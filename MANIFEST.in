@@ -1,2 +1,2 @@
 graft bin
-include ./ADToolbox/ADToolbox_Configs.json
+include ADToolbox/ADToolbox_Configs.json
