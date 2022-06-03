@@ -1,6 +1,47 @@
 # Toolbox Overview
 
-AD Toolbox is developed in Chan Lab at Colorado State University. The main goal of this toolbox is to provide all of the tools required for modeling and optimization of anaerobic digestion process. This pipeline is comprised of different modules:
+Parsa Ghadermazi 
+parsa96@colostate.edu
+
+AD Toolbox is developed in Chan Lab at Colorado State University. The main goal of this toolbox is to provide the tools that are useful for modeling and optimization of anaerobic digestion process. 
+
+## Installation
+
+Although it is not mandatory, It is greatly advised to create a python environment for this project and install ADToolbox in that environment. Check for how to build and use python's virtual environments. There are severall methods that allow you to install or use ADToolbox:
+
+
+1- Install by cloning this repository:
+
+```
+git clone https://github.com/chan-csu/ADToolbox.git
+cd ADToolbox
+pip install .
+
+```
+2- Install using pip
+
+```
+Not available yet
+
+```
+
+3- Use docker
+
+```
+Not available yet
+
+```
+
+4- Click bellow:
+
+```
+My binder place holder 
+
+```
+-------------------
+## Using ADToolbox
+
+This Toolbox is comprised of different modules:
 
 1. Database Module
 
