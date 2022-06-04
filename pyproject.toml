@@ -13,6 +13,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
+include_package_data = True
 license = { file = "LICENSE" }
 keywords = ["Anaerobic Digestion", "AD", "Modeling"]
 dependencies = [
@@ -28,7 +29,7 @@ dependencies = [
 "sympy==1.10.1"
 
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.6"
 
 [project.optional-dependencies]
 Sysbio = ["cobra"]
