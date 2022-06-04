@@ -41,6 +41,21 @@ My binder place holder
 -------------------
 # Using ADToolbox
 
+After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:
+
+```
+ADToolbox
+
+```
+You should see the following if you are running this for the first time:
+
+```
+No Base Directory Found: 
+Where do you want to store your ADToolBox Data?:
+
+```
+type the directory of interest. Don't worry if you mess this part up. You can change this later as well.
+
 This Toolbox is comprised of different modules:
 
 1. Database Module
