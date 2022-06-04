@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-
+license = { file = "LICENSE" }
 keywords = ["Anaerobic Digestion", "AD", "Modeling"]
 dependencies = [
 "bs4==0.0.1",
