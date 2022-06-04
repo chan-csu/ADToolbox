@@ -1,3 +1,2 @@
-graft bin
+graft ADToolbox/pkg-data
 include ADToolbox/ADToolbox_Configs.json
-include README.md

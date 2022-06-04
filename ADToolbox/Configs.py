@@ -179,5 +179,5 @@ class Modified_ADM:
 
 class Documentation:
     def __init__(self,
-                 ReadMe=os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","README.md")):
+                 ReadMe=os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","README.md")):
         self.ReadMe = ReadMe
