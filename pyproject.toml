@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-include_package_data = True
+include_package_data = true
 license = { file = "LICENSE" }
 keywords = ["Anaerobic Digestion", "AD", "Modeling"]
 dependencies = [
