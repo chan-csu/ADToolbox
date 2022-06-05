@@ -15,7 +15,7 @@ Although it is not mandatory, It is greatly advised to create a python environme
 ```
 git clone https://github.com/chan-csu/ADToolbox.git
 cd ADToolbox
-pip install -e .
+pip install .
 
 ```
 2- Install using pip
