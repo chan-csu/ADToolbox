@@ -1,40 +1,27 @@
-[build-system]
-requires      = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "ADToolbox"
+[tool.poetry]
+name = "adtoolbox"
 version = "0.1.0"
-description = "A Tool for Modeling and Optimization of Anaerobic Digestion systems"
-readme = "README.md"
-authors = [{ name = "Parsa Ghadermazi", email = "parsa96@colostatete.edu" }]
-classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-]
-license = { file = "LICENSE" }
-keywords = ["Anaerobic Digestion", "AD", "Modeling"]
-dependencies = [
-"bs4==0.0.1",
-"dash==2.4.1",
-"numpy==1.22.4",
-"pandas==1.4.2",
-"plotly==5.8.0",
-"pytz==2022.1",
-"requests==2.27.1",
-"rich==12.4.1",
-"scipy==1.8.1",
-"sympy==1.10.1"
+description = "A tool for modeling and optimization of anaerobic digestion process."
+authors = ["ParsaGhadermazi <54489047+ParsaGhadermazi@users.noreply.github.com>"]
+readme= "README.md"
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+bs4 = "^0.0.1"
+dash = "^2.4.1"
+numpy = "^1.22.4"
+pandas = "^1.4.2"
+plotly = "^5.8.0"
+requests = "^2.27.1"
+rich = "^12.4.4"
+scipy = "^1.8.1"
+sympy = "^1.10.1"
 
-]
-requires-python = ">=3.6"
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
 
-[project.optional-dependencies]
-Sysbio = ["cobra"]
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[tool.setuptools]
-include-package-data = true
-
-[project.scripts]
-ADToolbox = "ADToolbox.__main__:main"
+[tool.poetry.scripts]
+ADToolbox = 'adtoolbox.__main__:main'

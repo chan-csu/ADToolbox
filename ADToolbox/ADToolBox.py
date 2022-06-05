@@ -9,7 +9,7 @@ import requests
 import time
 from requests.adapters import HTTPAdapter
 from sympy import Li
-from ADToolbox.Parameters import Base_Parameters, Model_Parameters
+from .Parameters import Base_Parameters, Model_Parameters
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
