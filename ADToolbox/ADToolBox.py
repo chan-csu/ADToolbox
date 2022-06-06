@@ -805,7 +805,7 @@ class Database:
             f.write(r.content)
     @staticmethod
     def Download_Feed_Database(directory):
-        Feed="https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/Feed_DB.json"
+        Feed="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
         r = requests.get(Feed, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)

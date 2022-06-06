@@ -27,17 +27,24 @@ def main():
     parser.version = f"[green]ADToolBox v{__version__}"
     subparsers = parser.add_subparsers(dest="ADToolbox_Module", help='ADToolbox Modules:')
     subparser_Database = subparsers.add_parser('Database', help='Database Module of ADToolBox')
-    subparser_Database.add_argument("--Initialize-Feed-DB", action="store_true", help="Initialize the Feed DB")
-    subparser_Database.add_argument("--Extend-Feed-DB", action="store", help="Extend the Feed Database using a CSV file")
-    subparser_Database.add_argument("--Show-Feed-DB", action="store_true", help="Display the Current Feed Database")
-    subparser_Database.add_argument("--Show-Reaction-DB", action="store_true", help="Display the Current Compound Database")
-    subparser_Database.add_argument("--Build-Protein-DB", action="store_true", help="Generates the protein database for ADToolbox",default=False)
-    subparser_Metagenomics= subparsers.add_parser('Metagenomics', help='Metagenomics Module of ADToolBox')
+    db_subp=subparser_Database.add_subparsers(dest="Database_Module", help='Database Modules:')
+    db_subp.add_parser("initialize-feed-db", action="store_true", help="Initialize the Feed DB")
+    db_subp.add_parser("extend-feed-db", action="store", help="Extend the Feed Database using a CSV file")
+    db_subp.add_parser("show-feed-db", action="store_true", help="Display the Current Feed Database")
+    db_subp.add_parser("show-reaction-db", action="store_true", help="Display the Current Compound Database")
+    db_subp.add_parser("build-protein-db", action="store_true", help="Generates the protein database for ADToolbox",default=False)
+    db_subp.add_parser("download-feed-db", action="store_true", help="Downloads the feed database in JSON format",default=False)
+    db_subp.add_parser("download-reaction-db", action="store_true", help="Downloads the reaction database in CSV format",default=False)
+    db_subp.add_parser("download-protein-db", action="store_true", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.",default=False)
+    db_subp.add_parser("download-amplicon-to-genome-dbs", action="store_true", help="downloads amplicon to genome databases",default=False)
+    
+    
+    
+    
     
     ### Metagenomics Module ###
+    subparser_Metagenomics= subparsers.add_parser('Metagenomics', help='Metagenomics Module of ADToolBox')
     MetaG_subp=subparser_Metagenomics.add_subparsers(dest='MetaG_Subparser',help='[yellow] Available Metagenomics Commands:')
-    # MetaG_subp_1=MetaG_subp.add_parser('Initialize-Amplicon-to-Genome', help='Initialize the Amplicon to Genome Databases and files')
-    # MetaG_subp_1.add_argument("-o","--Output-dir", action="store", help="The directory to store the amplicon to genome database files")
     MetaG_subp_2=MetaG_subp.add_parser('Amplicon-to-Genome', help='Downloads the representative genome from each amplicon')
     MetaG_subp_2.add_argument("-i", "--Input-dir", action="store", help="Input the directory containing all the required [bold]QIIME output tables")
     MetaG_subp_2.add_argument("-o", "--Output-dir", action="store", help="Output the directory to store the representative genome files")
@@ -54,50 +61,7 @@ def main():
 
 
     Doc_Parser=subparsers.add_parser('Documentations', help='Documentations for using AD Toolbox')
-    Doc_Parser.add_argument("-s", "--show", action="store_true", help="Documentation for a specific module")
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    Doc_Parser.add_argument("-s", "--show", action="store_true", help="Documentation for a specific module")    
     
     ### ADM module ###
     subparser_ADM = subparsers.add_parser('ADM', help='ADM Module of ADToolBox')
@@ -158,9 +122,17 @@ def main():
             rich.print(u"[bold green]\u2713 Protein Database was built!\n")
     
     
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.download_feed_db:
+        DB_Class.Download_Feed_Database(DB_Class.Config.Feed_DB)
+        rich.print(u"[bold green]\u2713 Feed Database was downloaded!\n")
     
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.download_reaction_db:
+        DB_Class.Download_Reaction_Database(DB_Class.Config.Reaction_DB)
+        rich.print(u"[bold green]\u2713 Reaction Database was downloaded!\n")
     
-    
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.download_protein_db:
+        DB_Class.Download_Protein_Database(DB_Class.Config.Protein_DB)
+        rich.print(u"[bold green]\u2713 Protein Database was downloaded!\n")
     
     
     
