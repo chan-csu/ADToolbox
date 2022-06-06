@@ -33,11 +33,11 @@ def main():
     ExFDB.add_argument("-d", "--dir", help="CSV file to be used for extending the Feed DB",required=True)
     db_subp.add_parser("show-feed-db", help="Display the Current Feed Database")
     db_subp.add_parser("show-reaction-db", help="Display the Current Compound Database")
-    db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox",default=False)
-    db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format",default=False)
-    db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format",default=False)
-    db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.",default=False)
-    db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases",default=False)
+    db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
+    db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format")
+    db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
+    db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
+    db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases")
     
     
     
@@ -111,8 +111,7 @@ def main():
             T=f.read()
             console.print(markdown.Markdown(T))
     
-
-    if args.ADToolbox_Module == 'Database' and args.Build_Protein_DB:
+    if args.ADToolbox_Module == 'Database' and "Database_Module" in args and args.Database_Module=="build-protein-db" :
             DB_Class
             ECs=DB_Class.EC_From_CSV(Configs.Database().CSV_Reaction_DB)
             rich.print(u"[bold green]\u2713 All EC numbers were extracted!\n")
@@ -123,19 +122,29 @@ def main():
             rich.print(u"[bold green]\u2713 Protein Database was built!\n")
     
     
-    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.download_feed_db:
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-feed-db":
         DB_Class.Download_Feed_Database(DB_Class.Config.Feed_DB)
         rich.print(u"[bold green]\u2713 Feed Database was downloaded!\n")
     
-    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.download_reaction_db:
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-reaction-db":
         DB_Class.Download_Reaction_Database(DB_Class.Config.Reaction_DB)
         rich.print(u"[bold green]\u2713 Reaction Database was downloaded!\n")
     
-    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.download_protein_db:
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-protein-db":
         DB_Class.Download_Protein_Database(DB_Class.Config.Protein_DB)
         rich.print(u"[bold green]\u2713 Protein Database was downloaded!\n")
     
-    
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="show-feed-db":
+        with open(Configs.Database().Feed_DB, 'r') as f:
+            Feed_DB = json.load(f)
+        ColNames=Feed_DB[0].keys()
+        Feed_table = Table(title="Feed Database",expand=True,safe_box=True)
+
+        for i in ColNames:
+            Feed_table.add_column(i, justify="center", style="cyan", no_wrap=True)
+        for i in Feed_DB:
+            Feed_table.add_row(*map(str,list(i.values())))
+        console.print(Feed_table)
     
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'Original-ADM1':
@@ -251,9 +260,12 @@ def main():
             with open(args.Metagenome_Report) as f:
                 ADM_Metagenome_Report=json.load(f)
         else:
-            with open(Configs.Modified_ADM().Metagenome_Report) as f:
-                ADM_Metagenome_Report=json.load(f)
-        
+            if os.path.exists(Configs.Modified_ADM().Metagenome_Report):
+                with open(Configs.Modified_ADM().Metagenome_Report) as f:
+                    ADM_Metagenome_Report=json.load(f)
+            else:
+                ADM_Metagenome_Report=None
+                
         mod_adm1 = Model(ADM_Model_Parameters,ADM_Base_Parameters,ADM_Initial_Conditions,ADM_Inlet_Conditions,ADM_Reactions,
                     ADM_Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Metagenome_Report=ADM_Metagenome_Report,Name="Modified_ADM1", Switch="DAE")
         Sol_mod_adm1 = mod_adm1.Solve_Model(
@@ -279,17 +291,7 @@ def main():
         (0, 100), mod_adm1.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))
         mod_adm1.Dash_App(Sol_mod_adm1)
     
-    if "Show_Feed_DB" in args and bool(args.Show_Feed_DB):
-        with open(Configs.Database().Feed_DB, 'r') as f:
-            Feed_DB = json.load(f)
-        ColNames=Feed_DB[0].keys()
-        Feed_table = Table(title="Feed Database",expand=True,safe_box=True)
 
-        for i in ColNames:
-            Feed_table.add_column(i, justify="center", style="cyan", no_wrap=True)
-        for i in Feed_DB:
-            Feed_table.add_row(*map(str,list(i.values())))
-        console.print(Feed_table)
     
     #### Configuration Block ####
 

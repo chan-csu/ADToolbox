@@ -162,7 +162,7 @@ class Model:
                 }
             )
 
-        app.layout = html.Div([html.Div(style={'backgroundColor': colors['background'], 'height':'200px', "margin-top":'-30px'}, children=[html.H1(
+        with_Report=html.Div([html.Div(style={'backgroundColor': colors['background'], 'height':'200px', "margin-top":'-30px'}, children=[html.H1(
             children='ADToolbox',
             style={
                 'textAlign': 'center',
@@ -258,14 +258,111 @@ class Model:
                     'font-size': '20px',
                     "BackgroundColor": "#fbeec1",
                     "font-family": "Trebuchet MS",
-                    }),
+                    }) ,
 
             dcc.Dropdown(self.Reactions,
-                         self.Reactions[0], style={"width": "300px"}, id="Drop_Down"),
+                         self.Reactions[0], style={"width": "300px"}, id="Drop_Down") ,
 
             dcc.Graph(figure=None, id="Annotation_Graph", style={
             "height": "900px",
             "font-size": "150%"})])
+        without_Report=html.Div([html.Div(style={'backgroundColor': colors['background'], 'height':'200px', "margin-top":'-30px'}, children=[html.H1(
+            children='ADToolbox',
+            style={
+                'textAlign': 'center',
+                'color': colors['text'],
+                'font-size': '50px',
+                'padding-top': '20px'
+            })]),
+
+            html.H2("Original ADM1 Line Plot", style={
+                    'textAlign': 'left',
+                    'color': colors['text'],
+                    'font-size': '20px',
+                    "BackgroundColor": "#fbeec1",
+                    "font-family": "Trebuchet MS",
+                    }),
+            
+
+            dcc.Graph(figure=fig, id='Concentrations_Line_Plot'),
+
+            html.Br(),
+
+            html.H3("Base_Parameters", style={
+                    'textAlign': 'left',
+                    'color': colors['text'],
+                    'font-size': '20px',
+                    "BackgroundColor": "#fbeec1",
+                    "font-family": "Trebuchet MS",
+                    }),
+            
+            dash_table.DataTable(
+            id='Base_Parameters',
+            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.Base_Parameters.keys())],
+            data=pd.DataFrame(self.Base_Parameters,index=[0]).to_dict('records'),
+            editable=True,
+            style_table={'overflowX': 'scroll'}),
+
+
+            html.Br(),
+            html.H3("Model_Parameters", style={
+                    'textAlign': 'left',
+                    'color': colors['text'],
+                    'font-size': '20px',
+                    "BackgroundColor": "#fbeec1",
+                    "font-family": "Trebuchet MS",
+                    }),
+
+
+
+            dash_table.DataTable(
+            id='Model_Parameters',
+            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.Model_Parameters.keys())],
+            data=pd.DataFrame(self.Model_Parameters,index=[0]).to_dict('records'),
+            editable=True,
+            style_table={'overflowX': 'scroll'}),            
+
+            html.Br(),
+
+            html.H3("Initial_Conditions", style={
+                    'textAlign': 'left',
+                    'color': colors['text'],
+                    'font-size': '20px',
+                    "BackgroundColor": "#fbeec1",
+                    "font-family": "Trebuchet MS",
+                    }),
+            
+            dash_table.DataTable(
+            id='Initial_Conditions',
+            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._IC.keys())],
+            data=pd.DataFrame(self._IC,index=[0]).to_dict('records'),
+            editable=True,
+            style_table={'overflowX': 'scroll'}),
+
+            html.Br(),
+            html.H3("Inlet_Conditions", style={
+                    'textAlign': 'left',
+                    'color': colors['text'],
+                    'font-size': '20px',
+                    "BackgroundColor": "#fbeec1",
+                    "font-family": "Trebuchet MS",
+                    }),
+            dash_table.DataTable(
+            id='Inlet_Conditions',
+            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._InC.keys())],
+            data=pd.DataFrame(self._InC,index=[0]).to_dict('records'),
+            editable=True,
+            style_table={'overflowX': 'scroll'})])
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        app.layout = with_Report if self.Metagenome_Report else without_Report
 
         @app.callback(Output(component_id="Annotation_Graph", component_property='figure'), Input(component_id='Drop_Down', component_property='value'))
         def update_graph_fig(input_value):
