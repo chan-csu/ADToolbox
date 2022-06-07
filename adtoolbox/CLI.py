@@ -58,6 +58,10 @@ def main():
     MetaG_subp_3.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results")
     MetaG_subp_3.add_argument("-b", "--bit-score", action="store", help="Minimum Bit Score cutoff for alignment",default=40)
     MetaG_subp_3.add_argument("-e", "--e-value", action="store", help="Minimum e-vlaue score cutoff for alignment",default=100)
+    MetaG_subp_4=MetaG_subp.add_parser("make-json-from-genomes",help="Generates JSON file required by Align-Genomes for custom genomes.")
+    
+    MetaG_subp_4.add_argument("-i", "--input-file", action="store", help="Input the address of the CSV file includeing information about the genomes to be aligned",required=True)
+    MetaG_subp_4.add_argument("-o", "--output-file", action="store", help="Output the directory to store the JSON file.",required=True)
 
 
 
@@ -106,6 +110,21 @@ def main():
     ### Block for running ADM Module ###
         ### Block for running Original ADM1 ###
 
+    #### Metagenomics Module #####
+    if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="Align-Genomes":
+        if "input_file" in args and "output_dir" in args:
+            Meta_Config=Configs.Metagenomics(Genomes_JSON_Info=args.input_file,Genome_Alignment_Output=args.output_dir)
+            ADToolBox.Metagenomics(Meta_Config).Align_Genomes()
+
+
+    
+    if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="make-json-from-genomes":
+        ADToolBox.Metagenomics.Make_JSON_from_Genomes(args.input_file,args.output_file)
+
+
+
+
+
     if args.ADToolbox_Module == 'Documentations' and args.show:
         with open(Configs.Documentation().ReadMe,'r') as f:
             T=f.read()
@@ -117,7 +136,7 @@ def main():
             rich.print(u"[bold green]\u2713 All EC numbers were extracted!\n")
             Uniprot_IDS=DB_Class.Uniprots_from_EC(ECs)
             rich.print(u"[bold green]\u2713 All Uniprot IDs were extracted!\n")
-            DB_Class.__Initialize_Database__()
+            DB_Class._Initialize_Database()
             DB_Class.Add_Protein_from_Uniprot(Uniprot_IDS)
             rich.print(u"[bold green]\u2713 Protein Database was built!\n")
     

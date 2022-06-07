@@ -1,6 +1,7 @@
 import subprocess
 import os
 import random
+from matplotlib import streamplot
 import pandas as pd
 import json
 import numpy as np
@@ -467,15 +468,14 @@ class Database:
 
             try:
                 file = Database.session.get(
-                    Base_URL+EC+'+taxonomy%3Abacteria+reviewed%3Ayes&format=list', timeout=1000)
+                    Base_URL+str(EC)+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
 
             except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
 
                 print("Request Error! Trying again ...")
                 time.sleep(30)
                 file = Database.session.get(
-                    Base_URL+EC+'+taxonomy%3Abacteria+reviewed%3Ayes&format=list', timeout=1000)
-
+                    Base_URL+EC+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
             if file.ok:
                 [Uniprots.append((Uniprot, EC))
                  for Uniprot in file.text.split('\n')[:-1]]  # This alsp does a sanity check
@@ -492,14 +492,15 @@ class Database:
 
         try:
 
-            EC_List = pd.read_table(CSV_File, sep=Sep)
+            EC_List = pd.read_table(CSV_File, sep=Sep,dtype="str")
+            EC_List.dropna(axis=0)
             Output_EC_list = list(EC_List["EC_Numbers"])
             assert len(
                 Output_EC_list) > 0, "The EC list is empty; Check the file"
 
         except FileNotFoundError:
 
-            print("TSV file not found")
+            print("CSV file not found")
 
         except (pd.errors.ParserError, KeyError):
 
@@ -511,7 +512,6 @@ class Database:
             print(error)
 
         else:
-
 
             return Output_EC_list
 
@@ -1082,30 +1082,52 @@ class Metagenomics:
                     Genomes_Info[Genome_ID]['Genome_Dir'].split(
                         "/")[-1][:-4]+".tsv")
 
-                Alignment_Results_Genome = pd.read_table(
-                    Genomes_Info[Genome_ID]['Alignment_File'], header=None)
+                # Alignment_Results_Genome = pd.read_table(
+                #     Genomes_Info[Genome_ID]['Alignment_File'], header=None)
 
-                Filter = (Alignment_Results_Genome.iloc[:, -1] >= self.Config.bit_score) & (
-                    Alignment_Results_Genome.iloc[:, -2] <= self.Config.e_value)
+                # Filter = (Alignment_Results_Genome.iloc[:, -1] >= self.Config.bit_score) & (
+                #     Alignment_Results_Genome.iloc[:, -2] <= self.Config.e_value)
 
-                ECs_Matched = list(set(list(Alignment_Results_Genome[Filter].iloc[j, 1].split(
-                    '|')[1] for j in range(len(Alignment_Results_Genome[Filter])))))
+                # ECs_Matched = list(set(list(Alignment_Results_Genome[Filter].iloc[j, 1].split(
+                #     '|')[1] for j in range(len(Alignment_Results_Genome[Filter])))))
 
-                Genomes_Info[Genome_ID]['ECs_Matched'] = ECs_Matched
+                # Genomes_Info[Genome_ID]['ECs_Matched'] = ECs_Matched
 
-                Matched_Rxns = {}
+                # Matched_Rxns = {}
 
-                for EC in ECs_Matched:
-                    for rxn in Reaction_Toolkit().Instantiate_Rxns(EC, Mode='Multiple_Match'):
+                # for EC in ECs_Matched:
+                #     for rxn in Reaction_Toolkit().Instantiate_Rxns(EC, Mode='Multiple_Match'):
 
-                        Matched_Rxns[rxn.Dict["id"]] = rxn.__str__()
+                #         Matched_Rxns[rxn.Dict["id"]] = rxn.__str__()
 
-                Genomes_Info[Genome_ID]['Rxns_Matched'] = Matched_Rxns
-                # Filter the results
+                # Genomes_Info[Genome_ID]['Rxns_Matched'] = Matched_Rxns
+                # # Filter the results
         with open(os.path.join(self.Config.Genome_Alignment_Output,"Alignment_Info.json"), 'w') as f:
             json.dump(Genomes_Info, f)
 
         return Genomes_Info
+    @staticmethod
+    def Make_JSON_from_Genomes(Input_Dir,Output_Dir):
+        """
+        This function takes a csv file directory. The CSV file must include three columns:
+        1- Genome_ID: Identifier for the genome, preferrably; NCBI ID
+        2- NCBI_Name: NCBI taxonomy name for the genome: Does not need to be in a specific format
+        3- Genome_Dir: Absolute path to the fasta files: NOT .gz
+
+        """
+        Genomes_JSON={}
+        Genomes_table=pd.read_table(Input_Dir,delimiter=",")
+        Genomes_table.set_index("Genome_ID",inplace=True)
+        for GI in Genomes_table.index:
+            Genomes_JSON[GI]={}
+            Genomes_JSON[GI]["NCBI_Name"]= Genomes_table.loc[GI,"NCBI_Name"]
+            Genomes_JSON[GI]["Genome_Dir"]= Genomes_table.loc[GI,"Genome_Dir"]
+        with open(Output_Dir,"w") as fp:
+            json.dump(Genomes_JSON,fp)
+        return
+
+
+        
 
 
 
