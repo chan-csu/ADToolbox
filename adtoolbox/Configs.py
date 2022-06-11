@@ -48,6 +48,7 @@ class Database:
                      CSV_Reaction_DB=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
                 Feed_DB=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
                 Protein_DB=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
+                Escher_Files=os.path.join(Main_Dir, "Visualizations", 'escher'),
 
                      ):
         self.Compound_DB = Compound_DB
@@ -58,6 +59,7 @@ class Database:
         self.CSV_Reaction_DB = CSV_Reaction_DB
         self.Feed_DB = Feed_DB
         self.Protein_DB = Protein_DB
+        self.Escher_Files = Escher_Files
 
 class Metagenomics:
     """

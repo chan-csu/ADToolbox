@@ -162,16 +162,26 @@ class Model:
                 }
             )
 
-        with_Report=html.Div([html.Div(style={'backgroundColor': colors['background'], 'height':'200px', "margin-top":'-30px'}, children=[html.H1(
+        with_Report=html.Div([html.Div(style={'backgroundColor': 'rgb(200, 200, 200)', 'height':'300px', "margin-top":'-50px'}, children=[html.H1(
             children='ADToolbox',
             style={
                 'textAlign': 'center',
                 'color': colors['text'],
-                'font-size': '50px',
-                'padding-top': '20px'
-            })]),
+                'font-size': '60px',
+                # 'font-family': 'sans-serif',
+                'padding-top': '30px',
+                'color': "rgb(30, 30, 30)",
 
-            html.H2("Original ADM1 Line Plot", style={
+            }),html.H2(children="A toolbox for modeleing and optimization of anaerobic digestion process",
+            style={
+                'textAlign': 'center',
+                'color': "rgb(30, 30, 30)",
+                'font-family': 'sans-serif'
+
+            })
+            ]),
+
+            html.H2(f"{self.Name} Concentration Plot", style={
                     'textAlign': 'left',
                     'color': colors['text'],
                     'font-size': '20px',
@@ -180,7 +190,11 @@ class Model:
                     }),
             
 
-            dcc.Graph(figure=fig, id='Concentrations_Line_Plot'),
+            dcc.Graph(figure=fig, id='Concentrations_Line_Plot',
+            style={
+                "backgroundColor": "#171010",
+            }
+            ),
 
             html.Br(),
 
@@ -197,7 +211,18 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.Base_Parameters.keys())],
             data=pd.DataFrame(self.Base_Parameters,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'}),
+            style_table={'overflowX': 'scroll'},
+            style_header={
+            'backgroundColor': 'rgb(200, 200, 200)',
+            'color': 'black',
+            'font-size': '20px',
+                },
+            style_data={
+            'backgroundColor': 'rgb(250, 250, 250)',
+            'color': 'black',
+            'font-size': '20px',
+            'font-family': 'Trebuchet MS',
+            }),
 
 
             html.Br(),
@@ -216,7 +241,22 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.Model_Parameters.keys())],
             data=pd.DataFrame(self.Model_Parameters,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'}),            
+            style_table={'overflowX': 'scroll'},
+            style_header={
+            'backgroundColor': 'rgb(200, 200, 200)',
+            'color': 'black',
+            'font-size': '20px',
+                },
+            style_data={
+            'backgroundColor': 'rgb(250, 250, 250)',
+            'color': 'black',
+            'font-size': '20px',
+            'font-family': 'Trebuchet MS',
+            }
+            ,
+
+            
+                ),            
 
             html.Br(),
 
@@ -233,7 +273,20 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._IC.keys())],
             data=pd.DataFrame(self._IC,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'}),
+            style_table={'overflowX': 'scroll'},
+            style_header={
+            'backgroundColor': 'rgb(200, 200, 200)',
+            'color': 'black',
+            'font-size': '20px',
+                },
+            style_data={
+            'backgroundColor': 'rgb(250, 250, 250)',
+            'color': 'black',
+            'font-size': '20px',
+            'font-family': 'Trebuchet MS',
+            }
+            
+            ),
 
             html.Br(),
             html.H3("Inlet_Conditions", style={
@@ -248,7 +301,18 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._InC.keys())],
             data=pd.DataFrame(self._InC,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'}),
+            style_table={'overflowX': 'scroll'},
+            style_header={
+            'backgroundColor': 'rgb(200, 200, 200)',
+            'color': 'black',
+            'font-size': '20px',
+                },
+            style_data={
+            'backgroundColor': 'rgb(250, 250, 250)',
+            'color': 'black',
+            'font-size': '20px',
+            'font-family': 'Trebuchet MS',
+            }),
 
             
 
@@ -264,8 +328,8 @@ class Model:
                          self.Reactions[0], style={"width": "300px"}, id="Drop_Down") ,
 
             dcc.Graph(figure=None, id="Annotation_Graph", style={
-            "height": "900px",
-            "font-size": "150%"})])
+            "height": "500px"})])
+
         without_Report=html.Div([html.Div(style={'backgroundColor': colors['background'], 'height':'200px', "margin-top":'-30px'}, children=[html.H1(
             children='ADToolbox',
             style={
@@ -352,9 +416,17 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._InC.keys())],
             data=pd.DataFrame(self._InC,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'})])
+            style_table={'overflowX': 'scroll'},
+            style_header={
+            'backgroundColor': 'rgb(30, 30, 30)',
+            'color': 'white'
+                },
+            style_data={
+            'backgroundColor': 'rgb(50, 50, 50)',
+            'color': 'white'
+                })])
         
-        
+
         
         
         

@@ -809,6 +809,22 @@ class Database:
         r = requests.get(Feed, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
+    @staticmethod
+    def Download_Escher_Files(directory):
+        Escher_Files=[
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"]
+        
+        for i in Escher_Files:
+            r = requests.get(i, allow_redirects=True)
+            with open(os.path.join(directory,i.split("/")[-1]), 'wb') as f:
+                f.write(r.content)
+
+
+
+
 class Report:
 
     """

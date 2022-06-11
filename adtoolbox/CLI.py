@@ -89,7 +89,7 @@ def main():
     Mod_ADM_subp.add_argument("--Species", action="store", help="Provide json file with species for modified ADM")
     Mod_ADM_subp.add_argument("--Metagenome-Report", action="store", help="Provide json file with metagenome report for modified ADM")
     Mod_ADM_subp.add_argument("--Report", action="store", help="Describe how to report the results of modified ADM. Current options are: 'dash' and 'csv'")
-    
+    ADM_subp.add_parser('show-escher-map',help='makes an escher map for modified ADM')
     ####
 
     # subparser_ADM.add_argument( "Modified-ADM-dash", help="Runs the dash app in the browser",action="store_true")
@@ -104,7 +104,9 @@ def main():
     subparser_Configs1 = Conf_subp.add_parser('set-base-dir',help='Determine the address of the base directory for ADToolBox to work with')
     subparser_Configs2= Conf_subp.add_parser('build-folder-structure',help='Builds the folder structure for ADToolBox to work properly')
     subparser_Configs3= Conf_subp.add_parser('download-all-databases',help='Downloads all the databases for ADToolBox to work properly, and puts them in the right directory in Databases')
+    subparser_Configs4= Conf_subp.add_parser('download-escher-files',help='Downloads all files required for running the escher map functionality of ADToolBox')
     subparser_Configs1.add_argument("-d", "--directory", action="store", help="Provide the address of the base directory for ADToolBox to work with",required=True)
+
 
     args=parser.parse_args()
     ### Block for running ADM Module ###
@@ -165,6 +167,10 @@ def main():
             Feed_table.add_row(*map(str,list(i.values())))
         console.print(Feed_table)
     
+    if "Initialize_Feed_DB" in args and bool(args.Initialize_Feed_DB):
+        ADToolBox.Database.Init_Feedstock_Database(DB_Class)
+    if "Extend_Feed_DB" in args and bool(args.Extend_Feed_DB):
+        DB_Class.Add_Feedstock_To_Database_From_File(args.Extend_Feed_DB)
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'Original-ADM1':
         if args.Model_Parameters:
@@ -296,7 +302,17 @@ def main():
             Address=Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
             mod_adm1.CSV_Report(Sol_mod_adm1,Address)
         else:
-            print('Please provide a valid report option')    
+            print('Please provide a valid report option')
+    
+    elif "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'show-escher-map':
+        from http.server import HTTPServer, CGIHTTPRequestHandler
+        os.chdir(os.path.join(Main_Dir,'Visualizations','escher'))
+        server_object = HTTPServer(server_address=('', 80), RequestHandlerClass=CGIHTTPRequestHandler)
+        rich.print('[green]Started the server:')
+        rich.print('[yellow]Copy the following in your browser: http://localhost:80/')
+        server_object.serve_forever()
+
+
         
 
     if "Modified_ADM_dash" in args and bool(args.Modified_ADM_dash):
@@ -311,60 +327,90 @@ def main():
         mod_adm1.Dash_App(Sol_mod_adm1)
     
 
-    
+    #############################
     #### Configuration Block ####
+    #############################
 
     if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='set-base-dir':
+        Set_Base_Dir(args)
 
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"), 'r') as f:
-            Conf = json.load(f)
-        Conf["Base_Dir"] = args.directory
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"), 'w') as f:
-            json.dump(Conf, f, indent=4)
-        if not os.path.exists(args.directory):
-            os.mkdir(args.directory)
-            rich.print("\n[yellow]Directory did not exist. Created directory: [green]{}".format(args.directory))
-    
     if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='build-folder-structure':
-        print("Went through Configs")
-        Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes"]
-        for i in Required_Folders:
-            if not os.path.exists(os.path.join(Main_Dir,i)):
-                os.mkdir(os.path.join(Main_Dir,i))
-                rich.print("\n[yellow]Directory did not exist. Created directory: [green]{}".format(os.path.join(Main_Dir,i)))
-    
+        Build_Folder_Structure()
+
     if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='download-all-databases':
-        MetaG=ADToolBox.Metagenomics(Configs.Metagenomics())
-        rich.print(u"[yellow] Downloading Amplicon to Genome databases ...\n")
-        MetaG.Get_Requirements_A2G()
-        rich.print(u"[bold green]\u2713 Amplicon to Genome databases were downloaded successfuly!\n")
-        rich.print(u"[yellow] Downloading Seed database ...\n")
-        ADToolBox.Database().Download_Seed_Databases(Configs.Seed_RXN_DB)
-        rich.print(u"[bold green]\u2713 Seed database was downloaded successfuly!\n")
-        rich.print(u"[yellow] Downloading Original-ADM1 database ...\n")
-        ADToolBox.Database().Download_ADM1_Parameters(Configs.Original_ADM1())
-        rich.print(u"[bold green]\u2713 Original-ADM1 database was downloaded successfuly!\n")
-        rich.print(u"[yellow] Downloading Modified-ADM database ...\n")
-        ADToolBox.Database().Download_Modified_ADM_Parameters(Configs.Modified_ADM())
-        rich.print(u"[bold green]\u2713 Modified-ADM database was downloaded successfuly!\n")
-        rich.print(u"[yellow] Downloading protein database ...\n")
-        ADToolBox.Database().Download_Protein_Database(Configs.Database().Protein_DB)
-        rich.print(u"[bold green]\u2713 Protein database was downloaded successfuly!\n")
-        rich.print(u"[yellow] Downloading Reaction database ...\n")
-        ADToolBox.Database().Download_Reaction_Database(Configs.Database().Reaction_DB)
-        rich.print(u"[bold green]All the databases were downloaded successfuly!\n")
-        rich.print(u"[yellow] Downloading the feed database ...\n")
-        ADToolBox.Database().Download_Feed_Database(Configs.Database().Feed_DB)
-        rich.print(u"[bold green]\u2713 Feed database was downloaded successfuly!\n")
+        Download_All_Databases()
+    
+    if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='download-escher-files':
+        Download_Escher_Files()
 
 
 
-    if "Initialize_Feed_DB" in args and bool(args.Initialize_Feed_DB):
-        ADToolBox.Database.Init_Feedstock_Database(DB_Class)
-    if "Extend_Feed_DB" in args and bool(args.Extend_Feed_DB):
-        DB_Class.Add_Feedstock_To_Database_From_File(args.Extend_Feed_DB)
 
-    # adm1.Dash_App(Sol)
+
+
+###########################
+#####Configs functions#####
+###########################
+
+def Set_Base_Dir(args):
+    """
+    This function sets the base directory for the ADToolbox.
+    """
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"), 'r') as f:
+        Conf = json.load(f)
+    Conf["Base_Dir"] = args.directory
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"), 'w') as f:
+        json.dump(Conf, f, indent=4)
+    if not os.path.exists(args.directory):
+        os.mkdir(args.directory)
+        rich.print("[yellow]Directory did not exist. Created directory: [green]{}".format(args.directory))
+
+def Build_Folder_Structure():
+    """
+    This function will build the folder structure undrestandable by the ADToolbox.
+    """
+    Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes","Visualizations"]
+    for i in Required_Folders:
+        if not os.path.exists(os.path.join(Main_Dir,i)):
+            os.mkdir(os.path.join(Main_Dir,i))
+            rich.print(f"\n[yellow] {i} directory did not exist. Created directory: [green]{os.path.join(Main_Dir,i)}\n")
+
+def Download_All_Databases():
+    """
+    This function will download all the databases required by the ADToolbox.
+    """
+    MetaG=ADToolBox.Metagenomics(Configs.Metagenomics())
+    rich.print(u"[yellow] Downloading Amplicon to Genome databases ...\n")
+    MetaG.Get_Requirements_A2G()
+    rich.print(u"[bold green]\u2713 Amplicon to Genome databases were downloaded successfuly!\n")
+    rich.print(u"[yellow] Downloading Seed database ...\n")
+    ADToolBox.Database().Download_Seed_Databases(Configs.Seed_RXN_DB)
+    rich.print(u"[bold green]\u2713 Seed database was downloaded successfuly!\n")
+    rich.print(u"[yellow] Downloading Original-ADM1 database ...\n")
+    ADToolBox.Database().Download_ADM1_Parameters(Configs.Original_ADM1())
+    rich.print(u"[bold green]\u2713 Original-ADM1 database was downloaded successfuly!\n")
+    rich.print(u"[yellow] Downloading Modified-ADM database ...\n")
+    ADToolBox.Database().Download_Modified_ADM_Parameters(Configs.Modified_ADM())
+    rich.print(u"[bold green]\u2713 Modified-ADM database was downloaded successfuly!\n")
+    rich.print(u"[yellow] Downloading protein database ...\n")
+    ADToolBox.Database().Download_Protein_Database(Configs.Database().Protein_DB)
+    rich.print(u"[bold green]\u2713 Protein database was downloaded successfuly!\n")
+    rich.print(u"[yellow] Downloading Reaction database ...\n")
+    ADToolBox.Database().Download_Reaction_Database(Configs.Database().Reaction_DB)
+    rich.print(u"[bold green]All the databases were downloaded successfuly!\n")
+    rich.print(u"[yellow] Downloading the feed database ...\n")
+    ADToolBox.Database().Download_Feed_Database(Configs.Database().Feed_DB)
+    rich.print(u"[bold green]\u2713 Feed database was downloaded successfuly!\n")
+
+def Download_Escher_Files():
+    """
+    This function will download the files necessary to load the escher map correcly.
+    """
+    if not os.path.exists(os.path.join(Main_Dir,"Visualizations","escher")):
+        os.mkdir(os.path.join(Main_Dir,"Visualizations","escher"))
+    rich.print(u"[yellow] Downloading Escher files ...\n")
+    ADToolBox.Database().Download_Escher_Files(Configs.Database().Escher_Files)
+    rich.print(u"[bold green]\u2713 Escher files were downloaded successfuly!\n")
 
 
 if __name__ == "__main__":
