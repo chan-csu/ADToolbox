@@ -15,6 +15,7 @@ requests = "^2.27.1"
 rich = "^12.4.4"
 scipy = "^1.8.1"
 sympy = "^1.10.1"
+matplotlib = "^3.5.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

@@ -18,6 +18,16 @@ cd ADToolbox
 pip install .
 
 ```
+
+Or if you wish to install in editable mode (contribute to the developemnt), run the following:
+
+```
+git clone https://github.com/chan-csu/ADToolbox.git
+cd ADToolbox
+pip install -e .
+
+```
+
 2- Install using pip
 
 ```
@@ -41,6 +51,8 @@ My binder place holder
 -------------------
 # Using ADToolbox
 
+## Installation
+
 After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:
 
 ```
@@ -54,7 +66,54 @@ No Base Directory Found:
 Where do you want to store your ADToolBox Data?:
 
 ```
-type the directory of interest. Don't worry if you mess this part up. You can change this later as well.
+Type the **absolute path** directory of interest. Don't worry if you mess this part up. You can change this later as well. you can type '.' for now and change this later.
+
+You can access all the commands along with their brief explanation by:
+
+```
+ADToolbox --help
+
+```
+
+## Using the ADToolox Commandline Interface
+
+This toolbox is comprised of different modules:
+
+1. Database Module
+
+2. Metagenomics Module
+
+3. Documentations Module
+
+4. ADM Module
+
+5. Report Module
+
+6. Utility Module
+
+7. Configs Module
+-------------
+
+After installation, you have to download all the required files to run ADToolbox properly. To do this, first go to the Configs module by:
+
+```
+ADToolbox Configs --help
+
+```
+This will give you a list of all functionalities that are related to the configurations of the toolbox. Here we go one by one in the correct order:
+
+- set-base-dir:  The first configuration command will allow you to set the base directory for ADToolbox to work. This could be an existing folder somewhere in your files or a directory that you are willing to create. If the directory does not already exit, it will be automatically created after this command. For example if I want to set the base directory to be ADToolbox directory on my desktop the command would be, in MacOS, something like this:
+
+```
+ADToolbox Configs set-base-dir -d ~/Desktop/ADToolbox
+
+```
+Note that you ***must*** include -d after ```set-base-dir```.
+
+Anything that you will do from now on, will be saved in this directory.
+
+----------
+
 
 This Toolbox is comprised of different modules:
 
