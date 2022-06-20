@@ -1,4 +1,4 @@
-from .Parameters import *
+from Parameters import *
 import numpy as np
 import scipy.optimize
 import scipy.integrate
@@ -6,16 +6,16 @@ import pandas as pd
 import json
 import os
 import plotly.express as px
-from . import Parameters_Modified as PM
+import Parameters_Modified as PM
 from dash import Dash, html, dcc
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output,dash_table
-from .ADToolBox import Database as Database
-from .ADToolBox import Reaction_Toolkit as Reaction_Toolkit
+from ADToolBox import Database as Database
+from ADToolBox import Reaction_Toolkit as Reaction_Toolkit
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
 from collections import OrderedDict
-from . import Main_Dir
+from __init__ import Main_Dir
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
 # It is extensively based on PyADM1, and I would like to thank the author of PyADM1 for this work

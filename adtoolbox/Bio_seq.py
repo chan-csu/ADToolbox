@@ -1,4 +1,4 @@
-from .Bio_Struct import *
+from Bio_Struct import *
 from collections import Counter
 import random
 import csv

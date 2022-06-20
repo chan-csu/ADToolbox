@@ -2,6 +2,8 @@ import json
 import os
 import rich
 from rich.prompt import Prompt
+import pdb
+
 """Project Setup for ADToolBox."""
 __version__ = "0.1.0"
 

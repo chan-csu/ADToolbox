@@ -1,6 +1,6 @@
 import os
-from . import Main_Dir
-from .Parameters import Initial_Conditions
+from __init__ import Main_Dir
+from Parameters import Initial_Conditions
 
 RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 

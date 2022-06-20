@@ -1,15 +1,15 @@
 import argparse
-from . import Configs
-from . import ADToolBox
-from . import __version__
-from . import Main_Dir
+import Configs
+import ADToolBox
+from __init__ import __version__
+from __init__ import Main_Dir
 from rich.console import Console
 import rich
-from .ADM import *
+from ADM import *
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
-
+import pdb
 console = Console()
 
 
@@ -32,10 +32,9 @@ def main():
     ExFDB=db_subp.add_parser("extend-feed-db", help="Extend the Feed Database using a CSV file")
     ExFDB.add_argument("-d", "--dir", help="CSV file to be used for extending the Feed DB",required=True)
     db_subp.add_parser("show-feed-db", help="Display the Current Feed Database")
-    db_subp.add_parser("show-reaction-db", help="Display the Current Compound Database")
+    db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
     db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format")
-    db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
     db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases")
     
@@ -111,7 +110,6 @@ def main():
     args=parser.parse_args()
     ### Block for running ADM Module ###
         ### Block for running Original ADM1 ###
-
     #### Metagenomics Module #####
     if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="Align-Genomes":
         if "input_file" in args and "output_dir" in args:

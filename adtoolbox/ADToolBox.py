@@ -10,7 +10,7 @@ import requests
 import time
 from requests.adapters import HTTPAdapter
 from sympy import Li
-from .Parameters import Base_Parameters, Model_Parameters
+from Parameters import Base_Parameters, Model_Parameters
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
@@ -18,22 +18,11 @@ from datetime import datetime
 from pathlib import Path
 import gzip
 import shutil
-from . import Configs
-from . import Bio_seq
+import Configs
+import Bio_seq
 from rich.progress import track
 import rich
-from . import Main_Dir
-
-
-class Project:
-
-    """This class can be used for a high level control over a project.
-    It is optional to use this class but it provides a nice wholistic view of an integrated project."""
-
-    def __init__(self, Project_Name, Project_Hash, Project_Dir):
-
-        pass
-
+from __init__ import Main_Dir
 
 class Feed:
 
@@ -131,7 +120,7 @@ class Reaction_Toolkit:
 
     """
 
-    def __init__(self, Compound_DB=Configs.Reaction_Toolkit().Compound_DB, Reaction_DB=Configs.Reaction_Toolkit().Reaction_DB) -> None:
+    def __init__(self, Compound_DB:str =Configs.Reaction_Toolkit().Compound_DB, Reaction_DB=Configs.Reaction_Toolkit().Reaction_DB) -> None:
         self.Reaction_DB = Reaction_DB
         self.Compound_DB = Compound_DB
 
@@ -161,17 +150,6 @@ class Reaction_Toolkit:
         return Matched_Compunds[0]
 
 
-class Pathway:
-    "A pathway is defined as a list of binary tuples:(Rank of the reaction in the pathway, and the reaction object)"
-    # Under construction
-    # Check mass balance could be added as a function
-
-    def __init__(self) -> None:
-        pass
-
-    def __str__(self, Reaction_List):
-
-        self.Reaction_List = Reaction_List
 
 
 class Reaction:
@@ -191,16 +169,52 @@ class Reaction:
 
 
 class Metabolites:
+    """
+    Any metabolite with seed id can be an instance of this class.
+    In order to instantiate a Metabolite object, you first define a dictionary in seed database format.
+    This dictionary must have  "name", "mass", and "formula" keys, but it is okay if it has other keys.
+    Examples:
+        >>>A={
+        "name":"methane"
+        "mass":16,
+        "formula":"CH4"
+            }
+        >>>a=Metabolites(A)
+        methane
+
+    """
 
     def __init__(self, Dict):
         self.Dict = Dict
         self.COD = self.COD_Calc()
 
-    def __str__(self):
+    def __str__(self) -> str:
+        return self.Dict['name']
+    
+    def __repr__(self) -> str:
         return self.Dict['name']
 
-    def COD_Calc(self):
-        # returns the compound's gCOD/g of the compound
+    def COD_Calc(self)->float:
+        """
+        Calculates the conversion rates for g/l -> gCOD/l
+
+        Examples:
+            >>>A={
+            "name":"methane"
+            "mass":16,
+            "formula":"CH4"
+                }
+            >>>a=Metabolites(A)
+            >>>a.COD
+            4.0
+        Args:
+            self (Metabolite): An instance of the Metabolite class: Note
+
+        Returns:
+            float: COD conversion from g/l to gCOD/l
+        
+
+        """
         if self:
             Content = {}
             Atoms = ["H", "C", "O"]
@@ -218,142 +232,6 @@ class Metabolites:
 
         else:
             return 'None'
-
-
-class Subprocess:
-
-    def __init__(self, Name, Reactions, Metabolites, Parameters, Input):
-        self.Name = Name
-        self.Reactions = Reactions
-        self.Parameters = Parameters
-        self.Input = Input
-        self.Metabolites = Metabolites
-
-    def Report(self):
-        Report_string = f'This instance of {self.Name} includes the following \
-            reactions:\n{[Rxn for Rxn in self.Reactions]}'
-        return Report_string
-
-    def __str__(self):
-        return f'This is an instance of {self.Name} subprocess'
-
-    @property
-    def Stoichiometric_Matrix(self):
-        S = np.zeros((len(self.Metabolites), len(self.Reactions)))
-        for i in range(len(self.Metabolites)):
-            for j in range(len(self.Reactions)):
-                for keys in self.Reactions[j][0].Stoichiometry:
-                    if self.Metabolites[i].Dict['id'] in keys:
-                        S[i][j] = self.Reactions[j][0].Stoichiometry[keys]
-
-        return (S, [rxn[0].Dict['name'] for rxn in self.Reactions], [Met.Dict['name'] for Met in self.Metabolites])
-
-    @property
-    def Nodes(self):
-        return [compounds.Dict['name'] for compounds in self.Metabolites]
-
-    @property
-    def Edges(self):
-        # After running many examples I think the best clean way to draw
-        # A map for the system is to have pathway focus. Reactions of a pathway
-        edge = []
-        for reaction in self.Reactions:
-            Rxn_Name = re.sub(':', ' | ', reaction[0].Dict['name'])
-            for met in reaction[0].Stoichiometry.keys():
-                Met = Reaction_Toolkit().Instantiate_Metabs(met)
-                # This part is not efficient
-                edge.append((Rxn_Name, Met.Dict['name']))
-
-        return edge
-
-
-class Process:
-
-    def __init__(self, Name,
-                 Suprocess_List,
-                 Input_Seq,
-                 Reaction_Metadata=Main_Dir+'/Database/Protein_DB.csv',
-                 Protein_DB=Main_Dir+'/Database/Protein_DB.fasta',
-                 Alignment_output=Main_Dir+"/Outputs/",
-                 Create_DB=True,
-                 Align_DB=True):
-
-        self.Name = Name
-        self.Input_Seq = Input_Seq
-        self.Reaction_Metadata = Reaction_Metadata
-        self.Protein_DB = Protein_DB
-        self.Alignment_output = Alignment_output
-        self.Suprocess_List = Suprocess_List
-        self.__create_DB__() if Create_DB else None
-        self.__run_diamond__() if Align_DB else None
-
-    def _Create_Diamond_DB(self):
-        subprocess.run(['diamond', 'makedb',
-                        '--in', self.Protein_DB,
-                        '-d', re.sub('.fasta', '', self.Protein_DB)])
-
-    def _Run_Diamond(self, **kwargs):
-
-        if len(kwargs) == 0:
-            subprocess.run(['diamond', 'blastp',
-                            '-d', re.sub('.fasta', '', self.Protein_DB),
-                            '-q', self.Input_Seq,
-                            '-o', self.Alignment_output+"Alignment_Results_Diamond_"+self.Name + ".tsv"])
-
-        elif 'Query' in kwargs and 'DB' not in kwargs:
-            subprocess.run(['diamond', 'blastp',
-                            '-d', re.sub('.fasta', '', self.Protein_DB),
-                            '-q', kwargs['Query'],
-                            '-o', kwargs['OutDir']])
-
-        elif 'Query' in kwargs and 'DB' in kwargs and "Mode" not in kwargs:
-            subprocess.run(['diamond', 'blastp',
-                            '-d', kwargs['DB'],
-                            '-q', kwargs['Query'],
-                            '-o', kwargs['OutDir']])
-
-        elif "Mode" in kwargs and 'DB' in kwargs and 'Query' in kwargs:
-            subprocess.run(['diamond', kwargs['Mode'],
-                            '-d', kwargs['DB'],
-                            '-q', kwargs['Query'],
-                            '-o', kwargs['OutDir'], "--very-sensitive"])
-
-        else:
-            print('\nThe arguments can not be handled!\n')
-
-
-    def __str__(self):
-        return f'{self.Name} has {len(self.Subprocesses)} Subprocesses: {[ClassNames for ClassNames in self.Subprocesses]} '
-
-    
-    def Build_Cobra_Model(self, Name):
-        # Finished but needs to be tested
-        """This function will build a cobra model from the subprocesses"""
-        Subprocesses = self.Subprocesses
-        Model = cobra.Model(self.Name)
-        Cobra_Metabs = {}
-        for Subprocess in Subprocesses:
-            Subprocess_Metabs = self.Get_Subprocess_Metabolites(
-                Subprocess.Reactions)
-            for Metab in Subprocess_Metabs:
-                Temp_Metab = cobra.Metabolite(
-                    Metab.Dict['id'], compartment=Subprocess.Name, formula=Metab.Dict['formula'], name=Metab.Dict['id'])
-                Cobra_Metabs[Metab.Dict['id']] = Temp_Metab
-            for Rxns in Subprocess.Reactions:
-                # The following line can be changed based on gibbs free energy values
-                Temp_Rxn = cobra.Reaction(
-                    Rxns.Dict['id'], name=Rxns.Dict['id'], subsystem=Subprocess.Name, lower_bound=-10, upper_bound=10)
-                Dict = {}
-                for Metab in Rxns.Stoichiometry.keys():
-
-                    Dict[Cobra_Metabs[Metab]] = Rxns.Stoichiometry[Metab]
-                Temp_Rxn.add_metabolites(Dict)
-
-                Model.add_reaction(Temp_Rxn)
-
-        cobra.io.write_sbml_model(Model, "test_fbc2.xml")
-        return Model
-
 
 class Database:
 
@@ -1203,36 +1081,8 @@ class ADM_Mapping:
 
 
 
-class Universal_Model:
-    pass
 
-    # To-Do:
-    # ------------------------------------------
-    # 3. More systems biology stuff             | [ ]
-    # ------------------------------------------
-    # 4. ADM1 Improvement                       | [ ]
-    # ------------------------------------------
-    # 6. Compare with prokka or other tools     | [ ]
-    # ------------------------------------------
-    # 7. Build a map for the process            | [I think finally it would be something like graphviz rather than escher]
-    # ------------------------------------------
-    # 8. Metadata for reactions                 | []
-    # ------------------------------------------
-    # 9. Maybe for now graphviz is fine         | []
-    # ------------------------------------------
-    # 10. Metagenomics class for handling       |
-    # Any type of metagenomics data, and the    | []
-    # Downstream analysis.                      |
-    # ------------------------------------------
-    # 11. Visualization classMaybe for now      | []
-    #  graphviz is fine                         |
-    # ------------------------------------------
-    # 12. Report class                          | []
-    # ------------------------------------------
-    # 13. Project class                         | [Very Low Priority]
-    # ------------------------------------------
 
-### TEST BLOCK ###
 
 
 if __name__ == "__main__":
@@ -1241,6 +1091,11 @@ if __name__ == "__main__":
     # MG.Align_Genomes()
     # R=Report(Configs.Report())
     # R.ADM_From_Alignment_JSON(Parameters_Modified.Reactions)
+    # A={
+    # "name":"methane",
+    # "mass":16,
+    # "formula":"CH4"
+    # }
+    # a=Metabolites(A)
+    # print(a.COD)
     pass
-    
-

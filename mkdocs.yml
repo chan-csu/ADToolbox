@@ -1,0 +1,14 @@
+site_name: ADToolbox
+
+theme:
+  name: "material"
+
+nav:
+  - index.md
+  - Installation: Installation.md
+  - Commandline Interface: CLI.md
+  - API: API.md
+  - Parameter Tuning: Parameter_Tuning.md
+
+plugins:
+  - mkdocstrings
