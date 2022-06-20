@@ -1,0 +1,564 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.3.5">
+    
+    
+      
+        <title>Parameter Tuning - ADToolbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.4a0965b7.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.cbb835fc.min.css">
+        
+      
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#parameter-tuning" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ADToolbox" class="md-header__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ADToolbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Parameter Tuning
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ADToolbox" class="md-nav__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    ADToolbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome to ADToolbox
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Installation/" class="md-nav__link">
+        Installation
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        Commandline Interface
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        API
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Parameter Tuning
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Parameter Tuning
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-load-the-default-parameters" class="md-nav__link">
+    1- Load the default parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-load-the-experimental-data" class="md-nav__link">
+    2- Load the experimental data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-determine-the-parameters-to-be-trained" class="md-nav__link">
+    3- Determine the parameters to be trained
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-start-optimizing" class="md-nav__link">
+    4- Start Optimizing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-display-the-results" class="md-nav__link">
+    5- Display the Results
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-load-the-default-parameters" class="md-nav__link">
+    1- Load the default parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-load-the-experimental-data" class="md-nav__link">
+    2- Load the experimental data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-determine-the-parameters-to-be-trained" class="md-nav__link">
+    3- Determine the parameters to be trained
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-start-optimizing" class="md-nav__link">
+    4- Start Optimizing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-display-the-results" class="md-nav__link">
+    5- Display the Results
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+
+<h1 id="parameter-tuning">Parameter tuning</h1>
+<p>This is a how-to tutorial on how to train ADM parametrs using experimental data.</p>
+<p>First, you need to import the packages that you need.</p>
+<pre><code>
+from adtoolbox import ADM,Main_Dir
+import pygad
+import numpy as np
+import os
+import json 
+import pandas as pd
+
+</code></pre>
+<p>Now you are ready to start:</p>
+<h2 id="1-load-the-default-parameters">1- Load the default parameters</h2>
+<p>This script is build for tuning the parameters of Modified-ADM using a genetic algorithm. 
+First you need to load the current default parameters.</p>
+<pre><code>
+Parameters_Dir=os.path.join(Main_Dir,&quot;Database&quot;,&quot;Modified_ADM&quot;)
+Base_Parameters=os.path.join(Parameters_Dir,&quot;Modified_ADM_Base_Parameters.json&quot;)
+IC=os.path.join(Parameters_Dir,&quot;Modified_ADM_Initial_Conditions.json&quot;)
+Inlet_C=os.path.join(Parameters_Dir,&quot;Modified_ADM_Inlet_Conditions.json&quot;)
+Model_Parameters=os.path.join(Parameters_Dir,&quot;Modified_ADM_Model_Parameters.json&quot;)
+Reactions=os.path.join(Parameters_Dir,&quot;Modified_ADM_Reactions.json&quot;)
+Species=os.path.join(Parameters_Dir,&quot;Modified_ADM_Species.json&quot;)
+
+with open(Base_Parameters) as f:
+    Base_Parameters=json.load(f)
+with open(IC) as f:
+    IC=json.load(f)
+with open(Inlet_C) as f:
+    Inlet_C=json.load(f)
+with open(Model_Parameters) as f:
+    Model_Parameters=json.load(f)
+with open(Reactions) as f:
+    Reactions=json.load(f)
+with open(Species) as f:
+    Species=json.load(f)
+
+
+
+</code></pre>
+<h2 id="2-load-the-experimental-data">2- Load the experimental data</h2>
+<p>In the next step you need to load your experimental data that you need to train parameters.
+The data must be in a CSV file following this format(All in ADM Units):</p>
+<table>
+<thead>
+<tr>
+<th>time</th>
+<th>ADM_State_var1</th>
+<th>ADM_State_var2</th>
+<th>....</th>
+<th>ADM_State_varM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.</td>
+<td>0.1</td>
+<td>0.15</td>
+<td>...</td>
+<td>0.0</td>
+</tr>
+</tbody>
+</table>
+<pre><code>
+Exp_Data=pd.read_csv(os.path.join(&quot;/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization&quot;,&quot;Experimental_Data.csv&quot;),delimiter=&quot;,&quot;)
+
+Inds=[]
+for i in Exp_Data.columns[1:]:
+    Inds.append(Species.index(i))
+for state in Exp_Data.columns[1:]:
+    IC[state]=Exp_Data[state][0]
+
+
+</code></pre>
+<h2 id="3-determine-the-parameters-to-be-trained">3- Determine the parameters to be trained</h2>
+<p>Now you have to determine what parameters you want to tune using the experimental data that you have:</p>
+<pre><code>
+Params_list=[&quot;n_cap&quot;,&quot;f_ch_TSS&quot;,&quot;f_et_bu&quot;]
+
+gene_space=[[0,5],[0,1],[0,1]]
+
+</code></pre>
+<h2 id="4-start-optimizing">4- Start Optimizing</h2>
+<pre><code>
+model=ADM.Model(Model_Parameters,Base_Parameters,IC,Inlet_C,Reactions,Species,ODE_System=ADM.Modified_ADM1_ODE_Sys,Build_Stoiciometric_Matrix=ADM.Build_Modified_ADM1_Stoiciometric_Matrix)
+
+def fitness_func(solution, solution_idx):
+    for i in range(len(Params_list)):
+        Model_Parameters[Params_list[i]]=solution[i]
+    model.Model_Parameters=Model_Parameters
+    Sol = model.Solve_Model(
+        (0, Exp_Data[&quot;time&quot;].iloc[-1]+1), model.Initial_Conditions[:, 0], Exp_Data[&quot;time&quot;].to_list())
+
+    # Calculate the fitness
+    fitness = 1.0 /(np.square(Sol.y[Inds,:] - Exp_Data.to_numpy()[:,1:].T)).mean()
+    return fitness
+
+fitness_function = fitness_func
+
+num_generations = 50
+num_parents_mating = 4
+
+sol_per_pop = 8
+num_genes = len(Params_list)
+
+init_range_low = 0.0000000000000001
+init_range_high =5
+
+parent_selection_type = &quot;sss&quot;
+keep_parents = 1
+
+crossover_type = &quot;single_point&quot;
+
+mutation_type = &quot;random&quot;
+mutation_percent_genes = 10
+
+ga_instance = pygad.GA(num_generations=num_generations,
+                       num_parents_mating=num_parents_mating,
+                       fitness_func=fitness_function,
+                       sol_per_pop=sol_per_pop,
+                       num_genes=num_genes,
+                       init_range_low=init_range_low,
+                       init_range_high=init_range_high,
+                       parent_selection_type=parent_selection_type,
+                       keep_parents=keep_parents,
+                       crossover_type=crossover_type,
+                       mutation_type=mutation_type,
+                       mutation_percent_genes=mutation_percent_genes
+                       ,gene_space=gene_space)
+
+ga_instance.run()
+
+</code></pre>
+<h2 id="5-display-the-results">5- Display the Results</h2>
+<p>You can plot the results:</p>
+<pre><code>
+solution, solution_fitness, solution_idx = ga_instance.best_solution()
+print(&quot;Parameters of the best solution : {solution}&quot;.format(solution=solution))
+print(&quot;Fitness value of the best solution = {solution_fitness}&quot;.format(solution_fitness=solution_fitness))
+ga_instance.plot_fitness()
+
+</code></pre>
+
+              
+            </article>
+            
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../API/" class="md-footer__link md-footer__link--prev" aria-label="Previous: API" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              API
+            </div>
+          </div>
+        </a>
+      
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.85cb4492.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.431f3d41.min.js"></script>
+      
+    
+  </body>
+</html>
