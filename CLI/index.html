@@ -240,6 +240,41 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#3-metagenomics-module" class="md-nav__link">
+    3. Metagenomics Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-adm-module" class="md-nav__link">
+    4. ADM Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-documentations-module" class="md-nav__link">
+    5. Documentations Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-report-module" class="md-nav__link">
+    6. Report Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-utility-module" class="md-nav__link">
+    7. Utility Module
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -338,6 +373,41 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#3-metagenomics-module" class="md-nav__link">
+    3. Metagenomics Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-adm-module" class="md-nav__link">
+    4. ADM Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-documentations-module" class="md-nav__link">
+    5. Documentations Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-report-module" class="md-nav__link">
+    6. Report Module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-utility-module" class="md-nav__link">
+    7. Utility Module
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -388,10 +458,10 @@ Where do you want to store your ADToolBox Data?:
 <p>Metagenomics Module</p>
 </li>
 <li>
-<p>Documentations Module</p>
+<p>ADM Module</p>
 </li>
 <li>
-<p>ADM Module</p>
+<p>Documentations Module</p>
 </li>
 <li>
 <p>Report Module</p>
@@ -472,36 +542,41 @@ options:
 <h3 id="2-database-module">2. Database Module</h3>
 <p>Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:</p>
 <pre><code>ADToolbox Database --help
-
-────────────────────────────────── ADToolBox───────────────────────────────────
+──────────────────────────── ADToolBox ────────────────────────────
 usage: ADToolBox Database [-h]
-                          {initialize-feed-db,extend-feed-db,show-feed-db,show-r
-eaction-db,build-protein-db,download-feed-db,download-reaction-db,download-prote
-in-db,download-amplicon-to-genome-dbs}
+                          {initialize-feed-db,extend-feed-db,show-f
+eed-db,download-reaction-db,download-seed-reaction-db,build-protein
+-db,download-feed-db,download-protein-db,download-amplicon-to-genom
+e-dbs}
                           ...
 
 positional arguments:
-  {initialize-feed-db,extend-feed-db,show-feed-db,show-reaction-db,build-protein
--db,download-feed-db,download-reaction-db,download-protein-db,download-amplicon-
-to-genome-dbs}
+  {initialize-feed-db,extend-feed-db,show-feed-db,download-reaction
+-db,download-seed-reaction-db,build-protein-db,download-feed-db,dow
+nload-protein-db,download-amplicon-to-genome-dbs}
                         Database Modules:
     initialize-feed-db  Initialize the Feed DB
     extend-feed-db      Extend the Feed Database using a CSV file
     show-feed-db        Display the Current Feed Database
-    build-protein-db    Generates the protein database for ADToolbox
-    download-feed-db    Downloads the feed database in JSON format
     download-reaction-db
-                        Downloads the reaction database in CSV format
+                        Downloads the reaction database in CSV
+                        format
+    download-seed-reaction-db
+                        Downloads the seed reaction database in
+                        JSON format
+    build-protein-db    Generates the protein database for
+                        ADToolbox
+    download-feed-db    Downloads the feed database in JSON
+                        format
     download-protein-db
-                        Downloads the protein database in fasta format; You
-                        can alternatively build it from reaction database.
+                        Downloads the protein database in fasta
+                        format; You can alternatively build it
+                        from reaction database.
     download-amplicon-to-genome-dbs
                         downloads amplicon to genome databases
 
 options:
   -h, --help            show this help message and exit
-
-
 </code></pre>
 <p>We now go over these commands one by one:</p>
 <ul>
@@ -588,6 +663,385 @@ ADToolbox Database build-protein-db
 ADToolbox Database download-amplicon-to-genome-dbs
 
 </code></pre>
+<ul>
+<li>download-seed-reaction-db: This will download the SEED reaction database in JSON format.</li>
+</ul>
+<pre><code>ADToolbox Database download-seed-reaction-db
+
+</code></pre>
+<h3 id="3-metagenomics-module">3. Metagenomics Module</h3>
+<p>Metagenomics module of ADToolbox is designed to add metagenomics data into considewration when designing and AD process.</p>
+<p>You can observe all the functionalities by:</p>
+<pre><code>
+ADToolbox Metagenomics --help   
+
+──────────────────────────── ADToolBox ────────────────────────────
+usage: ADToolBox Metagenomics [-h]
+                              {amplicon-to-genome,align-genomes,mak
+e-json-from-genomes,map-genomes-to-adm}
+                              ...
+
+positional arguments:
+  {amplicon-to-genome,align-genomes,make-json-from-genomes,map-geno
+mes-to-adm}
+                         Available Metagenomics Commands:
+    amplicon-to-genome  Downloads the representative genome from
+                        each amplicon
+    align-genomes       Align Genomes to the protein database of
+                        ADToolbox, or any other fasta with
+                        protein sequences
+    make-json-from-genomes
+                        Generates JSON file required by Align-
+                        Genomes for custom genomes.
+    map-genomes-to-adm  maps JSON file with genome infromation to
+                        ADM reactions
+
+options:
+  -h, --help            show this help message and exit
+
+</code></pre>
+<p>As of right now, there are 3 main submodules exist in the Metagenomics module:</p>
+<ul>
+<li>amplicon-to-genome: If you have 16s Data from QIIME, you can, hopefully, find the representative genomes for each replicon in an automated way
+using this functionality by selecting different parameters:</li>
+</ul>
+<pre><code>ADToolbox Metagenomics amplicon-to-genome --help
+
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox Metagenomics amplicon-to-genome [-h] [-q QIIME_OUTPUTS_DIR]
+                                                 [-f FEATURE_TABLE_DIR]
+                                                 [-r REP_SEQ_DIR]
+                                                 [-t TAXONOMY_TABLE_DIR]
+                                                 [-o OUTPUT_DIR]
+                                                 [-a AMPLICON_TO_GENOME_DB]
+                                                 [--k K]
+                                                 [--similarity SIMILARITY]
+
+options:
+  -h, --help            show this help message and exit
+  -q QIIME_OUTPUTS_DIR, --qiime-outputs-dir QIIME_OUTPUTS_DIR
+                        Input the directory to the QIIME outputs
+  -f FEATURE_TABLE_DIR, --feature-table-dir FEATURE_TABLE_DIR
+                        Input the directory to the feature table output from
+                        QIIME output tables
+  -r REP_SEQ_DIR, --rep-Seq-dir REP_SEQ_DIR
+                        Input the directory to the repseq fasta output from
+                        QIIME output files
+  -t TAXONOMY_TABLE_DIR, --taxonomy-table-dir TAXONOMY_TABLE_DIR
+                        Input the directory to the taxonomy table output from
+                        QIIME output files
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                        Output the directory to store the representative
+                        genome files
+  -a AMPLICON_TO_GENOME_DB, --amplicon-to-genome-db AMPLICON_TO_GENOME_DB
+                        The Amplicon to Genome Database to use
+  --k K                 Top k genomes to be selected
+  --similarity SIMILARITY
+                        Similarity cutoff in the 16s V4 region for genome
+                        selection
+
+</code></pre>
+<p>If you do not provide any arguents, the default directories and values will be used. By default, ADToolbox looks at
+your base directory, that you set in Configs, in :<code>Metagenomics_Data/QIIME_Outputs</code>. </p>
+<ul>
+<li>
+<p>If you want to use your default arguments, you need to provide the directory to Feature table, taxonomy table, repseq fasta file from QIIME.</p>
+</li>
+<li>
+<p>If you do not want to use the amplicon to genome database that you downloaded in Configs or Database modules, you can point to the database directory of your interest as well by <code>--amplicon-to-genome-db</code> or <code>-a</code></p>
+</li>
+<li>
+<p>From each sample you can choose the top k abundant taxa to be selected for downloading genome, for instance <code>--k 10</code> will select the top 10 taxa from each sample</p>
+</li>
+<li>
+<p>When selecting genomes you need a precentage of similarity cutoff to select a representaive genome from GTDB. You do this by <code>--similarity 96</code>. This will set 96% as a similarity cutoff.</p>
+</li>
+<li>
+<p>Finally, you need to provide the directory where you want the representative genomes to be saved. Additionally, a few extra files 
+providing information about the fetched genomes will be saved here:</p>
+</li>
+<li>
+<p><code>GenomeAccessions.csv</code> provides the NCBI accession IDs of the found genomes.</p>
+</li>
+<li><code>SelectedFeatures.csv</code> provides the feature IDs, hashes, from QIIME outputs for the fetched genomes.</li>
+<li><code>TopKTaxa.csv</code> taxonomy name of the replicons for which a genome has been found.</li>
+<li><code>Amplicon2Genome_OutInfo.json</code> <strong><em>important</em></strong> This JSON file is a metadata about the genomes that were found. This is later used to align these genomes to the protein database.</li>
+</ul>
+<p>A complete amplicon-to-genome command will look like:</p>
+<pre><code>
+ADToolbox Metagenomics amplicon-to-genome -f ~/Desktop/test/feature-table.tsv \
+-r ~/Desktop/test/dna-sequences.fasta \
+-t ~/Desktop/test/taxonomy.tsv \
+-o ~/Desktop/test/ --k 10 \
+-q ~/Desktop/test/ \
+-a ~/Desktop/ADToolbox/Database/Amplicon2GenomeDBs/
+
+</code></pre>
+<hr />
+<ul>
+<li>align-genomes This submodule uses MMseqs to align a list of genomes to the protein database of ADToolbox for functional analysis.</li>
+</ul>
+<p>You can run this submodule by the following arguments:</p>
+<pre><code>
+ADToolbox Metagenomics align-genomes --help    
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox Metagenomics align-genomes [-h] [-i INPUT_FILE]
+                                            [-d PROTEIN_DB_DIR]
+                                            [-o OUTPUT_DIR] [-b BIT_SCORE]
+                                            [-e E_VALUE]
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_FILE, --input-file INPUT_FILE
+                        Input the address of the JSON file includeing
+                        information about the genomes to be aligned
+  -d PROTEIN_DB_DIR, --protein-db-dir PROTEIN_DB_DIR
+                        Directory containing the protein database to be used
+                        for alignment
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                        Output the directory to store the alignment results
+  -b BIT_SCORE, --bit-score BIT_SCORE
+                        Minimum Bit Score cutoff for alignment
+  -e E_VALUE, --e-value E_VALUE
+                        Minimum e-vlaue score cutoff for alignment
+
+</code></pre>
+<ul>
+<li>
+<p>input-file: you need to give a JSON file similar to what you create in amplicon-to-genome, see previous submodule, so that ADToolbox finds
+all the information it needs about the genomes</p>
+</li>
+<li>
+<p>protein-db-dir: you can provide ADToolboxes protein database fasta file, or any protein database that you would like to align your genomes with.</p>
+</li>
+<li>output-dir: Describes the location to save the alignment results. </li>
+<li>bits-core: Minimum bit score to filter out the alignment results.</li>
+<li>e_value: Minimum bit score to filter out the alignment results.</li>
+</ul>
+<p>The outputs of this step includes one more import file:</p>
+<p><code>Alignment_Info.json</code>  -&gt; This file is used by map-genomes-to-adm</p>
+<p>A complete command for this submodule would looklike:</p>
+<pre><code>
+ADToolBox Metagenomics align-genomes \
+--input-file ~/Desktop/ADToolbox/Genomes/Amplicon2Genome_OutInfo.json
+--protein-db-dir ~/Desktop/ADToolbox/Database/Protein_DB.fasta
+--output-dir ~/Desktop/ADToolbox/Outputs/ \
+--bit-score 40 \
+--e-value 0.000001
+
+</code></pre>
+<hr />
+<ul>
+<li>make-json-from-genomes Sometimes you have genomes either from assembly or downloading it manually. In this case you can import your genomes 
+to the pipeline by making a JSON file similar to  <code>Amplicon2Genome_OutInfo.json</code>. To this you need to make a CSV file for your genomes:</li>
+</ul>
+<pre><code>
+ADToolbox Metagenomics make-json-from-genomes  --help
+
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox Metagenomics make-json-from-genomes [-h] -i INPUT_FILE -o
+                                                     OUTPUT_FILE
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_FILE, --input-file INPUT_FILE
+                        Input the address of the CSV file includeing
+                        information about the genomes to be aligned
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        Output the directory to store the JSON file.
+
+</code></pre>
+<ul>
+<li>input-file: This input file should be the address to a CSV file exactly in the following column format:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Genome_ID</th>
+<th>NCBI_Name</th>
+<th>Genome_Dir</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Genome1</td>
+<td>xyz</td>
+<td>~/Desktop/...</td>
+</tr>
+</tbody>
+</table>
+<p>1- Genome_ID: Identifier for the genome, preferrably; NCBI ID
+2- NCBI_Name: NCBI taxonomy name for the genome: Does not need to be in a specific format
+3- Genome_Dir: Absolute path to the fasta files: NOT .gz</p>
+<ul>
+<li>output-file: output directory for the generated JSON to be saved. </li>
+</ul>
+<p>An example of this command would be:</p>
+<pre><code>
+ADToolBox Metagenomics make-json-from-genomes --input-file ~/Desktop/MyGenomes.CSV --output-files ~/Desktop/Genome_info.json
+
+</code></pre>
+<hr />
+<ul>
+<li>map-genomes-to-adm: This command will take a JSON file that has Alignment info for all of the genomes, and will output the mapping to ADM models. This is how you run this command:</li>
+</ul>
+<pre><code>
+ADToolbox Metagenomics map-genomes-to-adm --help
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox Metagenomics map-genomes-to-adm [-h] [-i INPUT_FILE]
+                                                 [-m MODEL] [-o OUTPUT_DIR]
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_FILE, --input-file INPUT_FILE
+                        Input the address of the JSON file includeing
+                        information about the alignment of the genomes to the
+                        protein database
+  -m MODEL, --model MODEL
+                        Model determines which mapping system you'd like to
+                        use; Current options: 'Modified_ADM_Reactions'
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                        address to store the JSON report to be loaded with a
+                        model
+
+
+
+</code></pre>
+<ul>
+<li>input-file: This should be the alignment info JSON file created in align-genome step.</li>
+<li>model: this must be a string defining the model that you want to map the aligned reactions to. Current option is only
+"Modified_ADM_Reactions"</li>
+<li>output-dir: Directory to save the Genome alignment report, Metagenome report, in JSON format. This can be used later in ADM module to include the role of different genomes in the process.</li>
+</ul>
+<p>An example of a complete command for this submodule is:</p>
+<pre><code>ADToolbox Metagenomics map-genomes-to-adm -i ~/Desktop/alignment_info.json -m Modified_ADM_Reactions -o ~/Desktop/ADM_Mapping_Report.json
+
+</code></pre>
+<hr />
+<h3 id="4-adm-module">4. ADM Module</h3>
+<p>ADM module provides all the tools needed to run instances of ADM Model. This include the originsl ADM, Batstone et al., and the Modified-ADM suggested by the Authors of ADToolbox. In order to find out about all the functionalities in this module, you can run:</p>
+<pre><code>
+ADToolbox ADM --help
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox ADM [-h] {original-adm1,modified-adm,show-escher-map} ...
+
+positional arguments:
+  {original-adm1,modified-adm,show-escher-map}
+                        Available ADM Commands:
+    original-adm1       Original ADM1:
+    modified-adm        Modified ADM:
+    show-escher-map     makes an escher map for modified ADM
+
+options:
+  -h, --help            show this help message and exit
+
+</code></pre>
+<ul>
+<li>original-adm1: If you want to run the original ADM, batstone et al, in your browser you can run this command with the required parameters in JSON format:</li>
+</ul>
+<pre><code>ADToolbox ADM original-adm1 --help
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox ADM original-adm1 [-h] [--model-parameters MODEL_PARAMETERS]
+                                   [--base-parameters BASE_PARAMETERS]
+                                   [--initial-conditions INITIAL_CONDITIONS]
+                                   [--inlet-conditions INLET_CONDITIONS]
+                                   [--reactions REACTIONS] [--species SPECIES]
+                                   [--metagenome-report METAGENOME_REPORT]
+                                   [--report REPORT]
+
+options:
+  -h, --help            show this help message and exit
+  --model-parameters MODEL_PARAMETERS
+                        Model parameters for ADM 1
+  --base-parameters BASE_PARAMETERS
+                        Provide json file with base parameters for original
+                        ADM1
+  --initial-conditions INITIAL_CONDITIONS
+                        Provide json file with initial conditions for original
+                        ADM1
+  --inlet-conditions INLET_CONDITIONS
+                        Provide json file with inlet conditions for original
+                        ADM1
+  --reactions REACTIONS
+                        Provide json file with reactions for original ADM1
+  --species SPECIES     Provide json file with species for original ADM1
+  --metagenome-report METAGENOME_REPORT
+                        Provide json file with metagenome report for original
+                        ADM1
+  --report REPORT       Describe how to report the results of original ADM1.
+                        Current options are: 'dash' and 'csv'
+
+
+</code></pre>
+<p>Every argument is optional, and their role is clear from the comments in front of them, So we just provide a full example of this command:</p>
+<pre><code>ADToolbox ADM original-adm1 \
+--model-parameters ~/Desktop/Model_Parameters.json \
+--base-parameters ~/Desktop/Base_Parameters.json \
+--initial-conditions ~/Desktop/Initial_Conditions.json \
+--inlet-conditions ~/Desktop/Inlet-Conditions.json \
+--reactions ~/Desktop/Reactions.json
+--species  ~/Desktop/Species.json
+--metagenome-report ~/Desktop/ADM_Mapping_Report.json
+--repor dash
+
+</code></pre>
+<p><strong>NOTE</strong> if you choose dash for your report, the CLI will prompt you to open your browser in the instructed address, if you choose csv, it will generate a CSV file that includes concentration profiles simulated over time.</p>
+<hr />
+<ul>
+<li>modified-adm: This command is exactly similar to the previous one, except that it requires parameters taylored for modified ADM:</li>
+</ul>
+<pre><code>
+ADToolbox ADM modified-adm --help 
+────────────────────────────────── ADToolBox ───────────────────────────────────
+usage: ADToolBox ADM modified-adm [-h] [--model-parameters MODEL_PARAMETERS]
+                                  [--base-parameters BASE_PARAMETERS]
+                                  [--initial-conditions INITIAL_CONDITIONS]
+                                  [--inlet-conditions INLET_CONDITIONS]
+                                  [--reactions REACTIONS] [--species SPECIES]
+                                  [--metagenome-report METAGENOME_REPORT]
+                                  [--report REPORT]
+
+options:
+  -h, --help            show this help message and exit
+  --model-parameters MODEL_PARAMETERS
+                        Model parameters for Modified ADM
+  --base-parameters BASE_PARAMETERS
+                        Provide json file with base parameters for modified
+                        ADM
+  --initial-conditions INITIAL_CONDITIONS
+                        Provide json file with initial conditions for modified
+                        ADM
+  --inlet-conditions INLET_CONDITIONS
+                        Provide json file with inlet conditions for modified
+                        ADM
+  --reactions REACTIONS
+                        Provide json file with reactions for modified ADM
+  --species SPECIES     Provide json file with species for modified ADM
+  --metagenome-report METAGENOME_REPORT
+                        Provide json file with metagenome report for modified
+                        ADM
+  --report REPORT       Describe how to report the results of modified ADM.
+                        Current options are: 'dash' and 'csv'
+
+</code></pre>
+<p>The usage is exactly the same as the original-adm</p>
+<hr />
+<ul>
+<li>show-escher-map: This command will prompt you to open an escher map for the modified-adm model in your browser with the instructed address:</li>
+</ul>
+<pre><code>ADToolbox ADM show-escher-map
+
+</code></pre>
+<hr />
+<h3 id="5-documentations-module">5. Documentations Module</h3>
+<p>You can view the documentaion in your CLI using rich's markdown render. You can do this by:</p>
+<pre><code>ADToolbox Documentations --show 
+
+</code></pre>
+<hr />
+<h3 id="6-report-module">6. Report Module</h3>
+<hr />
+<h3 id="7-utility-module">7. Utility Module</h3>
 
               
             </article>
