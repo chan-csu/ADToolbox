@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from ADToolBox import Reaction_Toolkit, Metabolites
+from ADToolBox import Reaction_Toolkit, Metabolite
 from collections import Counter as Counter
 Base_Parameters = {"R": 0.083145,
                    "T_base": 298.15,

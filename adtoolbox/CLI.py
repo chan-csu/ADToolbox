@@ -1,4 +1,5 @@
 import argparse
+from re import M
 import Configs
 import ADToolBox
 from __init__ import __version__
@@ -33,6 +34,7 @@ def main():
     ExFDB.add_argument("-d", "--dir", help="CSV file to be used for extending the Feed DB",required=True)
     db_subp.add_parser("show-feed-db", help="Display the Current Feed Database")
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
+    db_subp.add_parser("download-seed-reaction-db", help="Downloads the seed reaction database in JSON format")
     db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
     db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format")
     db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
@@ -43,25 +45,35 @@ def main():
     
     
     ### Metagenomics Module ###
+    Meta_Config_defult=Configs.Metagenomics()
     subparser_Metagenomics= subparsers.add_parser('Metagenomics', help='Metagenomics Module of ADToolBox')
     MetaG_subp=subparser_Metagenomics.add_subparsers(dest='MetaG_Subparser',help='[yellow] Available Metagenomics Commands:')
-    MetaG_subp_2=MetaG_subp.add_parser('Amplicon-to-Genome', help='Downloads the representative genome from each amplicon')
-    MetaG_subp_2.add_argument("-i", "--Input-dir", action="store", help="Input the directory containing all the required [bold]QIIME output tables")
-    MetaG_subp_2.add_argument("-o", "--Output-dir", action="store", help="Output the directory to store the representative genome files")
-    MetaG_subp_2.add_argument("-a", "--Amplicon-to-Genome-DB", action="store", help="The Amplicon to Genome Database to use")
-    MetaG_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=10)
-    MetaG_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=97)
-    MetaG_subp_3=MetaG_subp.add_parser('Align-Genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
-    MetaG_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned")
-    MetaG_subp_3.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment")
-    MetaG_subp_3.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results")
-    MetaG_subp_3.add_argument("-b", "--bit-score", action="store", help="Minimum Bit Score cutoff for alignment",default=40)
-    MetaG_subp_3.add_argument("-e", "--e-value", action="store", help="Minimum e-vlaue score cutoff for alignment",default=100)
-    MetaG_subp_4=MetaG_subp.add_parser("make-json-from-genomes",help="Generates JSON file required by Align-Genomes for custom genomes.")
     
+    MetaG_subp_2=MetaG_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
+    MetaG_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=Meta_Config_defult.QIIME_Outputs_Dir)
+    MetaG_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables",default=Meta_Config_defult.Feature_Table_Dir)
+    MetaG_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files",default=Meta_Config_defult.Rep_Seq_Fasta)
+    MetaG_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files",default=Meta_Config_defult.Taxonomy_Table_Dir)
+    MetaG_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=Meta_Config_defult.Amplicon2Genome_Outputs_Dir)
+    MetaG_subp_2.add_argument("-a", "--amplicon-to-genome-db", action="store", help="The Amplicon to Genome Database to use",default=Meta_Config_defult.Amplicon2Genome_DB)
+    MetaG_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=Meta_Config_defult.K,type=int)
+    MetaG_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=Meta_Config_defult.Amplicon2Genome_Similarity,type=float)
+    
+    MetaG_subp_3=MetaG_subp.add_parser('align-genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
+    MetaG_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned",default=Meta_Config_defult.Genomes_JSON_Info)
+    MetaG_subp_3.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=Meta_Config_defult.Protein_DB)
+    MetaG_subp_3.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results",default=Meta_Config_defult.Genome_Alignment_Output)
+    MetaG_subp_3.add_argument("-b", "--bit-score", action="store", help="Minimum Bit Score cutoff for alignment",default=Meta_Config_defult.bit_score)
+    MetaG_subp_3.add_argument("-e", "--e-value", action="store", help="Minimum e-vlaue score cutoff for alignment",default=Meta_Config_defult.e_value)
+    
+    MetaG_subp_4=MetaG_subp.add_parser("make-json-from-genomes",help="Generates JSON file required by Align-Genomes for custom genomes.")
     MetaG_subp_4.add_argument("-i", "--input-file", action="store", help="Input the address of the CSV file includeing information about the genomes to be aligned",required=True)
     MetaG_subp_4.add_argument("-o", "--output-file", action="store", help="Output the directory to store the JSON file.",required=True)
-
+    
+    MetaG_subp_5=MetaG_subp.add_parser('map-genomes-to-adm', help='maps JSON file with genome infromation to ADM reactions')
+    MetaG_subp_5.add_argument("-i","--input-file",action="store",help="Input the address of the JSON file includeing information about the alignment of the genomes to the protein database",default=Meta_Config_defult.Genome_Alignment_Output_JSON)
+    MetaG_subp_5.add_argument("-m","--model",action="store",help="Model determines which mapping system you'd like to use; Current options: 'Modified_ADM_Reactions'",default="Modified_ADM_Reactions")
+    MetaG_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model",default=Meta_Config_defult.Genome_ADM_Map_JSON)
 
 
     Doc_Parser=subparsers.add_parser('Documentations', help='Documentations for using AD Toolbox')
@@ -70,24 +82,24 @@ def main():
     ### ADM module ###
     subparser_ADM = subparsers.add_parser('ADM', help='ADM Module of ADToolBox')
     ADM_subp=subparser_ADM.add_subparsers(dest='ADM_Subparser',help='Available ADM Commands:')
-    subparser_ADM1 = ADM_subp.add_parser('Original-ADM1',help='Original ADM 1:')
-    subparser_ADM1.add_argument("--Model-Parameters", action="store", help="Model parameters for ADM 1")
-    subparser_ADM1.add_argument("--Base-Parameters", action="store", help="Provide json file with base parameters for original ADM1")
-    subparser_ADM1.add_argument("--Initial-Conditions", action="store", help="Provide json file with initial conditions for original ADM1")
-    subparser_ADM1.add_argument("--Inlet-Conditions", action="store", help="Provide json file with inlet conditions for original ADM1")
-    subparser_ADM1.add_argument("--Reactions", action="store", help="Provide json file with reactions for original ADM1")
-    subparser_ADM1.add_argument("--Species", action="store", help="Provide json file with species for original ADM1")
-    subparser_ADM1.add_argument("--Metagenome-Report", action="store", help="Provide json file with metagenome report for original ADM1")
-    subparser_ADM1.add_argument("--Report", action="store", help="Describe how to report the results of original ADM1. Current options are: 'dash' and 'csv'")
-    Mod_ADM_subp=ADM_subp.add_parser('Modified-ADM',help='Modified ADM:')
-    Mod_ADM_subp.add_argument("--Model-Parameters", action="store", help="Model parameters for Modified ADM")
-    Mod_ADM_subp.add_argument("--Base-Parameters", action="store", help="Provide json file with base parameters for modified ADM")
-    Mod_ADM_subp.add_argument("--Initial-Conditions", action="store", help="Provide json file with initial conditions for modified ADM")
-    Mod_ADM_subp.add_argument("--Inlet-Conditions", action="store", help="Provide json file with inlet conditions for modified ADM")
-    Mod_ADM_subp.add_argument("--Reactions", action="store", help="Provide json file with reactions for modified ADM")
-    Mod_ADM_subp.add_argument("--Species", action="store", help="Provide json file with species for modified ADM")
-    Mod_ADM_subp.add_argument("--Metagenome-Report", action="store", help="Provide json file with metagenome report for modified ADM")
-    Mod_ADM_subp.add_argument("--Report", action="store", help="Describe how to report the results of modified ADM. Current options are: 'dash' and 'csv'")
+    subparser_ADM1 = ADM_subp.add_parser('original-adm1',help='Original ADM1:')
+    subparser_ADM1.add_argument("--model-parameters", action="store", help="Model parameters for ADM 1")
+    subparser_ADM1.add_argument("--base-parameters", action="store", help="Provide json file with base parameters for original ADM1")
+    subparser_ADM1.add_argument("--initial-conditions", action="store", help="Provide json file with initial conditions for original ADM1")
+    subparser_ADM1.add_argument("--inlet-conditions", action="store", help="Provide json file with inlet conditions for original ADM1")
+    subparser_ADM1.add_argument("--reactions", action="store", help="Provide json file with reactions for original ADM1")
+    subparser_ADM1.add_argument("--species", action="store", help="Provide json file with species for original ADM1")
+    subparser_ADM1.add_argument("--metagenome-report", action="store", help="Provide json file with metagenome report for original ADM1")
+    subparser_ADM1.add_argument("--report", action="store", help="Describe how to report the results of original ADM1. Current options are: 'dash' and 'csv'")
+    Mod_ADM_subp=ADM_subp.add_parser('modified-adm',help='Modified ADM:')
+    Mod_ADM_subp.add_argument("--model-parameters", action="store", help="Model parameters for Modified ADM")
+    Mod_ADM_subp.add_argument("--base-parameters", action="store", help="Provide json file with base parameters for modified ADM")
+    Mod_ADM_subp.add_argument("--initial-conditions", action="store", help="Provide json file with initial conditions for modified ADM")
+    Mod_ADM_subp.add_argument("--inlet-conditions", action="store", help="Provide json file with inlet conditions for modified ADM")
+    Mod_ADM_subp.add_argument("--reactions", action="store", help="Provide json file with reactions for modified ADM")
+    Mod_ADM_subp.add_argument("--species", action="store", help="Provide json file with species for modified ADM")
+    Mod_ADM_subp.add_argument("--metagenome-report", action="store", help="Provide json file with metagenome report for modified ADM")
+    Mod_ADM_subp.add_argument("--report", action="store", help="Describe how to report the results of modified ADM. Current options are: 'dash' and 'csv'")
     ADM_subp.add_parser('show-escher-map',help='makes an escher map for modified ADM')
     ####
 
@@ -111,11 +123,35 @@ def main():
     ### Block for running ADM Module ###
         ### Block for running Original ADM1 ###
     #### Metagenomics Module #####
-    if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="Align-Genomes":
+    if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="amplicon-to-genome":
+        Meta_Config_defult.Feature_Table_Dir=args.feature_table_dir
+        Meta_Config_defult.QIIME_Outputs_Dir=args.qiime_outputs_dir
+        Meta_Config_defult.Rep_Seq_Fasta=args.rep_Seq_dir
+        Meta_Config_defult.Taxonomy_Table_Dir=args.taxonomy_table_dir
+        Meta_Config_defult.Amplicon2Genome_Outputs_Dir=args.output_dir
+        Meta_Config_defult.Amplicon2Genome_DB=args.amplicon_to_genome_db
+        Meta_Config_defult.K=args.k
+        Meta_Config_defult.Amplicon2Genome_Similarity=args.similarity
+        ADToolBox.Metagenomics(Meta_Config_defult).Amplicon2Genome()
+
+    if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="map-genomes-to-adm":
+        Meta_Config_defult.Genome_Alignment_Output_JSON=args.input_file
+        Model_Reactions=args.model
+        Meta_Config_defult.Genome_ADM_Map_JSON=args.output_dir
+        if Model_Reactions=="Modified_ADM_Reactions":
+            Reactions=Configs.Modified_ADM().Reactions
+            with open(Reactions,"r") as f:
+                Reactions=json.load(f)
+            ADToolBox.Metagenomics(Meta_Config_defult).ADM_From_Alignment_JSON(Reactions,Model=Model_Reactions)
+        else:
+            rich.print(f"[red] No Reaction mapping exists for {Model_Reactions}; execution aborted!")
+
+        
+
+    if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="align-genomes":
         if "input_file" in args and "output_dir" in args:
             Meta_Config=Configs.Metagenomics(Genomes_JSON_Info=args.input_file,Genome_Alignment_Output=args.output_dir)
             ADToolBox.Metagenomics(Meta_Config).Align_Genomes()
-
 
     
     if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="make-json-from-genomes":
@@ -146,12 +182,16 @@ def main():
         rich.print(u"[bold green]\u2713 Feed Database was downloaded!\n")
     
     if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-reaction-db":
-        DB_Class.Download_Reaction_Database(DB_Class.Config.Reaction_DB)
+        DB_Class.Download_Reaction_Database(DB_Class.Config.CSV_Reaction_DB)
         rich.print(u"[bold green]\u2713 Reaction Database was downloaded!\n")
     
     if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-protein-db":
         DB_Class.Download_Protein_Database(DB_Class.Config.Protein_DB)
         rich.print(u"[bold green]\u2713 Protein Database was downloaded!\n")
+    
+    if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-seed-reaction-db":
+        DB_Class.Download_Seed_Databases(DB_Class.Config.Reaction_DB)
+        rich.print(u"[bold green]\u2713 SEED Reaction Database was downloaded!\n")
     
     if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="show-feed-db":
         with open(Configs.Database().Feed_DB, 'r') as f:
@@ -170,52 +210,52 @@ def main():
     if "Extend_Feed_DB" in args and bool(args.Extend_Feed_DB):
         DB_Class.Add_Feedstock_To_Database_From_File(args.Extend_Feed_DB)
     
-    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'Original-ADM1':
-        if args.Model_Parameters:
-            with open(args.Model_Parameters) as f:
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'original-adm1':
+        if args.model_parameters:
+            with open(args.model_parameters) as f:
                 ADM_Model_Parameters=json.load(f)
         else:
             with open(Configs.Original_ADM1().Model_Parameters) as f:
                 ADM_Model_Parameters=json.load(f)
-        if args.Base_Parameters:
-            with open(args.Base_Parameters) as f:
+        if args.base_parameters:
+            with open(args.base_parameters) as f:
                 ADM_Base_Parameters=json.load(f)
         else:
             with open(Configs.Original_ADM1().Base_Parameters) as f:
                 ADM_Base_Parameters=json.load(f)
 
-        if args.Initial_Conditions:
-            with open(args.Initial_Conditions) as f:
+        if args.initial_conditions:
+            with open(args.initial_conditions) as f:
                 ADM_Initial_Conditions=json.load(f)
         else:
             with open(Configs.Original_ADM1().Initial_Conditions) as f:
                 ADM_Initial_Conditions=json.load(f)
 
         
-        if args.Inlet_Conditions:
-            with open(args.Inlet_Conditions) as f:
+        if args.inlet_conditions:
+            with open(args.inlet_conditions) as f:
                 ADM_Inlet_Conditions=json.load(f)
         else:
             with open(Configs.Original_ADM1().Inlet_Conditions) as f:
                 ADM_Inlet_Conditions=json.load(f)
 
         
-        if args.Reactions:
-            with open(args.Reactions) as f:
+        if args.reactions:
+            with open(args.reactions) as f:
                 ADM_Reactions=json.load(f)
         else:
             with open(Configs.Original_ADM1().Reactions) as f:
                 ADM_Reactions=json.load(f)
         
-        if args.Species:
-            with open(args.Species) as f:
+        if args.species:
+            with open(args.species) as f:
                 ADM_Species=json.load(f)
         else:
             with open(Configs.Original_ADM1().Species) as f:
                 ADM_Species=json.load(f)
         
-        if args.Metagenome_Report:
-            with open(args.Metagenome_Report) as f:
+        if args.metagenome_report:
+            with open(args.metagenome_report) as f:
                 ADM_Metagenome_Report=json.load(f)
         else:
             with open(Configs.Original_ADM1().Metagenome_Report) as f:
@@ -226,61 +266,61 @@ def main():
         Sol = ADM1.Solve_Model(
         (0, 20), ADM1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
 
-        if args.Report == 'dash' or args.Report==None:
+        if args.report == 'dash' or args.report==None:
             ADM1.Dash_App(Sol)
-        elif args.Report == 'csv':
+        elif args.report == 'csv':
             Address=Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
             ADM1.CSV_Report(Sol,Address)
         else:
             print('Please provide a valid report option')
     
 
-    elif "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'Modified-ADM':
-        if args.Model_Parameters:
-            with open(args.Model_Parameters) as f:
+    elif "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "ADM_Subparser" in args and args.ADM_Subparser == 'modified-adm':
+        if args.model_parameters:
+            with open(args.model_parameters) as f:
                 ADM_Model_Parameters=json.load(f)
         else:
             with open(Configs.Modified_ADM().Model_Parameters) as f:
                 ADM_Model_Parameters=json.load(f)
-        if args.Base_Parameters:
-            with open(args.Base_Parameters) as f:
+        if args.base_parameters:
+            with open(args.base_parameters) as f:
                 ADM_Base_Parameters=json.load(f)
         else:
             with open(Configs.Modified_ADM().Base_Parameters) as f:
                 ADM_Base_Parameters=json.load(f)
 
-        if args.Initial_Conditions:
-            with open(args.Initial_Conditions) as f:
+        if args.initial_conditions:
+            with open(args.initial_conditions) as f:
                 ADM_Initial_Conditions=json.load(f)
         else:
             with open(Configs.Modified_ADM().Initial_Conditions) as f:
                 ADM_Initial_Conditions=json.load(f)
 
         
-        if args.Inlet_Conditions:
-            with open(args.Inlet_Conditions) as f:
+        if args.inlet_conditions:
+            with open(args.inlet_conditions) as f:
                 ADM_Inlet_Conditions=json.load(f)
         else:
             with open(Configs.Modified_ADM().Inlet_Conditions) as f:
                 ADM_Inlet_Conditions=json.load(f)
 
         
-        if args.Reactions:
-            with open(args.Reactions) as f:
+        if args.reactions:
+            with open(args.reactions) as f:
                 ADM_Reactions=json.load(f)
         else:
             with open(Configs.Modified_ADM().Reactions) as f:
                 ADM_Reactions=json.load(f)
         
-        if args.Species:
-            with open(args.Species) as f:
+        if args.species:
+            with open(args.species) as f:
                 ADM_Species=json.load(f)
         else:
             with open(Configs.Modified_ADM().Species) as f:
                 ADM_Species=json.load(f)
         
-        if args.Metagenome_Report:
-            with open(args.Metagenome_Report) as f:
+        if args.metagenome_report:
+            with open(args.metagenome_report) as f:
                 ADM_Metagenome_Report=json.load(f)
         else:
             if os.path.exists(Configs.Modified_ADM().Metagenome_Report):
@@ -294,9 +334,9 @@ def main():
         Sol_mod_adm1 = mod_adm1.Solve_Model(
         (0, 100), mod_adm1.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))
 
-        if args.Report == 'dash' or args.Report==None:
+        if args.report == 'dash' or args.report==None:
             mod_adm1.Dash_App(Sol_mod_adm1)
-        elif args.Report == 'csv':
+        elif args.report == 'csv':
             Address=Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
             mod_adm1.CSV_Report(Sol_mod_adm1,Address)
         else:
@@ -367,7 +407,7 @@ def Build_Folder_Structure():
     """
     This function will build the folder structure undrestandable by the ADToolbox.
     """
-    Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes","Visualizations"]
+    Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes","Visualizations","bin"]
     for i in Required_Folders:
         if not os.path.exists(os.path.join(Main_Dir,i)):
             os.mkdir(os.path.join(Main_Dir,i))
@@ -394,7 +434,7 @@ def Download_All_Databases():
     ADToolBox.Database().Download_Protein_Database(Configs.Database().Protein_DB)
     rich.print(u"[bold green]\u2713 Protein database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Reaction database ...\n")
-    ADToolBox.Database().Download_Reaction_Database(Configs.Database().Reaction_DB)
+    ADToolBox.Database().Download_Reaction_Database(Configs.Database().CSV_Reaction_DB)
     rich.print(u"[bold green]All the databases were downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading the feed database ...\n")
     ADToolBox.Database().Download_Feed_Database(Configs.Database().Feed_DB)

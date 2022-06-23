@@ -27,13 +27,9 @@ from __init__ import Main_Dir
 RT = Reaction_Toolkit(Reaction_DB=os.path.join(
     Main_Dir, "..", "Database", "reactions.json"))
 
-
-class Web_App:
-
-    """This class provides methods for building functional web app"""
-
-    def __init__(self, Model_Object_List) -> None:
-        self.Model_Object_List = Model_Object_List
+class _Fake_Sol:
+    def __init__(self, y):
+        self.y = y
 
 
 class Model:
@@ -78,8 +74,12 @@ class Model:
         #     cobra.io.save_json_model(model, self.Name+'.json')
 
     def Solve_Model(self, t_span, y0, T_eval, method="Radau", switch="DAE"):
-        C = scipy.integrate.solve_ivp(
-            self.ODE_System, t_span, y0, t_eval=T_eval, method=method, args=[self])
+        try:
+            C = scipy.integrate.solve_ivp(
+                self.ODE_System, t_span, y0, t_eval=T_eval, method=method, args=[self])
+        except Exception as e:
+            print("Could not solve model, setting C to a very large value")
+            C=_Fake_Sol(np.ones((y0.shape[0],1))*1e10)
         return C
 
     def Plot(self, Sol, Type: str = "Line"):
@@ -546,7 +546,16 @@ class Model:
                   index=True)
 
 
-def Build_ADM1_Stoiciometric_Matrix(Base_Parameters, Model_Parameters, Reactons, Species):
+def Build_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parameters: dict, Reactons: list, Species:list)-> np.ndarray:
+    """This function builds the stoichiometric matrix for the original ADM Model.
+    No testing is done.
+    """
+    if type(Base_Parameters)!= dict and type(Model_Parameters)!= dict:
+        raise TypeError("Base_Parameters and Model_Parameters need to be dictionary")
+    if type(Reactions)!= list and type(Species)!= list:
+        raise TypeError("Reactions and Species must be list")
+
+
     S = np.zeros((len(Species), len(Reactons)))
     S[0, [1, 3, 4]] = [1, (1-Model_Parameters["f_fa_li"]), - 1]
     S[1, [2, 5]] = [1, -1]

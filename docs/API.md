@@ -13,4 +13,8 @@ This module includes the following classes:
 
 ### 1. Metabolites
 
-::: adtoolbox.ADToolBox.Metabolites
+::: adtoolbox.ADToolBox.Metabolite
+
+### 2. Reactions
+
+::: adtoolbox.ADToolBox.Reaction

@@ -1,3 +1,4 @@
+import pdb
 import subprocess
 import os
 import random
@@ -145,7 +146,7 @@ class Reaction_Toolkit:
         f = open(self.Compound_DB)
         Data = json.load(f)
         # Maybe contain is better than == below\\To be completed
-        Matched_Compunds = [Metabolites(Met)
+        Matched_Compunds = [Metabolite(Met)
                             for Met in Data if Met['id'] == Seed_ID]
         return Matched_Compunds[0]
 
@@ -153,33 +154,57 @@ class Reaction_Toolkit:
 
 
 class Reaction:
+    """
+    This class is used to store and process the reaction information.
+    In order to instantiate a reaction object, you need to pass a dictionary of the reaction information.
+    This dictionary must include 'name','stoichiometry' keys. This follows the format of the seed database.
+    Examples:
+        >>> A={"name":'D-glucose-6-phosphate aldose-ketose-isomerase',"stoichiometry":'-1:cpd00079:0:0:\"D-glucose-6-phosphate\";1:cpd00072:0:0:\"D-fructose-6-phosphate\"'}
+        >>> a=Reaction(A)
+        >>> print(a)
+        D-glucose-6-phosphate aldose-ketose-isomerase
 
+    """
     def __init__(self, Dict):
         self.Dict = Dict
 
     def __str__(self):
-        return self.Dict['definition']
+        return self.Dict['name']
 
     @property
     def Stoichiometry(self):
+        """
+        Returns the stoichiometry of the reaction by the seed id of the compounds as key and the
+        stoichiometric coefficient as value.
+        Examples:
+            >>> A={"name":'D-glucose-6-phosphate aldose-ketose-isomerase',"stoichiometry":'-1:cpd00079:0:0:\"D-glucose-6-phosphate\";1:cpd00072:0:0:\"D-fructose-6-phosphate\"'}
+            >>> a=Reaction(A)
+            >>> a.Stoichiometry=={'cpd00079': -1, 'cpd00072': 1}
+            True
+        
+        Args:
+            self (Reaction): An instance of the Reaction.
+
+        Returns:
+            dict: The stoichiometry of the reaction by the seed id of the compounds as key and the
+        stoichiometric coefficient as value.
+        """
+
         S = {}
         for compound in self.Dict['stoichiometry'].split(';'):
-            S[compound.split(':')[1]] = compound.split(':')[0]
+            S[compound.split(':')[1]] = float(compound.split(':')[0])
         return S
 
 
-class Metabolites:
+class Metabolite:
     """
     Any metabolite with seed id can be an instance of this class.
     In order to instantiate a Metabolite object, you first define a dictionary in seed database format.
     This dictionary must have  "name", "mass", and "formula" keys, but it is okay if it has other keys.
     Examples:
-        >>>A={
-        "name":"methane"
-        "mass":16,
-        "formula":"CH4"
-            }
-        >>>a=Metabolites(A)
+        >>> A={"name":"methane","mass":16,"formula":"CH4"}
+        >>> a=Metabolite(A)
+        >>> print(a)
         methane
 
     """
@@ -199,14 +224,11 @@ class Metabolites:
         Calculates the conversion rates for g/l -> gCOD/l
 
         Examples:
-            >>>A={
-            "name":"methane"
-            "mass":16,
-            "formula":"CH4"
-                }
-            >>>a=Metabolites(A)
-            >>>a.COD
+            >>> A={"name":"methane","mass":16,"formula":"CH4"}
+            >>> a=Metabolite(A)
+            >>> a.COD
             4.0
+
         Args:
             self (Metabolite): An instance of the Metabolite class: Note
 
@@ -663,7 +685,7 @@ class Database:
         
         
     @staticmethod
-    def Download_Seed_Databases(directory):
+    def Download_Seed_Databases(directory:str) -> None :
         Reactions="https://github.com/ModelSEED/ModelSEEDDatabase/raw/master/Biochemistry/reactions.json"
         r = requests.get(Reactions, allow_redirects=True)
         with open(directory, 'wb') as f:
@@ -701,66 +723,6 @@ class Database:
                 f.write(r.content)
 
 
-
-
-class Report:
-
-    """
-    This Class will be used for generating the final reports of any kind
-    Genome_Alignment_JSON={Genome_ID1, Genome_ID2, ...}
-    Genome_ID={{"NCBI_Name":"THE NCBI TAXONOMY NAME"},{"Alingment_TSV_File":"THE TSV FILE NAME"}}}}}} 
-
-    """
-
-    def __init__(self, Configuration):
-        """
-        This class is initiated with a Config module/class.
-        A config module/class is a module/class that contains all the necessary information about the pipeline.
-
-        """
-
-        self.Configs = Configuration
-
-    def ADM_From_Alignment_JSON(self,ADM_Rxns,Model="Modified_ADM_Reactions"):
-        RT = Reaction_Toolkit(Reaction_DB=self.Configs.Seed_RXN_DB)
-        with open(self.Configs.Alignment_JSON_Info) as f:
-            JSON_Report = json.load(f)
-        Reaction_DB = pd.read_table(self.Configs.RXN_DB, sep=',')
-        JSON_ADM_Output = {}
-        for ADM_Reaction in track([Rxn for Rxn in ADM_Rxns],description="Finding Alignments to ADM Reactions"):
-            JSON_ADM_Output[ADM_Reaction] = {}
-            for Genome_ID in JSON_Report.keys():
-                if os.path.exists(JSON_Report[Genome_ID]['Alignment_File']):
-                    JSON_ADM_Output[ADM_Reaction][JSON_Report[Genome_ID]
-                                                  ['NCBI_Name']] = {}
-                    Temp_TSV = pd.read_table(
-                        JSON_Report[Genome_ID]['Alignment_File'], sep='\t')
-                    A_Filter = (Temp_TSV.iloc[:, -1] > self.Configs.bit_score) & (
-                        Temp_TSV.iloc[:, -2] < self.Configs.e_value)
-                    Temp_TSV = Temp_TSV[A_Filter]
-                    ECs = [item.split('|')[1] for item in Temp_TSV.iloc[:, 1]]
-                    Filter = (Reaction_DB['EC_Numbers'].isin(ECs)) & (
-                        Reaction_DB[Model] == ADM_Reaction)
-                    Filtered_Rxns = Reaction_DB[Filter]
-                    ECs = Filtered_Rxns['EC_Numbers'].tolist()
-
-                    EC_Dict = {}
-                    for EC in ECs:
-                        EC_Dict[EC] = []
-                        L = RT.Instantiate_Rxns(EC, "Multiple_Match")
-                        [EC_Dict[EC].append(
-                            rxn.__str__()) for rxn in L if rxn.__str__() not in EC_Dict[EC]]
-
-                    JSON_ADM_Output[ADM_Reaction][JSON_Report[Genome_ID]
-                                                  ['NCBI_Name']] = EC_Dict
-
-
-        with open(self.Configs.ADM_From_Alignment_JSON_Output, 'w') as f:
-            json.dump(JSON_ADM_Output, f)
-
-        return JSON_ADM_Output
-        # So far it has gotten really complicated, after making sure it works, instead of adding EC numbers I'll add [SEED,STR] so
-        # that it can be used for downstream analysis
 
 
 class Metagenomics:
@@ -810,11 +772,11 @@ class Metagenomics:
 
 
     def Amplicon2Genome(self,
-                        Requirements=False,
-                        Report=True):
+                        Requirements: bool=False,
+                        Report:bool =True)->dict:
 
         if not os.path.exists(self.Config.QIIME_Outputs_Dir):
-            os.mkdir(self.Config.Config.QIIME_Outputs_Dir)
+            os.mkdir(self.Config.QIIME_Outputs_Dir)
             print("Please provide the QIIME output files in: "+self.Config.Config.QIIME_Outputs_Dir)
             return 0
         try:
@@ -887,7 +849,7 @@ class Metagenomics:
         for Sample in Samples:
             Genome_Accessions[Sample] = ['None']*self.Config.K
         Alignment_Dir = os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Alignments')
-        subprocess.run([os.path.join(Main_Dir,"bin","vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'matches.blast'), '--usearch_global',
+        subprocess.run([os.path.join(Main_Dir,self.Config.vsearch,"vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'matches.blast'), '--usearch_global',
                         self.Config.Amplicon2Genome_Outputs_Dir+'/Top_k_RepSeq.fasta', '--db', os.path.join(self.Config.Amplicon2Genome_DB,"bac120_ssu_reps_r207.fna"), '--id', str(self.Config.Amplicon2Genome_Similarity), '--alnout', Alignment_Dir])
         f.close()
         f = open(Alignment_Dir, 'r')
@@ -951,13 +913,13 @@ class Metagenomics:
     
     def Align_Genomes(self):
         """
-        #This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
-        #and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value
+        This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
+        and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value
         """
         with open(self.Config.Genomes_JSON_Info, 'r') as f:
             Genomes_Info = json.load(f)
         Valid_Genomes = 0
-        for Genome_IDs in track(Genomes_Info.keys(),description='[yellow]Validating the genomes'):
+        for Genome_IDs in track(Genomes_Info.keys(),description="Fetching Genomes ..."):
             Totall_Genomes = len(Genomes_Info.keys())
             if os.path.exists(Genomes_Info[Genome_IDs]["Genome_Dir"]):
                 Valid_Genomes += 1
@@ -966,7 +928,7 @@ class Metagenomics:
 
         if self.Config.Aligner == 'mmseqs2':
             Aligned_Genomes = {}
-            for Genome_ID in track(Genomes_Info.keys(),description='[yellow]Aligning the genomes'):
+            for Genome_ID in Genomes_Info.keys():
 
                 subprocess.run(['mmseqs', 'easy-search', Genomes_Info[Genome_ID]['Genome_Dir'], self.Config.Protein_DB,
                                 os.path.join(self.Config.Genome_Alignment_Output,"Alignment_Results_mmseq_"+Genomes_Info[Genome_ID]['Genome_Dir'].split("/")[-1][:-4]+".tsv"), 'tmp'])
@@ -976,27 +938,7 @@ class Metagenomics:
                     Genomes_Info[Genome_ID]['Genome_Dir'].split(
                         "/")[-1][:-4]+".tsv")
 
-                # Alignment_Results_Genome = pd.read_table(
-                #     Genomes_Info[Genome_ID]['Alignment_File'], header=None)
-
-                # Filter = (Alignment_Results_Genome.iloc[:, -1] >= self.Config.bit_score) & (
-                #     Alignment_Results_Genome.iloc[:, -2] <= self.Config.e_value)
-
-                # ECs_Matched = list(set(list(Alignment_Results_Genome[Filter].iloc[j, 1].split(
-                #     '|')[1] for j in range(len(Alignment_Results_Genome[Filter])))))
-
-                # Genomes_Info[Genome_ID]['ECs_Matched'] = ECs_Matched
-
-                # Matched_Rxns = {}
-
-                # for EC in ECs_Matched:
-                #     for rxn in Reaction_Toolkit().Instantiate_Rxns(EC, Mode='Multiple_Match'):
-
-                #         Matched_Rxns[rxn.Dict["id"]] = rxn.__str__()
-
-                # Genomes_Info[Genome_ID]['Rxns_Matched'] = Matched_Rxns
-                # # Filter the results
-        with open(os.path.join(self.Config.Genome_Alignment_Output,"Alignment_Info.json"), 'w') as f:
+        with open(self.Config.Genome_Alignment_Output_JSON, 'w') as f:
             json.dump(Genomes_Info, f)
 
         return Genomes_Info
@@ -1019,29 +961,47 @@ class Metagenomics:
         with open(Output_Dir,"w") as fp:
             json.dump(Genomes_JSON,fp)
         return
+    
+    def ADM_From_Alignment_JSON(self,ADM_Rxns,Model="Modified_ADM_Reactions"):
+        RT = Reaction_Toolkit(Reaction_DB=Configs.Seed_RXN_DB)
+        with open(self.Config.Genome_Alignment_Output_JSON) as f:
+            JSON_Report = json.load(f)
+        Reaction_DB = pd.read_table(self.Config.CSV_Reaction_DB, sep=',')
+        JSON_ADM_Output = {}
+        for ADM_Reaction in track([Rxn for Rxn in ADM_Rxns],description="Finding Alignments to ADM Reactions"):
+            JSON_ADM_Output[ADM_Reaction] = {}
+            for Genome_ID in JSON_Report.keys():
+                if os.path.exists(JSON_Report[Genome_ID]['Alignment_File']):
+                    JSON_ADM_Output[ADM_Reaction][JSON_Report[Genome_ID]
+                                                  ['NCBI_Name']] = {}
+                    Temp_TSV = pd.read_table(
+                        JSON_Report[Genome_ID]['Alignment_File'], sep='\t')
+                    A_Filter = (Temp_TSV.iloc[:, -1] > self.Config.bit_score) & (
+                        Temp_TSV.iloc[:, -2] < self.Config.e_value)
+                    Temp_TSV = Temp_TSV[A_Filter]
+                    ECs = [item.split('|')[1] for item in Temp_TSV.iloc[:, 1]]
+                    Filter = (Reaction_DB['EC_Numbers'].isin(ECs)) & (
+                        Reaction_DB[Model] == ADM_Reaction)
+                    Filtered_Rxns = Reaction_DB[Filter]
+                    ECs = Filtered_Rxns['EC_Numbers'].tolist()
+
+                    EC_Dict = {}
+                    for EC in ECs:
+                        EC_Dict[EC] = []
+                        L = RT.Instantiate_Rxns(EC, "Multiple_Match")
+                        [EC_Dict[EC].append(
+                            rxn.__str__()) for rxn in L if rxn.__str__() not in EC_Dict[EC]]
+
+                    JSON_ADM_Output[ADM_Reaction][JSON_Report[Genome_ID]
+                                                  ['NCBI_Name']] = EC_Dict
 
 
-        
+        with open(self.Config.Genome_ADM_Map_JSON, 'w') as f:
+            json.dump(JSON_ADM_Output, f)
 
-
-
-# class Visualization:
-#     """This class will handle any visualization tasks"""
-
-#     def Process_Graph(self):
-#         g = gz.Digraph('G', filename='Process_Graph.gv', engine='fdp',
-#                        node_attr={'color': 'lightblue2', 'style': 'filled'})
-#         g.attr(compound='true')
-#         Clusters = [('A'+str(i+1), i) for i in range(len(self.Subprocesses))]
-#         for Cluster in Clusters:
-#             with g.subgraph(name=Cluster[0]) as A:
-#                 A.attr(label=self.Subprocesses[Cluster[1]].Name, color='black')
-#                 A.edges(self.Subprocesses[Cluster[1]].Edges)
-#                 # A.nodes=self.Subprocesses[Cluster[1]].Nodes
-#         g.view()
-
-#         # Add universal map
-#         return g
+        return JSON_ADM_Output
+        # So far it has gotten really complicated, after making sure it works, instead of adding EC numbers I'll add [SEED,STR] so
+        # that it can be used for downstream analysis
 
 
 class ADM_Mapping:

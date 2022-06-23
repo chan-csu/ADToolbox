@@ -17,13 +17,7 @@ class Alignment:
         self.aligner_name = aligner_name
         self.e_value = e_value
         self.bit_score = bit_score
-
-
-
-
-        
-
-
+    
 class Reaction_Toolkit:
 
     def __init__(self, Compound_DB=os.path.join(Main_Dir, "Database", 'Local_compounds.json'),
@@ -77,7 +71,11 @@ class Metagenomics:
                  Feature_Table_Dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
                  Rep_Seq_Fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
                  Taxonomy_Table_Dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","taxonomy.tsv"),
-                 Genome_Alignment_Output=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
+                 Genome_Alignment_Output=os.path.join(Main_Dir,"Outputs"),
+                 Genome_Alignment_Output_JSON=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
+                 vsearch=os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")),
+                 Genome_ADM_Map_JSON=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
+                 CSV_Reaction_DB=Database().CSV_Reaction_DB,
                 Aligner="mmseqs2",
                 bit_score=40,
                 e_value=10**-5
@@ -95,48 +93,13 @@ class Metagenomics:
         self.Aligner = Aligner
         self.Protein_DB=Database().Protein_DB
         self.Genome_Alignment_Output = Genome_Alignment_Output
+        self.Genome_Alignment_Output_JSON=Genome_Alignment_Output_JSON
         self.bit_score = bit_score
         self.e_value = e_value
+        self.vsearch=vsearch
+        self.Genome_ADM_Map_JSON=Genome_ADM_Map_JSON
+        self.CSV_Reaction_DB=CSV_Reaction_DB
 
-
-        
-class Align_Genomes:
-    """
-    A class for Align_Genomes Configs
-
-    """
-
-    def __init__(self,
-                 Genomes_JSON_Info=Metagenomics().Genomes_JSON_Info,
-                 Alignment_JSON_Info=Main_Dir+"/Outputs/Alignment_Info.json",
-                 Aligner=Alignment().aligner_name,
-                 bit_score=Alignment().bit_score,
-                 e_value=Alignment().e_value,
-                 ):
-        self.Genomes_JSON_Info = Genomes_JSON_Info
-        self.Aligner = Aligner
-        self.bit_score = bit_score
-        self.e_value = e_value
-        self.Alignment_JSON_Info = Alignment_JSON_Info
-
-
-class Report:
-    """
-    A class for Report Configs
-
-    """
-
-    def __init__(self,
-    ADM_From_Alignment_JSON_Output=os.path.join(Main_Dir,"Reports","ADM1_From_Alignment_JSON_Output.json")
-    ):
-
-        
-        self.ADM_From_Alignment_JSON_Output = ADM_From_Alignment_JSON_Output
-        self.Seed_RXN_DB=Reaction_Toolkit().Reaction_DB
-        self.RXN_DB=Database().CSV_Reaction_DB
-        self.Alignment_JSON_Info=Metagenomics().Genome_Alignment_Output
-        self.bit_score=Metagenomics().bit_score
-        self.e_value=Metagenomics().e_value
 
 
 class Original_ADM1:
@@ -149,7 +112,7 @@ class Original_ADM1:
                 Base_Parameters=os.path.join(Main_Dir, "Database","ADM1", 'ADM1_Base_Parameters.json'),
                 Initial_Conditions=os.path.join(Main_Dir,"Database","ADM1","ADM1_Initial_Conditions.json"),
                 Inlet_Conditions=os.path.join(Main_Dir,"Database","ADM1","ADM1_Inlet_Conditions.json"),
-                Metagenome_Report=Report().ADM_From_Alignment_JSON_Output):
+                Metagenome_Report=Metagenomics().Genome_ADM_Map_JSON):
         self.Model_Parameters = Model_Parameters
         self.Base_Parameters = Base_Parameters
         self.Initial_Conditions = Initial_Conditions
@@ -169,7 +132,7 @@ class Modified_ADM:
                 Inlet_Conditions=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Inlet_Conditions.json"),
                 Reactions=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Reactions.json"),
                 Species=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Species.json"),
-                Metagenome_Report=Report().ADM_From_Alignment_JSON_Output):
+                Metagenome_Report=Metagenomics().Genome_ADM_Map_JSON):
         self.Model_Parameters = Model_Parameters
         self.Base_Parameters = Base_Parameters
         self.Initial_Conditions = Initial_Conditions
