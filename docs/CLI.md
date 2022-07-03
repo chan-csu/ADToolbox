@@ -357,7 +357,6 @@ providing information about the fetched genomes will be saved here:
 A complete amplicon-to-genome command will look like:
 
 ```
-
 ADToolbox Metagenomics amplicon-to-genome -f ~/Desktop/test/feature-table.tsv \
 -r ~/Desktop/test/dna-sequences.fasta \
 -t ~/Desktop/test/taxonomy.tsv \
@@ -366,7 +365,7 @@ ADToolbox Metagenomics amplicon-to-genome -f ~/Desktop/test/feature-table.tsv \
 -a ~/Desktop/ADToolbox/Database/Amplicon2GenomeDBs/
 
 ```
------------------------
+
 
 - align-genomes This submodule uses MMseqs to align a list of genomes to the protein database of ADToolbox for functional analysis.
 
