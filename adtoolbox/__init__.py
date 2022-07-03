@@ -2,6 +2,7 @@ import json
 import os
 import rich
 from rich.prompt import Prompt
+
 import sys
 
 """Project Setup for ADToolBox."""

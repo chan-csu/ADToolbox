@@ -150,7 +150,7 @@ def main():
 
     if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="align-genomes":
         if "input_file" in args and "output_dir" in args:
-            Meta_Config=Configs.Metagenomics(Genomes_JSON_Info=args.input_file,Genome_Alignment_Output=args.output_dir)
+            Meta_Config=Configs.Metagenomics(Genomes_JSON_Info=args.input_file,Genome_Alignment_Output=args.output_dir,Genome_Alignment_Output_JSON=os.path.join(args.output_dir,"Alignment_Info.json"))
             ADToolBox.Metagenomics(Meta_Config).Align_Genomes()
 
     

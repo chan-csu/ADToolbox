@@ -1,3 +1,6 @@
+import string
+
+from sympy import plot
 from Parameters import *
 import numpy as np
 import scipy.optimize
@@ -14,6 +17,7 @@ from ADToolBox import Database as Database
 from ADToolBox import Reaction_Toolkit as Reaction_Toolkit
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
+import ADToolBox.Reaction as Reaction
 from collections import OrderedDict
 from __init__ import Main_Dir
 ### Note ###
@@ -23,6 +27,7 @@ from __init__ import Main_Dir
 # the PyADM1 code.
 
 # ----------
+
 
 RT = Reaction_Toolkit(Reaction_DB=os.path.join(
     Main_Dir, "..", "Database", "reactions.json"))
@@ -34,9 +39,24 @@ class _Fake_Sol:
 
 class Model:
 
-    """General Class For a Model"""
+    """General Class For a Model
+    Args:
+        Model Parameters (dict): a dictionary which contains model parameters
+        Base_Parameters (dict): a dictionary which contains base paramters
+        Initial Conditions (dict): a dictionary containing inlet conditions for all species
+        Inlet Conditions (dict): a dictionary containing inlet conditions for all species
+        Reactions (list): a list containing all types of reactions
+        Species (list): a list containing all species
+        ODE_System (function): a function which solves inital value ODEs
+        Build Stoiciometric Matrix (function): a function which outputs a matrix for of all reactions
+        
+    Returns:
+        adtoolbox.ADM.Model: returns a model instance for downstream purposes.
+    """
+    
 
-    def __init__(self, Model_Parameters, Base_Parameters, Initial_Conditions, Inlet_Conditions, Reactions, Species, ODE_System, Build_Stoiciometric_Matrix, Metagenome_Report=None, Name="ADM1", Switch="DAE"):
+
+    def __init__(self, Model_Parameters: dict, Base_Parameters: dict, Initial_Conditions: dict, Inlet_Conditions:dict, Reactions: list, Species: list, ODE_System, Build_Stoiciometric_Matrix, Metagenome_Report=None, Name="ADM1", Switch="DAE"):
         self.Model_Parameters = Model_Parameters
         self.Base_Parameters = Base_Parameters
         self.Inlet_Conditions = np.array(
@@ -73,16 +93,60 @@ class Model:
         # if save_model:
         #     cobra.io.save_json_model(model, self.Name+'.json')
 
-    def Solve_Model(self, t_span, y0, T_eval, method="Radau", switch="DAE"):
+    def Solve_Model(self, t_span: tuple, y0: np.ndarray, T_eval: np.ndarray, method="Radau", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
+        """
+        Function to solve the model. 
+        Examples:
+            >>> from ADM import Model
+            >>> import numpy as np
+            >>> reactions=['rxn1','rxn2']
+            >>> species=['a','b','c']
+            >>> Initial_Conditions={'a':.001,'b':.002,'c':.003}
+            >>> Inlet_Conditions={'a_in':.001,'b_in':.002,'c_in':.003}
+            >>> Model_Parameters={'k1':0.001,'k2':0.002}
+            >>> Base_Parameters={'T':0.1}
+            >>> def Build_Stoiciometric_Matrix(Base_Parameters,Model_Parameters,Reactions,Species):
+            ...    S = np.zeros((len(Species), len(Reactions)))
+            ...    S[[0,1],0]=[-1,0.001]
+            ...    S[[1,2],1]=[-5,1]
+            ...    return S
+            >>> def ODE_System(t,c,Model1):
+            ...    v = np.zeros((len(Model1.Reactions), 1))
+            ...    v[0]=Model1.Model_Parameters['k1']*c[0]*Model1.Base_Parameters['T']/1000
+            ...    v[1]=Model1.Model_Parameters['k2']*c[1]/1000
+            ...    dCdt=np.matmul(Model1.S,v)
+            ...    return dCdt[:, 0]
+            >>> m= Model(Model_Parameters,Base_Parameters,Initial_Conditions,Inlet_Conditions,reactions,species,ODE_System,Build_Stoiciometric_Matrix)
+            >>> m.Solve_Model((0,.1),m.Initial_Conditions[:, 0],np.linspace(0,0.1,10),method='RK45')['status']==0
+            True
+        
+        Args:
+            t_span (tuple): The range the time will include
+            y0 (np.ndarray): The initial value at time = 0
+            T_eval (np.ndarray): The time steps that will be evaluated
+        
+        Returns:
+            scipy.integrate._ivp.ivp.OdeResult: Returns the results of the simulation being run and gives optimized paramters.
+        """
         try:
             C = scipy.integrate.solve_ivp(
                 self.ODE_System, t_span, y0, t_eval=T_eval, method=method, args=[self])
+        
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
             C=_Fake_Sol(np.ones((y0.shape[0],1))*1e10)
+       
         return C
 
-    def Plot(self, Sol, Type: str = "Line"):
+    
+       #C = scipy.integrate.solve_ivp(
+       #        self.ODE_System, t_span, y0, t_eval=T_eval, method=method, args=[self])
+       #
+       #return C
+
+    def Plot(self, Sol: scipy.integrate._ivp.ivp.OdeResult, Type: str = "Line")-> plot:
+        """ A function which returns a plot of the solution from the ODE
+        """
         Solution = {
             't': Sol.t,
         }
@@ -120,7 +184,8 @@ class Model:
         elif Type == "Sankey":
             pass
 
-    def Dash_App(self, Sol, Type: str = "Line"):
+    def Dash_App(self, Sol: scipy.integrate._ivp.ivp.OdeResult, Type: str = "Line")->None:
+        """A fuction which opens a web browser that displays the results"""
         
         app = Dash(__name__)
         colors = {
@@ -487,7 +552,10 @@ class Model:
                     Input(component_id='Model_Parameters', component_property='data'),
                     Input(component_id='Initial_Conditions', component_property='data'),
                     Input(component_id='Inlet_Conditions', component_property='data'))
-        def update_graph_fig(Base_Parameters, Model_Parameters, Initial_Conditions, Inlet_Conditions):
+        def update_graph_fig(Base_Parameters: dict, Model_Parameters:dict, Initial_Conditions: dict, Inlet_Conditions: dict)->plotly.graph_objects.Figure:
+            """A functions that imports Base_Parameters, Model_Parameters, Initial_Conditions, Inlet_Conditions into the plot.
+            """
+
             self.Base_Parameters = Base_Parameters[0]
             self.Model_Parameters = Model_Parameters[0]
             self.Initial_Conditions = np.array(
@@ -534,13 +602,15 @@ class Model:
 
         app.run_server(port=8000, host='127.0.0.1')
 
-    def S_to_DF(self):
+    def S_to_DF(self,Address: str)->None:
+        """Converts the matrix to a pandas data frame then to a csv"""
 
         DF = pd.DataFrame(self.S, columns=self.Reactions, index=self.Species)
-        DF.to_csv(self.Name+"_S.csv", header=True,
+        DF.to_csv(Address, header=True,
                   index=True)
 
-    def CSV_Report(self,Sol,Address):
+    def CSV_Report(self,Sol: scipy.integrate._ivp.ivp.OdeResult ,Address: str)->None:
+        """Converts the results to a pandas data frame then to a csv"""
         DF = pd.DataFrame(Sol.y, columns=Sol.t, index=self.Species)
         DF.to_csv(os.path.join(Address,self.Name+"_Report.csv"), header=True,
                   index=True)
@@ -552,7 +622,7 @@ def Build_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parameters: dic
     """
     if type(Base_Parameters)!= dict and type(Model_Parameters)!= dict:
         raise TypeError("Base_Parameters and Model_Parameters need to be dictionary")
-    if type(Reactions)!= list and type(Species)!= list:
+    if type(Reactons)!= list and type(Species)!= list:
         raise TypeError("Reactions and Species must be list")
 
 
@@ -664,7 +734,18 @@ def Build_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parameters: dic
     return S
 
 
-def ADM1_ODE_Sys(t, c, ADM1_Instance):
+def ADM1_ODE_Sys(t: float, c: np.ndarray, ADM1_Instance:Model)-> np.ndarray:
+    """ The ODE system for the original ADM.
+        No testing is done.
+
+        Args:
+            t (float):a matrix of zeros to be filled
+            c (np.ndarray): an array of concentrations to be filled
+            Model (Model): The model to calculate ODE with
+
+        Returns:
+            np.ndarray: The output is dCdt, the change of concentration with respect to time.
+    """
     c[34] = c[10] - c[33]
     c[32] = c[9] - c[31]
     I_pH_aa = (ADM1_Instance.Model_Parameters["K_pH_aa"] ** ADM1_Instance.Model_Parameters['nn_aa'])/(np.power(
@@ -770,7 +851,20 @@ def ADM1_ODE_Sys(t, c, ADM1_Instance):
     return dCdt[:, 0]
 
 
-def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters, Model_Parameters, Reactions, Species):
+def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parameters: dict, Reactions: list, Species: list)->np.ndarray:
+    """ 
+    This function builds the stoichiometric matrix for the modified ADM Model.
+        
+        Model Parameters (dict): a dictionary which contains model parameters
+        Base_Parameters (dict): a dictionary which contains base paramters
+        Initial Conditions (dict): a dictionary containing inlet conditions for all species
+        Inlet Conditions (dict): a dictionary containing inlet conditions for all species
+        Reactions (list): a list containing all of the reaction names
+        Species (list): a list containing all species
+        
+    Returns:
+        np.ndarray: Returns an matrix of stochiometic values.
+    """
     S = np.zeros((len(Species), len(Reactions)))
     S[list(map(Species.index, ["TSS", "X_ch", "X_pr", "X_li", "X_I"])),
       Reactions.index('TSS_Disintegration')] = [-1, Model_Parameters['f_ch_TSS'], Model_Parameters['f_pr_TSS'], Model_Parameters['f_li_TSS'], Model_Parameters['f_xI_TSS']]
@@ -1065,10 +1159,19 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters, Model_Parameters, 
     return S
 
 
-def Modified_ADM1_ODE_Sys(t, c, Model):
+def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
     """
-    This function is used to calculate the ODEs of the modified ADM1 model.
+    This function is used to build the ODEs of the modified ADM1 model.
+    
+    Args:
+        t (float):a matrix of zeros to be filled
+        c (np.ndarray): an array of concentrations to be filled
+        Model (Model): The model to calculate ODE with
+
+    Returns:
+        np.ndarray: The output is dCdt, the change of concentration with respect to time. 
     """
+    c[c<0]=0
     c[Model.Species.index('S_nh4_ion')] = c[Model.Species.index(
         'S_IN')] - c[Model.Species.index('S_nh3')]
     c[Model.Species.index('S_co2')] = c[Model.Species.index(
@@ -1185,6 +1288,7 @@ def Modified_ADM1_ODE_Sys(t, c, Model):
     v[Model.Reactions.index('Uptake of caproate')] = Model.Model_Parameters['k_m_cap']*c[Model.Species.index('S_cap')] / \
         (Model.Model_Parameters['K_S_cap']+c[Model.Species.index('S_cap')]
          )*c[Model.Species.index('X_VFA_deg')]*I13
+
     v[Model.Reactions.index('Methanogenessis from acetate and h2')] = Model.Model_Parameters['k_m_h2_Me_ac']*c[Model.Species.index('S_h2')]*c[Model.Species.index('S_ac')] / \
         (Model.Model_Parameters['K_S_h2_Me_ac']*c[Model.Species.index('S_h2')]+Model.Model_Parameters['K_S_ac_Me']*c[Model.Species.index(
             'S_ac')]+c[Model.Species.index('S_ac')]*c[Model.Species.index('S_h2')])*c[Model.Species.index('X_Me_ac')]*I12
@@ -1256,7 +1360,8 @@ def Modified_ADM1_ODE_Sys(t, c, Model):
     v[Model.Reactions.index('Acid Base Equilibrium (Cap)')] = Model.Model_Parameters['k_A_B_cap'] * \
         (c[Model.Species.index('S_cap_ion')] * (Model.Model_Parameters['K_a_cap'] + c[Model.Species.index('S_H_ion')]) -
          Model.Model_Parameters['K_a_cap'] * c[Model.Species.index('S_cap')])
-
+    if t>1:
+        pass
     v[Model.Reactions.index('Acid Base Equilibrium (Lac)')] = Model.Model_Parameters['k_A_B_lac'] * \
         (c[Model.Species.index('S_lac_ion')] * (Model.Model_Parameters['K_a_lac'] + c[Model.Species.index('S_H_ion')]) -
          Model.Model_Parameters['K_a_lac'] * c[Model.Species.index('S_lac')])
@@ -1298,7 +1403,7 @@ def Modified_ADM1_ODE_Sys(t, c, Model):
 
     dCdt = np.matmul(Model.S, v)
 
-    phi = c[Model.Species.index('S_cation')]+c[Model.Species.index('S_nh4_ion')]-c[Model.Species.index('S_hco3_ion')] - (c[Model.Species.index('S_ac_ion')] / 64) - (c[Model.Species.index('S_pro_ion')] /
+    phi = c[Model.Species.index('S_cation')]+c[Model.Species.index('S_nh4_ion')]-c[Model.Species.index('S_hco3_ion')]-(c[Model.Species.index('S_lac_ion')] / 88) - (c[Model.Species.index('S_ac_ion')] / 64) - (c[Model.Species.index('S_pro_ion')] /
                                                                                                                                                                      112) - (c[Model.Species.index('S_bu_ion')] / 160)-(c[Model.Species.index('S_cap_ion')] / 230) - (c[Model.Species.index('S_va_ion')] / 208) - c[Model.Species.index('S_anion')]
 
     c[Model.Species.index('S_H_ion')] = (-1 * phi / 2) + \
@@ -1322,22 +1427,37 @@ def Modified_ADM1_ODE_Sys(t, c, Model):
         dCdt[Model.Species.index('S_va_ion'):Model.Species.index('S_co2')] = 0
 
         dCdt[Model.Species.index('S_nh3')] = 0
+    
+        c[Model.Species.index('S_va_ion')]=Model.Model_Parameters['K_a_va']/(Model.Model_Parameters['K_a_va']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_va')]
+    
+        c[Model.Species.index('S_bu_ion')]=Model.Model_Parameters['K_a_bu']/(Model.Model_Parameters['K_a_bu']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_bu')]
+    
+        c[Model.Species.index('S_pro_ion')]=Model.Model_Parameters['K_a_pro']/(Model.Model_Parameters['K_a_pro']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_pro')]
+    
+        c[Model.Species.index('S_cap_ion')]=Model.Model_Parameters['K_a_cap']/(Model.Model_Parameters['K_a_cap']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_cap')]
+    
+        c[Model.Species.index('S_ac_ion')]=Model.Model_Parameters['K_a_ac']/(Model.Model_Parameters['K_a_ac']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_ac')]
+        
+        c[Model.Species.index('S_lac_ion')]=Model.Model_Parameters['K_a_lac']/(Model.Model_Parameters['K_a_lac']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_lac')]    
+    
     return dCdt[:, 0]
 
 
 if __name__ == "__main__":
-    Report = os.path.join(Main_Dir, "..", "Reports",
-                          "ADM_From_Alignment_JSON_Output.json")
-    with open(Report, 'r') as j:
-        Report = json.load(j)
+   # Report = os.path.join(Main_Dir, "..", "Reports",
+                         # "ADM_From_Alignment_JSON_Output.json")
+   # with open(Report, 'r') as j:
+        #Report = json.load(j)
 
-    adm1 = Model(Model_Parameters, Base_Parameters, Initial_Conditions,
-                 Inlet_Conditions, Reactions, Species, ADM1_ODE_Sys, Build_ADM1_Stoiciometric_Matrix, Metagenome_Report=Report, Name="ADM1", Switch="DAE")
-    Sol = adm1.Solve_Model(
-        (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
+   #adm1 = Model(Model_Parameters, Base_Parameters, Initial_Conditions,
+   #             Inlet_Conditions, Reactions, Species, ADM1_ODE_Sys, Build_ADM1_Stoiciometric_Matrix, Name="ADM1", Switch="DAE")
+   #Sol = adm1.Solve_Model(
+   #    (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
 
     # adm1.Dash_App(Sol)
-    mod_adm1 = Model(PM.Model_Parameters, PM.Base_Parameters, PM.Initial_Conditions, PM.Inlet_Conditions, PM.Reactions,
+    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Model_Parameters.json', 'r') as f:
+        mp=json.load(f)
+    mod_adm1 = Model(mp, PM.Base_Parameters, PM.Initial_Conditions, PM.Inlet_Conditions, PM.Reactions,
                      PM.Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix, Name="Modified_ADM1", Switch="DAE")
     Sol_mod_adm1 = mod_adm1.Solve_Model(
         (0, 100), mod_adm1.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))

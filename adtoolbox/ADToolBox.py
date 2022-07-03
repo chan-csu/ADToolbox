@@ -24,10 +24,13 @@ import Bio_seq
 from rich.progress import track
 import rich
 from __init__ import Main_Dir
+# import doctest
+# doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
 class Feed:
 
     """
+
     This class maps real feed data to ADM Feed parameters.
     Later I move some these to a markdown file.
 
@@ -48,23 +51,6 @@ class Feed:
     TS = TFS + TVS
     Sometimes the fixed solids content,TFS, is called the Ash Content.
 
-    My suggested Model for the ADM Feed inspired by the above link:
-
-                        -------> FSS ----> PI
-                     /
-            ----> TSS                     -----> Carbs
-          /          \                  /
-         /             -------> VSS ---> -----> Proteins
-    TS =>                                \  
-         \                                 -----> Lipids   
-          \
-           \              -------> FDS ---> SI
-            \           /
-              -----> TDS                     -----> Carbohydrates
-                        \                  /
-                          ------> VDS ----> -----> Proteins
-                                           \ 
-                                             -----> Lipids
     """
 
     def __init__(self, Carbohydrates, Lipids, Proteins, TS, TSS):
@@ -85,11 +71,11 @@ class Sequence_Toolkit:
                'K', 'Q', 'E', 'S', 'P', 'I', 'C', 'Y', 'R', 'N', 'D', 'T']
     N_list = ['A', 'C', 'G', 'T']
 
-    def __init__(self, Type='Protein', Length=100):
+    def __init__(self, Type: str='Protein', Length: int=100):
         self.Type = Type
         self.Length = Length
 
-    def Seq_Generator(self):
+    def Seq_Generator(self)-> None:
 
         if self.Type == 'Protein':
             return ''.join([random.choice(self.AA_List) for i in range(self.Length)])
@@ -473,12 +459,12 @@ class Database:
         print("EC numbers extracted from Cazy website!")
         return EC_list
 
-    @staticmethod
-    def Seed_From_EC(EC_Number, Mode='Single_Match'):
+    
+    def Seed_From_EC(self,EC_Number, Mode='Single_Match'):
 
-        f = open(Main_Dir+'/reactions.json')
+        with open(self.Config.Reaction_DB,'r') as f: 
 
-        Data = json.load(f)
+            Data = json.load(f)
 
         if Mode == 'Single_Match':
 
@@ -501,10 +487,24 @@ class Database:
         else:
             print('Mode not recognized!')
 
-    @staticmethod
-    def Instantiate_Rxn_From_Seed(Seed_ID_List):
+    def Instantiate_Rxn_From_Seed(self,Seed_ID_List:list)->list:
+        """
+        Function that idenifies reaction seed ID's and instantiates them in the Reaction class.
+        Examples:
+            >>> Seed_ID_List = ['rxn00002','rxn00003','rxn00005']
+            >>> dbconfigs = Configs.Database()
+            >>> rxnlist = Database(dbconfigs).Instantiate_Rxn_From_Seed(Seed_ID_List)
+            >>> assert type(rxnlist[0])==Reaction
+
+        Args:
+            Seed_ID_List (list): A list of relevant seed ID entries [rxn#####]
+
+        Returns:
+            Rxn_List: A list including reaction instances in the database class for each seed ID in input list.
+
+        """
         Rxn_List = []
-        with open(Main_Dir+'/reactions.json') as f:
+        with open(self.Config.Reaction_DB) as f:
 
             Data = json.load(f)
 
@@ -521,16 +521,34 @@ class Database:
 
         return Rxn_List
 
-    @staticmethod
-    def Metadata_From_EC(EC_list):
+    def Metadata_From_EC(self,EC_list:list)->pd.DataFrame:
+        """
+        This function returns a pandas dataframe containing relevant pathway and reactions for
+        each EC number input.
+        Examples:
+            >>> EC_list = ['1.1.1.1','1.1.1.2'] 
+            >>> metadata= Database().Metadata_From_EC(EC_list) # doctest: +ELLIPSIS 
+            Finding ...
+            >>> assert type(metadata)==pd.DataFrame
+            >>> assert set(metadata['EC_Numbers'].to_list())==set(EC_list)
+            >>> assert set(["EC_Numbers", "Seed_Ids","Reaction_Names", "Pathways"])==set(metadata.columns)
+            >>> assert metadata.shape==(len(EC_list),4)
+
+        Args:
+            EC_list (list): A list of relevant EC numbers.
+
+        Returns:
+            pd.DataFrame: A pandas dataframe including reaction metadata or pathways for each EC number in list.
+
+        """
         full_table = {"EC_Numbers": [], "Seed_Ids": [],
                       "Reaction_Names": [], "Pathways": []}
-        print("##---Finding EC Metadata:\n")
-        for idx, ec in enumerate(EC_list):
-            Seed_ID = Database.Seed_From_EC(ec, Mode='Multiple_Match')
+        rich.print("Finding EC Metadata ...\n")
+        for ec in track(EC_list, description= "Collecting Metadata for EC numbers"):
+            Seed_ID = self.Seed_From_EC(ec, Mode='Multiple_Match')
             full_table['EC_Numbers'].append(ec)
             full_table['Seed_Ids'].append(Seed_ID)
-            Temp_rxns = Database.Instantiate_Rxn_From_Seed(Seed_ID)
+            Temp_rxns = Database().Instantiate_Rxn_From_Seed(Seed_ID)
             Temp_rxn_Names = list([reaction.Dict["name"]
                                    for reaction in Temp_rxns])
             Temp_rxn_Path = list([reaction.Dict["pathways"]
@@ -691,26 +709,26 @@ class Database:
         with open(directory, 'wb') as f:
             f.write(r.content)        
     @staticmethod
-    def Download_Protein_Database(directory):
+    def Download_Protein_Database(directory:str) -> None:
         Protein_DB="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta"
         r = requests.get(Protein_DB, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
         
     @staticmethod
-    def Download_Reaction_Database(directory):
+    def Download_Reaction_Database(directory: str)->None:
         Reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv"
         r = requests.get(Reactions, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
     @staticmethod
-    def Download_Feed_Database(directory):
+    def Download_Feed_Database(directory:str)-> None:
         Feed="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
         r = requests.get(Feed, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
     @staticmethod
-    def Download_Escher_Files(directory):
+    def Download_Escher_Files(directory:str)-> None:
         Escher_Files=[
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
@@ -980,8 +998,7 @@ class Metagenomics:
                         Temp_TSV.iloc[:, -2] < self.Config.e_value)
                     Temp_TSV = Temp_TSV[A_Filter]
                     ECs = [item.split('|')[1] for item in Temp_TSV.iloc[:, 1]]
-                    Filter = (Reaction_DB['EC_Numbers'].isin(ECs)) & (
-                        Reaction_DB[Model] == ADM_Reaction)
+                    Filter = (Reaction_DB['EC_Numbers'].isin(ECs)) & (Reaction_DB[Model].str.contains(ADM_Reaction))
                     Filtered_Rxns = Reaction_DB[Filter]
                     ECs = Filtered_Rxns['EC_Numbers'].tolist()
 
@@ -1046,16 +1063,4 @@ class ADM_Mapping:
 
 
 if __name__ == "__main__":
-    # MG_C=Configs.Metagenomics()
-    # MG=Metagenomics(MG_C)
-    # MG.Align_Genomes()
-    # R=Report(Configs.Report())
-    # R.ADM_From_Alignment_JSON(Parameters_Modified.Reactions)
-    # A={
-    # "name":"methane",
-    # "mass":16,
-    # "formula":"CH4"
-    # }
-    # a=Metabolites(A)
-    # print(a.COD)
     pass
