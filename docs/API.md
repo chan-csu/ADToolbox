@@ -14,31 +14,31 @@ This module includes the following classes:
 
 ### 1. Feed
 
-::: ADToolbox.ADToolBox.Feed
+::: adtoolbox.ADToolBox.Feed
 
 ### 2. Sequence_Toolkit 
 
-::: ADToolbox.ADToolBox.Sequence_Toolkit
+::: adtoolbox.ADToolBox.Sequence_Toolkit
 
 ### 3. Reaction_Toolkit
 
-ADToolbox.ADToolBox.Reaction_Toolkit
+::: adtoolbox.ADToolBox.Reaction_Toolkit
 
 ### 4. Reaction
 
-::: ADToolbox.ADToolBox.Reaction
+::: adtoolbox.ADToolBox.Reaction
 
 ### 5. Metabolite
 
-::: ADToolbox.ADToolBox.Metabolite
+::: adtoolbox.ADToolBox.Metabolite
 
 ### 6. Database
 
-::: ADToolbox.ADToolBox.Database
+::: adtoolbox.ADToolBox.Database
 
 ### 7. Metagenomics
 
-::: ADToolbox.ADToolBox.Metagenomics
+::: adtoolbox.ADToolBox.Metagenomics
 
 
 ## ADM
@@ -51,4 +51,4 @@ from adtoolbox import ADM
 ```
 This module includes the following classes:
 
-::: ADToolbox.ADM
+::: adtoolbox.ADM
