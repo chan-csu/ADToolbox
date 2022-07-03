@@ -432,19 +432,16 @@
 First, we need to initialize the CLI:</p>
 <h2 id="initialization">Initialization</h2>
 <p>After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:</p>
-<pre><code>ADToolbox
-
-</code></pre>
-<p>You should see the following if you are running this for the first time:</p>
-<pre><code>No Base Directory Found: 
+<p><div class="highlight"><pre><span></span><code>ADToolbox
+</code></pre></div>
+You should see the following if you are running this for the first time:</p>
+<p><div class="highlight"><pre><span></span><code>No Base Directory Found: 
 Where do you want to store your ADToolBox Data?:
-
-</code></pre>
-<p>Type the <strong>absolute path</strong> directory of interest. Don't worry if you mess this part up. You can change this later as well. you can type '.' for now and change this later.</p>
+</code></pre></div>
+Type the <strong>absolute path</strong> directory of interest. Don't worry if you mess this part up. You can change this later as well. you can type '.' for now and change this later.</p>
 <p>You can access all the commands along with their brief explanation by:</p>
-<pre><code>ADToolbox --help
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox --help
+</code></pre></div>
 <h2 id="adtoolbox-modules">ADToolbox Modules</h2>
 <p>This toolbox is comprised of different modules:</p>
 <ol>
@@ -473,43 +470,33 @@ Where do you want to store your ADToolBox Data?:
 <hr />
 <h3 id="1-configs-module">1. Configs Module</h3>
 <p>After installation, you have to download all the required files to run ADToolbox properly. To do this, first go to the Configs module by:</p>
-<pre><code>
-ADToolbox Configs --help
-
-</code></pre>
-<p>This will give you a list of all functionalities that are related to the configurations of the toolbox. Here we go one by one in the correct order:</p>
+<p><div class="highlight"><pre><span></span><code>ADToolbox Configs --help
+</code></pre></div>
+This will give you a list of all functionalities that are related to the configurations of the toolbox. Here we go one by one in the correct order:</p>
 <ul>
 <li>set-base-dir:  The first configuration command will allow you to set the base directory for ADToolbox to work. This could be an existing folder somewhere in your files or a directory that you are willing to create. If the directory does not already exit, it will be automatically created after this command. For example if I want to set the base directory to be ADToolbox directory on my desktop the command would be, in MacOS, something like this:</li>
 </ul>
-<pre><code>
-ADToolbox Configs set-base-dir -d ~/Desktop/ADToolbox
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Configs set-base-dir -d ~/Desktop/ADToolbox
+</code></pre></div>
 <p>Note that you <strong><em>must</em></strong> include -d after <code>set-base-dir</code>.</p>
 <p>Anything that you will do from now on, will be saved in this directory.</p>
 <ul>
 <li>build-folder-structure: Now you need to build the folder structure that is understandable by ADToolbox. You will do that by:</li>
 </ul>
-<pre><code>
-ADToolbox Configs build-folder-structure
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Configs build-folder-structure
+</code></pre></div>
 <ul>
 <li>download-all-databases: The next step is to download all the necessary database files for ADToolbox to work properly. You will achieve this by: </li>
 </ul>
-<pre><code>ADToolbox Configs download-all-databases
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Configs download-all-databases
+</code></pre></div>
 <ul>
 <li>download-escher-files: If you want to access the esher map functionalities of ADToolbox you need to download the required files by:</li>
 </ul>
-<pre><code>
-ADToolbox Configs download-escher-files
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Configs download-escher-files
+</code></pre></div>
 <p>An overal view of the Configs module of ADToolbox can be obtained by:</p>
-<pre><code>
-ADToolbox Configs --help
+<div class="highlight"><pre><span></span><code>ADToolbox Configs --help
 
 ────────────────────────────────── ADToolBox───────────────────────────────────
 usage: ADToolBox Configs [-h]
@@ -536,12 +523,10 @@ les}
 
 options:
   -h, --help            show this help message and exit
-
-
-</code></pre>
+</code></pre></div>
 <h3 id="2-database-module">2. Database Module</h3>
 <p>Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:</p>
-<pre><code>ADToolbox Database --help
+<div class="highlight"><pre><span></span><code>ADToolbox Database --help
 ──────────────────────────── ADToolBox ────────────────────────────
 usage: ADToolBox Database [-h]
                           {initialize-feed-db,extend-feed-db,show-f
@@ -577,15 +562,13 @@ nload-protein-db,download-amplicon-to-genome-dbs}
 
 options:
   -h, --help            show this help message and exit
-</code></pre>
+</code></pre></div>
 <p>We now go over these commands one by one:</p>
 <ul>
 <li>initialize-feed-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future feed information that you add. You can run this command  by:</li>
 </ul>
-<pre><code>
-ADToolbox Database initialize-feed-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database initialize-feed-db
+</code></pre></div>
 <ul>
 <li>extend-feed-db: you can add to your current feed database from a csv file with this command. The CSV file <strong>must</strong> follow this column configuration:</li>
 </ul>
@@ -618,62 +601,47 @@ ADToolbox Database initialize-feed-db
 </tbody>
 </table>
 <p>You can add your CSV file by:</p>
-<pre><code>
-ADToolbox Database extend-feed-db -d [PATH TO YOUR CSV FILE]
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database extend-feed-db -d [PATH TO YOUR CSV FILE]
+</code></pre></div>
 <ul>
 <li>show-feed-db: You can pretty print your current feed table by</li>
 </ul>
-<pre><code>
-ADToolbox Database show-feed-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database show-feed-db
+</code></pre></div>
 <p>This command will print a pretty table of your current feed database, which is the JSON file you initialized earlier and extended with a CSV file. This is made possible because of the great Rich library.</p>
 <p><em>NOTE</em>: Skipp the following download commands if you ran <code>ADToolbox Configs download-all-databases</code>
 - download-reaction-db: As the name implies, this will download the ADToolbox reaction database. This is required for many important modules of the toolbox</p>
-<pre><code>ADToolbox Database download-reaction-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database download-reaction-db
+</code></pre></div>
 <ul>
 <li>download-feed-db: Downloads the default feed database in JSON format</li>
 </ul>
-<pre><code>
-ADToolbox Database download-feed-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database download-feed-db
+</code></pre></div>
 <ul>
 <li>download-protein-db: Downloads the protein database in fasta format; You can alternatively build it from reaction database if you have downloaded it; Check below.</li>
 </ul>
-<pre><code>
-ADToolbox Database download-protein-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database download-protein-db
+</code></pre></div>
 <ul>
 <li>build-protein-db: Generates the protein database for ADToolbox from the reaction database:</li>
 </ul>
-<pre><code>
-ADToolbox Database build-protein-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database build-protein-db
+</code></pre></div>
 <ul>
 <li>download-amplicon-to-genome-dbs: If you need to use the 16s mapping to the protein database and ADM, you will need to download the required databases using this command:</li>
 </ul>
-<pre><code>
-ADToolbox Database download-amplicon-to-genome-dbs
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database download-amplicon-to-genome-dbs
+</code></pre></div>
 <ul>
 <li>download-seed-reaction-db: This will download the SEED reaction database in JSON format.</li>
 </ul>
-<pre><code>ADToolbox Database download-seed-reaction-db
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Database download-seed-reaction-db
+</code></pre></div>
 <h3 id="3-metagenomics-module">3. Metagenomics Module</h3>
 <p>Metagenomics module of ADToolbox is designed to add metagenomics data into considewration when designing and AD process.</p>
 <p>You can observe all the functionalities by:</p>
-<pre><code>
-ADToolbox Metagenomics --help   
+<div class="highlight"><pre><span></span><code>ADToolbox Metagenomics --help   
 
 ──────────────────────────── ADToolBox ────────────────────────────
 usage: ADToolBox Metagenomics [-h]
@@ -698,14 +666,13 @@ mes-to-adm}
 
 options:
   -h, --help            show this help message and exit
-
-</code></pre>
+</code></pre></div>
 <p>As of right now, there are 3 main submodules exist in the Metagenomics module:</p>
 <ul>
 <li>amplicon-to-genome: If you have 16s Data from QIIME, you can, hopefully, find the representative genomes for each replicon in an automated way
 using this functionality by selecting different parameters:</li>
 </ul>
-<pre><code>ADToolbox Metagenomics amplicon-to-genome --help
+<div class="highlight"><pre><span></span><code>ADToolbox Metagenomics amplicon-to-genome --help
 
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox Metagenomics amplicon-to-genome [-h] [-q QIIME_OUTPUTS_DIR]
@@ -739,8 +706,7 @@ options:
   --similarity SIMILARITY
                         Similarity cutoff in the 16s V4 region for genome
                         selection
-
-</code></pre>
+</code></pre></div>
 <p>If you do not provide any arguents, the default directories and values will be used. By default, ADToolbox looks at
 your base directory, that you set in Configs, in :<code>Metagenomics_Data/QIIME_Outputs</code>. </p>
 <ul>
@@ -768,20 +734,18 @@ providing information about the fetched genomes will be saved here:</p>
 <li><code>Amplicon2Genome_OutInfo.json</code> <strong><em>important</em></strong> This JSON file is a metadata about the genomes that were found. This is later used to align these genomes to the protein database.</li>
 </ul>
 <p>A complete amplicon-to-genome command will look like:</p>
-<pre><code>ADToolbox Metagenomics amplicon-to-genome -f ~/Desktop/test/feature-table.tsv \
+<div class="highlight"><pre><span></span><code>ADToolbox Metagenomics amplicon-to-genome -f ~/Desktop/test/feature-table.tsv \
 -r ~/Desktop/test/dna-sequences.fasta \
 -t ~/Desktop/test/taxonomy.tsv \
 -o ~/Desktop/test/ --k 10 \
 -q ~/Desktop/test/ \
 -a ~/Desktop/ADToolbox/Database/Amplicon2GenomeDBs/
-
-</code></pre>
+</code></pre></div>
 <ul>
 <li>align-genomes This submodule uses MMseqs to align a list of genomes to the protein database of ADToolbox for functional analysis.</li>
 </ul>
 <p>You can run this submodule by the following arguments:</p>
-<pre><code>
-ADToolbox Metagenomics align-genomes --help    
+<div class="highlight"><pre><span></span><code>ADToolbox Metagenomics align-genomes --help    
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox Metagenomics align-genomes [-h] [-i INPUT_FILE]
                                             [-d PROTEIN_DB_DIR]
@@ -802,8 +766,7 @@ options:
                         Minimum Bit Score cutoff for alignment
   -e E_VALUE, --e-value E_VALUE
                         Minimum e-vlaue score cutoff for alignment
-
-</code></pre>
+</code></pre></div>
 <ul>
 <li>
 <p>input-file: you need to give a JSON file similar to what you create in amplicon-to-genome, see previous submodule, so that ADToolbox finds
@@ -819,22 +782,19 @@ all the information it needs about the genomes</p>
 <p>The outputs of this step includes one more import file:</p>
 <p><code>Alignment_Info.json</code>  -&gt; This file is used by map-genomes-to-adm</p>
 <p>A complete command for this submodule would looklike:</p>
-<pre><code>
-ADToolBox Metagenomics align-genomes \
+<div class="highlight"><pre><span></span><code>ADToolBox Metagenomics align-genomes \
 --input-file ~/Desktop/ADToolbox/Genomes/Amplicon2Genome_OutInfo.json
 --protein-db-dir ~/Desktop/ADToolbox/Database/Protein_DB.fasta
 --output-dir ~/Desktop/ADToolbox/Outputs/ \
 --bit-score 40 \
 --e-value 0.000001
-
-</code></pre>
+</code></pre></div>
 <hr />
 <ul>
 <li>make-json-from-genomes Sometimes you have genomes either from assembly or downloading it manually. In this case you can import your genomes 
 to the pipeline by making a JSON file similar to  <code>Amplicon2Genome_OutInfo.json</code>. To this you need to make a CSV file for your genomes:</li>
 </ul>
-<pre><code>
-ADToolbox Metagenomics make-json-from-genomes  --help
+<div class="highlight"><pre><span></span><code>ADToolbox Metagenomics make-json-from-genomes  --help
 
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox Metagenomics make-json-from-genomes [-h] -i INPUT_FILE -o
@@ -847,8 +807,7 @@ options:
                         information about the genomes to be aligned
   -o OUTPUT_FILE, --output-file OUTPUT_FILE
                         Output the directory to store the JSON file.
-
-</code></pre>
+</code></pre></div>
 <ul>
 <li>input-file: This input file should be the address to a CSV file exactly in the following column format:</li>
 </ul>
@@ -875,16 +834,13 @@ options:
 <li>output-file: output directory for the generated JSON to be saved. </li>
 </ul>
 <p>An example of this command would be:</p>
-<pre><code>
-ADToolBox Metagenomics make-json-from-genomes --input-file ~/Desktop/MyGenomes.CSV --output-files ~/Desktop/Genome_info.json
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolBox Metagenomics make-json-from-genomes --input-file ~/Desktop/MyGenomes.CSV --output-files ~/Desktop/Genome_info.json
+</code></pre></div>
 <hr />
 <ul>
 <li>map-genomes-to-adm: This command will take a JSON file that has Alignment info for all of the genomes, and will output the mapping to ADM models. This is how you run this command:</li>
 </ul>
-<pre><code>
-ADToolbox Metagenomics map-genomes-to-adm --help
+<p><div class="highlight"><pre><span></span><code>ADToolbox Metagenomics map-genomes-to-adm --help
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox Metagenomics map-genomes-to-adm [-h] [-i INPUT_FILE]
                                                  [-m MODEL] [-o OUTPUT_DIR]
@@ -896,30 +852,23 @@ options:
                         information about the alignment of the genomes to the
                         protein database
   -m MODEL, --model MODEL
-                        Model determines which mapping system you'd like to
-                        use; Current options: 'Modified_ADM_Reactions'
+                        Model determines which mapping system you&#39;d like to
+                        use; Current options: &#39;Modified_ADM_Reactions&#39;
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         address to store the JSON report to be loaded with a
                         model
-
-
-
-</code></pre>
-<ul>
-<li>input-file: This should be the alignment info JSON file created in align-genome step.</li>
-<li>model: this must be a string defining the model that you want to map the aligned reactions to. Current option is only
-"Modified_ADM_Reactions"</li>
-<li>output-dir: Directory to save the Genome alignment report, Metagenome report, in JSON format. This can be used later in ADM module to include the role of different genomes in the process.</li>
-</ul>
+</code></pre></div>
+- input-file: This should be the alignment info JSON file created in align-genome step.
+- model: this must be a string defining the model that you want to map the aligned reactions to. Current option is only
+"Modified_ADM_Reactions"
+- output-dir: Directory to save the Genome alignment report, Metagenome report, in JSON format. This can be used later in ADM module to include the role of different genomes in the process.</p>
 <p>An example of a complete command for this submodule is:</p>
-<pre><code>ADToolbox Metagenomics map-genomes-to-adm -i ~/Desktop/alignment_info.json -m Modified_ADM_Reactions -o ~/Desktop/ADM_Mapping_Report.json
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Metagenomics map-genomes-to-adm -i ~/Desktop/alignment_info.json -m Modified_ADM_Reactions -o ~/Desktop/ADM_Mapping_Report.json
+</code></pre></div>
 <hr />
 <h3 id="4-adm-module">4. ADM Module</h3>
 <p>ADM module provides all the tools needed to run instances of ADM Model. This include the originsl ADM, Batstone et al., and the Modified-ADM suggested by the Authors of ADToolbox. In order to find out about all the functionalities in this module, you can run:</p>
-<pre><code>
-ADToolbox ADM --help
+<div class="highlight"><pre><span></span><code>ADToolbox ADM --help
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox ADM [-h] {original-adm1,modified-adm,show-escher-map} ...
 
@@ -932,12 +881,11 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-
-</code></pre>
+</code></pre></div>
 <ul>
 <li>original-adm1: If you want to run the original ADM, batstone et al, in your browser you can run this command with the required parameters in JSON format:</li>
 </ul>
-<pre><code>ADToolbox ADM original-adm1 --help
+<div class="highlight"><pre><span></span><code>ADToolbox ADM original-adm1 --help
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox ADM original-adm1 [-h] [--model-parameters MODEL_PARAMETERS]
                                    [--base-parameters BASE_PARAMETERS]
@@ -967,12 +915,10 @@ options:
                         Provide json file with metagenome report for original
                         ADM1
   --report REPORT       Describe how to report the results of original ADM1.
-                        Current options are: 'dash' and 'csv'
-
-
-</code></pre>
+                        Current options are: &#39;dash&#39; and &#39;csv&#39;
+</code></pre></div>
 <p>Every argument is optional, and their role is clear from the comments in front of them, So we just provide a full example of this command:</p>
-<pre><code>ADToolbox ADM original-adm1 \
+<p><div class="highlight"><pre><span></span><code>ADToolbox ADM original-adm1 \
 --model-parameters ~/Desktop/Model_Parameters.json \
 --base-parameters ~/Desktop/Base_Parameters.json \
 --initial-conditions ~/Desktop/Initial_Conditions.json \
@@ -981,15 +927,13 @@ options:
 --species  ~/Desktop/Species.json
 --metagenome-report ~/Desktop/ADM_Mapping_Report.json
 --repor dash
-
-</code></pre>
-<p><strong>NOTE</strong> if you choose dash for your report, the CLI will prompt you to open your browser in the instructed address, if you choose csv, it will generate a CSV file that includes concentration profiles simulated over time.</p>
+</code></pre></div>
+<strong>NOTE</strong> if you choose dash for your report, the CLI will prompt you to open your browser in the instructed address, if you choose csv, it will generate a CSV file that includes concentration profiles simulated over time.</p>
 <hr />
 <ul>
 <li>modified-adm: This command is exactly similar to the previous one, except that it requires parameters taylored for modified ADM:</li>
 </ul>
-<pre><code>
-ADToolbox ADM modified-adm --help 
+<div class="highlight"><pre><span></span><code>ADToolbox ADM modified-adm --help 
 ────────────────────────────────── ADToolBox ───────────────────────────────────
 usage: ADToolBox ADM modified-adm [-h] [--model-parameters MODEL_PARAMETERS]
                                   [--base-parameters BASE_PARAMETERS]
@@ -1019,23 +963,20 @@ options:
                         Provide json file with metagenome report for modified
                         ADM
   --report REPORT       Describe how to report the results of modified ADM.
-                        Current options are: 'dash' and 'csv'
-
-</code></pre>
+                        Current options are: &#39;dash&#39; and &#39;csv&#39;
+</code></pre></div>
 <p>The usage is exactly the same as the original-adm</p>
 <hr />
 <ul>
 <li>show-escher-map: This command will prompt you to open an escher map for the modified-adm model in your browser with the instructed address:</li>
 </ul>
-<pre><code>ADToolbox ADM show-escher-map
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox ADM show-escher-map
+</code></pre></div>
 <hr />
 <h3 id="5-documentations-module">5. Documentations Module</h3>
 <p>You can view the documentaion in your CLI using rich's markdown render. You can do this by:</p>
-<pre><code>ADToolbox Documentations --show 
-
-</code></pre>
+<div class="highlight"><pre><span></span><code>ADToolbox Documentations --show 
+</code></pre></div>
 <hr />
 <h3 id="6-report-module">6. Report Module</h3>
 <hr />

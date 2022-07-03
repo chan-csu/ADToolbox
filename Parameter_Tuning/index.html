@@ -362,21 +362,18 @@
 <h1 id="parameter-tuning">Parameter tuning</h1>
 <p>This is a how-to tutorial on how to train ADM parametrs using experimental data.</p>
 <p>First, you need to import the packages that you need.</p>
-<pre><code>
-from adtoolbox import ADM,Main_Dir
+<p><div class="highlight"><pre><span></span><code>from adtoolbox import ADM,Main_Dir
 import pygad
 import numpy as np
 import os
 import json 
 import pandas as pd
-
-</code></pre>
-<p>Now you are ready to start:</p>
+</code></pre></div>
+Now you are ready to start:</p>
 <h2 id="1-load-the-default-parameters">1- Load the default parameters</h2>
 <p>This script is build for tuning the parameters of Modified-ADM using a genetic algorithm. 
 First you need to load the current default parameters.</p>
-<pre><code>
-Parameters_Dir=os.path.join(Main_Dir,&quot;Database&quot;,&quot;Modified_ADM&quot;)
+<div class="highlight"><pre><span></span><code>Parameters_Dir=os.path.join(Main_Dir,&quot;Database&quot;,&quot;Modified_ADM&quot;)
 Base_Parameters=os.path.join(Parameters_Dir,&quot;Modified_ADM_Base_Parameters.json&quot;)
 IC=os.path.join(Parameters_Dir,&quot;Modified_ADM_Initial_Conditions.json&quot;)
 Inlet_C=os.path.join(Parameters_Dir,&quot;Modified_ADM_Inlet_Conditions.json&quot;)
@@ -396,10 +393,7 @@ with open(Reactions) as f:
     Reactions=json.load(f)
 with open(Species) as f:
     Species=json.load(f)
-
-
-
-</code></pre>
+</code></pre></div>
 <h2 id="2-load-the-experimental-data">2- Load the experimental data</h2>
 <p>In the next step you need to load your experimental data that you need to train parameters.
 The data must be in a CSV file following this format(All in ADM Units):</p>
@@ -423,28 +417,22 @@ The data must be in a CSV file following this format(All in ADM Units):</p>
 </tr>
 </tbody>
 </table>
-<pre><code>
-Exp_Data=pd.read_csv(os.path.join(&quot;/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization&quot;,&quot;Experimental_Data.csv&quot;),delimiter=&quot;,&quot;)
+<div class="highlight"><pre><span></span><code>Exp_Data=pd.read_csv(os.path.join(&quot;/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization&quot;,&quot;Experimental_Data.csv&quot;),delimiter=&quot;,&quot;)
 
 Inds=[]
 for i in Exp_Data.columns[1:]:
     Inds.append(Species.index(i))
 for state in Exp_Data.columns[1:]:
     IC[state]=Exp_Data[state][0]
-
-
-</code></pre>
+</code></pre></div>
 <h2 id="3-determine-the-parameters-to-be-trained">3- Determine the parameters to be trained</h2>
 <p>Now you have to determine what parameters you want to tune using the experimental data that you have:</p>
-<pre><code>
-Params_list=[&quot;n_cap&quot;,&quot;f_ch_TSS&quot;,&quot;f_et_bu&quot;]
+<div class="highlight"><pre><span></span><code>Params_list=[&quot;n_cap&quot;,&quot;f_ch_TSS&quot;,&quot;f_et_bu&quot;]
 
 gene_space=[[0,5],[0,1],[0,1]]
-
-</code></pre>
+</code></pre></div>
 <h2 id="4-start-optimizing">4- Start Optimizing</h2>
-<pre><code>
-model=ADM.Model(Model_Parameters,Base_Parameters,IC,Inlet_C,Reactions,Species,ODE_System=ADM.Modified_ADM1_ODE_Sys,Build_Stoiciometric_Matrix=ADM.Build_Modified_ADM1_Stoiciometric_Matrix)
+<div class="highlight"><pre><span></span><code>model=ADM.Model(Model_Parameters,Base_Parameters,IC,Inlet_C,Reactions,Species,ODE_System=ADM.Modified_ADM1_ODE_Sys,Build_Stoiciometric_Matrix=ADM.Build_Modified_ADM1_Stoiciometric_Matrix)
 
 def fitness_func(solution, solution_idx):
     for i in range(len(Params_list)):
@@ -491,17 +479,14 @@ ga_instance = pygad.GA(num_generations=num_generations,
                        ,gene_space=gene_space)
 
 ga_instance.run()
-
-</code></pre>
+</code></pre></div>
 <h2 id="5-display-the-results">5- Display the Results</h2>
 <p>You can plot the results:</p>
-<pre><code>
-solution, solution_fitness, solution_idx = ga_instance.best_solution()
+<div class="highlight"><pre><span></span><code>solution, solution_fitness, solution_idx = ga_instance.best_solution()
 print(&quot;Parameters of the best solution : {solution}&quot;.format(solution=solution))
 print(&quot;Fitness value of the best solution = {solution_fitness}&quot;.format(solution_fitness=solution_fitness))
 ga_instance.plot_fitness()
-
-</code></pre>
+</code></pre></div>
 
               
             </article>
