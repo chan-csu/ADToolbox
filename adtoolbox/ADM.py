@@ -1,5 +1,6 @@
 import string
-
+from typing import Callable
+import plotly
 from sympy import plot
 from Parameters import *
 import numpy as np
@@ -17,9 +18,15 @@ from ADToolBox import Database as Database
 from ADToolBox import Reaction_Toolkit as Reaction_Toolkit
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
-import ADToolBox.Reaction as Reaction
+from ADToolBox import Reaction
 from collections import OrderedDict
+import rich
+from rich.console import Console
+from rich.table import Table
 from __init__ import Main_Dir
+from rich.style import Style
+
+import time
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
 # It is extensively based on PyADM1, and I would like to thank the author of PyADM1 for this work
@@ -33,8 +40,10 @@ RT = Reaction_Toolkit(Reaction_DB=os.path.join(
     Main_Dir, "..", "Database", "reactions.json"))
 
 class _Fake_Sol:
-    def __init__(self, y):
+    def __init__(self, y,t):
         self.y = y
+        self.t=t
+
 
 
 class Model:
@@ -56,9 +65,35 @@ class Model:
     
 
 
-    def __init__(self, Model_Parameters: dict, Base_Parameters: dict, Initial_Conditions: dict, Inlet_Conditions:dict, Reactions: list, Species: list, ODE_System, Build_Stoiciometric_Matrix, Metagenome_Report=None, Name="ADM1", Switch="DAE"):
+    def __init__(self, Model_Parameters: dict, Base_Parameters: dict, Initial_Conditions: dict, Inlet_Conditions:dict, Reactions: list, Species: list, ODE_System:Callable, Build_Stoiciometric_Matrix:Callable,Control_States:dict={"S_bu":0.5,"S_H_ion":10**-7},Metagenome_Report=None, Name="ADM1", Switch="DAE"):
         self.Model_Parameters = Model_Parameters
         self.Base_Parameters = Base_Parameters
+        
+        try:
+            for items in Control_States.keys():
+                Initial_Conditions[items]
+                Initial_Conditions[items]=Control_States[items]
+        
+        except TypeError:
+
+            rich.print("[red]No acceptable Controled State passed!\nEverything will change according to the system's dynamics!") 
+            self.Control_States={}
+        except KeyError:
+            
+            rich.print("[red]Control states must follow the ADM state variable notations!\nCheck the Control_States json file.")
+            self.Control_States={}
+        else:
+            rich.print("[green]The following states were set as control:\n")
+            table = Table(title="Control States\n",header_style=Style(color="cyan", blink=True, bold=True))
+            for i in Control_States.keys():
+                table.add_column(i)
+            
+            table.add_row(*[str(Control_States[i]) for i in Control_States.keys()],style=Style(color="white", blink=True, bold=True))
+            rich.print(table)
+            self.Control_States=Control_States
+
+            time.sleep(3)
+
         self.Inlet_Conditions = np.array(
             [Inlet_Conditions[i+"_in"] for i in Species])[:, np.newaxis]
         self.Reactions = Reactions
@@ -134,7 +169,7 @@ class Model:
         
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
-            C=_Fake_Sol(np.ones((y0.shape[0],1))*1e10)
+            C=_Fake_Sol(np.ones((y0.shape[0],T_eval.__len__()))*1e10,T_eval)
        
         return C
 
@@ -1198,22 +1233,22 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
         c[Model.Species.index('S_H_ion')] ** Model.Model_Parameters['n_h2'] + Model.Model_Parameters['K_pH_h2']**Model.Model_Parameters['n_h2'])
 
     I_IN_lim = 1 / \
-        (1+(Model.Model_Parameters['K_S_IN'] / c[Model.Species.index('S_IN')]))
+        (1+(Model.Model_Parameters['K_S_IN'] / (c[Model.Species.index('S_IN')]+10**-9)))
 
     I_h2_fa = 1 / (1+(c[Model.Species.index('S_h2')] /
-                   Model.Model_Parameters['K_I_h2_fa']))
+                   (Model.Model_Parameters['K_I_h2_fa']+10**-9)))
 
     I_h2_c4 = 1 / (1+(c[Model.Species.index('S_h2')] /
-                   Model.Model_Parameters['K_I_h2_c4']))
+                   (Model.Model_Parameters['K_I_h2_c4']+10**-9)))
 
     I_h2_pro = (1/(1+(c[Model.Species.index('S_h2')] /
-                Model.Model_Parameters['K_I_h2_pro'])))
+                (Model.Model_Parameters['K_I_h2_pro']+10**-9))))
 
     I_nh3 = 1/(1+(c[Model.Species.index('S_nh3')] /
-               Model.Model_Parameters['K_I_nh3']))
+               (Model.Model_Parameters['K_I_nh3']+10**-9)))
 
     I_h2_oxidation=(1/(1+(c[Model.Species.index('S_h2')] /
-                Model.Model_Parameters['K_I_h2_ox'])))
+                (Model.Model_Parameters['K_I_h2_ox']+10**-9))))
 
     I5 = (I_pH_aa * I_IN_lim)
     I6 = I5.copy()
@@ -1258,27 +1293,27 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
          c[Model.Species.index('S_fa')])*c[Model.Species.index('X_fa')]*I7
 
     v[Model.Reactions.index('Uptake of acetate_et')] = Model.Model_Parameters['k_m_ac']*c[Model.Species.index('S_ac')]*c[Model.Species.index('S_et')] / \
-        (Model.Model_Parameters['K_S_ac']+c[Model.Species.index('S_ac')]
+        (Model.Model_Parameters['K_S_ac']*c[Model.Species.index('S_ac')]+Model.Model_Parameters['K_S_ac_et']*c[Model.Species.index('S_et')]+c[Model.Species.index('S_ac')]*c[Model.Species.index('S_et')]+10**-9
          )*c[Model.Species.index('X_ac_et')]*I11
 
     v[Model.Reactions.index('Uptake of acetate_lac')] = Model.Model_Parameters['k_m_ac']*c[Model.Species.index('S_ac')]*c[Model.Species.index('S_lac')] / \
-        (Model.Model_Parameters['K_S_ac']*c[Model.Species.index('S_ac')]+Model.Model_Parameters['K_S_ac_et']*c[Model.Species.index('S_ac')]+c[Model.Species.index('S_ac')]*c[Model.Species.index('S_lac')]
+        (Model.Model_Parameters['K_S_ac']*c[Model.Species.index('S_ac')]+Model.Model_Parameters['K_S_ac_lac']*c[Model.Species.index('S_lac')]+c[Model.Species.index('S_ac')]*c[Model.Species.index('S_lac')]+10**-9
          )*c[Model.Species.index('X_ac_lac')]*I11
 
     v[Model.Reactions.index('Uptake of propionate_et')] = Model.Model_Parameters['k_m_pro']*c[Model.Species.index('S_pro')]*c[Model.Species.index('S_et')] / \
-        (Model.Model_Parameters['K_S_pro']*c[Model.Species.index('S_pro')]+Model.Model_Parameters['K_S_pro_lac']*c[Model.Species.index('S_pro')]+c[Model.Species.index('S_pro')]*c[Model.Species.index('S_et')]
+        (Model.Model_Parameters['K_S_pro']*c[Model.Species.index('S_pro')]+Model.Model_Parameters['K_S_pro_et']*c[Model.Species.index('S_et')]+c[Model.Species.index('S_pro')]*c[Model.Species.index('S_et')]+10**-9
          )*c[Model.Species.index('X_chain_et')]*I10
 
     v[Model.Reactions.index('Uptake of propionate_lac')] = Model.Model_Parameters['k_m_pro']*c[Model.Species.index('S_pro')]*c[Model.Species.index('S_lac')] / \
-        (Model.Model_Parameters['K_S_pro']*c[Model.Species.index('S_pro')]
+        (Model.Model_Parameters['K_S_pro']*c[Model.Species.index('S_pro')]+Model.Model_Parameters['K_S_pro_lac']*c[Model.Species.index('S_lac')]+c[Model.Species.index('S_pro')]*c[Model.Species.index('S_lac')]+10**-9
          )*c[Model.Species.index('X_chain_lac')]*I10
 
     v[Model.Reactions.index('Uptake of butyrate_et')] = Model.Model_Parameters['k_m_bu']*c[Model.Species.index('S_bu')]*c[Model.Species.index('S_et')] / \
-        (Model.Model_Parameters['K_S_bu']+c[Model.Species.index('S_bu')]
+        (Model.Model_Parameters['K_S_bu']*c[Model.Species.index('S_bu')]+Model.Model_Parameters['K_S_bu_et']*c[Model.Species.index('S_et')]+c[Model.Species.index('S_bu')]*c[Model.Species.index('S_et')]+10**-9
          )*c[Model.Species.index('X_chain_et')]*I14
 
     v[Model.Reactions.index('Uptake of butyrate_lac')] = Model.Model_Parameters['k_m_bu']*c[Model.Species.index('S_bu')]*c[Model.Species.index('S_lac')] / \
-        (Model.Model_Parameters['K_S_bu']+c[Model.Species.index('S_bu')]
+        (Model.Model_Parameters['K_S_bu']*c[Model.Species.index('S_bu')]+Model.Model_Parameters['K_S_bu_lac']*c[Model.Species.index('S_lac')]+c[Model.Species.index('S_bu')]*c[Model.Species.index('S_lac')]+10**-9
          )*c[Model.Species.index('X_chain_lac')]*I14
 
     v[Model.Reactions.index('Uptake of valerate')] = Model.Model_Parameters['k_m_va']*c[Model.Species.index('S_va')] / \
@@ -1291,15 +1326,12 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
 
     v[Model.Reactions.index('Methanogenessis from acetate and h2')] = Model.Model_Parameters['k_m_h2_Me_ac']*c[Model.Species.index('S_h2')]*c[Model.Species.index('S_ac')] / \
         (Model.Model_Parameters['K_S_h2_Me_ac']*c[Model.Species.index('S_h2')]+Model.Model_Parameters['K_S_ac_Me']*c[Model.Species.index(
-            'S_ac')]+c[Model.Species.index('S_ac')]*c[Model.Species.index('S_h2')])*c[Model.Species.index('X_Me_ac')]*I12
+            'S_ac')]+c[Model.Species.index('S_ac')]*c[Model.Species.index('S_h2')]+10**-9)*c[Model.Species.index('X_Me_ac')]*I12
 
     v[Model.Reactions.index('Methanogenessis from CO2 and h2')] = Model.Model_Parameters['k_m_h2_Me_CO2']*c[Model.Species.index('S_h2')]*c[Model.Species.index('S_co2')] / \
         (Model.Model_Parameters['K_S_h2_Me_CO2']*c[Model.Species.index('S_h2')]+Model.Model_Parameters['K_S_CO2_Me']*c[Model.Species.index(
-            'S_co2')]+c[Model.Species.index('S_co2')]*c[Model.Species.index('S_h2')])*c[Model.Species.index('X_Me_CO2')]*I12
+            'S_co2')]+c[Model.Species.index('S_co2')]*c[Model.Species.index('S_h2')]+10**-9)*c[Model.Species.index('X_Me_CO2')]*I12
 
-    v[Model.Reactions.index('Methanogenessis from CO2 and h2')] = Model.Model_Parameters['k_m_h2_Me_CO2']*c[Model.Species.index('S_h2')]*c[Model.Species.index('S_co2')] / \
-        (Model.Model_Parameters['K_S_h2_Me_CO2']*c[Model.Species.index('S_h2')]+Model.Model_Parameters['K_S_CO2_Me']*c[Model.Species.index(
-            'S_co2')]+c[Model.Species.index('S_co2')]*c[Model.Species.index('S_h2')])*c[Model.Species.index('X_Me_CO2')]*I12
 
     v[Model.Reactions.index('Uptake of ethanol')] = Model.Model_Parameters['k_m_et']*c[Model.Species.index('S_et')] / \
         (Model.Model_Parameters['K_S_et']+c[Model.Species.index('S_et')]
@@ -1360,8 +1392,7 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
     v[Model.Reactions.index('Acid Base Equilibrium (Cap)')] = Model.Model_Parameters['k_A_B_cap'] * \
         (c[Model.Species.index('S_cap_ion')] * (Model.Model_Parameters['K_a_cap'] + c[Model.Species.index('S_H_ion')]) -
          Model.Model_Parameters['K_a_cap'] * c[Model.Species.index('S_cap')])
-    if t>1:
-        pass
+
     v[Model.Reactions.index('Acid Base Equilibrium (Lac)')] = Model.Model_Parameters['k_A_B_lac'] * \
         (c[Model.Species.index('S_lac_ion')] * (Model.Model_Parameters['K_a_lac'] + c[Model.Species.index('S_H_ion')]) -
          Model.Model_Parameters['K_a_lac'] * c[Model.Species.index('S_lac')])
@@ -1405,8 +1436,10 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
 
     phi = c[Model.Species.index('S_cation')]+c[Model.Species.index('S_nh4_ion')]-c[Model.Species.index('S_hco3_ion')]-(c[Model.Species.index('S_lac_ion')] / 88) - (c[Model.Species.index('S_ac_ion')] / 64) - (c[Model.Species.index('S_pro_ion')] /
                                                                                                                                                                      112) - (c[Model.Species.index('S_bu_ion')] / 160)-(c[Model.Species.index('S_cap_ion')] / 230) - (c[Model.Species.index('S_va_ion')] / 208) - c[Model.Species.index('S_anion')]
-
-    c[Model.Species.index('S_H_ion')] = (-1 * phi / 2) + \
+    if 'S_H_ion' in Model.Control_States.keys():
+        c[Model.Species.index('S_H_ion')]=Model.Control_States['S_H_ion']
+    else:
+        c[Model.Species.index('S_H_ion')] = (-1 * phi / 2) + \
         (0.5 * np.sqrt(phi**2 + 4 * Model.Model_Parameters['K_w']))
 
     dCdt[0: Model.Species.__len__()-3] = dCdt[0: Model.Species.__len__()-3]+Model.Base_Parameters['q_in'] / \
@@ -1440,6 +1473,11 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
         
         c[Model.Species.index('S_lac_ion')]=Model.Model_Parameters['K_a_lac']/(Model.Model_Parameters['K_a_lac']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_lac')]    
     
+    if Model.Control_States.keys():
+        for state in Model.Control_States.keys():
+            c[Model.Species.index(state)]=Model.Control_States[state]
+            dCdt[Model.Species.index(state)]=0
+
     return dCdt[:, 0]
 
 
@@ -1455,7 +1493,7 @@ if __name__ == "__main__":
    #    (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
 
     # adm1.Dash_App(Sol)
-    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Model_Parameters.json', 'r') as f:
+    with open('/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Database/Modified_ADM/Modified_ADM_Model_Parameters.json', 'r') as f:
         mp=json.load(f)
     mod_adm1 = Model(mp, PM.Base_Parameters, PM.Initial_Conditions, PM.Inlet_Conditions, PM.Reactions,
                      PM.Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix, Name="Modified_ADM1", Switch="DAE")

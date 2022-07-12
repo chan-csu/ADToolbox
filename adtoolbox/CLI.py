@@ -99,6 +99,7 @@ def main():
     Mod_ADM_subp.add_argument("--reactions", action="store", help="Provide json file with reactions for modified ADM")
     Mod_ADM_subp.add_argument("--species", action="store", help="Provide json file with species for modified ADM")
     Mod_ADM_subp.add_argument("--metagenome-report", action="store", help="Provide json file with metagenome report for modified ADM")
+    Mod_ADM_subp.add_argument("--control-states", action="store", help="Provide a json file that contains the control states, and their values ")
     Mod_ADM_subp.add_argument("--report", action="store", help="Describe how to report the results of modified ADM. Current options are: 'dash' and 'csv'")
     ADM_subp.add_parser('show-escher-map',help='makes an escher map for modified ADM')
     ####
@@ -328,9 +329,15 @@ def main():
                     ADM_Metagenome_Report=json.load(f)
             else:
                 ADM_Metagenome_Report=None
+        if args.control_states:
+            with open(args.control_states) as f:
+                ADM_Control_States=json.load(f)
+        else:
+            
+            ADM_Control_States={}
                 
         mod_adm1 = Model(ADM_Model_Parameters,ADM_Base_Parameters,ADM_Initial_Conditions,ADM_Inlet_Conditions,ADM_Reactions,
-                    ADM_Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Metagenome_Report=ADM_Metagenome_Report,Name="Modified_ADM1", Switch="DAE")
+                    ADM_Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Control_States=ADM_Control_States,Metagenome_Report=ADM_Metagenome_Report,Name="Modified_ADM1", Switch="DAE")
         Sol_mod_adm1 = mod_adm1.Solve_Model(
         (0, 100), mod_adm1.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))
 
