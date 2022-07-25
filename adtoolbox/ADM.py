@@ -938,7 +938,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                 (1-Model_Parameters['Y_aa'])*Model_Parameters['f_et_aa']*Model_Parameters['C_et'] +
                 (1-Model_Parameters['Y_aa'])*Model_Parameters['f_lac_aa']*Model_Parameters['C_lac'] +
                 (1-Model_Parameters['Y_aa'])*Model_Parameters['f_ac_aa']*Model_Parameters['C_ac'] +
-                (1-Model_Parameters['Y_aa'])*Model_Parameters['C_bac'])
+                Model_Parameters['Y_aa']*Model_Parameters['C_bac'])
 
     S[list(map(Species.index, ["S_aa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_aa"])),
       Reactions.index('Uptake of amino acids')] = [-1,
@@ -959,7 +959,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                 (1-Model_Parameters['Y_fa'])*Model_Parameters['f_et_fa']*Model_Parameters['C_et'] +
                 (1-Model_Parameters['Y_fa'])*Model_Parameters['f_lac_fa']*Model_Parameters['C_lac'] +
                 (1-Model_Parameters['Y_fa'])*Model_Parameters['f_ac_fa']*Model_Parameters['C_ac'] +
-                (1-Model_Parameters['Y_fa'])*Model_Parameters['C_bac'])
+                Model_Parameters['Y_fa']*Model_Parameters['C_bac'])
 
     S[list(map(Species.index, ["S_fa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_fa"])),
       Reactions.index('Uptake of LCFA')] = [-1,
@@ -979,14 +979,14 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
     f_IC_ac_et = -(-Model_Parameters['C_ac'] +
                    (1-Model_Parameters['Y_ac_et'])*Model_Parameters['f_et_ac']*Model_Parameters['C_et'] +
                    (1-Model_Parameters['Y_ac_et']) *
-                   Model_Parameters['f_bu_ac']*Model_Parameters['C_bu'] +
-                   (1-Model_Parameters['Y_ac_et'])*Model_Parameters['C_bac'])
+                   (1-Model_Parameters['f_bu_ac'])*Model_Parameters['C_bu'] +
+                   Model_Parameters['Y_ac_et']*Model_Parameters['C_bac'])
 
     f_IC_ac_lac = -(-Model_Parameters['C_ac'] +
                     (1-Model_Parameters['Y_ac_lac'])*Model_Parameters['f_lac_ac']*Model_Parameters['C_lac'] +
                     (1-Model_Parameters['Y_ac_lac']) *
-                    Model_Parameters['f_bu_ac']*Model_Parameters['C_bu'] +
-                    (1-Model_Parameters['Y_ac_lac'])*Model_Parameters['C_bac'])
+                    (1-Model_Parameters['f_bu_ac'])*Model_Parameters['C_bu'] +
+                    Model_Parameters['Y_ac_lac']*Model_Parameters['C_bac'])
 
     S[list(map(Species.index, ["S_ac", "S_et", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_et"])),
       Reactions.index('Uptake of acetate_et')] = [-1,
@@ -1017,12 +1017,12 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
     f_IC_pro_et = -(-Model_Parameters['C_pro'] +
                     (1-Model_Parameters['Y_pro_et'])*Model_Parameters['f_et_pro']*Model_Parameters['C_et'] +
                     (1-Model_Parameters['Y_pro_et'])*Model_Parameters['f_va_pro']*Model_Parameters['C_va'] +
-                    (1-Model_Parameters['Y_pro_et'])*Model_Parameters['C_bac'])
+                    Model_Parameters['Y_pro_et']*Model_Parameters['C_bac'])
 
     f_IC_pro_lac = -(-Model_Parameters['C_pro'] +
                      (1-Model_Parameters['Y_pro_lac'])*Model_Parameters['f_lac_pro']*Model_Parameters['C_lac'] +
                      (1-Model_Parameters['Y_pro_lac'])*Model_Parameters['f_va_pro']*Model_Parameters['C_va'] +
-                     (1-Model_Parameters['Y_pro_lac'])*Model_Parameters['C_bac'])
+                     Model_Parameters['Y_pro_lac']*Model_Parameters['C_bac'])
 
     S[list(map(Species.index, ["S_pro", "S_et", "S_va", "S_IN", "S_IC", "S_h2", "X_chain_et"])),
       Reactions.index('Uptake of propionate_et')] = [-1,
@@ -1053,12 +1053,12 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
     f_IC_bu_et = -(-Model_Parameters['C_bu'] +
                    (1-Model_Parameters['Y_bu_et'])*Model_Parameters['f_et_bu']*Model_Parameters['C_et'] +
                    (1-Model_Parameters['Y_bu_et'])*Model_Parameters['f_cap_bu']*Model_Parameters['C_cap'] +
-                   (1-Model_Parameters['Y_bu_et'])*Model_Parameters['C_bac'])
+                   Model_Parameters['Y_bu_et']*Model_Parameters['C_bac'])
 
     f_IC_bu_lac = -(-Model_Parameters['C_bu'] +
                     (1-Model_Parameters['Y_bu_lac'])*Model_Parameters['f_lac_bu']*Model_Parameters['C_lac'] +
                     (1-Model_Parameters['Y_bu_lac'])*Model_Parameters['f_cap_bu']*Model_Parameters['C_cap'] +
-                    (1-Model_Parameters['Y_bu_lac'])*Model_Parameters['C_bac'])
+                    Model_Parameters['Y_bu_lac']*Model_Parameters['C_bac'])
 
     S[list(map(Species.index, ["S_bu", "S_et", "S_cap", "S_IN", "S_IC", "S_h2", "X_chain_et"])),
         Reactions.index('Uptake of butyrate_et')] = [-1,
@@ -1095,7 +1095,8 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                   (1 -
                                                    Model_Parameters['Y_cap']),
                                                   Model_Parameters['Y_cap']]
-    f_IC_Me_ach2 = 0
+    f_IC_Me_ach2 = -(-Model_Parameters['C_ac'] + Model_Parameters['Y_Me_ac']*Model_Parameters['C_bac'])         #Updated
+
     S[list(map(Species.index, ["S_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC'])),
         Reactions.index('Methanogenessis from acetate and h2')] = [-1,
                                                                    (1 - Model_Parameters['Y_h2_ac']
@@ -1105,8 +1106,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                                    Model_Parameters['Y_Me_ac'],
                                                                    f_IC_Me_ach2]
 
-    f_IC_Me_CO2h2 = -(Model_Parameters['Y_Me_CO2']*Model_Parameters['C_ch4'] +
-                      Model_Parameters['Y_Me_h2']*Model_Parameters['C_bac'])
+    f_IC_Me_CO2h2 = 0
     
     S[list(map(Species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_IC'])),
         Reactions.index('Methanogenessis from CO2 and h2')] = [-1,
@@ -1116,8 +1116,8 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                                f_IC_Me_CO2h2]
     
     f_IC_et_ox=-(-Model_Parameters['C_et'] +
-                    (1-Model_Parameters['Y_ac_et_ox'])*Model_Parameters['C_bac']
-                    +Model_Parameters['Y_ac_et_ox']*Model_Parameters['C_ac'])
+                    Model_Parameters['Y_ac_et_ox']*Model_Parameters['C_bac']
+                    + (1-Model_Parameters['Y_ac_et_ox'])*Model_Parameters['C_ac'])
 
     S[list(map(Species.index, ["S_et", "X_et","S_ac","S_IC"])),
         Reactions.index('Uptake of ethanol')] = [-1,1-Model_Parameters['Y_ac_et_ox'],Model_Parameters['Y_ac_et_ox'],f_IC_et_ox]
@@ -1125,8 +1125,8 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
     
     
     f_IC_lac_ox=-(-Model_Parameters['C_lac'] +
-                (1-Model_Parameters['Y_pro_lac_ox'])*Model_Parameters['C_bac']
-                +Model_Parameters['Y_pro_lac_ox']*Model_Parameters['C_pro'])
+                Model_Parameters['Y_pro_lac_ox']*Model_Parameters['C_bac']
+                + (1-Model_Parameters['Y_pro_lac_ox'])*Model_Parameters['C_pro'])
     
     S[list(map(Species.index, ["S_lac", "X_lac","S_pro","S_IC"])),
         Reactions.index('Uptake of lactate')] = [-Model_Parameters['C_bac'], 1,Model_Parameters['Y_pro_lac_ox'],f_IC_lac_ox]
