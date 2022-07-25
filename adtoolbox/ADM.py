@@ -1190,14 +1190,12 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
         np.ndarray: The output is dCdt, the change of concentration with respect to time. 
     """
     c[c<0]=0
+
     c[Model.Species.index('S_H_ion')] = 0.00001
 
-    c[Model.Species.index('S_IN')] = 0.0000001
-    
-    c[Model.Species.index('S_nh4_ion')] = c[Model.Species.index(
-        'S_IN')] - c[Model.Species.index('S_nh3')]
     c[Model.Species.index('S_co2')] = c[Model.Species.index(
         'S_IC')] - c[Model.Species.index('S_hco3_ion')]
+
     I_pH_aa = (Model.Model_Parameters["K_pH_aa"] ** Model.Model_Parameters['nn_aa'])/(np.power(
         c[Model.Species.index('S_H_ion')], Model.Model_Parameters['nn_aa']) + np.power(Model.Model_Parameters["K_pH_aa"], Model.Model_Parameters['nn_aa']))
 
