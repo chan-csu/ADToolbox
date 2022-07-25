@@ -988,7 +988,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                     (1-Model_Parameters['f_bu_ac'])*Model_Parameters['C_bu'] +
                     Model_Parameters['Y_ac_lac']*Model_Parameters['C_bac'])
 
-    S[list(map(Species.index, ["S_ac", "S_et", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_et"])),
+    S[list(map(Species.index, ["S_ac", "S_et", "S_bu", "S_IC", "S_IN", "S_h2", "X_ac_et"])),
       Reactions.index('Uptake of acetate_et')] = [-1,
                                                   (1-Model_Parameters['Y_ac_et']) *
                                                   Model_Parameters['f_et_ac'],
@@ -1001,7 +1001,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                   Model_Parameters['f_h2_ac'],
                                                   Model_Parameters['Y_ac_et']]
 
-    S[list(map(Species.index, ["S_ac", "S_lac", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_lac"])),
+    S[list(map(Species.index, ["S_ac", "S_lac", "S_bu", "S_IC", "S_IN", "S_h2", "X_ac_lac"])),
         Reactions.index('Uptake of acetate_lac')] = [-1,
                                                      (1-Model_Parameters['Y_ac_lac']) *
                                                      Model_Parameters['f_lac_ac'],
@@ -1024,7 +1024,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                      (1-Model_Parameters['Y_pro_lac'])*Model_Parameters['f_va_pro']*Model_Parameters['C_va'] +
                      Model_Parameters['Y_pro_lac']*Model_Parameters['C_bac'])
 
-    S[list(map(Species.index, ["S_pro", "S_et", "S_va", "S_IN", "S_IC", "S_h2", "X_chain_et"])),
+    S[list(map(Species.index, ["S_pro", "S_et", "S_va", "S_IC", "S_IN", "S_h2", "X_chain_et"])),
       Reactions.index('Uptake of propionate_et')] = [-1,
                                                      (1-Model_Parameters['Y_pro_et']) *
                                                      Model_Parameters['f_et_pro'],
@@ -1037,7 +1037,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                      Model_Parameters['f_h2_pro'],
                                                      Model_Parameters['Y_chain_et_pro']]
 
-    S[list(map(Species.index, ["S_pro", "S_lac", "S_va", "S_IN", "S_IC", "S_h2", "X_chain_lac"])),
+    S[list(map(Species.index, ["S_pro", "S_lac", "S_va", "S_IC", "S_IN", "S_h2", "X_chain_lac"])),
         Reactions.index('Uptake of propionate_lac')] = [-1,
                                                         (1-Model_Parameters['Y_pro_lac']) *
                                                         Model_Parameters['f_lac_pro'],
@@ -1060,7 +1060,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                     (1-Model_Parameters['Y_bu_lac'])*Model_Parameters['f_cap_bu']*Model_Parameters['C_cap'] +
                     Model_Parameters['Y_bu_lac']*Model_Parameters['C_bac'])
 
-    S[list(map(Species.index, ["S_bu", "S_et", "S_cap", "S_IN", "S_IC", "S_h2", "X_chain_et"])),
+    S[list(map(Species.index, ["S_bu", "S_et", "S_cap", "S_IC", "S_IN", "S_h2", "X_chain_et"])),
         Reactions.index('Uptake of butyrate_et')] = [-1,
                                                      (1-Model_Parameters['Y_bu_et']
                                                       ) * Model_Parameters['f_et_bu'],
@@ -1072,7 +1072,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                       )*Model_Parameters['f_h2_bu'],
                                                      Model_Parameters['Y_bu_et']]
 
-    S[list(map(Species.index, ["S_bu", "S_lac", "S_cap", "S_IN", "S_IC", "S_h2", "X_chain_lac"])),
+    S[list(map(Species.index, ["S_bu", "S_lac", "S_cap", "S_IC", "S_IN", "S_h2", "X_chain_lac"])),
         Reactions.index('Uptake of butyrate_lac')] = [-1,
                                                       (1-Model_Parameters['Y_bu_lac']) *
                                                       Model_Parameters['f_lac_bu'],
