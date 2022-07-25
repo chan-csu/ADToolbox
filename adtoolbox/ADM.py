@@ -915,20 +915,32 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
     f_IC_su = -(-Model_Parameters['C_su'] +
                 (1-Model_Parameters['Y_su'])*Model_Parameters['f_pro_su']*Model_Parameters['C_pro'] +
                 (1-Model_Parameters['Y_su'])*Model_Parameters['f_et_su']*Model_Parameters['C_et'] +
-                (1-Model_Parameters['Y_su'])*Model_Parameters['f_lac_su']*Model_Parameters['C_lac'] +
                 (1-Model_Parameters['Y_su'])*Model_Parameters['f_ac_su']*Model_Parameters['C_ac'] +
                 Model_Parameters['Y_su']*Model_Parameters['C_bac'])
 
-    S[list(map(Species.index, ["S_su", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_su"])),
+    theta = Base_Parameters['P_h2'] * pow(10,(Base_Parameters['pH'] - 3.82))
+
+    Eta_ac = 2/pow((1 + theta),2)
+    Eta_bu = theta/pow((1+theta),2)
+    Eta_et = Eta_bu
+
+    f_ac_su = 0.67*Eta_ac
+    f_bu_su = 0.83*Eta_bu
+    f_et_su = 0.86*Eta_et
+    f_h2_su = 0.33*Eta_ac + 0.17*Eta_bu + 0.14*Eta_et
+    f_pro_su = 1 - f_ac_su - f_bu_su - f_et_su - f_h2_su
+
+
+    S[list(map(Species.index, ["S_su", "S_pro", "S_et", "S_ac", "S_h2", "S_IN", "S_IC", "X_su"])),
       Reactions.index('Uptake of sugars')] = [-1,
                                               (1-Model_Parameters['Y_su']) *
-                                              Model_Parameters['f_pro_su'],
+                                              f_pro_su,
                                               (1-Model_Parameters['Y_su']) *
-                                              Model_Parameters['f_et_su'],
+                                              f_et_su,
                                               (1-Model_Parameters['Y_su']) *
-                                              Model_Parameters['f_lac_su'],
+                                              f_ac_su,
                                               (1-Model_Parameters['Y_su']) *
-                                              Model_Parameters['f_ac_su'],
+                                              f_h2_su,
                                               -Model_Parameters['N_bac']*Model_Parameters['Y_su'],
                                               f_IC_su,
                                               Model_Parameters['Y_su']]
