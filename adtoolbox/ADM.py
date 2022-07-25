@@ -1095,7 +1095,9 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                   (1 -
                                                    Model_Parameters['Y_cap']),
                                                   Model_Parameters['Y_cap']]
-    f_IC_Me_ach2 = -(-Model_Parameters['C_ac'] + Model_Parameters['Y_Me_ac']*Model_Parameters['C_bac'])         #Updated
+   
+    f_IC_Me_ach2 = -(-Model_Parameters['C_ac'] + (1-Model_Parameters['Y_Me_ac'])*Model_Parameters['C_ch4']
+                    + Model_Parameters['Y_Me_ac']*Model_Parameters['C_bac'])                                     #Updated
 
     S[list(map(Species.index, ["S_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC'])),
         Reactions.index('Methanogenessis from acetate and h2')] = [-1,
@@ -1106,12 +1108,12 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                                                    Model_Parameters['Y_Me_ac'],
                                                                    f_IC_Me_ach2]
 
-    f_IC_Me_CO2h2 = 0
+    f_IC_Me_CO2h2 = -((1-Model_Parameters['Y_Me_CO2'])*Model_Parameters['C_ch4'] + Model_Parameters['Y_Me_CO2']*Model_Parameters['C_bac'])
     
-    S[list(map(Species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_IC'])),
+    S[list(map(Species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_IC'])),                                          #Updated
         Reactions.index('Methanogenessis from CO2 and h2')] = [-1,
                                                                (1 -
-                                                                Model_Parameters['Y_h2_CO2']),
+                                                                Model_Parameters['Y_Me_CO2']),
                                                                (Model_Parameters['Y_Me_CO2']),
                                                                f_IC_Me_CO2h2]
     
