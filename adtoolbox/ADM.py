@@ -931,7 +931,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
     f_pro_su = 1 - f_ac_su - f_bu_su - f_et_su - f_h2_su
 
 
-    S[list(map(Species.index, ["S_su", "S_pro", "S_et", "S_ac", "S_h2", "S_IN", "S_IC", "X_su"])),
+    S[list(map(Species.index, ["S_su", "S_pro", "S_et", "S_ac", "S_h2", "S_bu", "S_IN", "S_IC", "X_su"])),
       Reactions.index('Uptake of sugars')] = [-1,
                                               (1-Model_Parameters['Y_su']) *
                                               f_pro_su,
@@ -941,6 +941,8 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                                               f_ac_su,
                                               (1-Model_Parameters['Y_su']) *
                                               f_h2_su,
+                                              (1-Model_Parameters['Y_su']) *
+                                              f_bu_su,
                                               -Model_Parameters['N_bac']*Model_Parameters['Y_su'],
                                               f_IC_su,
                                               Model_Parameters['Y_su']]
