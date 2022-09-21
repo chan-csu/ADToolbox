@@ -17,6 +17,7 @@ from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
+from collections import Counter
 import gzip
 import shutil
 import Configs
@@ -26,6 +27,27 @@ import rich
 from __init__ import Main_Dir
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
+
+class Additive_Dict(dict):
+    """ A simple dictionary with additive properties. The only difference with 
+    normal dictionary is that "+" operator works with the objects of this class.
+    when the values are the same between two dictionaries, their values gets added,
+    if not, nothing happens!
+    
+    """
+    def __add__(self,B):
+        Out=self.copy()
+        for key in B.keys():
+            if key in self.keys():
+                Out[key]+=B[key]
+        return Out
+    
+    def __mul__(self,a):
+        Out=self.copy()
+        for key in Out.keys():
+            Out[key]=Out[key]*a
+        return Out
+
 
 class Feed:
 
@@ -929,7 +951,7 @@ class Metagenomics:
 
         return Output_JSON
     
-    def Align_Genomes(self):
+    def align_genomes(self):
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
         and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value
@@ -1019,42 +1041,81 @@ class Metagenomics:
         return JSON_ADM_Output
         # So far it has gotten really complicated, after making sure it works, instead of adding EC numbers I'll add [SEED,STR] so
         # that it can be used for downstream analysis
+    
+    def calculate_microbial_portions(self,microbe_reaction_map:dict,genome_info:dict,relative_abundances:dict)-> dict:
+        
+        """This method calculates COD fraction of each microbial term in a Model
+        
+        Args:
+            microbe_reaction_map: This dictionary must determine the association between
+            microbial species in the model and the reactions that these species are involved
+            in. In the case of Modified-ADM, this dictionary is the following:
+            
+            microbe_reaction_map={
+                            "Hydrolysis carbohydrates":"X_ch",
+                            "Hydrolysis proteins":"X_pr",
+                            "Hydrolysis lipids":"X_li",
+                            "Uptake of sugars":"X_su",
+                            "Uptake of amino acids":"X_aa",
+                            "Uptake of LCFA":"X_fa",
+                            "Uptake of acetate_et":"X_ac_et",
+                            "Uptake of acetate_lac":"X_ac_lac",
+                            "Uptake of propionate_et":"X_chain_et",
+                            "Uptake of propionate_lac":"X_chain_lac",
+                            "Uptake of butyrate_et":"X_chain_et",
+                            "Uptake of butyrate_lac":"X_chain_lac",
+                            "Uptake of valerate":"X_VFA_deg",
+                            "Uptake of caproate":"X_VFA_deg",
+                            "Methanogenessis from acetate and h2":"X_Me_ac",
+                            "Methanogenessis from CO2 and h2":"X_Me_CO2",
+                            "Uptake of ethanol":"X_et",
+                            "Uptake of lactate":"X_lac",} 
+        
+            genome_info: This dictionary is the output of the align_genomes method. It holds
+            the information about the directory holding the result of aligning the genomes of
+            interest and other useful information
+
+            relative_abundances: This dictionary holds the relative abundace of each genome in the 
+            community. The keys of this dictionary are Genome_ID similar to the output of align_genomes.
+            NOTE: The relative abundances must be between 0,1
+            For example: 
+            relative_abundances={
+                "Genome_1":0.56,
+                "Genome_2":0.11,
+                "Genome_3":0.22,
+                "Genome_4":0.11
+            }
+
+        
+        Returns:
+            dict: This dictionary includes the fraction of COD that belongs to each microbial species in the
+            model. 
 
 
-class ADM_Mapping:
-
-    """
-    This class deals with mapping Metagenomics and Exp data to ADM1
-
-    """
-    Degrader_Reaction_Map = {
-        'Hydrolysis carbohydrates': "X_ch",
-        'Hydrolysis of proteins': "X_pr",
-        'Hydrolysis of lipids': "X_li",
-        'Uptake of sugars': 'X_su',
-        'Uptake of amino acids': "X_aa",
-        'Uptake of LCFA': "X_fa",
-        'Uptake of valerate': "X_c4",
-        'Uptake of butyrate': "X_c5",
-        'Uptake of propionate': "X_pro",
-        'Uptake of acetate': "X_ac",
-        'Uptake of Hydrogen': "X_h2",
-    }
-
-    def __init__(self, Alignment_Info_JSON, ADM1_Parameters, Rel_Abundances_Dict):
-
-        self.ADM1_Parameters = ADM1_Parameters
-        self.Alignment_Info_JSON = Alignment_Info_JSON
-        self.Rel_Abundances_Dict = Rel_Abundances_Dict
-
-    def Update_Degrader_CODs(self, Inoculum_Total_COD, Degrader_Reaction_Map=Degrader_Reaction_Map):
         """
-        This function updates the CODs of the degrader reactions
-        """
-        Degrader_CODs = {}
-        for Degrader in Degrader_Reaction_Map.keys():
-            Degrader_CODs[Degrader] = Inoculum_Total_COD[Degrader_Reaction_Map[Degrader]]
-        return Degrader_CODs
+        reaction_db=pd.read_table(self.Config.CSV_Reaction_DB,delimiter=",")
+        reaction_db.set_index("EC_Numbers",inplace=True)
+        model_species=list(set(microbe_reaction_map.values()))
+        cod_portion=Additive_Dict([(i,0) for i in model_species])
+        
+        for genome_id in genome_info.keys():
+            temp_tsv = pd.read_table(
+                        genome_info[genome_id]['Alignment_File'], sep='\t',header=None)
+            filter = (temp_tsv.iloc[:, -1] > self.Config.bit_score) & (
+                        temp_tsv.iloc[:, -2] < self.Config.e_value)
+            temp_tsv = temp_tsv[filter]
+            Unique_ECs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
+            Cleaned_Reaction_List=[]
+            [Cleaned_Reaction_List.extend(map(lambda x:x.strip(" "),reaction_db.loc[EC,"Modified_ADM_Reactions"].split("|"))) for EC in Unique_ECs if EC in reaction_db.index]
+            pathway_counts=Counter(Cleaned_Reaction_List)
+            SUM=sum([pathway_counts[key] for key in pathway_counts])
+            for i in pathway_counts:
+                pathway_counts[i]=pathway_counts[i]/SUM
+            cod_portion=cod_portion+Additive_Dict(pathway_counts)*relative_abundances[genome_id]
+
+        
+
+        return cod_portion
 
 
 

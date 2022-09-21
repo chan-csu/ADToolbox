@@ -7,6 +7,8 @@ RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
 
 
+
+
 class Alignment:
     """
     A class for aligner configurations

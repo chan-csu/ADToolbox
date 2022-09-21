@@ -1,4 +1,4 @@
-import string
+
 from typing import Callable
 import plotly
 from sympy import plot
@@ -23,10 +23,9 @@ from collections import OrderedDict
 import rich
 from rich.console import Console
 from rich.table import Table
-from __init__ import Main_Dir
+from __init__ import Main_Dir,PKG_DATA
 from rich.style import Style
-
-import time
+import dash_escher
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
 # It is extensively based on PyADM1, and I would like to thank the author of PyADM1 for this work
@@ -65,34 +64,36 @@ class Model:
     
 
 
-    def __init__(self, Model_Parameters: dict, Base_Parameters: dict, Initial_Conditions: dict, Inlet_Conditions:dict, Reactions: list, Species: list, ODE_System:Callable, Build_Stoiciometric_Matrix:Callable,Control_States:dict={"S_bu":0.5,"S_H_ion":10**-7},Metagenome_Report=None, Name="ADM1", Switch="DAE"):
+    def __init__(self, Model_Parameters: dict, Base_Parameters: dict, Initial_Conditions: dict, Inlet_Conditions:dict, Reactions: list, Species: list, ODE_System:Callable, Build_Stoiciometric_Matrix:Callable,Control_States:dict={},Metagenome_Report=None, Name="ADM1", Switch="DAE",simulation_time=30):
         self.Model_Parameters = Model_Parameters
         self.Base_Parameters = Base_Parameters
         
-        try:
-            for items in Control_States.keys():
-                Initial_Conditions[items]
-                Initial_Conditions[items]=Control_States[items]
+        # try:
+        #     for items in Control_States.keys():
+        #         Initial_Conditions[items]
+        #         Initial_Conditions[items]=Control_States[items]
         
-        except TypeError:
+        # except TypeError:
 
-            rich.print("[red]No acceptable Controled State passed!\nEverything will change according to the system's dynamics!") 
-            self.Control_States={}
-        except KeyError:
+        #     rich.print("[red]No acceptable Controled State passed!\nEverything will change according to the system's dynamics!") 
+        #     self.Control_States={}
+        # except KeyError:
             
-            rich.print("[red]Control states must follow the ADM state variable notations!\nCheck the Control_States json file.")
-            self.Control_States={}
-        else:
-            rich.print("[green]The following states were set as control:\n")
-            table = Table(title="Control States\n",header_style=Style(color="cyan", blink=True, bold=True))
-            for i in Control_States.keys():
-                table.add_column(i)
+        #     rich.print("[red]Control states must follow the ADM state variable notations!\nCheck the Control_States json file.")
+        #     self.Control_States={}
+        # else:
+        #     rich.print("[green]The following states were set as control:\n")
+        #     table = Table(title="Control States\n",header_style=Style(color="cyan", blink=True, bold=True))
+        #     for i in Control_States.keys():
+        #         table.add_column(i)
             
-            table.add_row(*[str(Control_States[i]) for i in Control_States.keys()],style=Style(color="white", blink=True, bold=True))
-            rich.print(table)
-            self.Control_States=Control_States
+        #     table.add_row(*[str(Control_States[i]) for i in Control_States.keys()],style=Style(color="white", blink=True, bold=True))
+        #     rich.print(table)
+        for items in Control_States.keys():
+            Initial_Conditions[items]
+            Initial_Conditions[items]=Control_States[items]
+        self.Control_States=Control_States
 
-            time.sleep(3)
 
         self.Inlet_Conditions = np.array(
             [Inlet_Conditions[i+"_in"] for i in Species])[:, np.newaxis]
@@ -108,6 +109,7 @@ class Model:
         self.S = Build_Stoiciometric_Matrix(
             Base_Parameters, Model_Parameters, Reactions, Species)
         self.ODE_System = ODE_System
+        self.Simtime=simulation_time
 
     # def Build_COBRA_Model(self, save_model=True):
     #     model = cobra.Model(self.Name)
@@ -128,7 +130,7 @@ class Model:
         # if save_model:
         #     cobra.io.save_json_model(model, self.Name+'.json')
 
-    def Solve_Model(self, t_span: tuple, y0: np.ndarray, T_eval: np.ndarray, method="Radau", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
+    def Solve_Model(self, y0: np.ndarray, T_eval: np.ndarray, method="LSODA", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
         """
         Function to solve the model. 
         Examples:
@@ -163,9 +165,10 @@ class Model:
         Returns:
             scipy.integrate._ivp.ivp.OdeResult: Returns the results of the simulation being run and gives optimized paramters.
         """
+        self.Info={"Fluxes":[]}
         try:
             C = scipy.integrate.solve_ivp(
-                self.ODE_System, t_span, y0, t_eval=T_eval, method=method, args=[self])
+                self.ODE_System, (0,self.Simtime), y0, t_eval=T_eval, method=method, args=[self])
         
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
@@ -179,7 +182,7 @@ class Model:
        #
        #return C
 
-    def Plot(self, Sol: scipy.integrate._ivp.ivp.OdeResult, Type: str = "Line")-> plot:
+    def Plot(self, Sol: scipy.integrate._ivp.ivp.OdeResult, Type: str = "Line")-> None:
         """ A function which returns a plot of the solution from the ODE
         """
         Solution = {
@@ -221,7 +224,12 @@ class Model:
 
     def Dash_App(self, Sol: scipy.integrate._ivp.ivp.OdeResult, Type: str = "Line")->None:
         """A fuction which opens a web browser that displays the results"""
-        
+        with open(os.path.join(PKG_DATA,"Modified_ADM_Map.json"),'rb') as f:
+            MD=json.load(f)
+        with open(os.path.join(PKG_DATA,"Modified_ADM_Model.json"),'rb') as f:
+            MOD=json.load(f)
+
+
         app = Dash(__name__)
         colors = {
             'background': '#659dbd',
@@ -240,27 +248,31 @@ class Model:
             fig = px.line(Sol_DF, x="t", y=Sol_DF.columns,
                           title="Concentration of species")
             fig.update_layout(
-                title={
-                    'y': 0.95,
-                    'x': 0.5,
+            title={
+            'y': 0.95,
+            'x': 0.5,
+            "font_size": 30,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+            legend=dict(font=dict(size= 20))
 
-                    "font_size": 30,
-                    'xanchor': 'center',
-                    'yanchor': 'top'}
-
-            )
+                )
             fig.update_xaxes(
-                title={
-                    "text": "Time (Days)",
-                    "font_size": 25,
-                }
-            )
+            title={
+            "text": "Time (Days)",
+            "font_size": 25,
+                },
+                 tickfont_size=20
+                )
             fig.update_yaxes(
-                title={
-                    "text": "Concentrations (kg COD/m^3)",
-                    "font_size": 25,
-                }
-            )
+            title={
+            "text": "Concentrations (kg COD/m^3)",
+            "font_size": 25,
+             },
+             tickfont_size=20
+            
+                )
+            fig.update_traces(line=dict(width=5))
 
         with_Report=html.Div([html.Div(style={'backgroundColor': 'rgb(200, 200, 200)', 'height':'300px', "margin-top":'-50px'}, children=[html.H1(
             children='ADToolbox',
@@ -293,8 +305,11 @@ class Model:
             dcc.Graph(figure=fig, id='Concentrations_Line_Plot',
             style={
                 "backgroundColor": "#171010",
+                "height":"600px"
             }
             ),
+
+
 
             html.Br(),
 
@@ -412,9 +427,12 @@ class Model:
             'color': 'black',
             'font-size': '20px',
             'font-family': 'Trebuchet MS',
-            }),
+            },
+            export_format='csv',
+            export_headers='display',
+            merge_duplicate_headers=True),
 
-            
+            html.Br(),
 
             html.H2("Microbial Association", style={
                     'textAlign': 'left',
@@ -423,12 +441,37 @@ class Model:
                     "BackgroundColor": "#fbeec1",
                     "font-family": "Trebuchet MS",
                     }) ,
+            
 
             dcc.Dropdown(self.Reactions,
-                         self.Reactions[0], style={"width": "300px"}, id="Drop_Down") ,
+                         self.Reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down") ,
 
             dcc.Graph(figure=None, id="Annotation_Graph", style={
-            "height": "500px"})])
+            "height": "650px"}),
+
+            html.H2("Escher Map", style={
+                    'textAlign': 'left',
+                    'color': colors['text'],
+                    'font-size': '20px',
+                    "BackgroundColor": "#fbeec1",
+                    "font-family": "Trebuchet MS",
+                    }) ,
+            
+            dcc.Dropdown(["Show Map","Hide Map"],
+                         self.Reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down_Escher"),
+            html.Br(),
+            html.Div(children=None,id="Escher_"),
+            html.Div(children=None,id="Escher"),
+            
+        #     html.Div(children=[dash_escher.DashEscher(mapData=MD,modelData=MOD,
+        #      options={
+        #          'reaction_data':rxn_data
+        #      }
+        #      ,height='1000px',
+        #  width='100%')])
+         ])
+##
+
 
         without_Report=html.Div([html.Div(style={'backgroundColor': colors['background'], 'height':'200px', "margin-top":'-30px'}, children=[html.H1(
             children='ADToolbox',
@@ -536,6 +579,36 @@ class Model:
         
         app.layout = with_Report if self.Metagenome_Report else without_Report
 
+
+
+
+
+        @app.callback(Output(component_id="Escher_", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'))
+        def escher_wrapper(Drop_Down_Escher):
+            if Drop_Down_Escher=="Show Map":
+                Labels={}
+                for i in range(0,len(Sol.t),int(len(Sol.t)/20)):
+                    Labels[i]={'label':str(int(Sol.t[i])),'style':{'color': '#77b0b1'}}
+                Labels[len(Sol.t)-1]=self.Simtime
+                return [html.Br(),html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0, len(Sol.t),len(Sol.t)/20,value=0,id="Escher_Slider",marks=Labels),html.Br()]
+
+        @app.callback(Output(component_id="Escher", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'),
+        Input(component_id="Escher_Slider", component_property='value'))        
+        def draw_escher(Drop_Down_Escher,Escher_Slider):
+            rxn_data={}
+    
+            for ind,i in enumerate(self.Reactions):
+                rxn_data[i.replace(" ","_")]=self.Info["Fluxes"][int(Escher_Slider)][ind]
+            
+            if Drop_Down_Escher=="Show Map":
+                return [dash_escher.DashEscher(mapData=MD,modelData=MOD,
+            options={
+             'reaction_data':rxn_data
+            }
+            ,height='1000px',
+        width='100%')
+             ]
+
         @app.callback(Output(component_id="Annotation_Graph", component_property='figure'), Input(component_id='Drop_Down', component_property='value'))
         def update_graph_fig(input_value):
             Reactions = self.Reactions
@@ -570,26 +643,35 @@ class Model:
                         f"No Relevant EC Numbers were found for {item.split(';')[-1]} !")
                     Parents_List.append(item)
 
-            fig = go.Figure(go.Icicle(
+            fig = go.Figure(go.Treemap(
                 ids=id_list,
                 labels=Label_List,
                 parents=Parents_List,
                 values=list([1 for i in range(id_list.__len__())]),
-                root_color="lightgrey",
-                maxdepth=2
+                root_color="lightgray",
+                maxdepth=2,
+                marker_colorscale = 'RdBu'
+
+
             ))
+            fig.update_layout(
+            font=dict(size=25,color='white')
 
+
+            )
             return fig
-
 
         @app.callback(Output(component_id='Concentrations_Line_Plot', component_property='figure'),
                     Input(component_id='Base_Parameters', component_property='data'),
                     Input(component_id='Model_Parameters', component_property='data'),
                     Input(component_id='Initial_Conditions', component_property='data'),
                     Input(component_id='Inlet_Conditions', component_property='data'))
-        def update_graph_fig(Base_Parameters: dict, Model_Parameters:dict, Initial_Conditions: dict, Inlet_Conditions: dict)->plotly.graph_objects.Figure:
+        def update_graph_fig(Base_Parameters: dict, Model_Parameters:dict, Initial_Conditions: dict, Inlet_Conditions: dict,prevent_initial_call=True)->plotly.graph_objects.Figure:
             """A functions that imports Base_Parameters, Model_Parameters, Initial_Conditions, Inlet_Conditions into the plot.
             """
+            if len(self.Control_States.keys()):
+                for i in self.Control_States.keys():
+                    self.Control_States[i]=Initial_Conditions[0][i]
 
             self.Base_Parameters = Base_Parameters[0]
             self.Model_Parameters = Model_Parameters[0]
@@ -598,7 +680,7 @@ class Model:
             self.Inlet_Conditions = np.array(
             [Inlet_Conditions[0][i+"_in"] for i in self.Species])[:, np.newaxis]
             Update_Sol = self.Solve_Model(
-                            (0, 100), self.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))
+                         self.Initial_Conditions[:, 0], np.linspace(0, 30, 10000))
 
 
             Solution = {
@@ -616,20 +698,26 @@ class Model:
             'x': 0.5,
             "font_size": 30,
             'xanchor': 'center',
-            'yanchor': 'top'}
+            'yanchor': 'top'},
+            legend=dict(font=dict(size= 20))
+
                 )
             fig.update_xaxes(
             title={
             "text": "Time (Days)",
             "font_size": 25,
-                }
+                },
+                 tickfont_size=20
                 )
             fig.update_yaxes(
             title={
             "text": "Concentrations (kg COD/m^3)",
             "font_size": 25,
-             }
+             },
+             tickfont_size=20
+            
                 )
+            fig.update_traces(line=dict(width=5))
 
             return fig
             
@@ -1129,7 +1217,7 @@ def Build_Modified_ADM1_Stoiciometric_Matrix(Base_Parameters: dict, Model_Parame
                 +Model_Parameters['Y_pro_lac_ox']*Model_Parameters['C_pro'])
     
     S[list(map(Species.index, ["S_lac", "X_lac","S_pro","S_IC"])),
-        Reactions.index('Uptake of lactate')] = [-Model_Parameters['C_bac'], 1,Model_Parameters['Y_pro_lac_ox'],f_IC_lac_ox]
+        Reactions.index('Uptake of lactate')] = [-1, 1-Model_Parameters['Y_pro_lac_ox'],Model_Parameters['Y_pro_lac_ox'],f_IC_lac_ox]
 
     S[list(map(Species.index, ["X_su", "TSS"])),
         Reactions.index('Decay of Xsu')] = [-1, 1]
@@ -1425,12 +1513,12 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
         (c[Model.Species.index('S_h2')] - 16 *
          Model.Model_Parameters['K_H_h2'] * p_gas_h2)
 
-    v[Model.Reactions.index('Gas Transfer CH4')] = Model.Model_Parameters['k_L_a'] * \
+    v[Model.Reactions.index('Gas Transfer CH4')] = max(0,Model.Model_Parameters['k_L_a'] * \
         (c[Model.Species.index('S_ch4')] - 64 *
-         Model.Model_Parameters['K_H_ch4'] * p_gas_ch4)
-    v[Model.Reactions.index('Gas Transfer CO2')] = Model.Model_Parameters['k_L_a'] * \
+         Model.Model_Parameters['K_H_ch4'] * p_gas_ch4))
+    v[Model.Reactions.index('Gas Transfer CO2')] = max(0,Model.Model_Parameters['k_L_a'] * \
         (c[Model.Species.index('S_co2')] -
-         Model.Model_Parameters['K_H_co2'] * p_gas_co2)
+         Model.Model_Parameters['K_H_co2'] * p_gas_co2))
 
     dCdt = np.matmul(Model.S, v)
 
@@ -1472,12 +1560,12 @@ def Modified_ADM1_ODE_Sys(t: float, c: np.ndarray, Model: Model)-> np.ndarray:
         c[Model.Species.index('S_ac_ion')]=Model.Model_Parameters['K_a_ac']/(Model.Model_Parameters['K_a_ac']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_ac')]
         
         c[Model.Species.index('S_lac_ion')]=Model.Model_Parameters['K_a_lac']/(Model.Model_Parameters['K_a_lac']+c[Model.Species.index('S_H_ion')])*c[Model.Species.index('S_lac')]    
-    
+
     if Model.Control_States.keys():
         for state in Model.Control_States.keys():
             c[Model.Species.index(state)]=Model.Control_States[state]
             dCdt[Model.Species.index(state)]=0
-
+    Model.Info["Fluxes"].append(v)
     return dCdt[:, 0]
 
 
@@ -1493,10 +1581,11 @@ if __name__ == "__main__":
    #    (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
 
     # adm1.Dash_App(Sol)
-    with open('/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Database/Modified_ADM/Modified_ADM_Model_Parameters.json', 'r') as f:
+    with open("../Optimization/Tuned_Params.json", 'r') as f:
         mp=json.load(f)
+    with open('/Users/parsaghadermarzi/Desktop/ADM_Mapping.json', 'r') as f:
+        MR=json.load(f)
     mod_adm1 = Model(mp, PM.Base_Parameters, PM.Initial_Conditions, PM.Inlet_Conditions, PM.Reactions,
-                     PM.Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix, Name="Modified_ADM1", Switch="DAE")
-    Sol_mod_adm1 = mod_adm1.Solve_Model(
-        (0, 100), mod_adm1.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))
+                     PM.Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Control_States={"S_H_ion":0.000005},Name="Modified_ADM1", Switch="DAE",Metagenome_Report=MR)
+    Sol_mod_adm1 = mod_adm1.Solve_Model(mod_adm1.Initial_Conditions[:, 0], np.linspace(0,30, 10000))
     mod_adm1.Dash_App(Sol_mod_adm1)

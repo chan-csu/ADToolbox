@@ -6,10 +6,14 @@ from rich.prompt import Prompt
 import sys
 
 """Project Setup for ADToolBox."""
+
 __version__ = "0.1.0"
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"),"r") as f:
+PKG_DATA=os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")
+
+with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),"r") as f:
     Conf = json.load(f)
     Main_Dir=Conf["Base_Dir"]
 if Main_Dir:
