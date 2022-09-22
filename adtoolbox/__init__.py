@@ -25,6 +25,6 @@ if not os.path.exists(Main_Dir):
     os.mkdir(Main_Dir)
     rich.print("\n[yellow]Directory did not exist. Created directory: [yellow]{}".format(Main_Dir))
 
-with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"),"w") as f:
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","ADToolbox_Configs.json"),"w") as f:
     Conf["Base_Dir"]=Main_Dir
     json.dump(Conf,f)

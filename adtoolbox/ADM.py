@@ -2,7 +2,6 @@
 from typing import Callable
 import plotly
 from sympy import plot
-from Parameters import *
 import numpy as np
 import scipy.optimize
 import scipy.integrate
@@ -10,7 +9,6 @@ import pandas as pd
 import json
 import os
 import plotly.express as px
-import Parameters_Modified as PM
 from dash import Dash, html, dcc
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output,dash_table
@@ -1585,7 +1583,18 @@ if __name__ == "__main__":
         mp=json.load(f)
     with open('/Users/parsaghadermarzi/Desktop/ADM_Mapping.json', 'r') as f:
         MR=json.load(f)
-    mod_adm1 = Model(mp, PM.Base_Parameters, PM.Initial_Conditions, PM.Inlet_Conditions, PM.Reactions,
-                     PM.Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Control_States={"S_H_ion":0.000005},Name="Modified_ADM1", Switch="DAE",Metagenome_Report=MR)
+    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Base_Parameters.json', 'r') as f:
+        BP=json.load(f)
+    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Initial_Conditions.json', 'r') as f:
+        IC=json.load(f)
+    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Inlet_Conditions.json', 'r') as f:
+        InC=json.load(f)
+    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Reactions.json', 'r') as f:
+        r=json.load(f)
+    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Species.json', 'r') as f:
+        s=json.load(f)
+    
+    mod_adm1 = Model(mp, BP, IC, InC, r,
+                     s, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Control_States={"S_H_ion":0},Name="Modified_ADM1", Switch="DAE",Metagenome_Report=MR)
     Sol_mod_adm1 = mod_adm1.Solve_Model(mod_adm1.Initial_Conditions[:, 0], np.linspace(0,30, 10000))
     mod_adm1.Dash_App(Sol_mod_adm1)

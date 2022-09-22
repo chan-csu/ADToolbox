@@ -143,6 +143,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "dash-escher"
+version = "0.0.4"
+description = "A Plotly Dash component for EscherPy, a metabolic flux viewer."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "dash-html-components"
 version = "2.0.0"
 description = "Vanilla HTML components for Dash"
@@ -607,7 +615,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "8700d0da5365e5f1b9d7b0cc3d0330ca6c41ab80f95a2ee6c714ff342044c389"
+content-hash = "aa888b6a3ede73326119a64e9ba88c63fed9ce5b9d9507967b2bc56fc44d0a04"
 
 [metadata.files]
 atomicwrites = [
@@ -721,6 +729,7 @@ dash-core-components = [
     {file = "dash_core_components-2.0.0-py3-none-any.whl", hash = "sha256:52b8e8cce13b18d0802ee3acbc5e888cb1248a04968f962d63d070400af2e346"},
     {file = "dash_core_components-2.0.0.tar.gz", hash = "sha256:c6733874af975e552f95a1398a16c2ee7df14ce43fa60bb3718a3c6e0b63ffee"},
 ]
+dash-escher = []
 dash-html-components = [
     {file = "dash_html_components-2.0.0-py3-none-any.whl", hash = "sha256:b42cc903713c9706af03b3f2548bda4be7307a7cf89b7d6eae3da872717d1b63"},
     {file = "dash_html_components-2.0.0.tar.gz", hash = "sha256:8703a601080f02619a6390998e0b3da4a5daabe97a1fd7a9cebc09d015f26e50"},

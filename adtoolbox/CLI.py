@@ -336,10 +336,9 @@ def main():
             
             ADM_Control_States={}
                 
-        mod_adm1 = Model(ADM_Model_Parameters,ADM_Base_Parameters,ADM_Initial_Conditions,ADM_Inlet_Conditions,ADM_Reactions,
-                    ADM_Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Control_States=ADM_Control_States,Metagenome_Report=ADM_Metagenome_Report,Name="Modified_ADM1", Switch="DAE")
-        Sol_mod_adm1 = mod_adm1.Solve_Model(
-        (0, 100), mod_adm1.Initial_Conditions[:, 0], np.linspace(0, 100, 10000))
+        mod_adm1 = Model(ADM_Model_Parameters, ADM_Base_Parameters, ADM_Initial_Conditions, ADM_Inlet_Conditions, ADM_Reactions,
+                     ADM_Species, Modified_ADM1_ODE_Sys, Build_Modified_ADM1_Stoiciometric_Matrix,Control_States=ADM_Control_States,Name="Modified_ADM1", Switch="DAE",Metagenome_Report=ADM_Metagenome_Report)
+        Sol_mod_adm1 = mod_adm1.Solve_Model(mod_adm1.Initial_Conditions[:, 0], np.linspace(0,30, 10000))
 
         if args.report == 'dash' or args.report==None:
             mod_adm1.Dash_App(Sol_mod_adm1)
@@ -401,10 +400,10 @@ def Set_Base_Dir(args):
     """
     This function sets the base directory for the ADToolbox.
     """
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"), 'r') as f:
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","ADToolbox_Configs.json"), 'r') as f:
         Conf = json.load(f)
     Conf["Base_Dir"] = args.directory
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ADToolbox_Configs.json"), 'w') as f:
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","ADToolbox_Configs.json"), 'w') as f:
         json.dump(Conf, f, indent=4)
     if not os.path.exists(args.directory):
         os.mkdir(args.directory)
