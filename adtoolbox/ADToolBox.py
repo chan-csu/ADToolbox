@@ -814,8 +814,8 @@ class Metagenomics:
                         Requirements: bool=False,
                         Report:bool =True)->dict:
 
-        if not os.path.exists(self.Config.QIIME_Outputs_Dir):
-            os.mkdir(self.Config.QIIME_Outputs_Dir)
+        if not os.path.exists(self.Config.QIIME_Outputs_Directory):
+            os.mkdir(self.Config.QIIME_Outputs_Directory)
             print("Please provide the QIIME output files in: "+self.Config.Config.QIIME_Outputs_Dir)
             return 0
         try:
@@ -856,7 +856,11 @@ class Metagenomics:
             rich.print(
                 "[green] ---> Taxonomy_Table_Dir is found in the directory, and was loaded successfully!")
             time.sleep(3)
-
+        starting_column=["#OTU ID","FeatureID"]
+        for i in starting_column:
+            if i in list(Taxconomy_Table.columns):
+                Taxconomy_Table=Taxconomy_Table.rename(columns={i:"#OTU ID"})
+                break
         Rel_Abundances['#OTU ID'] = Feature_Table['#OTU ID']
         Rel_Abundances = Feature_Table.iloc[:, list(
             Feature_Table.columns).index('#OTU ID') + 1:]
