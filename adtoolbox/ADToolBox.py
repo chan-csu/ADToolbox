@@ -1,3 +1,4 @@
+from distutils.log import warn
 import pdb
 import subprocess
 import os
@@ -39,13 +40,13 @@ class Additive_Dict(dict):
         for key in B.keys():
             if key in self.keys():
                 Out[key]+=B[key]
-        return Out
+        return Additive_Dict(Out)
     
     def __mul__(self,a):
         Out=self.copy()
         for key in Out.keys():
             Out[key]=Out[key]*a
-        return Out
+        return Additive_Dict(Out)
 
 
 class Feed:
@@ -820,7 +821,12 @@ class Metagenomics:
             return 0
         try:
             Feature_Table = pd.read_table(
-                self.Config.Feature_Table_Dir, sep='\t', header=1)
+                self.Config.Feature_Table_Dir, sep='\t')
+            starting_column=["#OTU ID","FeatureID"]
+            for i in starting_column:
+                if i in list(Feature_Table.columns):
+                    Feature_Table=Feature_Table.rename(columns={i:"#OTU ID"})
+                    break
             Rel_Abundances = Feature_Table.iloc[:, list(
                 Feature_Table.columns).index('#OTU ID') + 1:]
 
@@ -856,11 +862,7 @@ class Metagenomics:
             rich.print(
                 "[green] ---> Taxonomy_Table_Dir is found in the directory, and was loaded successfully!")
             time.sleep(3)
-        starting_column=["#OTU ID","FeatureID"]
-        for i in starting_column:
-            if i in list(Taxconomy_Table.columns):
-                Taxconomy_Table=Taxconomy_Table.rename(columns={i:"#OTU ID"})
-                break
+
         Rel_Abundances['#OTU ID'] = Feature_Table['#OTU ID']
         Rel_Abundances = Feature_Table.iloc[:, list(
             Feature_Table.columns).index('#OTU ID') + 1:]
@@ -878,8 +880,10 @@ class Metagenomics:
         Top_genomes = []
         f = open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), 'w')
         for Sample in Samples:
+            
             FeatureIDs[Sample] = list(Rel_Abundances.sort_values(
-                Sample, ascending=False)['#OTU ID'].head(self.Config.K))
+            Sample, ascending=False)['#OTU ID'].head(self.Config.K))
+
             Top_K_Taxa[Sample] = list([Taxa[Feature]
                                        for Feature in FeatureIDs[Sample]])
             [Top_genomes.append(RepSeq) for RepSeq in FeatureIDs[Sample]]
@@ -893,7 +897,7 @@ class Metagenomics:
             Genome_Accessions[Sample] = ['None']*self.Config.K
         Alignment_Dir = os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Alignments')
         subprocess.run([os.path.join(Main_Dir,self.Config.vsearch,"vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'matches.blast'), '--usearch_global',
-                        self.Config.Amplicon2Genome_Outputs_Dir+'/Top_k_RepSeq.fasta', '--db', os.path.join(self.Config.Amplicon2Genome_DB,"bac120_ssu_reps_r207.fna"), '--id', str(self.Config.Amplicon2Genome_Similarity), '--alnout', Alignment_Dir])
+                        os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), '--db', os.path.join(self.Config.Amplicon2Genome_DB,"bac120_ssu_reps_r207.fna"), '--id', str(self.Config.Amplicon2Genome_Similarity), '--alnout', Alignment_Dir])
         f.close()
         f = open(Alignment_Dir, 'r')
         Alignment_Dict = {}
@@ -924,11 +928,9 @@ class Metagenomics:
             subprocess.run(['rsync', '--copy-links', '--times', '--verbose',
                             '--recursive', Base_NCBI_Dir+Specific_NCBI_Dir, self.Config.Amplicon2Genome_Outputs_Dir])
 
-        pd.DataFrame(FeatureIDs).to_csv(
-            os.path.join(Main_Dir,'Outputs','SelectedFeatures.csv'))
-        pd.DataFrame(Genome_Accessions).to_csv(
-            os.path.join(Main_Dir,'Outputs','GenomeAccessions.csv'))
-        pd.DataFrame(Top_K_Taxa).to_csv(os.path.join(Main_Dir,'Outputs','TopKTaxa.csv'))
+        pd.DataFrame(FeatureIDs).to_csv(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_FeatureIDs.csv'))
+        pd.DataFrame(Genome_Accessions).to_csv(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Genome_Accessions.csv'))
+        pd.DataFrame(Top_K_Taxa).to_csv(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Taxa.csv'))
 
         if len(list(Path(self.Config.Amplicon2Genome_Outputs_Dir).rglob('*_genomic.fna.gz'))) > 0:
             for path in Path(self.Config.Amplicon2Genome_Outputs_Dir).rglob('*_genomic.fna.gz'):
@@ -1045,6 +1047,37 @@ class Metagenomics:
         # So far it has gotten really complicated, after making sure it works, instead of adding EC numbers I'll add [SEED,STR] so
         # that it can be used for downstream analysis
     
+    def extract_relative_abundances(self,sample_name):
+        
+        """
+        This function will extract relative abundances for top k taxa from top k taxa table
+        and feature table. It will return a dictionary with the top k taxa as keys and the relative abundances as values
+
+        """
+        with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'),'r') as f:
+            Top_k_RepSeq = Bio_seq.Fasta(f).Fasta_To_Dict()
+        feature_genome_map={}
+        top_k_features = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_FeatureIDs.csv'),sep=',')
+        top_k_genomes = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Genome_Accessions.csv'),sep=',')
+        feature_table = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'feature-table.tsv'),sep='\t')
+        starting_column=["#OTU ID","FeatureID"]
+        for i in starting_column:
+            if i in list(feature_table.columns):
+                feature_table.rename(columns={i:"#OTU ID"},inplace=True)
+                break
+        feature_table.set_index('#OTU ID',inplace=True)
+        col_ind=feature_table.columns.get_loc(sample_name)
+        for row in range(top_k_features.shape[0]):
+            if top_k_genomes.iloc[row,col_ind] !="None":
+                feature_genome_map[top_k_features.iloc[row,col_ind]]=top_k_genomes.iloc[row,col_ind]
+            else:
+                feature_genome_map[top_k_features.iloc[row,col_ind]]="None"
+        valid_genomes = [(feature,feature_genome_map[feature]) for feature in feature_genome_map.keys() if feature_genome_map[feature]!="None"]
+        warn(f"{len(feature_genome_map.keys())-len(valid_genomes)} out of {len(feature_genome_map.keys())} features were not assigned to a genome")
+        abundances=dict([(feature[1],feature_table.loc[feature[0],sample_name]) for feature in valid_genomes])
+        relative_abundances = dict([(genome,abundances[genome]/sum(abundances.values())) for genome in abundances.keys()])
+        return relative_abundances
+
     def calculate_microbial_portions(self,microbe_reaction_map:dict,genome_info:dict,relative_abundances:dict)-> dict:
         
         """This method calculates COD fraction of each microbial term in a Model
@@ -1097,11 +1130,13 @@ class Metagenomics:
 
         """
         reaction_db=pd.read_table(self.Config.CSV_Reaction_DB,delimiter=",")
+        reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
+
         reaction_db.set_index("EC_Numbers",inplace=True)
         model_species=list(set(microbe_reaction_map.values()))
         cod_portion=Additive_Dict([(i,0) for i in model_species])
         
-        for genome_id in genome_info.keys():
+        for genome_id in relative_abundances.keys():
             temp_tsv = pd.read_table(
                         genome_info[genome_id]['Alignment_File'], sep='\t',header=None)
             filter = (temp_tsv.iloc[:, -1] > self.Config.bit_score) & (
@@ -1109,12 +1144,14 @@ class Metagenomics:
             temp_tsv = temp_tsv[filter]
             Unique_ECs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
             Cleaned_Reaction_List=[]
+
             [Cleaned_Reaction_List.extend(map(lambda x:x.strip(" "),reaction_db.loc[EC,"Modified_ADM_Reactions"].split("|"))) for EC in Unique_ECs if EC in reaction_db.index]
             pathway_counts=Counter(Cleaned_Reaction_List)
             SUM=sum([pathway_counts[key] for key in pathway_counts])
             for i in pathway_counts:
                 pathway_counts[i]=pathway_counts[i]/SUM
-            cod_portion=cod_portion+Additive_Dict(pathway_counts)*relative_abundances[genome_id]
+            microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
+            cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[genome_id]
 
         
 
