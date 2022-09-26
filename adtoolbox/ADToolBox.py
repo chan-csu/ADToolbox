@@ -811,9 +811,23 @@ class Metagenomics:
             open(os.path.join(self.Config.Amplicon2Genome_DB,keys+'.tar.gz'), 'wb').write(r.content)
 
 
-    def Amplicon2Genome(self,
-                        Requirements: bool=False,
-                        Report:bool =True)->dict:
+    def amplicon2genome(self,
+                        sample_name:str=None,
+                        download_databases: bool=False,
+                        )->dict:
+
+        """This function will take the amplicon data and will fetch the genomes.
+        it is created to start from QIIMEII outputs, and download the genomes from NCBI.
+        
+        Args:
+            sample_name (str, optional): The name of the sample. Defaults to None.
+            if None, it will find top k genomes for all samples.
+            download_databases (bool, optional): If True, it will download the required databases. Defaults to False.
+        
+        Returns:
+            dict: A dictionary of the genomes for the sample(s) along with the NCBI name and the
+            address where they are stored.
+        """    
 
         if not os.path.exists(self.Config.QIIME_Outputs_Directory):
             os.mkdir(self.Config.QIIME_Outputs_Directory)
@@ -843,7 +857,7 @@ class Metagenomics:
             
             time.sleep(3)
 
-        if Requirements:
+        if download_databases:
             Metagenomics.Get_Requirements()
 
         try:
@@ -867,8 +881,11 @@ class Metagenomics:
         Rel_Abundances = Feature_Table.iloc[:, list(
             Feature_Table.columns).index('#OTU ID') + 1:]
         Rel_Abundances['#OTU ID'] = Feature_Table['#OTU ID']
-        Samples = list(Feature_Table.columns)[list(
-            Feature_Table.columns).index('#OTU ID') + 1:]
+        if sample_name is None:
+            Samples = list(Feature_Table.columns)[list(
+                Feature_Table.columns).index('#OTU ID') + 1:]
+        else:
+            Samples = [sample_name]
         FeatureIDs = {}
         RepSeqs = {}
         Taxa = {}

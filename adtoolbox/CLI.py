@@ -133,7 +133,7 @@ def main():
         Meta_Config_defult.Amplicon2Genome_DB=args.amplicon_to_genome_db
         Meta_Config_defult.K=args.k
         Meta_Config_defult.Amplicon2Genome_Similarity=args.similarity
-        ADToolBox.Metagenomics(Meta_Config_defult).Amplicon2Genome()
+        ADToolBox.Metagenomics(Meta_Config_defult).amplicon2genome()
 
     if args.ADToolbox_Module == 'Metagenomics' and "MetaG_Subparser" in args and args.MetaG_Subparser=="map-genomes-to-adm":
         Meta_Config_defult.Genome_Alignment_Output_JSON=args.input_file
