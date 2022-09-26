@@ -1084,7 +1084,7 @@ class Metagenomics:
                 feature_table.rename(columns={i:"#OTU ID"},inplace=True)
                 break
         feature_table.set_index('#OTU ID',inplace=True)
-        col_ind=feature_table.columns.get_loc(sample_name)
+        col_ind=top_k_genomes.columns.get_loc(sample_name)
         for row in range(top_k_features.shape[0]):
             if top_k_genomes.iloc[row,col_ind] !="None":
                 feature_genome_map[top_k_features.iloc[row,col_ind]]=top_k_genomes.iloc[row,col_ind]
