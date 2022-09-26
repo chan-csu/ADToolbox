@@ -895,35 +895,36 @@ class Metagenomics:
             Taxa[Taxconomy_Table.iloc[i, 0]] = Taxconomy_Table.iloc[i, 1]
         Genome_Accessions = {}
         Top_genomes = []
-        f = open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), 'w')
-        for Sample in Samples:
-            
-            FeatureIDs[Sample] = list(Rel_Abundances.sort_values(
-            Sample, ascending=False)['#OTU ID'].head(self.Config.K))
+        with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), 'w') as f:
+        
+            for Sample in Samples:
 
-            Top_K_Taxa[Sample] = list([Taxa[Feature]
-                                       for Feature in FeatureIDs[Sample]])
-            [Top_genomes.append(RepSeq) for RepSeq in FeatureIDs[Sample]]
-        Top_genomes = list(set(Top_genomes))
-        with open(self.Config.Rep_Seq_Fasta) as D:
-            Repseqs = Bio_seq.Fasta(D).Fasta_To_Dict()
-        for FeatureID in Top_genomes:
-            f.write('>'+FeatureID+'\n'+Repseqs[FeatureID]+'\n')
+                FeatureIDs[Sample] = list(Rel_Abundances.sort_values(
+                Sample, ascending=False)['#OTU ID'].head(self.Config.K))
+
+                Top_K_Taxa[Sample] = list([Taxa[Feature]
+                                           for Feature in FeatureIDs[Sample]])
+                [Top_genomes.append(RepSeq) for RepSeq in FeatureIDs[Sample]]
+            Top_genomes = list(set(Top_genomes))
+            with open(self.Config.Rep_Seq_Fasta) as D:
+                Repseqs = Bio_seq.Fasta(D).Fasta_To_Dict()
+            for FeatureID in Top_genomes:
+                f.write('>'+FeatureID+'\n'+Repseqs[FeatureID]+'\n')
 
         for Sample in Samples:
             Genome_Accessions[Sample] = ['None']*self.Config.K
         Alignment_Dir = os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Alignments')
         subprocess.run([os.path.join(Main_Dir,self.Config.vsearch,"vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'matches.blast'), '--usearch_global',
                         os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), '--db', os.path.join(self.Config.Amplicon2Genome_DB,"bac120_ssu_reps_r207.fna"), '--id', str(self.Config.Amplicon2Genome_Similarity), '--alnout', Alignment_Dir])
-        f.close()
-        f = open(Alignment_Dir, 'r')
-        Alignment_Dict = {}
-        for lines in f:
-            if lines.startswith('Query >'):
-                f.readline()
-                Alignment_Dict[lines.split(
-                    '>')[1][:-1]] = re.search("  [A-Z][A-Z]_.*", f.readline()).group(0)[2:]
-        f.close()
+        
+        with open(Alignment_Dir, 'r') as f:
+            Alignment_Dict = {}
+            for lines in f:
+                if lines.startswith('Query >'):
+                    f.readline()
+                    Alignment_Dict[lines.split(
+                        '>')[1][:-1]] = re.search("  [A-Z][A-Z]_.*", f.readline()).group(0)[2:]
+            
         for Sample in Samples:
             for FeatureID in FeatureIDs[Sample]:
                 if FeatureID in Alignment_Dict.keys():
