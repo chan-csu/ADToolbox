@@ -812,7 +812,7 @@ class Metagenomics:
 
 
     def amplicon2genome(self,
-                        sample_name:str=None,
+                        sample_name:list[str]=None,
                         download_databases: bool=False,
                         )->dict:
 
@@ -885,7 +885,7 @@ class Metagenomics:
             Samples = list(Feature_Table.columns)[list(
                 Feature_Table.columns).index('#OTU ID') + 1:]
         else:
-            Samples = [sample_name]
+            Samples = sample_name
         FeatureIDs = {}
         RepSeqs = {}
         Taxa = {}
@@ -1065,35 +1065,37 @@ class Metagenomics:
         # So far it has gotten really complicated, after making sure it works, instead of adding EC numbers I'll add [SEED,STR] so
         # that it can be used for downstream analysis
     
-    def extract_relative_abundances(self,sample_name):
+    def extract_relative_abundances(self,sample_names:list[str])->dict:
         
         """
         This function will extract relative abundances for top k taxa from top k taxa table
         and feature table. It will return a dictionary with the top k taxa as keys and the relative abundances as values
 
         """
-        with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'),'r') as f:
-            Top_k_RepSeq = Bio_seq.Fasta(f).Fasta_To_Dict()
-        feature_genome_map={}
-        top_k_features = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_FeatureIDs.csv'),sep=',')
-        top_k_genomes = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Genome_Accessions.csv'),sep=',')
-        feature_table = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'feature-table.tsv'),sep='\t')
-        starting_column=["#OTU ID","FeatureID"]
-        for i in starting_column:
-            if i in list(feature_table.columns):
-                feature_table.rename(columns={i:"#OTU ID"},inplace=True)
-                break
-        feature_table.set_index('#OTU ID',inplace=True)
-        col_ind=top_k_genomes.columns.get_loc(sample_name)
-        for row in range(top_k_features.shape[0]):
-            if top_k_genomes.iloc[row,col_ind] !="None":
-                feature_genome_map[top_k_features.iloc[row,col_ind]]=top_k_genomes.iloc[row,col_ind]
-            else:
-                feature_genome_map[top_k_features.iloc[row,col_ind]]="None"
-        valid_genomes = [(feature,feature_genome_map[feature]) for feature in feature_genome_map.keys() if feature_genome_map[feature]!="None"]
-        warn(f"{len(feature_genome_map.keys())-len(valid_genomes)} out of {len(feature_genome_map.keys())} features were not assigned to a genome")
-        abundances=dict([(feature[1],feature_table.loc[feature[0],sample_name]) for feature in valid_genomes])
-        relative_abundances = dict([(genome,abundances[genome]/sum(abundances.values())) for genome in abundances.keys()])
+        relative_abundances={}
+        for sample in sample_names:
+            with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'),'r') as f:
+                Top_k_RepSeq = Bio_seq.Fasta(f).Fasta_To_Dict()
+            feature_genome_map={}
+            top_k_features = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_FeatureIDs.csv'),sep=',')
+            top_k_genomes = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Genome_Accessions.csv'),sep=',')
+            feature_table = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'feature-table.tsv'),sep='\t')
+            starting_column=["#OTU ID","FeatureID"]
+            for i in starting_column:
+                if i in list(feature_table.columns):
+                    feature_table.rename(columns={i:"#OTU ID"},inplace=True)
+                    break
+            feature_table.set_index('#OTU ID',inplace=True)
+            col_ind=top_k_genomes.columns.get_loc(sample)
+            for row in range(top_k_features.shape[0]):
+                if top_k_genomes.iloc[row,col_ind] !="None":
+                    feature_genome_map[top_k_features.iloc[row,col_ind]]=top_k_genomes.iloc[row,col_ind]
+                else:
+                    feature_genome_map[top_k_features.iloc[row,col_ind]]="None"
+            valid_genomes = [(feature,feature_genome_map[feature]) for feature in feature_genome_map.keys() if feature_genome_map[feature]!="None"]
+            warn(f"{len(feature_genome_map.keys())-len(valid_genomes)} out of {len(feature_genome_map.keys())} features were not assigned to a genome")
+            abundances=dict([(feature[1],feature_table.loc[feature[0],sample]) for feature in valid_genomes])
+            relative_abundances[sample]= dict([(genome,abundances[genome]/sum(abundances.values())) for genome in abundances.keys()])
         return relative_abundances
 
     def calculate_microbial_portions(self,microbe_reaction_map:dict,genome_info:dict,relative_abundances:dict)-> dict:
@@ -1147,33 +1149,36 @@ class Metagenomics:
 
 
         """
-        reaction_db=pd.read_table(self.Config.CSV_Reaction_DB,delimiter=",")
-        reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
-
-        reaction_db.set_index("EC_Numbers",inplace=True)
-        model_species=list(set(microbe_reaction_map.values()))
-        cod_portion=Additive_Dict([(i,0) for i in model_species])
+        cod={}
+        for sample in relative_abundances.keys():
         
-        for genome_id in relative_abundances.keys():
-            temp_tsv = pd.read_table(
-                        genome_info[genome_id]['Alignment_File'], sep='\t',header=None)
-            filter = (temp_tsv.iloc[:, -1] > self.Config.bit_score) & (
-                        temp_tsv.iloc[:, -2] < self.Config.e_value)
-            temp_tsv = temp_tsv[filter]
-            Unique_ECs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
-            Cleaned_Reaction_List=[]
+            reaction_db=pd.read_table(self.Config.CSV_Reaction_DB,delimiter=",")
+            reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
 
-            [Cleaned_Reaction_List.extend(map(lambda x:x.strip(" "),reaction_db.loc[EC,"Modified_ADM_Reactions"].split("|"))) for EC in Unique_ECs if EC in reaction_db.index]
-            pathway_counts=Counter(Cleaned_Reaction_List)
-            SUM=sum([pathway_counts[key] for key in pathway_counts])
-            for i in pathway_counts:
-                pathway_counts[i]=pathway_counts[i]/SUM
-            microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
-            cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[genome_id]
+            reaction_db.set_index("EC_Numbers",inplace=True)
+            model_species=list(set(microbe_reaction_map.values()))
+            cod_portion=Additive_Dict([(i,0) for i in model_species])
 
+            for genome_id in relative_abundances[sample].keys():
+                temp_tsv = pd.read_table(
+                            genome_info[genome_id]['Alignment_File'], sep='\t',header=None)
+                filter = (temp_tsv.iloc[:, -1] > self.Config.bit_score) & (
+                            temp_tsv.iloc[:, -2] < self.Config.e_value)
+                temp_tsv = temp_tsv[filter]
+                Unique_ECs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
+                Cleaned_Reaction_List=[]
+
+                [Cleaned_Reaction_List.extend(map(lambda x:x.strip(" "),reaction_db.loc[EC,"Modified_ADM_Reactions"].split("|"))) for EC in Unique_ECs if EC in reaction_db.index]
+                pathway_counts=Counter(Cleaned_Reaction_List)
+                SUM=sum([pathway_counts[key] for key in pathway_counts])
+                for i in pathway_counts:
+                    pathway_counts[i]=pathway_counts[i]/SUM
+                microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
+                cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[sample][genome_id]
+            cod[sample]=cod_portion
         
 
-        return cod_portion
+        return cod
 
 
 
