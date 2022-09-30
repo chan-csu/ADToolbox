@@ -12,6 +12,7 @@ import requests
 import time
 from requests.adapters import HTTPAdapter
 from sympy import Li
+import Configs
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
@@ -35,18 +36,18 @@ class Additive_Dict(dict):
     if not, nothing happens!
     
     """
-    def __add__(self,B):
-        Out=self.copy()
-        for key in B.keys():
+    def __add__(self,b):
+        out=self.copy()
+        for key in b.keys():
             if key in self.keys():
-                Out[key]+=B[key]
-        return Additive_Dict(Out)
+                out[key]+=b[key]
+        return Additive_Dict(out)
     
     def __mul__(self,a):
-        Out=self.copy()
-        for key in Out.keys():
-            Out[key]=Out[key]*a
-        return Additive_Dict(Out)
+        out=self.copy()
+        for key in out.keys():
+            out[key]=out[key]*a
+        return Additive_Dict(out)
 
 
 class Feed:
@@ -75,88 +76,90 @@ class Feed:
 
     """
 
-    def __init__(self, Carbohydrates, Lipids, Proteins, TS, TSS):
-        self.Carbohydrates = Carbohydrates
-        self.Lipids = Lipids
-        self.Proteins = Proteins
-        self.TS = TS
-        self.TSS = TSS
-        self.TDS = TS-TSS
+    def __init__(self, carbohydrates, lipids, proteins, ts, tss,si,pi):
+        self.carbohydrates = carbohydrates
+        self.lipids = lipids
+        self.proteins = proteins
+        self.ts = ts
+        self.tss = tss
+        self.tds = ts-tss
+        self.si=si
+        self.pi=pi
 
     def Report(self):
-        return "Feed Characteristics:\nCarbohydrates: "+str(self.Carbohydrates)+""+"\nLipids: "+str(self.Lipids)+"\nProteins: "+str(self.Proteins)+"\nFast Degrading portion: "+str(self.X_f)+"\nSouluble Inerts: "+str(self.SI)+"\nParticulate Inerts: "+str(self.PI)
+        return "Feed Characteristics:\nCarbohydrates: "+str(self.carbohydrates)+""+"\nLipids: "+str(self.lipids)+"\nProteins: "+str(self.proteins)+"\nFast Degrading portion: "+str(1-self.tds)+"\nSouluble Inerts: "+str(self.pi)+"\nParticulate Inerts: "+str(self.pi)
 
 
 class Sequence_Toolkit:
 
-    AA_List = ['A', 'M', 'N', 'V', 'W', 'L', 'H', 'S', 'G', 'F',
+    aa_list = ['A', 'M', 'N', 'V', 'W', 'L', 'H', 'S', 'G', 'F',
                'K', 'Q', 'E', 'S', 'P', 'I', 'C', 'Y', 'R', 'N', 'D', 'T']
-    N_list = ['A', 'C', 'G', 'T']
+    n_list = ['A', 'C', 'G', 'T']
 
-    def __init__(self, Type: str='Protein', Length: int=100):
-        self.Type = Type
-        self.Length = Length
+    def __init__(self, type_: str='Protein', length: int=100):
+        self.type = type_
+        self.length = length
 
-    def Seq_Generator(self)-> None:
+    def seq_generator(self)-> None:
 
-        if self.Type == 'Protein':
-            return ''.join([random.choice(self.AA_List) for i in range(self.Length)])
+        if self.type == 'Protein':
+            return ''.join([random.choice(self.aa_list) for i in range(self.length)])
 
-        elif self.Type == 'DNA':
-            return ''.join([random.choice(self.N_list) for i in range(self.Length)])
+        elif self.type == 'DNA':
+            return ''.join([random.choice(self.n_list) for i in range(self.length)])
 
         else:
             print('Type not recognized')
 
-    def Mutate_Random(self, seq, Number_of_Mutations=10):
-        if self.Type == 'Protein':
-            for i in range(Number_of_Mutations):
+    def mutate_random(self, seq, number_of_mutations=10):
+        if self.type == 'Protein':
+            for i in range(number_of_mutations):
                 seq = list(seq)
-                seq[random.randint(0, len(seq))] = random.choice(self.AA_List)
+                seq[random.randint(0, len(seq))] = random.choice(self.aa_list)
             return ''.join(seq)
 
-        elif self.Type == 'DNA':
-            for i in range(Number_of_Mutations):
+        elif self.type == 'DNA':
+            for i in range(number_of_mutations):
                 seq = list(seq)
-                seq[random.randint(0, len(seq))] = random.choice(self.N_list)
+                seq[random.randint(0, len(seq))] = random.choice(self.n_list)
             return ''.join(seq)
 
 
 class Reaction_Toolkit:
 
     """
-    A Class for converting EC numbers to reaction objects or extracting any information from the seed database
+    A Class for converting ec numbers to reaction objects or extracting any information from the seed database
 
     """
 
-    def __init__(self, Compound_DB:str =Configs.Reaction_Toolkit().Compound_DB, Reaction_DB=Configs.Reaction_Toolkit().Reaction_DB) -> None:
-        self.Reaction_DB = Reaction_DB
-        self.Compound_DB = Compound_DB
+    def __init__(self, compound_db:str =Configs.Reaction_Toolkit().compound_db, reaction_db=Configs.Reaction_Toolkit().reaction_db) -> None:
+        self.reaction_db = reaction_db
+        self.compound_db = compound_db
 
-    def Instantiate_Rxns(self, EC_Number, Mode='Single_Match'):
-        f = open(self.Reaction_DB)
-        Data = json.load(f)
-        if Mode == 'Single_Match':
-            for i in Data:
+    def instantiate_rxns(self, ec_number, mode='Single_Match'):
+        f = open(self.reaction_db)
+        data = json.load(f)
+        if mode == 'Single_Match':
+            for i in data:
                 if i['ec_numbers']:
-                    if EC_Number in i['ec_numbers']:
+                    if ec_number in i['ec_numbers']:
                         return Reaction(i)
 
-        elif Mode == 'Multiple_Match':
-            Matched_Rxns = [
-                Reaction(Rxn) for Rxn in Data if Rxn['ec_numbers'] == [EC_Number]]
-            return Matched_Rxns
+        elif mode == 'Multiple_Match':
+            matched_rxns = [
+                Reaction(rxn) for rxn in data if rxn['ec_numbers'] == [ec_number]]
+            return matched_rxns
 
         else:
             print('Mode not recognized!')
 
-    def Instantiate_Metabs(self, Seed_ID):
-        f = open(self.Compound_DB)
-        Data = json.load(f)
+    def instantiate_metabs(self, seed_id):
+        f = open(self.compound_db)
+        data = json.load(f)
         # Maybe contain is better than == below\\To be completed
-        Matched_Compunds = [Metabolite(Met)
-                            for Met in Data if Met['id'] == Seed_ID]
-        return Matched_Compunds[0]
+        matched_compounds = [Metabolite(met)
+                            for met in data if met['id'] == seed_id]
+        return matched_compounds[0]
 
 
 
@@ -173,14 +176,14 @@ class Reaction:
         D-glucose-6-phosphate aldose-ketose-isomerase
 
     """
-    def __init__(self, Dict):
-        self.Dict = Dict
+    def __init__(self, dict):
+        self.dict = dict
 
     def __str__(self):
-        return self.Dict['name']
+        return self.dict['name']
 
     @property
-    def Stoichiometry(self):
+    def stoichiometry(self):
         """
         Returns the stoichiometry of the reaction by the seed id of the compounds as key and the
         stoichiometric coefficient as value.
@@ -199,7 +202,7 @@ class Reaction:
         """
 
         S = {}
-        for compound in self.Dict['stoichiometry'].split(';'):
+        for compound in self.dict['stoichiometry'].split(';'):
             S[compound.split(':')[1]] = float(compound.split(':')[0])
         return S
 
@@ -217,17 +220,17 @@ class Metabolite:
 
     """
 
-    def __init__(self, Dict):
-        self.Dict = Dict
-        self.COD = self.COD_Calc()
+    def __init__(self, dict):
+        self.dict = dict
+        self.cod = self.cod_calc()
 
     def __str__(self) -> str:
-        return self.Dict['name']
+        return self.dict['name']
     
     def __repr__(self) -> str:
-        return self.Dict['name']
+        return self.dict['name']
 
-    def COD_Calc(self)->float:
+    def cod_calc(self)->float:
         """
         Calculates the conversion rates for g/l -> gCOD/l
 
@@ -245,20 +248,20 @@ class Metabolite:
         
 
         """
-        if self:
-            Content = {}
-            Atoms = ["H", "C", "O"]
-            MW = self.Dict['mass']
-            for atom in Atoms:
-                if re.search(atom+'\d*', self.Dict['formula']):
-                    if len(re.search(atom+'\d*', self.Dict['formula']).group()[1:]) == 0:
-                        Content[atom] = 1
+        if self.dict['formula'] and self.dict['mass']:
+            contents = {}
+            atoms = ["H", "C", "O"]
+            mw = self.dict['mass']
+            for atom in atoms:
+                if re.search(atom+'\d*', self.dict['formula']):
+                    if len(re.search(atom+'\d*', self.dict['formula']).group()[1:]) == 0:
+                        contents[atom] = 1
                     else:
-                        Content[atom] = int(
-                            re.search(atom+'\d*', self.Dict['formula']).group()[1:])
+                        contents[atom] = int(
+                            re.search(atom+'\d*', self.dict['formula']).group()[1:])
                 else:
-                    Content[atom] = 0
-            return 1/MW*(Content['H']+4*Content['C']-2*Content['O'])/4*32
+                    contents[atom] = 0
+            return 1/mw*(contents['H']+4*contents['C']-2*contents['O'])/4*32
 
         else:
             return 'None'
@@ -269,70 +272,68 @@ class Database:
     This class will handle all of the database tasks in ADToolBox
     '''
 
-    def __init__(self, Config=Configs.Database()):
+    def __init__(self, config=Configs.Database()):
 
-        self.Config = Config
-
-
+        self.config = config
 
 
-    def _Initialize_Database(self):
+    def _initialize_database(self):
 
-        with open(self.Config.Protein_DB, 'w') as f:
+        with open(self.config.protein_db, 'w') as f:
             pass
             # The rest is for other possible formats; fastq or gzipped fasta or gzipped fastq
 
     
-    def Filter_Seed_From_EC(self, EC_List,
-                            Reaction_DB=Configs.Database().Reaction_DB,
-                            Compound_DB=Configs.Database().Compound_DB,
-                            Local_Reaction_DB=Configs.Database().Local_Reaction_DB,
-                            Local_Compound_DB=Configs.Database().Local_Compound_DB) -> tuple:
+    def filter_seed_from_ec(self, ec_list,
+                            reaction_db=Configs.Database().reaction_db,
+                            compound_db=Configs.Database().compound_db,
+                            local_reaction_db=Configs.Database().local_reaction_db,
+                            local_compound_db=Configs.Database().local_compound_db) -> tuple:
         """
 
-        This function takes a list of EC numbers Generates a mini-seed JSON files. This is supposed to
+        This function takes a list of ec numbers Generates a mini-seed JSON files. This is supposed to
         make the code a lot faster, but makes no difference in terms of outputs, adn won't probably need
         frequent updates.
 
         """
-        with open(Reaction_DB, 'r') as f:
-            Main_Reaction_DB = json.load(f)
-        with open(Compound_DB, 'r') as f:
-            Main_Compound_DB = json.load(f)
+        with open(reaction_db, 'r') as f:
+            main_reaction_db = json.load(f)
+        with open(compound_db, 'r') as f:
+            main_compound_db = json.load(f)
 
         RT = Reaction_Toolkit()
-        cached_Compounds = []
-        Filtered_Rxns_DB = {}
-        Local_Rxn_DB = []
-        Local_Comp_DB = []
-        Counter = 0
-        for EC in EC_List:
-            for ind, rxn in enumerate(Main_Reaction_DB):
+        cached_compounds = []
+        filtered_rxns_db = {}
+        local_rxn_db = []
+        local_comp_db = []
+        counter = 0
+        for ec in ec_list:
+            for ind, rxn in enumerate(main_reaction_db):
 
-                if Main_Reaction_DB[ind]['ec_numbers'] != None and EC in Main_Reaction_DB[ind]['ec_numbers']:
-                    Local_Rxn_DB.append(rxn)
+                if main_reaction_db[ind]['ec_numbers'] != None and ec in main_reaction_db[ind]['ec_numbers']:
+                    local_rxn_db.append(rxn)
                     for Mets in rxn["compound_ids"].split(";"):
-                        if Mets not in cached_Compounds:
-                            cached_Compounds.append(Mets)
-            Counter += 1
-            print(" -> Percent of ECs processed: ",end=" ")
-            print("%"+str(int(Counter/len(EC_List)*100)), end="\r")
+                        if Mets not in cached_compounds:
+                            cached_compounds.append(Mets)
+            counter += 1
+            print(" -> Percent of ecs processed: ",end=" ")
+            print("%"+str(int(Counter/len(ec_list)*100)), end="\r")
 
-        Counter = 0
-        for Compound in cached_Compounds:
-            for ind, Comp in enumerate(Main_Compound_DB):
-                if Compound == Comp["id"]:
-                    Local_Comp_DB.append(Comp)
-            Counter += 1
+        counter = 0
+        for compound in cached_compounds:
+            for ind, Comp in enumerate(main_compound_db):
+                if compound == Comp["id"]:
+                    local_comp_db.append(Comp)
+            counter += 1
             print(" -> Percent of compunds processed: ",end=" ")
-            print("%"+str(int(Counter/len(cached_Compounds)*100)), end="\r")
+            print("%"+str(int(Counter/len(cached_compounds)*100)), end="\r")
 
-        with open(Local_Reaction_DB, 'w') as f:
-            json.dump(Local_Rxn_DB, f)
-        with open(Local_Compound_DB, 'w') as f:
-            json.dump(Local_Comp_DB, f)
+        with open(local_reaction_db, 'w') as f:
+            json.dump(local_rxn_db, f)
+        with open(local_compound_db, 'w') as f:
+            json.dump(local_comp_db, f)
 
-        return (Local_Rxn_DB, Local_Comp_DB)
+        return (local_rxn_db, local_comp_db)
 
     # The complete pandas objec can be used as input
     session = requests.Session()
@@ -340,12 +341,12 @@ class Database:
     adapter = HTTPAdapter(max_retries=retry)
     session.mount('http://', adapter)
 
-    def Add_Protein_from_Uniprot(self, Uniprot_ECs):
+    def add_protein_from_uniprot(self, uniprot_ecs):
 
         Base_URL = 'https://www.uniprot.org/uniprot/'
         
-        with open(self.Config.Protein_DB, 'a') as f:
-            for items in track(Uniprot_ECs,description="[yellow]    --> Fetching the protein sequences from Uniprot: "):
+        with open(self.config.protein_db, 'a') as f:
+            for items in track(uniprot_ecs,description="[yellow]    --> Fetching the protein sequences from Uniprot: "):
                 try:
                     file = Database.session.get(
                         Base_URL+items[0]+".fasta", timeout=10)
@@ -367,44 +368,44 @@ class Database:
                     f.write(''.join(file.text.split('\n')[1:-1]))
                     f.write('\n')
     
-    def Uniprots_from_EC(self, EC_list):
+    def uniprots_from_ec(self, ec_list):
         # 5.1.1.2 and 5.1.1.20 should be distinguished: So far it seems like they are distinguished automatically by Uniprot
         Base_URL = 'https://www.uniprot.org/uniprot/?query=ec%3A'
-        Uniprots = []
+        uniprots = []
 
-        for EC in track(EC_list,description="[yellow]   --> Fetching Uniprot IDs from ECs"):
+        for ec in track(ec_list,description="[yellow]   --> Fetching Uniprot IDs from ecs"):
 
             try:
                 file = Database.session.get(
-                    Base_URL+str(EC)+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
+                    Base_URL+str(ec)+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
 
             except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
 
                 print("Request Error! Trying again ...")
                 time.sleep(30)
                 file = Database.session.get(
-                    Base_URL+EC+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
+                    Base_URL+ec+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
             if file.ok:
-                [Uniprots.append((Uniprot, EC))
+                [uniprots.append((Uniprot, ec))
                  for Uniprot in file.text.split('\n')[:-1]]  # This alsp does a sanity check
 
             else:
                 print('Something went wrong!')
 
-        return Uniprots
+        return uniprots
 
     @staticmethod
-    def EC_From_CSV(CSV_File, Sep=','):
+    def ec_from_csv(csv_file, Sep=','):
 
-        # [ ]- One update could be to make the EC_Numbers column to be insensitive to the case
+        # [ ]- One update could be to make the ec_Numbers column to be insensitive to the case
 
         try:
 
-            EC_List = pd.read_table(CSV_File, sep=Sep,dtype="str")
-            EC_List.dropna(axis=0)
-            Output_EC_list = list(EC_List["EC_Numbers"])
+            ec_list = pd.read_table(csv_file, sep=Sep,dtype="str")
+            ec_list.dropna(axis=0)
+            output_ec_list = list(ec_list["ec_Numbers"])
             assert len(
-                Output_EC_list) > 0, "The EC list is empty; Check the file"
+                output_ec_list) > 0, "The ec list is empty; Check the file"
 
         except FileNotFoundError:
 
@@ -421,31 +422,31 @@ class Database:
 
         else:
 
-            return Output_EC_list
+            return output_ec_list
 
-    def EC_From_Uniprot(self, Uniprot_ID):
+    def ec_from_uniprot(self, uniprot_id):
 
         Base_URL = 'https://www.uniprot.org/uniprot/'
 
         try:
             file = Database.session.get(
-                Base_URL+Uniprot_ID+".txt", timeout=10)
+                Base_URL+uniprot_id+".txt", timeout=10)
 
         except requests.exceptions.ConnectionError:
 
             print("Request Error! Trying again ...")
             time.sleep(30)
             file = Database.session.get(
-                Base_URL+Uniprot_ID+".txt", timeout=10)
+                Base_URL+uniprot_id+".txt", timeout=10)
 
             if file.ok:
 
                 print("Retry was successful!")
 
         for line in file:
-            if re.search("EC=[0-9]+", line.decode("utf-8")):
-                EC = re.sub("EC=", "", re.search(
-                    "EC=[.0-9]+", line.decode("utf-8")).group(0))
+            if re.search("ec=[0-9]+", line.decode("utf-8")):
+                ec = re.sub("ec=", "", re.search(
+                    "ec=[.0-9]+", line.decode("utf-8")).group(0))
                 break
 
         else:
@@ -453,127 +454,127 @@ class Database:
             print("Retry was unsuccessful!")
             return None
 
-        return EC
+        return ec
 
-    Cazy_links = ["http://www.cazy.org/Glycoside-Hydrolases.html",
+    cazy_links = ["http://www.cazy.org/Glycoside-Hydrolases.html",
                   "http://www.cazy.org/Polysaccharide-Lyases.html",
                   "http://www.cazy.org/Carbohydrate-Esterases.html"
                   ]
 
-    def Cazy_EC_from_link(self):
+    def cazy_ec_from_link(self):
         '''
-        Extracts the EC numbers from a link to the Cazy website
+        Extracts the ec numbers from a link to the Cazy website
 
         '''
 
-        EC_list = []
-        for link in Database.Cazy_links:
+        ec_list = []
+        for link in Database.cazy_links:
 
             page = requests.get(link)
             soup = BeautifulSoup(page.content, "html.parser")
             results = soup.find("div", class_="cadre_principal").find_all(
                 "th", class_="thec")
-            for EC_number in results:
-                if '-' not in EC_number.text.strip() and '.' in EC_number.text.strip():
+            for ec_number in results:
+                if '-' not in ec_number.text.strip() and '.' in ec_number.text.strip():
 
-                    EC_list.append(EC_number.text.strip())
+                    ec_list.append(ec_number.text.strip())
 
-        print("EC numbers extracted from Cazy website!")
-        return EC_list
+        print("ec numbers extracted from Cazy website!")
+        return ec_list
 
     
-    def Seed_From_EC(self,EC_Number, Mode='Single_Match'):
+    def Seed_From_ec(self,ec_Number, mode='Single_Match'):
 
-        with open(self.Config.Reaction_DB,'r') as f: 
+        with open(self.config.reaction_db,'r') as f: 
 
-            Data = json.load(f)
+            data = json.load(f)
 
-        if Mode == 'Single_Match':
+        if mode == 'Single_Match':
 
-            for i in Data:
+            for i in data:
 
                 if i['ec_numbers']:
 
-                    if EC_Number in i['ec_numbers']:
+                    if ec_Number in i['ec_numbers']:
 
                         return i["id"]
 
-        elif Mode == 'Multiple_Match':
+        elif mode == 'Multiple_Match':
 
-            Matched_Rxns = list(set(list([
+            matched_rxn = list(set(list([
 
-                Rxn["id"] for Rxn in Data if Rxn['ec_numbers'] == [EC_Number]])))
+                rxn["id"] for rxn in data if rxn['ec_numbers'] == [ec_Number]])))
 
-            return Matched_Rxns
+            return matched_rxn
 
         else:
             print('Mode not recognized!')
 
-    def Instantiate_Rxn_From_Seed(self,Seed_ID_List:list)->list:
+    def instantiate_rxn_from_seed(self,seed_id_list:list)->list:
         """
         Function that idenifies reaction seed ID's and instantiates them in the Reaction class.
         Examples:
-            >>> Seed_ID_List = ['rxn00002','rxn00003','rxn00005']
-            >>> dbconfigs = Configs.Database()
-            >>> rxnlist = Database(dbconfigs).Instantiate_Rxn_From_Seed(Seed_ID_List)
+            >>> seed_id_List = ['rxn00002','rxn00003','rxn00005']
+            >>> dbconfigs = configs.Database()
+            >>> rxnlist = Database(dbconfigs).Instantiate_Rxn_From_Seed(seed_id_List)
             >>> assert type(rxnlist[0])==Reaction
 
         Args:
-            Seed_ID_List (list): A list of relevant seed ID entries [rxn#####]
+            seed_id_List (list): A list of relevant seed ID entries [rxn#####]
 
         Returns:
-            Rxn_List: A list including reaction instances in the database class for each seed ID in input list.
+            rxn_list: A list including reaction instances in the database class for each seed ID in input list.
 
         """
-        Rxn_List = []
-        with open(self.Config.Reaction_DB) as f:
+        rxn_list = []
+        with open(self.config.reaction_db) as f:
 
-            Data = json.load(f)
+            data = json.load(f)
 
-            for Seed_ID in Seed_ID_List:
+            for seed_id in seed_id_list:
 
-                for i in Data:
+                for i in data:
 
                     if i['id']:
 
-                        if Seed_ID in i['id']:
+                        if seed_id in i['id']:
 
-                            Rxn_List.append(Reaction(i))
+                            rxn_list.append(Reaction(i))
                             break
 
-        return Rxn_List
+        return rxn_list
 
-    def Metadata_From_EC(self,EC_list:list)->pd.DataFrame:
+    def metadata_from_ec(self,ec_list:list)->pd.DataFrame:
         """
         This function returns a pandas dataframe containing relevant pathway and reactions for
-        each EC number input.
+        each ec number input.
         Examples:
-            >>> EC_list = ['1.1.1.1','1.1.1.2'] 
-            >>> metadata= Database().Metadata_From_EC(EC_list) # doctest: +ELLIPSIS 
+            >>> ec_list = ['1.1.1.1','1.1.1.2'] 
+            >>> metadata= Database().Metadata_From_ec(ec_list) # doctest: +ELLIPSIS 
             Finding ...
             >>> assert type(metadata)==pd.DataFrame
-            >>> assert set(metadata['EC_Numbers'].to_list())==set(EC_list)
-            >>> assert set(["EC_Numbers", "Seed_Ids","Reaction_Names", "Pathways"])==set(metadata.columns)
-            >>> assert metadata.shape==(len(EC_list),4)
+            >>> assert set(metadata['ec_Numbers'].to_list())==set(ec_list)
+            >>> assert set(["ec_Numbers", "seed_ids","Reaction_Names", "Pathways"])==set(metadata.columns)
+            >>> assert metadata.shape==(len(ec_list),4)
 
         Args:
-            EC_list (list): A list of relevant EC numbers.
+            ec_list (list): A list of relevant ec numbers.
 
         Returns:
-            pd.DataFrame: A pandas dataframe including reaction metadata or pathways for each EC number in list.
+            pd.DataFrame: A pandas dataframe including reaction metadata or pathways for each ec number in list.
 
         """
-        full_table = {"EC_Numbers": [], "Seed_Ids": [],
+        full_table = {"ec_Numbers": [], "seed_ids": [],
                       "Reaction_Names": [], "Pathways": []}
-        rich.print("Finding EC Metadata ...\n")
-        for ec in track(EC_list, description= "Collecting Metadata for EC numbers"):
-            Seed_ID = self.Seed_From_EC(ec, Mode='Multiple_Match')
-            full_table['EC_Numbers'].append(ec)
-            full_table['Seed_Ids'].append(Seed_ID)
-            Temp_rxns = Database().Instantiate_Rxn_From_Seed(Seed_ID)
-            Temp_rxn_Names = list([reaction.Dict["name"]
+        rich.print("Finding ec Metadata ...\n")
+        for ec in track(ec_list, description= "Collecting Metadata for ec numbers"):
+            seed_id = self.Seed_From_ec(ec, Mode='Multiple_Match')
+            full_table['ec_Numbers'].append(ec)
+            full_table['seed_ids'].append(seed_id)
+            Temp_rxns = Database().instantiate_rxn_from_seed(seed_id)
+            Temp_rxn_Names = list([reaction.dict["name"]
                                    for reaction in Temp_rxns])
-            Temp_rxn_Path = list([reaction.Dict["pathways"]
+            Temp_rxn_Path = list([reaction.dict["pathways"]
                                   for reaction in Temp_rxns])
             full_table["Pathways"].append(Temp_rxn_Path)
             full_table["Reaction_Names"].append(Temp_rxn_Names)
@@ -583,22 +584,22 @@ class Database:
         return full_table
 
     ###-----FeedStock_Database_Functions-----###
-    def Init_Feedstock_Database(self):
+    def init_feedstock_database(self)-> None:
         '''
         Makes an empty feedstock database json file.
         BE CAREFUL: This will overwrite the current database file.
         '''
-        Dec=input("Are you sure you want to create a new database? (y/n): ")
-        if Dec=="y":
+        dec=input("Are you sure you want to create a new database? (y/n): ")
+        if dec=="y":
 
-            with open(self.Config.Feed_DB, 'w') as f:
+            with open(self.config.feed_db, 'w') as f:
                 json.dump([], f)
         else:
             print("Aborting!")
             return
         ## TO-DO: Error and Failure handling
 
-    def _Add_Feedstock_To_Database(self, Feedstock):
+    def _add_feedstock_to_database(self, feedstock):
         
         '''
         Adds a feedstock to the feedstock database.
@@ -615,19 +616,19 @@ class Database:
 
         '''
         try:
-            with open(self.Config.Feed_DB, 'r') as f:
-                DataBase=json.load(f)
+            with open(self.config.feed_db, 'r') as f:
+                database=json.load(f)
         except FileNotFoundError:
             print("Feedstock database not found! Creating new one...")
-            self.Init_Feedstock_Database()
+            self.init_feedstock_database()
         
         finally:
         
-            DataBase.append(Feedstock)
-            with open(self.Config.Feed_DB, 'w') as f:
-                json.dump(DataBase, f)
+            database.append(feedstock)
+            with open(self.config.feed_db, 'w') as f:
+                json.dump(database, f)
         
-    def Add_Feedstock_To_Database_From_File(self, File_Path):
+    def add_feedstock_to_database_from_file(self, file_path):
         '''
         Adds a feedstock to the feedstock database from a csv file.
         A Feed Stock spreadsheet must be a table with the following columns:
@@ -636,128 +637,128 @@ class Database:
         project directory with feedstock spreadsheets unwanted.
         '''
         try:
-            f=pd.read_table(File_Path, sep=',')
+            f=pd.read_table(file_path, sep=',')
         except FileNotFoundError:
             print("File not found!")
             return
-        Counter=0
+        counter=0
         for i in f.index:
-            Feedstock=f.loc[i,:].to_dict()
-            self._Add_Feedstock_To_Database(Feedstock)
-            Counter+=1
-        print("{} Feedstocks added to the database!".format(Counter))
+            feedstock=f.loc[i,:].to_dict()
+            self._add_feedstock_to_database(feedstock)
+            counter+=1
+        print("{} Feedstocks added to the database!".format(counter))
 
     @staticmethod
-    def Download_ADM1_Parameters(config):
+    def download_adm1_parameters(config):
         '''
-        Downloads the parameters needed for running ADM Models in ADToolbox
+        Downloads the parameters needed for running ADM models in ADToolbox
         
         '''
         if not os.path.exists(config.Base_dir):
             os.makedirs(config.Base_dir)
-        Model_Parameters_dir=config.Model_Parameters
-        Base_Parameters_dir=config.Base_Parameters
-        Initial_Conditions_dir=config.Initial_Conditions
-        Inlet_Conditions_dir=config.Inlet_Conditions
-        Reactions_dir=config.Reactions
-        Species_dir=config.Species
-        Model_Parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json"
-        Base_Parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json"
-        Initial_Conditions="https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_Initial_Conditions.json"
-        Inlet_Conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Inlet_Conditions.json"
-        Reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Reactions.json"
-        Species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Species.json"
-        r = requests.get(Model_Parameters, allow_redirects=True)
-        with open(Model_Parameters_dir, 'wb') as f:
+        model_parameters_dir=config.model_parameters
+        base_parameters_dir=config.base_parameters
+        initial_conditions_dir=config.initial_conditions
+        inlet_conditions_dir=config.inlet_conditions
+        reactions_dir=config.reactions
+        species_dir=config.species
+        model_parameters="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_model_parameters.json"
+        base_parameters="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_base_parameters.json"
+        initial_conditions="https:/[github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_initial_conditions.json"
+        inlet_conditions="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_inlet_conditions.json"
+        reactions="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_reactions.json"
+        species="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_species.json"
+        r = requests.get(model_parameters, allow_redirects=True)
+        with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Base_Parameters, allow_redirects=True)
-        with open(Base_Parameters_dir, 'wb') as f:
+        r = requests.get(base_parameters, allow_redirects=True)
+        with open(base_parameters_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Initial_Conditions, allow_redirects=True)
-        with open(Initial_Conditions_dir, 'wb') as f:
+        r = requests.get(initial_conditions, allow_redirects=True)
+        with open(initial_conditions_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Inlet_Conditions, allow_redirects=True)
-        with open(Inlet_Conditions_dir, 'wb') as f:
+        r = requests.get(inlet_conditions, allow_redirects=True)
+        with open(inlet_conditions_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Reactions, allow_redirects=True)
-        with open(Reactions_dir, 'wb') as f:
+        r = requests.get(reactions, allow_redirects=True)
+        with open(reactions_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Species, allow_redirects=True)
-        with open(Species_dir, 'wb') as f:
+        r = requests.get(species, allow_redirects=True)
+        with open(species_dir, 'wb') as f:
             f.write(r.content)
     @staticmethod
-    def Download_Modified_ADM_Parameters(config):    
+    def download_modified_adm_parameters(config):    
         '''
-        Downloads the parameters needed for running ADM Models in ADToolbox
+        Downloads the parameters needed for running ADM models in ADToolbox
         '''
         if not os.path.exists(config.Base_dir):
             os.makedirs(config.Base_dir)
-        Model_Parameters_dir=config.Model_Parameters
-        Base_Parameters_dir=config.Base_Parameters
-        Initial_Conditions_dir=config.Initial_Conditions
-        Inlet_Conditions_dir=config.Inlet_Conditions
-        Reactions_dir=config.Reactions
-        Species_dir=config.Species
-        Model_Parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Model_Parameters.json"
-        Base_Parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Base_Parameters.json"
-        Initial_Conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Initial_Conditions.json"
-        Inlet_Conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Inlet_Conditions.json"
-        Reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Reactions.json"
-        Species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Species.json"
-        r = requests.get(Model_Parameters, allow_redirects=True)
-        with open(Model_Parameters_dir, 'wb') as f:
+        model_parameters_dir=config.model_parameters
+        base_parameters_dir=config.base_parameters
+        initial_conditions_dir=config.initial_conditions
+        inlet_conditions_dir=config.inlet_conditions
+        reactions_dir=config.reactions
+        species_dir=config.species
+        model_parameters="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_model_parameters.json"
+        base_parameters="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_base_parameters.json"
+        initial_conditions="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_initial_conditions.json"
+        inlet_conditions="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_inlet_conditions.json"
+        reactions="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_adm_reactions.json"
+        species="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_species.json"
+        r = requests.get(model_parameters, allow_redirects=True)
+        with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Base_Parameters, allow_redirects=True)
-        with open(Base_Parameters_dir, 'wb') as f:
+        r = requests.get(base_parameters, allow_redirects=True)
+        with open(base_parameters_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Initial_Conditions, allow_redirects=True)
-        with open(Initial_Conditions_dir, 'wb') as f:
+        r = requests.get(initial_conditions, allow_redirects=True)
+        with open(initial_conditions_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Inlet_Conditions, allow_redirects=True)
-        with open(Inlet_Conditions_dir, 'wb') as f:
+        r = requests.get(inlet_conditions, allow_redirects=True)
+        with open(inlet_conditions_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Reactions, allow_redirects=True)
-        with open(Reactions_dir, 'wb') as f:
+        r = requests.get(reactions, allow_redirects=True)
+        with open(reactions_dir, 'wb') as f:
             f.write(r.content)
-        r = requests.get(Species, allow_redirects=True)
-        with open(Species_dir, 'wb') as f:
+        r = requests.get(species, allow_redirects=True)
+        with open(species_dir, 'wb') as f:
             f.write(r.content)
         
         
     @staticmethod
-    def Download_Seed_Databases(directory:str) -> None :
-        Reactions="https://github.com/ModelSEED/ModelSEEDDatabase/raw/master/Biochemistry/reactions.json"
-        r = requests.get(Reactions, allow_redirects=True)
+    def download_seed_databases(directory:str) -> None :
+        reactions="https:/[github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json"
+        r = requests.get(reactions, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)        
     @staticmethod
-    def Download_Protein_Database(directory:str) -> None:
-        Protein_DB="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta"
-        r = requests.get(Protein_DB, allow_redirects=True)
+    def download_protein_database(directory:str) -> None:
+        protein_db="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta"
+        r = requests.get(protein_db, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
         
     @staticmethod
-    def Download_Reaction_Database(directory: str)->None:
-        Reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv"
-        r = requests.get(Reactions, allow_redirects=True)
+    def download_reaction_database(directory: str)->None:
+        reactions="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv"
+        r = requests.get(reactions, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
     @staticmethod
-    def Download_Feed_Database(directory:str)-> None:
-        Feed="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
-        r = requests.get(Feed, allow_redirects=True)
+    def download_feed_database(directory:str)-> None:
+        feed="https:/[github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
+        r = requests.get(feed, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
     @staticmethod
-    def Download_Escher_Files(directory:str)-> None:
-        Escher_Files=[
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"]
+    def download_escher_files(directory:str)-> None:
+        escher_files=[
+        "https:/[github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
+        "https:/[github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
+        "https:/[github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
+        "https:/[github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"]
         
-        for i in Escher_Files:
+        for i in escher_files:
             r = requests.get(i, allow_redirects=True)
             with open(os.path.join(directory,i.split("/")[-1]), 'wb') as f:
                 f.write(r.content)
@@ -769,7 +770,7 @@ class Metagenomics:
 
     """
     A Core class that handles the metganomics data
-    Init this with a Metagenomics class of Config module
+    Init this with a Metagenomics class of config module
     
     
     
@@ -782,15 +783,15 @@ class Metagenomics:
 
     This class will use other classes to generate the required files for downstream analysis.
     """
-    def __init__(self,Config):
-        self.Config=Config
+    def __init__(self,config:Configs.Metagenomics):
+        self.config=config
     
-    def Get_Requirements_A2G(self):
+    def get_requirements_a2g(self):
         """
         This function will automatically download the required files for Amplicon to Genome functionality.
         """
-        if not os.path.exists(self.Config.Amplicon2Genome_DB):
-            os.mkdir(self.Config.Amplicon2Genome_DB)
+        if not os.path.exists(self.config.amplicon2genome_db):
+            os.mkdir(self.config.amplicon2genome_db)
 
         url = {'Version': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/VERSION',
                'MD5SUM': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/MD5SUM',
@@ -802,13 +803,13 @@ class Metagenomics:
 
         for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
             r = requests.get(url[keys], allow_redirects=True)
-            open(os.path.join(self.Config.Amplicon2Genome_DB,keys+'.txt'), 'wb').write(r.content)
+            open(os.path.join(self.config.amplicon2genome_db,keys+'.txt'), 'wb').write(r.content)
         r = requests.get(url['metadata_field_desc'], allow_redirects=True)
-        open(os.path.join(self.Config.Amplicon2Genome_DB,'metadata_field_desc.tsv'), 'wb').write(r.content)
+        open(os.path.join(self.config.amplicon2genome_db,'metadata_field_desc.tsv'), 'wb').write(r.content)
 
         for keys in ['bac120_metadata', 'bac120_ssu']:
             r = requests.get(url[keys], allow_redirects=True)
-            open(os.path.join(self.Config.Amplicon2Genome_DB,keys+'.tar.gz'), 'wb').write(r.content)
+            open(os.path.join(self.config.amplicon2genome_db,keys+'.tar.gz'), 'wb').write(r.content)
 
 
     def amplicon2genome(self,
@@ -829,20 +830,20 @@ class Metagenomics:
             address where they are stored.
         """    
 
-        if not os.path.exists(self.Config.QIIME_Outputs_Directory):
-            os.mkdir(self.Config.QIIME_Outputs_Directory)
-            print("Please provide the QIIME output files in: "+self.Config.Config.QIIME_Outputs_Dir)
+        if not os.path.exists(self.config.qiime_outputs_dir):
+            os.mkdir(self.config.qiime_outputs_dir)
+            print("Please provide the QIIME output files in: "+ self.config.qiime_outputs_dir)
             return 0
         try:
-            Feature_Table = pd.read_table(
-                self.Config.Feature_Table_Dir, sep='\t')
-            starting_column=["#OTU ID","FeatureID"]
+            feature_table = pd.read_table(
+                self.config.feature_table_dir, sep='\t')
+            starting_column=["#OTU ID","featureid"]
             for i in starting_column:
-                if i in list(Feature_Table.columns):
-                    Feature_Table=Feature_Table.rename(columns={i:"#OTU ID"})
+                if i in list(feature_table.columns):
+                    feature_table=feature_table.rename(columns={i:"#OTU ID"})
                     break
-            Rel_Abundances = Feature_Table.iloc[:, list(
-                Feature_Table.columns).index('#OTU ID') + 1:]
+            rel_abundances = feature_table.iloc[:, list(
+                feature_table.columns).index('#OTU ID') + 1:]
 
         except FileNotFoundError as errormsg:
             rich.print(errormsg)
@@ -853,17 +854,17 @@ class Metagenomics:
         else:
            
             rich.print(
-                "[green] ---> Feature_Table_Dir was found in the directory, and was loaded successfully!")
+                "[green] ---> feature_table_dir was found in the directory, and was loaded successfully!")
             
             time.sleep(3)
 
         if download_databases:
-            Metagenomics.Get_Requirements()
+            Metagenomics.get_requirements_a2g()
 
         try:
 
-            Taxconomy_Table = pd.read_table(
-                self.Config.Taxonomy_Table_Dir, delimiter='\t', header=0)
+            taxconomy_table = pd.read_table(
+                self.config.taxonomy_table_dir, delimiter='\t', header=0)
 
         except FileNotFoundError as errormsg:
             print(errormsg)
@@ -874,195 +875,192 @@ class Metagenomics:
         else:
 
             rich.print(
-                "[green] ---> Taxonomy_Table_Dir is found in the directory, and was loaded successfully!")
+                "[green] ---> taxonomy_table_dir is found in the directory, and was loaded successfully!")
             time.sleep(3)
 
-        Rel_Abundances['#OTU ID'] = Feature_Table['#OTU ID']
-        Rel_Abundances = Feature_Table.iloc[:, list(
-            Feature_Table.columns).index('#OTU ID') + 1:]
-        Rel_Abundances['#OTU ID'] = Feature_Table['#OTU ID']
+        rel_abundances['#OTU ID'] = feature_table['#OTU ID']
+        rel_abundances = feature_table.iloc[:, list(
+            feature_table.columns).index('#OTU ID') + 1:]
+        rel_abundances['#OTU ID'] = feature_table['#OTU ID']
         if sample_name is None:
-            Samples = list(Feature_Table.columns)[list(
-                Feature_Table.columns).index('#OTU ID') + 1:]
+            Samples = list(feature_table.columns)[list(
+                feature_table.columns).index('#OTU ID') + 1:]
         else:
             Samples = sample_name
-        FeatureIDs = {}
-        RepSeqs = {}
-        Taxa = {}
+        featureids = {}
+        repSeqs = {}
+        taxa = {}
 
-        Top_K_Taxa = {}
-        for i in range(len(Taxconomy_Table)):
-            Taxa[Taxconomy_Table.iloc[i, 0]] = Taxconomy_Table.iloc[i, 1]
-        Genome_Accessions = {}
-        Top_genomes = []
-        with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), 'w') as f:
+        top_k_taxa = {}
+        for i in range(len(taxconomy_table)):
+            taxa[taxconomy_table.iloc[i, 0]] = taxconomy_table.iloc[i, 1]
+        genome_accessions = {}
+        top_genomes = []
+        with open(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'), 'w') as f:
         
             for Sample in Samples:
 
-                FeatureIDs[Sample] = list(Rel_Abundances.sort_values(
-                Sample, ascending=False)['#OTU ID'].head(self.Config.K))
+                featureids[Sample] = list(rel_abundances.sort_values(
+                Sample, ascending=False)['#OTU ID'].head(self.config.k))
 
-                Top_K_Taxa[Sample] = list([Taxa[Feature]
-                                           for Feature in FeatureIDs[Sample]])
-                [Top_genomes.append(RepSeq) for RepSeq in FeatureIDs[Sample]]
-            Top_genomes = list(set(Top_genomes))
-            with open(self.Config.Rep_Seq_Fasta) as D:
-                Repseqs = Bio_seq.Fasta(D).Fasta_To_Dict()
-            for FeatureID in Top_genomes:
-                f.write('>'+FeatureID+'\n'+Repseqs[FeatureID]+'\n')
+                top_k_taxa[Sample] = list([taxa[Feature]
+                                           for Feature in featureids[Sample]])
+                [top_genomes.append(RepSeq) for RepSeq in featureids[Sample]]
+            top_genomes = list(set(top_genomes))
+            with open(self.config.rep_seq_fasta) as D:
+                repseqs = Bio_seq.Fasta(D).Fasta_To_Dict()
+            for featureid in top_genomes:
+                f.write('>'+featureid+'\n'+repseqs[featureid]+'\n')
 
         for Sample in Samples:
-            Genome_Accessions[Sample] = ['None']*self.Config.K
-        Alignment_Dir = os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Alignments')
-        subprocess.run([os.path.join(Main_Dir,self.Config.vsearch,"vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'matches.blast'), '--usearch_global',
-                        os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'), '--db', os.path.join(self.Config.Amplicon2Genome_DB,"bac120_ssu_reps_r207.fna"), '--id', str(self.Config.Amplicon2Genome_Similarity), '--alnout', Alignment_Dir])
+            genome_accessions[Sample] = ['None']*self.config.k
+        alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
+        subprocess.run([os.path.join(Main_Dir,self.config.vsearch,"vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast'), '--usearch_global',
+                        os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'), '--db', os.path.join(self.config.amplicon2genome_db,"bac120_ssu_reps_r207.fna"), '--id', str(self.config.amplicon2genome_similarity), '--alnout', alignment_dir])
         
-        with open(Alignment_Dir, 'r') as f:
-            Alignment_Dict = {}
+        with open(alignment_dir, 'r') as f:
+            alignment_dict = {}
             for lines in f:
                 if lines.startswith('Query >'):
                     f.readline()
-                    Alignment_Dict[lines.split(
+                    alignment_dict[lines.split(
                         '>')[1][:-1]] = re.search("  [A-Z][A-Z]_.*", f.readline()).group(0)[2:]
             
         for Sample in Samples:
-            for FeatureID in FeatureIDs[Sample]:
-                if FeatureID in Alignment_Dict.keys():
-                    Genome_Accessions[Sample][FeatureIDs[Sample].index(
-                        FeatureID)] = Alignment_Dict[FeatureID]
+            for featureid in featureids[Sample]:
+                if featureid in alignment_dict.keys():
+                    genome_accessions[Sample][featureids[Sample].index(
+                        featureid)] = alignment_dict[featureid]
 
         Base_NCBI_Dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
-        for Feature_ID in Alignment_Dict.keys():
-            Genome_Out = os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,Alignment_Dict[Feature_ID])
-            # if not os.path.exists(Outputs_Dir+Alignment_Dict[Feature_ID]):
-            #    os.makedirs(Outputs_Dir+Alignment_Dict[Feature_ID])
+        for feature_id in alignment_dict.keys():
+            Genome_Out = os.path.join(self.config.amplicon2genome_outputs_dir,alignment_dict[feature_id])
+            # if not os.path.exists(Outputs_Dir+alignment_dict[feature_id]):
+            #    os.makedirs(Outputs_Dir+alignment_dict[feature_id])
 
         # I think the next line can be done much more regorously by regexp which is easy
 
-            Specific_NCBI_Dir = Alignment_Dict[Feature_ID][3:6]+'/'+Alignment_Dict[Feature_ID][7:10]+'/' +\
-                Alignment_Dict[Feature_ID][10:13]+'/' + \
-                Alignment_Dict[Feature_ID][13:16]
+            Specific_NCBI_Dir = alignment_dict[feature_id][3:6]+'/'+alignment_dict[feature_id][7:10]+'/' +\
+                alignment_dict[feature_id][10:13]+'/' + \
+                alignment_dict[feature_id][13:16]
 
             subprocess.run(['rsync', '--copy-links', '--times', '--verbose',
-                            '--recursive', Base_NCBI_Dir+Specific_NCBI_Dir, self.Config.Amplicon2Genome_Outputs_Dir])
+                            '--recursive', Base_NCBI_Dir+Specific_NCBI_Dir, self.config.amplicon2genome_outputs_dir])
 
-        pd.DataFrame(FeatureIDs).to_csv(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_FeatureIDs.csv'))
-        pd.DataFrame(Genome_Accessions).to_csv(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Genome_Accessions.csv'))
-        pd.DataFrame(Top_K_Taxa).to_csv(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Taxa.csv'))
+        pd.DataFrame(featureids).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'))
+        pd.DataFrame(genome_accessions).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'))
+        pd.DataFrame(top_k_taxa).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'top_k_taxa.csv'))
 
-        if len(list(Path(self.Config.Amplicon2Genome_Outputs_Dir).rglob('*_genomic.fna.gz'))) > 0:
-            for path in Path(self.Config.Amplicon2Genome_Outputs_Dir).rglob('*_genomic.fna.gz'):
+        if len(list(Path(self.config.amplicon2genome_outputs_dir).rglob('*_genomic.fna.gz'))) > 0:
+            for path in Path(self.config.amplicon2genome_outputs_dir).rglob('*_genomic.fna.gz'):
                 if "cds" not in path.__str__() and "rna" not in path.__str__():
                     with gzip.open(path, 'rb') as f_in:
                         with open(path.__str__()[:-3], 'wb') as f_out:
                             shutil.copyfileobj(f_in, f_out)
-        Genomes_Dirs = list([path.__str__()
-                            for path in Path(self.Config.Amplicon2Genome_Outputs_Dir).rglob('*_genomic.fna')])
-        Output_JSON = {}
+        genomes_dirs = list([path.__str__()
+                            for path in Path(self.config.amplicon2genome_outputs_dir).rglob('*_genomic.fna')])
+        output_json = {}
         for sample in Samples:
-            for genome in Genome_Accessions[sample]:
+            for genome in genome_accessions[sample]:
                 if genome != 'None':
-                    if genome not in Output_JSON.keys():
-                        Output_JSON[genome] = {}
-                        Output_JSON[genome]["NCBI_Name"] = Top_K_Taxa[sample][Genome_Accessions[sample].index(
+                    if genome not in output_json.keys():
+                        output_json[genome] = {}
+                        output_json[genome]["NCBI_Name"] = top_k_taxa[sample][genome_accessions[sample].index(
                             genome)]
-                        for Items in Genomes_Dirs:
+                        for Items in genomes_dirs:
                             if genome[3:] in Items:
-                                Output_JSON[genome]["Genome_Dir"] = Items
-        with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,"Amplicon2Genome_OutInfo.json"), "w") as J:
-            json.dump(Output_JSON, J)
+                                output_json[genome]["Genome_Dir"] = Items
+        with open(os.path.join(self.config.amplicon2genome_outputs_dir,"Amplicon2Genome_OutInfo.json"), "w") as J:
+            json.dump(output_json, J)
 
-        return Output_JSON
+        return output_json
     
     def align_genomes(self):
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
         and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value
         """
-        with open(self.Config.Genomes_JSON_Info, 'r') as f:
-            Genomes_Info = json.load(f)
-        Valid_Genomes = 0
-        for Genome_IDs in track(Genomes_Info.keys(),description="Fetching Genomes ..."):
-            Totall_Genomes = len(Genomes_Info.keys())
-            if os.path.exists(Genomes_Info[Genome_IDs]["Genome_Dir"]):
-                Valid_Genomes += 1
-        rich.print(f"[green]{Valid_Genomes}/{Totall_Genomes} Genomes are valid")
+        with open(self.config.genomes_json_info, 'r') as f:
+            genomes_info = json.load(f)
+        valid_genomes = 0
+        for genome_ids in track(genomes_info.keys(),description="Fetching Genomes ..."):
+            Totall_Genomes = len(genomes_info.keys())
+            if os.path.exists(genomes_info[genome_ids]["Genome_Dir"]):
+                valid_genomes += 1
+        rich.print(f"[green]{valid_genomes}/{Totall_Genomes} Genomes are valid")
         time.sleep(3)
 
-        if self.Config.Aligner == 'mmseqs2':
-            Aligned_Genomes = {}
-            for Genome_ID in Genomes_Info.keys():
+        
+        for genome_id in genomes_info.keys():
+            subprocess.run(['mmseqs', 'easy-search', genomes_info[genome_id]['Genome_Dir'], self.config.protein_db,
+                            os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genomes_info[genome_id]['Genome_Dir'].split("/")[-1][:-4]+".tsv"), 'tmp'])
+            genomes_info[genome_id]['Alignment_File'] = os.path.join(self.config.genome_alignment_output, \
+                "Alignment_Results_mmseq_" + \
+                genomes_info[genome_id]['Genome_Dir'].split(
+                    "/")[-1][:-4]+".tsv")
 
-                subprocess.run(['mmseqs', 'easy-search', Genomes_Info[Genome_ID]['Genome_Dir'], self.Config.Protein_DB,
-                                os.path.join(self.Config.Genome_Alignment_Output,"Alignment_Results_mmseq_"+Genomes_Info[Genome_ID]['Genome_Dir'].split("/")[-1][:-4]+".tsv"), 'tmp'])
+        with open(self.config.genome_alignment_output_json, 'w') as f:
+            json.dump(genomes_info, f)
 
-                Genomes_Info[Genome_ID]['Alignment_File'] = os.path.join(self.Config.Genome_Alignment_Output, \
-                    "Alignment_Results_mmseq_" + \
-                    Genomes_Info[Genome_ID]['Genome_Dir'].split(
-                        "/")[-1][:-4]+".tsv")
-
-        with open(self.Config.Genome_Alignment_Output_JSON, 'w') as f:
-            json.dump(Genomes_Info, f)
-
-        return Genomes_Info
+        return genomes_info
     @staticmethod
-    def Make_JSON_from_Genomes(Input_Dir,Output_Dir):
+    def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
         """
         This function takes a csv file directory. The CSV file must include three columns:
-        1- Genome_ID: Identifier for the genome, preferrably; NCBI ID
+        1- genome_id: Identifier for the genome, preferrably; NCBI ID
         2- NCBI_Name: NCBI taxonomy name for the genome: Does not need to be in a specific format
         3- Genome_Dir: Absolute path to the fasta files: NOT .gz
 
         """
-        Genomes_JSON={}
-        Genomes_table=pd.read_table(Input_Dir,delimiter=",")
-        Genomes_table.set_index("Genome_ID",inplace=True)
-        for GI in Genomes_table.index:
-            Genomes_JSON[GI]={}
-            Genomes_JSON[GI]["NCBI_Name"]= Genomes_table.loc[GI,"NCBI_Name"]
-            Genomes_JSON[GI]["Genome_Dir"]= Genomes_table.loc[GI,"Genome_Dir"]
-        with open(Output_Dir,"w") as fp:
-            json.dump(Genomes_JSON,fp)
+        genomes_json={}
+        genomes_table=pd.read_table(input_dir,delimiter=",")
+        genomes_table.set_index("genome_id",inplace=True)
+        for[gi] in genomes_table.index:
+            genomes_json[gi]={}
+            genomes_json[gi]["NCBI_Name"]= genomes_table.loc[gi,"NCBI_Name"]
+            genomes_json[gi]["Genome_Dir"]= genomes_table.loc[gi,"Genome_Dir"]
+        with open(output_dir,"w") as fp:
+            json.dump(genomes_json,fp)
         return
     
-    def ADM_From_Alignment_JSON(self,ADM_Rxns,Model="Modified_ADM_Reactions"):
-        RT = Reaction_Toolkit(Reaction_DB=Configs.Seed_RXN_DB)
-        with open(self.Config.Genome_Alignment_Output_JSON) as f:
-            JSON_Report = json.load(f)
-        Reaction_DB = pd.read_table(self.Config.CSV_Reaction_DB, sep=',')
-        JSON_ADM_Output = {}
-        for ADM_Reaction in track([Rxn for Rxn in ADM_Rxns],description="Finding Alignments to ADM Reactions"):
-            JSON_ADM_Output[ADM_Reaction] = {}
-            for Genome_ID in JSON_Report.keys():
-                if os.path.exists(JSON_Report[Genome_ID]['Alignment_File']):
-                    JSON_ADM_Output[ADM_Reaction][JSON_Report[Genome_ID]
+    def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
+        rt = Reaction_Toolkit(reaction_db=self.config.seed_rxn_db)
+        with open(self.config.genome_alignment_output_json) as f:
+            json_report = json.load(f)
+        reaction_db = pd.read_table(self.config.csv_reaction_db, sep=',')
+        json_adm_output = {}
+        for adm_reaction in track([Rxn for Rxn in adm_rxns],description="Finding Alignments to ADM reactions"):
+            json_adm_output[adm_reaction] = {}
+            for genome_id in json_report.keys():
+                if os.path.exists(json_report[genome_id]['Alignment_File']):
+                    json_adm_output[adm_reaction][json_report[genome_id]
                                                   ['NCBI_Name']] = {}
-                    Temp_TSV = pd.read_table(
-                        JSON_Report[Genome_ID]['Alignment_File'], sep='\t')
-                    A_Filter = (Temp_TSV.iloc[:, -1] > self.Config.bit_score) & (
-                        Temp_TSV.iloc[:, -2] < self.Config.e_value)
-                    Temp_TSV = Temp_TSV[A_Filter]
-                    ECs = [item.split('|')[1] for item in Temp_TSV.iloc[:, 1]]
-                    Filter = (Reaction_DB['EC_Numbers'].isin(ECs)) & (Reaction_DB[Model].str.contains(ADM_Reaction))
-                    Filtered_Rxns = Reaction_DB[Filter]
-                    ECs = Filtered_Rxns['EC_Numbers'].tolist()
+                    temp_tsv = pd.read_table(
+                        json_report[genome_id]['Alignment_File'], sep='\t')
+                    a_filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
+                        temp_tsv.iloc[:, -2] < self.config.e_value)
+                    temp_tsv = temp_tsv[a_filter]
+                    ecs = [item.split('|')[1] for item in temp_tsv.iloc[:, 1]]
+                    filter = (reaction_db['ec_Numbers'].isin(ecs)) & (reaction_db[model].str.contains(adm_reaction))
+                    filtered_rxns = reaction_db[filter]
+                    ecs = filtered_rxns['ec_Numbers'].tolist()
 
-                    EC_Dict = {}
-                    for EC in ECs:
-                        EC_Dict[EC] = []
-                        L = RT.Instantiate_Rxns(EC, "Multiple_Match")
-                        [EC_Dict[EC].append(
-                            rxn.__str__()) for rxn in L if rxn.__str__() not in EC_Dict[EC]]
+                    ec_dict = {}
+                    for ec in ecs:
+                        ec_dict[ec] = []
+                        L = rt.instantiate_rxns(ec, "Multiple_Match")
+                        [ec_dict[ec].append(
+                            rxn.__str__()) for rxn in L if rxn.__str__() not in ec_dict[ec]]
 
-                    JSON_ADM_Output[ADM_Reaction][JSON_Report[Genome_ID]
-                                                  ['NCBI_Name']] = EC_Dict
+                    json_adm_output[adm_reaction][json_report[genome_id]
+                                                  ['NCBI_Name']] = ec_dict
 
 
-        with open(self.Config.Genome_ADM_Map_JSON, 'w') as f:
-            json.dump(JSON_ADM_Output, f)
+        with open(self.config.genome_adm_map_json, 'w') as f:
+            json.dump(json_adm_output, f)
 
-        return JSON_ADM_Output
-        # So far it has gotten really complicated, after making sure it works, instead of adding EC numbers I'll add [SEED,STR] so
+        return json_adm_output
+        # So far it has gotten really complicated, after making sure it works, instead of adding ec numbers I'll add [SEED,STR] so
         # that it can be used for downstream analysis
     
     def extract_relative_abundances(self,sample_names:list[str])->dict:
@@ -1074,39 +1072,44 @@ class Metagenomics:
         """
         relative_abundances={}
         for sample in sample_names:
-            with open(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_RepSeq.fasta'),'r') as f:
+            with open(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'),'r') as f:
                 Top_k_RepSeq = Bio_seq.Fasta(f).Fasta_To_Dict()
             feature_genome_map={}
-            top_k_features = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_FeatureIDs.csv'),sep=',')
-            top_k_genomes = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'Top_k_Genome_Accessions.csv'),sep=',')
-            feature_table = pd.read_table(os.path.join(self.Config.Amplicon2Genome_Outputs_Dir,'feature-table.tsv'),sep='\t')
-            starting_column=["#OTU ID","FeatureID"]
+            top_k_features = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'),sep=',')
+            top_k_genomes = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'),sep=',')
+            feature_table = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'feature-table.tsv'),sep='\t')
+            starting_column=["#OTU ID","Feature_ID"]
             for i in starting_column:
                 if i in list(feature_table.columns):
                     feature_table.rename(columns={i:"#OTU ID"},inplace=True)
                     break
             feature_table.set_index('#OTU ID',inplace=True)
             col_ind=top_k_genomes.columns.get_loc(sample)
+            
             for row in range(top_k_features.shape[0]):
+
                 if top_k_genomes.iloc[row,col_ind] !="None":
                     feature_genome_map[top_k_features.iloc[row,col_ind]]=top_k_genomes.iloc[row,col_ind]
                 else:
                     feature_genome_map[top_k_features.iloc[row,col_ind]]="None"
+
             valid_genomes = [(feature,feature_genome_map[feature]) for feature in feature_genome_map.keys() if feature_genome_map[feature]!="None"]
-            warn(f"{len(feature_genome_map.keys())-len(valid_genomes)} out of {len(feature_genome_map.keys())} features were not assigned to a genome")
+            warn(f"{len(feature_genome_map.keys())-len(valid_genomes)} out of {len(feature_genome_map.keys())} features were not assigned to a genome")   
             abundances=dict([(feature[1],feature_table.loc[feature[0],sample]) for feature in valid_genomes])
             relative_abundances[sample]= dict([(genome,abundances[genome]/sum(abundances.values())) for genome in abundances.keys()])
+        
         return relative_abundances
 
     def calculate_microbial_portions(self,microbe_reaction_map:dict,genome_info:dict,relative_abundances:dict)-> dict:
         
-        """This method calculates COD fraction of each microbial term in a Model
+        """This method calculates COD fraction of each microbial term in a model
         
         Args:
-            microbe_reaction_map: This dictionary must determine the association between
+
+            microbe_reaction_map (dict): This dictionary must determine the association between
             microbial species in the model and the reactions that these species are involved
             in. In the case of Modified-ADM, this dictionary is the following:
-            
+
             microbe_reaction_map={
                             "Hydrolysis carbohydrates":"X_ch",
                             "Hydrolysis proteins":"X_pr",
@@ -1132,7 +1135,7 @@ class Metagenomics:
             interest and other useful information
 
             relative_abundances: This dictionary holds the relative abundace of each genome in the 
-            community. The keys of this dictionary are Genome_ID similar to the output of align_genomes.
+            community. The keys of this dictionary are genome_id similar to the output of align_genomes.
             NOTE: The relative abundances must be between 0,1
             For example: 
             relative_abundances={
@@ -1146,35 +1149,34 @@ class Metagenomics:
         Returns:
             dict: This dictionary includes the fraction of COD that belongs to each microbial species in the
             model. 
-
-
         """
+
         cod={}
         for sample in relative_abundances.keys():
         
-            reaction_db=pd.read_table(self.Config.CSV_Reaction_DB,delimiter=",")
-            reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
+            reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
+            reaction_db.drop_duplicates(subset=['ec_Numbers'], keep='first',inplace=True)
 
-            reaction_db.set_index("EC_Numbers",inplace=True)
+            reaction_db.set_index("ec_Numbers",inplace=True)
             model_species=list(set(microbe_reaction_map.values()))
             cod_portion=Additive_Dict([(i,0) for i in model_species])
 
             for genome_id in relative_abundances[sample].keys():
                 temp_tsv = pd.read_table(
                             genome_info[genome_id]['Alignment_File'], sep='\t',header=None)
-                filter = (temp_tsv.iloc[:, -1] > self.Config.bit_score) & (
-                            temp_tsv.iloc[:, -2] < self.Config.e_value)
+                filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
+                            temp_tsv.iloc[:, -2] < self.config.e_value)
                 temp_tsv = temp_tsv[filter]
-                Unique_ECs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
-                Cleaned_Reaction_List=[]
-
-                [Cleaned_Reaction_List.extend(map(lambda x:x.strip(" "),reaction_db.loc[EC,"Modified_ADM_Reactions"].split("|"))) for EC in Unique_ECs if EC in reaction_db.index]
-                pathway_counts=Counter(Cleaned_Reaction_List)
+                unique_ecs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
+                cleaned_reaction_list=[]
+                [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_adm_reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
+                pathway_counts=Counter(cleaned_reaction_list)
                 SUM=sum([pathway_counts[key] for key in pathway_counts])
                 for i in pathway_counts:
                     pathway_counts[i]=pathway_counts[i]/SUM
                 microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
                 cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[sample][genome_id]
+            
             cod[sample]=cod_portion
         
 
