@@ -1078,7 +1078,7 @@ class Metagenomics:
             top_k_features = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'),sep=',')
             top_k_genomes = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'),sep=',')
             feature_table = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'feature-table.tsv'),sep='\t')
-            starting_column=["#OTU ID","Feature_ID"]
+            starting_column=["#OTU ID","FeatureID"]
             for i in starting_column:
                 if i in list(feature_table.columns):
                     feature_table.rename(columns={i:"#OTU ID"},inplace=True)
@@ -1155,9 +1155,9 @@ class Metagenomics:
         for sample in relative_abundances.keys():
         
             reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
-            reaction_db.drop_duplicates(subset=['ec_Numbers'], keep='first',inplace=True)
+            reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
 
-            reaction_db.set_index("ec_Numbers",inplace=True)
+            reaction_db.set_index("EC_Numbers",inplace=True)
             model_species=list(set(microbe_reaction_map.values()))
             cod_portion=Additive_Dict([(i,0) for i in model_species])
 
@@ -1169,7 +1169,7 @@ class Metagenomics:
                 temp_tsv = temp_tsv[filter]
                 unique_ecs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
                 cleaned_reaction_list=[]
-                [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_adm_reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
+                [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
                 pathway_counts=Counter(cleaned_reaction_list)
                 SUM=sum([pathway_counts[key] for key in pathway_counts])
                 for i in pathway_counts:

@@ -17,6 +17,7 @@ scipy = "^1.8.1"
 sympy = "^1.10.1"
 matplotlib = "^3.5.2"
 dash-escher = "^0.0.4"
+openbox = "^0.7.17"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
