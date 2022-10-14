@@ -390,7 +390,7 @@ def build_folder_structure():
     """
     This function will build the folder structure undrestandable by the ADToolbox.
     """
-    Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes","Visualizations","bin"]
+    Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes","bin"]
     for i in Required_Folders:
         if not os.path.exists(os.path.join(Main_Dir,i)):
             os.mkdir(os.path.join(Main_Dir,i))

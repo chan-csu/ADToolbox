@@ -23,7 +23,7 @@ from __init__ import Main_Dir,PKG_DATA
 from rich.style import Style
 import dash_escher
 import Configs
-
+import pdb
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
 # It is extensively based on PyADM1, and I would like to thank the author of PyADM1 for this work
@@ -459,17 +459,19 @@ class Model:
         def escher_wrapper(drop_down_escher):
             if drop_down_escher=="Show Map":
                 Labels={}
-                for i in range(0,len(sol.t),int(len(sol.t)/20)):
-                    Labels[i]={'label':str(int(sol.t[i])),'style':{'color': '#77b0b1'}}
-                Labels[len(sol.t)-1]=self.sim_time
-                return [html.Br(),html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0, len(sol.t),len(sol.t)/20,value=0,id="Escher_Slider",marks=Labels),html.Br()]
+                for i in range(0,self.sim_time,int(self.sim_time/20)):
+                    Labels[i]={'label':str(i),'style':{'color': '#77b0b1'}}
+                Labels[self.sim_time]=self.sim_time
+                return [html.Br(),html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0,self.sim_time,int(self.sim_time/20),value=0,id="Escher_Slider",marks=Labels),html.Br()]
 
         @app.callback(Output(component_id="Escher", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'),
         Input(component_id="Escher_Slider", component_property='value'))        
         def draw_escher(drop_down_escher,escher_slider):
             rxn_data={}
+            self.ode_system(0,sol.y[:,int(sol.y.shape[1]/30*escher_slider)],self)
+            fluxes=self.info["Fluxes"]
             for ind,i in enumerate(self.reactions):
-                rxn_data[i.replace(" ","_")]=self.info["Fluxes"][int(escher_slider)][:][ind]
+                rxn_data[i.replace(" ","_")]= fluxes[ind]
             
             if drop_down_escher=="Show Map":
                 return [dash_escher.DashEscher(mapData=escher_map,modelData=cobra_model,
@@ -551,9 +553,9 @@ class Model:
             self.inlet_conditions = np.array(
             [inlet_conditions[0][i+"_in"] for i in self.species])[:, np.newaxis]
             update_sol = self.solve_model(
-                         self.initial_conditions[:, 0], np.linspace(0, 30, 10000))
+                         self.initial_conditions[:, 0], np.linspace(0, self.sim_time, 10000))
 
-
+            sol=update_sol
             solution = {
                     't': update_sol.t,
                         }
@@ -1436,7 +1438,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         for state in model.control_state.keys():
             c[model.species.index(state)]=model.control_state[state]
             dCdt[model.species.index(state)]=0
-    model.info["Fluxes"].append(v)
+    model.info["Fluxes"]=v
     return dCdt[:, 0]
 
 
