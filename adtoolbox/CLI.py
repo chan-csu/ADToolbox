@@ -19,7 +19,7 @@ class AParser(argparse.ArgumentParser):
         rich.print(message, file=file)
 
 def main():
-    db_class=Database(Config=Configs.Database())
+    db_class=Database(config=Configs.Database())
     parser = AParser(prog="ADToolBox",
         description="[italic yellow]ADToolBox, a Toolbox for Anaerobic Digestion Modeling",
         epilog="ADToolBox-Chan Lab.")
@@ -49,14 +49,14 @@ def main():
     metag_subp=subparser_metagenomics.add_subparsers(dest='metag_Subparser',help='[yellow] Available Metagenomics Commands:')
     
     metag_subp_2=metag_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
-    metag_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=meta_config_defult.QIIME_Outputs_Dir)
-    metag_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables",default=meta_config_defult.Feature_Table_Dir)
-    metag_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files",default=meta_config_defult.Rep_Seq_Fasta)
-    metag_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files",default=meta_config_defult.Taxonomy_Table_Dir)
-    metag_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=meta_config_defult.Amplicon2Genome_Outputs_Dir)
-    metag_subp_2.add_argument("-a", "--amplicon-to-genome-db", action="store", help="The Amplicon to Genome Database to use",default=meta_config_defult.Amplicon2Genome_DB)
-    metag_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=meta_config_defult.K,type=int)
-    metag_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=meta_config_defult.Amplicon2Genome_Similarity,type=float)
+    metag_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=meta_config_defult.qiime_outputs_dir)
+    metag_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables",default=meta_config_defult.feature_table_dir)
+    metag_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files",default=meta_config_defult.rep_seq_fasta)
+    metag_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files",default=meta_config_defult.taxonomy_table_dir)
+    metag_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=meta_config_defult.amplicon2genome_outputs_dir)
+    metag_subp_2.add_argument("-a", "--amplicon-to-genome-db", action="store", help="The Amplicon to Genome Database to use",default=meta_config_defult.amplicon2genome_db)
+    metag_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=meta_config_defult.k,type=int)
+    metag_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=meta_config_defult.amplicon2genome_similarity,type=float)
     
     metag_subp_3=metag_subp.add_parser('align-genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
     metag_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned",default=meta_config_defult.genomes_json_info)
@@ -72,7 +72,7 @@ def main():
     metag_subp_5=metag_subp.add_parser('map-genomes-to-adm', help='maps JSON file with genome infromation to ADM reactions')
     metag_subp_5.add_argument("-i","--input-file",action="store",help="Input the address of the JSON file includeing information about the alignment of the genomes to the protein database",default=meta_config_defult.genome_alignment_output_json)
     metag_subp_5.add_argument("-m","--model",action="store",help="Model determines which mapping system you'd like to use; Current options: 'Modified_adm_reactions'",default="Modified_adm_reactions")
-    metag_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model",default=meta_config_defult.Genome_ADM_Map_JSON)
+    metag_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model",default=meta_config_defult.genome_adm_map_json)
 
 
     doc_parser=subparsers.add_parser('Documentations', help='Documentations for using AD Toolbox')
@@ -313,7 +313,7 @@ def main():
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(Configs.Modified_ADM().Species) as f:
+            with open(Configs.Modified_ADM().species) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
@@ -332,8 +332,8 @@ def main():
             
             adm_control_states={}
                 
-        mod_adm1 = Model(asm_model_parameters, adm_base_parameters, adm_initial_conditions, adm_inlet_conditions, adm_reactions,
-                     adm_species, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,Control_States=adm_control_states,Name="Modified_ADM1", Switch="DAE",metagenome_report=adm_metagenome_report)
+        mod_adm1 = Model(adm_model_parameters, adm_base_parameters, adm_initial_conditions, adm_inlet_conditions, adm_reactions,
+                     adm_species, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state=adm_control_states,name="Modified_ADM1", switch="DAE",metagenome_report=adm_metagenome_report)
         Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
 
         if args.report == 'dash' or args.report==None:
