@@ -1041,9 +1041,9 @@ class Metagenomics:
                         temp_tsv.iloc[:, -2] < self.config.e_value)
                     temp_tsv = temp_tsv[a_filter]
                     ecs = [item.split('|')[1] for item in temp_tsv.iloc[:, 1]]
-                    filter = (reaction_db['ec_Numbers'].isin(ecs)) & (reaction_db[model].str.contains(adm_reaction))
+                    filter = (reaction_db['EC_Numbers'].isin(ecs)) & (reaction_db[model].str.contains(adm_reaction))
                     filtered_rxns = reaction_db[filter]
-                    ecs = filtered_rxns['ec_Numbers'].tolist()
+                    ecs = filtered_rxns['EC_Numbers'].tolist()
 
                     ec_dict = {}
                     for ec in ecs:

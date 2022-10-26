@@ -160,7 +160,7 @@ def main():
 
 
     if args.ADToolbox_Module == 'Documentations' and args.show:
-        with open(Configs.Documentation().ReadMe,'r') as f:
+        with open(Configs.Documentation().readme,'r') as f:
             T=f.read()
             console.print(markdown.Markdown(T))
     
