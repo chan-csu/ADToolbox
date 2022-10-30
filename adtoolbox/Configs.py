@@ -148,7 +148,7 @@ class Modified_ADM:
         self.metagenome_report = metagenome_report
         self.reactions = reactions
         self.species = species
-        self.Base_dir = base_dir
+        self.base_dir = base_dir
 
 class Documentation:
     def __init__(self,

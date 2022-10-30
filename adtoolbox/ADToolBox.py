@@ -654,20 +654,20 @@ class Database:
         Downloads the parameters needed for running ADM models in ADToolbox
         
         '''
-        if not os.path.exists(config.Base_dir):
-            os.makedirs(config.Base_dir)
+        if not os.path.exists(config.base_dir):
+            os.makedirs(config.base_dir)
         model_parameters_dir=config.model_parameters
         base_parameters_dir=config.base_parameters
         initial_conditions_dir=config.initial_conditions
         inlet_conditions_dir=config.inlet_conditions
         reactions_dir=config.reactions
         species_dir=config.species
-        model_parameters="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_model_parameters.json"
-        base_parameters="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_base_parameters.json"
-        initial_conditions="https:/github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_initial_conditions.json"
-        inlet_conditions="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_inlet_conditions.json"
-        reactions="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_reactions.json"
-        species="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_species.json"
+        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_model_parameters.json"
+        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_base_parameters.json"
+        initial_conditions="https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_initial_conditions.json"
+        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_inlet_conditions.json"
+        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_reactions.json"
+        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_species.json"
         r = requests.get(model_parameters, allow_redirects=True)
         with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
@@ -691,20 +691,20 @@ class Database:
         '''
         Downloads the parameters needed for running ADM models in ADToolbox
         '''
-        if not os.path.exists(config.Base_dir):
-            os.makedirs(config.Base_dir)
+        if not os.path.exists(config.base_dir):
+            os.makedirs(config.base_dir)
         model_parameters_dir=config.model_parameters
         base_parameters_dir=config.base_parameters
         initial_conditions_dir=config.initial_conditions
         inlet_conditions_dir=config.inlet_conditions
         reactions_dir=config.reactions
         species_dir=config.species
-        model_parameters="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_model_parameters.json"
-        base_parameters="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_base_parameters.json"
-        initial_conditions="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_initial_conditions.json"
-        inlet_conditions="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_inlet_conditions.json"
-        reactions="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_adm_reactions.json"
-        species="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_species.json"
+        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_model_parameters.json"
+        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_base_parameters.json"
+        initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_initial_conditions.json"
+        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_inlet_conditions.json"
+        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_adm_reactions.json"
+        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_species.json"
         r = requests.get(model_parameters, allow_redirects=True)
         with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
@@ -727,36 +727,36 @@ class Database:
         
     @staticmethod
     def download_seed_databases(directory:str) -> None :
-        reactions="https:/github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json"
+        reactions="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json"
         r = requests.get(reactions, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)        
     @staticmethod
     def download_protein_database(directory:str) -> None:
-        protein_db="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta"
+        protein_db="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta"
         r = requests.get(protein_db, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
         
     @staticmethod
     def download_reaction_database(directory: str)->None:
-        reactions="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv"
+        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv"
         r = requests.get(reactions, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
     @staticmethod
     def download_feed_database(directory:str)-> None:
-        feed="https:/github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
+        feed="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
         r = requests.get(feed, allow_redirects=True)
         with open(directory, 'wb') as f:
             f.write(r.content)
     @staticmethod
     def download_escher_files(directory:str)-> None:
         escher_files=[
-        "https:/github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
-        "https:/github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
-        "https:/github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
-        "https:/github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"]
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"]
         
         for i in escher_files:
             r = requests.get(i, allow_redirects=True)
