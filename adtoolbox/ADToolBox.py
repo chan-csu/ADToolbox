@@ -662,12 +662,12 @@ class Database:
         inlet_conditions_dir=config.inlet_conditions
         reactions_dir=config.reactions
         species_dir=config.species
-        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_model_parameters.json"
-        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_base_parameters.json"
-        initial_conditions="https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_initial_conditions.json"
-        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_inlet_conditions.json"
-        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_reactions.json"
-        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_species.json"
+        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json"
+        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json"
+        initial_conditions="https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_Initial_Conditions.json"
+        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Inlet_Conditions.json"
+        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Reactions.json"
+        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Species.json"
         r = requests.get(model_parameters, allow_redirects=True)
         with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
@@ -699,12 +699,12 @@ class Database:
         inlet_conditions_dir=config.inlet_conditions
         reactions_dir=config.reactions
         species_dir=config.species
-        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_model_parameters.json"
-        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_base_parameters.json"
-        initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_initial_conditions.json"
-        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_inlet_conditions.json"
-        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_adm_reactions.json"
-        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_species.json"
+        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Model_Parameters.json"
+        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Base_Parameters.json"
+        initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Initial_Conditions.json"
+        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Inlet_Conditions.json"
+        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Reactions.json"
+        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Species.json"
         r = requests.get(model_parameters, allow_redirects=True)
         with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
