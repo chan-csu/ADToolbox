@@ -23,7 +23,7 @@ import gzip
 import shutil
 import Configs
 import Bio_seq
-from rich.progress import track
+from rich.progress import track,Progress
 import rich
 from __init__ import Main_Dir
 # import doctest
@@ -705,7 +705,7 @@ class Database:
         inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Inlet_Conditions.json"
         reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Reactions.json"
         species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Species.json"
-        r = requests.get(model_parameters, allow_redirects=True)
+        r = requests.get(model_parameters, allow_redirects=True,stream=True)
         with open(model_parameters_dir, 'wb') as f:
             f.write(r.content)
         r = requests.get(base_parameters, allow_redirects=True)
@@ -728,7 +728,7 @@ class Database:
     @staticmethod
     def download_seed_databases(directory:str) -> None :
         reactions="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json"
-        r = requests.get(reactions, allow_redirects=True)
+        r = requests.get(reactions, allow_redirects=True,stream=True)
         with open(directory, 'wb') as f:
             f.write(r.content)        
     @staticmethod
@@ -786,7 +786,7 @@ class Metagenomics:
     def __init__(self,config:Configs.Metagenomics):
         self.config=config
     
-    def get_requirements_a2g(self):
+    def get_requirements_a2g(self,progress=True):
         """
         This function will automatically download the required files for Amplicon to Genome functionality.
         """
@@ -800,16 +800,49 @@ class Metagenomics:
                'bac120_metadata': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/bac120_metadata.tar.gz',
                'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_reps/bac120_ssu_reps.tar.gz'
                }
+        if progress:
+            for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
+                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                    total_size = int(r.headers.get('content-length', 0))
+                    block_size = 1024
+                    with Progress() as progress:
+                        task1 = progress.add_task("Downloading " + keys, total=total_size)
+                        with open(os.path.join(self.config.amplicon2genome_db, keys), 'wb') as f:
+                            for data in r.iter_content(block_size):
+                                progress.update(task1, advance=len(data))
+                                f.write(data)
+            with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=progress) as r:
+                total_size = int(r.headers.get('content-length', 0))
+                block_size = 1024
+                with Progress() as progress:
+                    task1 = progress.add_task("Downloading metadata_field_desc.tsv", total=total_size)
+                    with open(os.path.join(self.config.amplicon2genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
+                        for data in r.iter_content(block_size):
+                            progress.update(task1, advance=len(data))
+                            f.write(data)
 
-        for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
-            r = requests.get(url[keys], allow_redirects=True)
-            open(os.path.join(self.config.amplicon2genome_db,keys+'.txt'), 'wb').write(r.content)
-        r = requests.get(url['metadata_field_desc'], allow_redirects=True)
-        open(os.path.join(self.config.amplicon2genome_db,'metadata_field_desc.tsv'), 'wb').write(r.content)
-
-        for keys in ['bac120_metadata', 'bac120_ssu']:
-            r = requests.get(url[keys], allow_redirects=True)
-            open(os.path.join(self.config.amplicon2genome_db,keys+'.tar.gz'), 'wb').write(r.content)
+            for keys in ['bac120_metadata', 'bac120_ssu']:
+                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                    total_size = int(r.headers.get('content-length', 0))
+                    block_size = 1024
+                    with Progress() as progress:
+                        task1 = progress.add_task("Downloading " + keys, total=total_size)
+                        with open(os.path.join(self.config.amplicon2genome_db, keys+'.tar.gz'), 'wb') as f:
+                            for data in r.iter_content(block_size):
+                                progress.update(task1, advance=len(data))
+                                f.write(data)
+        else:
+            for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
+                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                    with open(os.path.join(self.config.amplicon2genome_db, keys), 'wb') as f:
+                        f.write(r.content)
+            with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=progress) as r:
+                with open(os.path.join(self.config.amplicon2genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
+                    f.write(r.content)
+            for keys in ['bac120_metadata', 'bac120_ssu']:
+                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                    with open(os.path.join(self.config.amplicon2genome_db, keys+'.tar.gz'), 'wb') as f:
+                        f.write(r.content)
 
 
     def amplicon2genome(self,
