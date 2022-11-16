@@ -167,11 +167,9 @@ def main():
     if args.ADToolbox_Module == 'Database' and "Database_Module" in args and args.Database_Module=="build-protein-db" :
             ecs=db_class.ec_from_csv(Configs.Database().csv_reaction_db)
             rich.print(u"[bold green]\u2713 All EC numbers were extracted!\n")
-            uniprot_ids=db_class.uniprots_from_ec(ecs)
-            rich.print(u"[bold green]\u2713 All Uniprot IDs were extracted!\n")
             db_class._initialize_database()
-            db_class.add_protein_from_uniprot(uniprot_ids)
-            rich.print(u"[bold green]\u2713 Protein Database was built!\n")
+            db_class.protein_db_from_ec(ecs)
+            rich.print(u"\n[bold green]\u2713 Protein Database was built!\n")
     
     
     if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="download-feed-db":

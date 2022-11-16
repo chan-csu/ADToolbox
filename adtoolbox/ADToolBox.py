@@ -342,55 +342,60 @@ class Database:
     adapter = HTTPAdapter(max_retries=retry)
     session.mount('http://', adapter)
 
-    def add_protein_from_uniprot(self, uniprot_ecs):
+    # def add_protein_from_uniprot(self, uniprot_ecs):
 
-        Base_URL = 'https://www.uniprot.org/uniprot/'
-        
-        with open(self.config.protein_db, 'a') as f:
-            for items in track(uniprot_ecs,description="[yellow] --> Fetching the protein sequences from Uniprot: "):
+    #     pdb.set_trace()
+    #     with open(self.config.protein_db, 'a') as f:
+    #         for items in track(uniprot_ecs,description="[yellow] --> Fetching the protein sequences from Uniprot: "):
+    #             try:
+    #                 file = Database.session.get(
+    #                     f"https://rest.uniprot.org/uniprotkb/{items[0]}.fasta", timeout=10)
+    #             except requests.exceptions.ConnectionError:
+    #                 print("Could not fetch the sequence! Trying again ...")
+    #                 time.sleep(10)
+    #                 file = Database.session.get(
+    #                     Base_URL+items[0]+".fasta", timeout=10)
+    #                 if file.ok:
+    #                     print(
+    #                         f"Retry was successful: {items[0]} was fetched successfully!")
+    #                 else:
+    #                     print(
+    #                         f"Retry was unsuccessful: {items[0]} ignored!")
+    #                     # I can add this uniprot id to a log file
+    #                 continue
+    #             if file.ok:
+    #                 f.write(f'>{items[0]}|{items[1]}\n')
+    #                 f.write(''.join(file.text.split('\n')[1:-1]))
+    #                 f.write('\n')
+    
+    def protein_db_from_ec(self, ec_list,mode="a"):
+        # 5.1.1.2 and 5.1.1.20 should be distinguished: So far it seems like they are distinguished automatically by Uniprot
+        with open(self.config.protein_db, mode) as f:
+            for ec in track(ec_list,description="[yellow]   --> Writing the protein database:"):
                 try:
                     file = Database.session.get(
-                        Base_URL+items[0]+".fasta", timeout=10)
-                except requests.exceptions.ConnectionError:
-                    print("Could not fetch the sequence! Trying again ...")
-                    time.sleep(10)
+                        f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=1000)
+
+                except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
+
+                    print("Request Error! Trying again ...")
+                    time.sleep(30)
                     file = Database.session.get(
-                        Base_URL+items[0]+".fasta", timeout=10)
-                    if file.ok:
-                        print(
-                            f"Retry was successful: {items[0]} was fetched successfully!")
+                        f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=1000)
+                # This alsp does a sanity check
+
+                except Exception:
+                    print('Something went wrong!')
+                text = file.text
+                for line in text.split('\n'):
+                    if line.startswith('>'):
+                        uniprot=line.split('|')[1]
+                        f.write(f'>{uniprot}|{ec}\n')
                     else:
-                        print(
-                            f"Retry was unsuccessful: {items[0]} ignored!")
-                        # I can add this uniprot id to a log file
-                    continue
-                if file.ok:
-                    f.write(f'>{items[0]}|{items[1]}\n')
-                    f.write(''.join(file.text.split('\n')[1:-1]))
-                    f.write('\n')
-    
-    def uniprots_from_ec(self, ec_list):
-        # 5.1.1.2 and 5.1.1.20 should be distinguished: So far it seems like they are distinguished automatically by Uniprot
-         
-        uniprots = []
-        for ec in track(ec_list,description="[yellow]   --> Fetching Uniprot IDs from ecs"):
-            try:
-                file = Database.session.get(
-                    f"https://www.uniprot.org/uniprotkb?query=(ec:{ec})%20AND%20(reviewed:true)%20NOT%20(taxonomy_id:2759)", timeout=1000)
+                        f.write(f'{line}\n')
 
-            except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
 
-                print("Request Error! Trying again ...")
-                time.sleep(30)
-                file = Database.session.get(
-                    f"https://www.uniprot.org/uniprotkb?query=(ec:{ec})%20AND%20(reviewed:true)%20NOT%20(taxonomy_id:2759)", timeout=1000)
-                [uniprots.append((Uniprot, ec))
-                 for Uniprot in file.text.split('\n')[:-1]]  # This alsp does a sanity check
 
-            except Exception:
-                print('Something went wrong!')
-
-        return uniprots
 
     @staticmethod
     def ec_from_csv(csv_file, Sep=','):
