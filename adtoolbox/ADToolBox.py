@@ -5,6 +5,7 @@ import os
 import random
 from matplotlib import streamplot
 import pandas as pd
+import pdb
 import json
 import numpy as np
 import re
@@ -346,7 +347,7 @@ class Database:
         Base_URL = 'https://www.uniprot.org/uniprot/'
         
         with open(self.config.protein_db, 'a') as f:
-            for items in track(uniprot_ecs,description="[yellow]    --> Fetching the protein sequences from Uniprot: "):
+            for items in track(uniprot_ecs,description="[yellow] --> Fetching the protein sequences from Uniprot: "):
                 try:
                     file = Database.session.get(
                         Base_URL+items[0]+".fasta", timeout=10)
@@ -370,26 +371,23 @@ class Database:
     
     def uniprots_from_ec(self, ec_list):
         # 5.1.1.2 and 5.1.1.20 should be distinguished: So far it seems like they are distinguished automatically by Uniprot
-        Base_URL = 'https://www.uniprot.org/uniprot/?query=ec%3A'
+         
         uniprots = []
-
         for ec in track(ec_list,description="[yellow]   --> Fetching Uniprot IDs from ecs"):
-
             try:
                 file = Database.session.get(
-                    Base_URL+str(ec)+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
+                    f"https://www.uniprot.org/uniprotkb?query=(ec:{ec})%20AND%20(reviewed:true)%20NOT%20(taxonomy_id:2759)", timeout=1000)
 
             except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
 
                 print("Request Error! Trying again ...")
                 time.sleep(30)
                 file = Database.session.get(
-                    Base_URL+ec+'+NOT+taxonomy%3A%22Eukaryota+%5B2759%5D%22+reviewed%3Ayes&format=list', timeout=1000)
-            if file.ok:
+                    f"https://www.uniprot.org/uniprotkb?query=(ec:{ec})%20AND%20(reviewed:true)%20NOT%20(taxonomy_id:2759)", timeout=1000)
                 [uniprots.append((Uniprot, ec))
                  for Uniprot in file.text.split('\n')[:-1]]  # This alsp does a sanity check
 
-            else:
+            except Exception:
                 print('Something went wrong!')
 
         return uniprots
@@ -403,7 +401,7 @@ class Database:
 
             ec_list = pd.read_table(csv_file, sep=Sep,dtype="str")
             ec_list.dropna(axis=0)
-            output_ec_list = list(ec_list["ec_Numbers"])
+            output_ec_list = list(ec_list["EC_Numbers"])
             assert len(
                 output_ec_list) > 0, "The ec list is empty; Check the file"
 
@@ -420,9 +418,8 @@ class Database:
 
             print(error)
 
-        else:
 
-            return output_ec_list
+        return output_ec_list
 
     def ec_from_uniprot(self, uniprot_id):
 
