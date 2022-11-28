@@ -10,6 +10,7 @@ from ADM import *
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
+import kbase
 console = Console()
 
 
@@ -26,6 +27,7 @@ def main():
     parser.add_argument("-v", "--version", action="version",help="Prints the version of ADToolBox") 
     parser.version = f"[green]ADToolBox v{__version__}"
     subparsers = parser.add_subparsers(dest="ADToolbox_Module", help='ADToolbox Modules:')
+    ### Database Module -------------------------------------------------------------
     subparser_database = subparsers.add_parser('Database', help='Database Module of ADToolBox')
     db_subp=subparser_database.add_subparsers(dest="Database_Module", help='Database Modules:')
     db_subp.add_parser("initialize-feed-db", help="Initialize the Feed DB")
@@ -38,8 +40,40 @@ def main():
     db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format")
     db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
     db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases")
+    ### kbase module -----------------------------------------------------------------
+    subparser_kbase = subparsers.add_parser('Kbase', help='Kbase Module of ADToolBox')
+    kbase_subp=subparser_kbase.add_subparsers(dest="Kbase_Module", help='Kbase Modules:')
     
+    kbase_subp.add_parser("show-studies", help="Show the list of all studies in Kbase")
     
+    add_study=kbase_subp.add_parser("add-study", help="Add a study to the Kbase") 
+    add_study.add_argument("-n", "--name", help="Study Name to be added to the Kbase",required=True)
+    add_study.add_argument("-t", "--type", help="Study Type to be added to the Kbase",required=True)
+    add_study.add_argument("-r", "--reference", help="Study Reference to be added to the Kbase",required=True)
+    
+    kbase_subp.add_parser("show-metagenomics-studies", help="Show the list of all metagenomics studies in Kbase")
+    
+    add_metagenomics_study=kbase_subp.add_parser("add-metagenomics-study", help="Add a metagenomics study to the Kbase")
+    add_metagenomics_study.add_argument("-i", "--study-id", help="Metagenomics Study ID to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-n", "--name", help="Metagenomics Study Name to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-t", "--type", help="Metagenomics Study Type to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-r", "--reference", help="Metagenomics Study Reference to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-m","--microbiome", help="Microbiome ID to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-s","--sra_accession", help="SRA accession ID for the project",required=True)
+    add_metagenomics_study.add_argument("-c","--comments", help="Comments on the study of interest",required=True)
+
+    kbase_subp.add_parser("show-experimental-data-studies", help="Show the list of all studies with experimental data in Kbase")
+
+    add_experimental_data_study=kbase_subp.add_parser("add-experimental-data-study", help="Add a study with experimental data to the Kbase")
+    add_experimental_data_study.add_argument("-i", "--study-id", help="Study ID to be added to the Kbase",required=True)
+    add_experimental_data_study.add_argument("-n", "--name", help="Study Name to be added to the Kbase",required=True)
+    add_experimental_data_study.add_argument("-t", "--type", help="Study Type to be added to the Kbase",required=True)
+    add_experimental_data_study.add_argument("-r", "--reference", help="Study Reference to be added to the Kbase",required=True)
+
+
+    kbase_subp.add_parser("create-studies-db", help="Create the studies database")
+    kbase_subp.add_parser("create-metagenomics-studies-db", help="Create the metagenomics studies database")
+    kbase_subp.add_parser("create-experimental-data-studies-db", help="Create the studies with experimental data database")
     
     
     
@@ -360,12 +394,59 @@ def main():
     if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='download-all-databases':
         download_all_databases()
     
+### Kbase Block
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'create-studies-db':
+        kbase.create_study_table(Configs.Kbase().studies)
+    
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'add-study':
+        kbase.add_study(Configs.Kbase().studies, args.name,args.type, args.reference)
 
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-studies':
+        kbase_show_studies(Configs.Kbase().studies)
+    
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'create-metagenomics-studies-db':
+        kbase.create_metagenoics_studies_table(Configs.Kbase().studies)
+    
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'add-metagenomics-study':
+        kbase.add_metagenomics_study(Configs.Kbase().studies, args.name, args.study_id, args.type, args.microbiome,args.sra_accession, args.reference, args.comments)
 
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-metagenomics-studies':
+        kbase_show_metagenomics_studies(Configs.Kbase().studies)
+    
+    
+    
+    
 
+def kbase_show_studies(studies_db):
+    if os.path.exists(studies_db) and len(kbase.get_studies(studies_db)):
+        print("The following studies are available in the database:\n")
+        study_table = Table(title="[bold]Studies",expand=True,safe_box=True)
+        colnames = ['ID','Name', 'Type', 'Reference']
+        for i in colnames:
+            study_table.add_column(i, justify="center", style="cyan", no_wrap=True)
+        for i in kbase.get_studies(studies_db):
+            study_table.add_row(*map(str, i))
+        console.print(study_table)
+    elif len(kbase.get_studies(studies_db))==0:
+        print("There are no studies in the database")
+    else:
+        print("The database Does not exist. Please build/download the kbase databases first.")
 
-
-
+def kbase_show_metagenomics_studies(metagenomics_studies_db):
+    print(metagenomics_studies_db)
+    if os.path.exists(metagenomics_studies_db) and len(kbase.get_metagenomics_studies(metagenomics_studies_db)):
+        print("The following metagenomics studies are available in the database:\n")
+        study_table = Table(title="[bold]Metagenomics Studies",expand=True,safe_box=True)
+        colnames = ['ID','Name', 'Study ID', 'Type', 'Microbiome', 'SRA Accession', 'Reference', 'Comments']
+        for i in colnames:
+            study_table.add_column(i, justify="center", style="cyan", no_wrap=True)
+        for i in kbase.get_metagenomics_studies(metagenomics_studies_db):
+            study_table.add_row(*map(str, i))
+        console.print(study_table)
+    elif os.path.exists(metagenomics_studies_db) and len(kbase.get_metagenomics_studies(metagenomics_studies_db))==0:
+        print("There are no metagenomics studies in the database")
+    else:
+        print("The database Does not exist. Please build/download the kbase databases first.")
 
 ###########################
 #####Configs functions#####
@@ -420,6 +501,13 @@ def download_all_databases():
     rich.print(u"[yellow] Downloading the feed database ...\n")
     ADToolBox.Database().download_feed_database(Configs.Database().feed_db)
     rich.print(u"[bold green]\u2713 Feed database was downloaded successfuly!\n")
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()

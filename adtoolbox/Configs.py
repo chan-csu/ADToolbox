@@ -157,5 +157,5 @@ class Documentation:
 
 class Kbase:
     def __init__(self,
-                 sqlite_db=os.path.join(Main_Dir,"Database","Kbase.sqlite")):
-        self.sqlite_db = sqlite_db
+                 studies=os.path.join(Main_Dir,"Database","Kbase","studies.sqlite")):
+        self.studies = studies
