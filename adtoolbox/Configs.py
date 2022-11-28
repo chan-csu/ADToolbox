@@ -154,3 +154,8 @@ class Documentation:
     def __init__(self,
                  readme=os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","README.md")):
         self.readme = readme
+
+class Kbase:
+    def __init__(self,
+                 sqlite_db=os.path.join(Main_Dir,"Database","Kbase.sqlite")):
+        self.sqlite_db = sqlite_db
