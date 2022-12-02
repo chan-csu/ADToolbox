@@ -22,7 +22,7 @@ def execute_query(connection, query,address):
         connection.commit()
     
     except Error as e:
-        print(f"The error '{type(e)}' occurred")
+        print(f"The error '{e}' occurred")
 
 def read_query(connection, query):
     
@@ -92,8 +92,8 @@ def _create_metagenoics_studies_table(address):
         print("Error! cannot create the database connection.")
 
 def add_metagenomics_study(address, name, study_id, type, microbiome,SRA_accession, reference,comments):
-    add_metagenomics_study_query = f""" INSERT INTO metagenomics_studies(name, study_id, type, microbiome,SRA_accession, reference,comments)
-                            VALUES('{name}', '{study_id}', '{type}', '{microbiome}','{SRA_accession}', '{reference}','{comments}'); """
+    add_metagenomics_study_query = f""" INSERT INTO metagenomics_studies(name, study_id,type, microbiome,SRA_accession, reference,comments)
+                            VALUES("{name}", "{study_id}", "{type}", "{microbiome}","{SRA_accession}", "{reference}","{comments}"); """
     # create a database connection
     connection = connect_to_db(address)
     if connection is not None:
