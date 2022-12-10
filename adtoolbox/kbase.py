@@ -274,7 +274,7 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
             for index,item in enumerate(to_be_added):
                 if rows[index+num_metagenomics_studies] and rows[index+num_metagenomics_studies]['Name'] and rows[index+num_metagenomics_studies]['Type'] and rows[index+num_metagenomics_studies]['Reference']:
                     add_metagenomics_study(configs.studies,rows[index+num_metagenomics_studies]['Name'],num_studies+index,rows[index+num_metagenomics_studies]['Type'],rows[index+num_metagenomics_studies]['Microbiome'],rows[index+num_metagenomics_studies]['SRA_accession'],rows[index+num_metagenomics_studies]['Reference'],rows[index+num_metagenomics_studies]['Comments'])
-                    _add_study(configs.studies,rows[index+num_studies]['Name'],rows[index+num_studies]['Type'],rows[index+num_studies]['Reference'])
+                    _add_study(configs.studies,rows[index+num_metagenomics_studies]['Name'],rows[index+num_metagenomics_studies]['Type'],rows[index+num_metagenomics_studies]['Reference'])
 
                 else:
                     return dbc.Alert("Submission was unsuccessful! Please check ll the entries!", color="danger")
