@@ -12,8 +12,8 @@ import dash_bootstrap_components as dbc
 
 
 def get_studies(Config=Configs.Kbase()):
-    metagenomics_studies=pd.read_csv(Config.metagenomics_studies)
-    experimental_data_references=pd.read_csv(Config.experimental_data_references)
+    metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
+    experimental_data_references=pd.read_csv(Config.experimental_data_references,delimiter="ᚢ",encoding="utf-8",engine="python")
     studies={"Name":[],"Type":[],"Reference":[],"Comments":[]}
     studies['Name'].extend(metagenomics_studies['Name'].tolist())
     studies['Type'].extend(["Metagenomics"]*metagenomics_studies.shape[0])
@@ -38,22 +38,22 @@ def delete_metagenomics_study(metagenomics_studies_table, metagenomics_study_id)
     return metagenomics_studies_table
 
 def get_metagenomics_studies(Config=Configs.Kbase()):
-    metagenomics_studies=pd.read_csv(Config.metagenomics_studies)
+    metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
     return metagenomics_studies
 
 def write_metagenomics_studies(metagenomics_studies_table,Config=Configs.Kbase()):
-    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False)
+    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="ᚢ",encoding="utf-8")
 
 def create_metagenomics_study_table(Config=Configs.Kbase()):
     metagenomics_studies_table={"Name":[],"Type":[],"Microbiome":[],"SRA_accession":[],"Reference":[],"Comments":[]}
     metagenomics_studies_table=pd.DataFrame(metagenomics_studies_table)
-    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False)
+    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="ᚢ",encoding="utf-8")
     rich.print(f"[bold green]The metagenomics studies table was created successfully!")
 
 def create_experimental_data_references_table(Config=Configs.Kbase()):
     experimental_data_references_table={"Name":[],"Type":[],"Reference":[],"Comments":[]}
     experimental_data_references_table=pd.DataFrame(experimental_data_references_table)
-    experimental_data_references_table.to_csv(Config.experimental_data_references,index=False)
+    experimental_data_references_table.to_csv(Config.experimental_data_references,index=False,sep="ᚢ",encoding="utf-8")
     rich.print(f"[bold green]The experimental data references table was created successfully!")
 
 def _initialize_databases(Config=Configs.Kbase()):
@@ -74,14 +74,14 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
         studies=get_studies(configs)
         metagenomics_studies=get_metagenomics_studies(configs)
         if studies.shape[0]:
-            studies=studies.to_json(orient='records')
+            studies=studies.to_dict(orient='records')
         else:
-            studies=[{"Index":'',"Name":'',"Type":'',"Reference":''}]
+            studies=[{"Index":"","Name":"","Type":"","Reference":""}]
             
         if metagenomics_studies.shape[0]:
-            metagenomics_studies=metagenomics_studies.to_json(orient='records')
+            metagenomics_studies=metagenomics_studies.to_dict(orient='records')
         else:
-            metagenomics_studies=[{"Index":'',"Name":'',"Study":'',"Type":'',"Microbiome":'',"SRA_accession":'',"Reference":'',"Comments":''}]
+            metagenomics_studies=[{"Index":"","Name":"","Study":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
             
 
     app.layout = html.Div(children=[html.P("All Studies"),
@@ -139,12 +139,12 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
             write_metagenomics_studies(pd.DataFrame(rows),configs)
             studies=get_studies(configs)
             if studies.shape[0]:
-                studies=studies.to_json(orient='records')
+                studies=studies.to_dict(orient='records')
             else:
-                studies=[{"Index":'',"Name":'',"Type":'',"Reference":''}]
+                studies=[{"Index":"","Name":"","Type":"","Reference":""}]
 
             
-
+        print(studies)
         return html.Div([dbc.Alert(f"All of the changes were made successfully!", color="success")]),studies
 
 
