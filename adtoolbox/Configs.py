@@ -157,9 +157,11 @@ class Documentation:
 
 class Kbase:
     def __init__(self,
+                 base_dir=os.path.join(Main_Dir,"Database","Kbase"),
                  metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.csv"),
                  experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.csv"),):
 
         self.metagenomics_studies = metagenomics_studies
         self.experimental_data_references = experimental_data_references
-        
+        self.base_dir = base_dir
+
