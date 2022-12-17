@@ -81,7 +81,7 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
         if metagenomics_studies.shape[0]:
             metagenomics_studies=metagenomics_studies.to_dict(orient='records')
         else:
-            metagenomics_studies=[{"Index":"","Name":"","Study":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
+            metagenomics_studies=[{"Index":"","Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
             
 
     app.layout = html.Div(children=[html.P("All Studies"),
@@ -136,7 +136,11 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
     def submit_metag_row(n_clicks, rows, columns):
         if n_clicks > 0:
 
-            write_metagenomics_studies(pd.DataFrame(rows),configs)
+            if rows:
+                write_metagenomics_studies(pd.DataFrame(rows),configs)
+            else:
+                rows=[{"Index":"","Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
+                write_metagenomics_studies(pd.DataFrame(columns=rows[0].keys()),configs)
             studies=get_studies(configs)
             if studies.shape[0]:
                 studies=studies.to_dict(orient='records')
@@ -144,7 +148,6 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
                 studies=[{"Index":"","Name":"","Type":"","Reference":""}]
 
             
-        print(studies)
         return html.Div([dbc.Alert(f"All of the changes were made successfully!", color="success")]),studies
 
 
