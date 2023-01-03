@@ -20,6 +20,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 from collections import Counter
+import pathlib
 import gzip
 import shutil
 import Configs
@@ -27,6 +28,7 @@ import Bio_seq
 from rich.progress import track,Progress
 import rich
 from __init__ import Main_Dir
+from typing import Union
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
@@ -395,12 +397,11 @@ class Database:
                         f.write(f'{line}\n')
 
 
-
-
     @staticmethod
-    def ec_from_csv(csv_file, Sep=','):
+    def ec_from_csv(csv_file:str, Sep=',')->list:
 
-        # [ ]- One update could be to make the ec_Numbers column to be insensitive to the case
+        """This function reads a csv file and returns a list of ec numbers"""
+        
 
         try:
 
@@ -1216,12 +1217,52 @@ class Metagenomics:
         
 
         return cod
+    
+    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True):
+        """ 
+        Args:
+            accession (str): The accession number of the SRA project or run
+            save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
+            run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
+    
+        """   
+        prefetch_script=f"""#!/bin/bash
+        prefetch {accession} -O {os.path.join(self.config.sra_work_dir(accession),"seqs")}"""
+
+        fasterq_dump_script=f"""#!/bin/bash
+        for i in $(ls ./seqs/) ; do
+        fasterq-dump --split-files seqs/$i/*.sra -O seqs/$i/
+        rm seqs/$i/*.sra
+        done
+        """
+        project_path=pathlib.Path(self.config.sra_work_dir(accession))
+        if not project_path.exists():
+            project_path.mkdir(parents=True)
+
+        if save:
+            with open(project_path.joinpath("prefetch.sh"),"w") as f:
+                f.write(prefetch_script)
+            with open(project_path.joinpath("fasterq_dump.sh"),"w") as f:
+                f.write(fasterq_dump_script)
+        if run:
+            subprocess.run(["bash",str(project_path.joinpath("prefetch.sh"))],cwd=str(project_path))
+            subprocess.run(["bash",str(project_path.joinpath("fasterq_dump.sh"))],cwd=str(project_path))
+        return prefetch_script,fasterq_dump_script
+    
+
+
+    
 
 
 
+            
 
+
+
+        
 
 
 
 if __name__ == "__main__":
-    pass
+    Metagenomics=Metagenomics(Configs.Metagenomics())
+    Metagenomics.seqs_from_sra("SRP395763")

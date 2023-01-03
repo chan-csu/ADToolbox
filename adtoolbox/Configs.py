@@ -64,12 +64,12 @@ class Database:
 
 
 class Metagenomics:
-    """
-    A class for Amplicon2Genome Configs
+        """
+        A class for Amplicon2Genome Configs
 
-    """
+        """
 
-    def __init__(self, 
+        def __init__(self, 
                 amplicon2genome_k=10,
                 amplicon2genome_similarity=0.97,
                 amplicon2genome_outputs_dir=os.path.join(Main_Dir,"Genomes"),
@@ -84,28 +84,38 @@ class Metagenomics:
                 vsearch=os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")),
                 genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
                 csv_reaction_db=Database().csv_reaction_db,
+                sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
                 bit_score=40,
                 e_value=10**-5
 
                  ):
-        self.k = amplicon2genome_k
-        self.amplicon2genome_similarity = amplicon2genome_similarity
-        self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
-        self.amplicon2genome_db = amplicon2genome_db
-        self.qiime_outputs_dir = qiime_outputs_dir
-        self.genomes_json_info = genomes_json_info
-        self.feature_table_dir = feature_table_dir
-        self.rep_seq_fasta = rep_seq_fasta
-        self.taxonomy_table_dir = taxonomy_table_dir
-        self.protein_db=Database().protein_db
-        self.seed_rxn_db=Seed_RXN_DB
-        self.genome_alignment_output = genome_alignment_output
-        self.genome_alignment_output_json=genome_alignment_output_json
-        self.bit_score = bit_score
-        self.e_value = e_value
-        self.vsearch=vsearch
-        self.genome_adm_map_json=genome_adm_map_json
-        self.csv_reaction_db=csv_reaction_db
+                self.k = amplicon2genome_k
+                self.amplicon2genome_similarity = amplicon2genome_similarity
+                self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
+                self.amplicon2genome_db = amplicon2genome_db
+                self.qiime_outputs_dir = qiime_outputs_dir
+                self.genomes_json_info = genomes_json_info
+                self.feature_table_dir = feature_table_dir
+                self.rep_seq_fasta = rep_seq_fasta
+                self.taxonomy_table_dir = taxonomy_table_dir
+                self.protein_db=Database().protein_db
+                self.seed_rxn_db=Seed_RXN_DB
+                self.genome_alignment_output = genome_alignment_output
+                self.genome_alignment_output_json=genome_alignment_output_json
+                self.bit_score = bit_score
+                self.e_value = e_value
+                self.vsearch=vsearch
+                self.genome_adm_map_json=genome_adm_map_json
+                self.csv_reaction_db=csv_reaction_db
+                self.sra=sra
+
+
+        def sra_work_dir(self, sra_project_id: str):
+                """ sets the working directory for the SRA project id """
+                
+                return os.path.join(self.sra, sra_project_id)
+
+
 
 
 
@@ -149,6 +159,8 @@ class Modified_ADM:
         self.reactions = reactions
         self.species = species
         self.base_dir = base_dir
+
+
 
 class Documentation:
     def __init__(self,
