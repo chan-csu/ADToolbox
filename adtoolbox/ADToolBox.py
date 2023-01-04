@@ -52,6 +52,40 @@ class Additive_Dict(dict):
             out[key]=out[key]*a
         return Additive_Dict(out)
 
+class Pipeline:
+    """A class for running a chain of commands in series with parallelism."""
+    def __init__(self,commands:list[tuple],executer:str,**kwargs):
+        self.commands=commands
+        self.executer=executer
+        self.kbase_config=kwargs.get("kbase_config",Configs.Kbase())
+        self.database_config=kwargs.get("database_config",Configs.Database())
+        self.reaction_toolkit_config=kwargs.get("reaction_toolkit_config",Configs.Reaction_Toolkit())
+        self.metagenomics_config=kwargs.get("metagenomics_config",Configs.Metagenomics())
+        self.alignment_config=kwargs.get("alignment_config",Configs.Alignment())
+        self.original_adm_config=kwargs.get("original_adm_config",Configs.Original_ADM1())
+        self.modified_adm_config=kwargs.get("modified_adm_config",Configs.Modified_ADM())
+        
+    
+    def validate(self):
+        """Validates the pipeline commands. Runs the following checks:
+        1. Input to the first command is correct."""
+        succsess=[]
+        fail=[]
+        for command in self.commands:
+            try:
+                pass
+            except Exception as e:
+                fail.append((command.__name___,e))
+            else:
+                succsess.append(command.__name___)
+        rich.print(f"[bold green]Succsessful commands: {succsess}")
+        rich.print(f"[bold red]Failed commands:\n {fail}")
+
+
+    def run(self):
+        pass
+    
+    def 
 
 class Feed:
 
@@ -275,7 +309,7 @@ class Database:
     This class will handle all of the database tasks in ADToolBox
     '''
 
-    def __init__(self, config=Configs.Database()):
+    def __init__(self, config:Configs.Database=Configs.Database()):
 
         self.config = config
 
@@ -486,7 +520,7 @@ class Database:
         return ec_list
 
     
-    def Seed_From_ec(self,ec_Number, mode='Single_Match'):
+    def seed_from_ec(self,ec_Number, mode='Single_Match'):
 
         with open(self.config.reaction_db,'r') as f: 
 
@@ -766,8 +800,19 @@ class Database:
             with open(os.path.join(directory,i.split("/")[-1]), 'wb') as f:
                 f.write(r.content)
 
+    def get_metagenomics_studies(self) -> list:
+        """
+        This function will return accession numbers in all metagenomics studies on the kbase.
+        """
+        try:
+            metagenomics_studies=pd.read_table(self.config.kbase_db.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
+
+        except FileNotFoundError:
+
+            rich.print("[bold red]KBase Database is not found. Please download/build/configure the database first.[/bold red]")
 
 
+        return metagenomics_studies.to_dict(orient="list")
 
 class Metagenomics:
 
@@ -1183,7 +1228,7 @@ class Metagenomics:
 
         
         Returns:
-            dict: This dictionary includes the fraction of COD that belongs to each microbial species in the
+            cod (dict): This dictionary includes the fraction of COD that belongs to each microbial species in the
             model. 
         """
 
@@ -1220,10 +1265,25 @@ class Metagenomics:
     
     def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True):
         """ 
+        Requires:
+            <R>project_accession</R>
+            <R>Configs.Metagenomics</R>
+        Satisfies:
+            <S>sra_project_dir</S>
+            <S>sra_seq_prefetch_bash_str</S>
+            <S>sra_seq_fasterq_dump_bash_str</S>
+            <if> save=True</if><S>sra_seq_prefetch_bash_file</S>
+            <if> save=True</if><S>sra_seq_fasterq_dump_bash_file</S>
+            <if> run=True</if><S>.fastq_files</S>
+            
         Args:
             accession (str): The accession number of the SRA project or run
             save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
             run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
+        
+        Returns:
+            prefetch_script (str): The bash script that will be used to download the SRA files in python string format
+            fasterq_dump_script (str): The bash script that will be used to convert the SRA files to fastq files in python string format
     
         """   
         prefetch_script=f"""#!/bin/bash
@@ -1249,9 +1309,70 @@ class Metagenomics:
             subprocess.run(["bash",str(project_path.joinpath("fasterq_dump.sh"))],cwd=str(project_path))
         return prefetch_script,fasterq_dump_script
     
-
-
+    def run_qiime2(self,accession:str,save:bool=True,run:bool=True,container:str='None'):
+        """
+        Requires:
+            <R>project_accession</R>
+            <R>Configs.Metagenomics</R>
+            <R>sra_project_dir</R>
+            <R>.fastq_files</R>
+        
+        Satisfies:
+            <S>qiime2_work_dir</S>
+            <S>qiime2_bash_str</S>
+            <if>save=True</if><S>qiime2_bash_file</S>
+            <if>run=True</if><S>qiime2_output</S>
+            """
+        qiime2_work_dir=self.config.qiime2_work_dir(accession)
     
+        qiime2_bash_str=f"""#!/bin/bash
+        qiime tools import \
+        --type 'SampleData[PairedEndSequencesWithQuality]' \
+        --input-path {qiime2_work_dir} \
+        --output-path {qiime2_work_dir}/demux-paired-end.qza \
+        --input-format PairedEndFastqManifestPhred33V2
+        qiime demux summarize \
+        --i-data {qiime2_work_dir}/demux-paired-end.qza \
+        --o-visualization {qiime2_work_dir}/demux.qzv
+        qiime dada2 denoise-paired \
+        --i-demultiplexed-seqs {qiime2_work_dir}/demux-paired-end.qza \
+        --p-trunc-len-f 0 \
+        --p-trunc-len-r 0 \
+        --o-representative-sequences {qiime2_work_dir}/rep-seqs.qza \
+        --o-table {qiime2_work_dir}/table.qza \
+        --o-denoising-stats {qiime2_work_dir}/stats.qza
+        qiime feature-table summarize \
+        --i-table {qiime2_work_dir}/table.qza \
+        --o-visualization {qiime2_work_dir}/table.qzv \
+        --m-sample-metadata-file {qiime2_work_dir}/sample-metadata.tsv
+        qiime feature-table tabulate-seqs \
+        --i-data {qiime2_work_dir}/rep-seqs.qza \
+        --o-visualization {qiime2_work_dir}/rep-seqs.qzv
+        qiime metadata tabulate \
+        --m-input-file {qiime2_work_dir}/stats.qza \
+        --o-visualization {qiime2_work_dir}/stats.qzv
+        """
+        if container=="None":
+            pass
+        elif container=="singularity":
+            for line in qiime2_bash_str.splitlines():
+                if line.startswith("qiime"):
+                    qiime2_bash_str=qiime2_bash_str.replace(line,f"singularity exec {self.config.qiime2_singularity_image} {line}")
+        elif container=="docker":
+            for line in qiime2_bash_str.splitlines():
+                if line.startswith("qiime"):
+                    qiime2_bash_str=qiime2_bash_str.replace(line,f"docker run -v {self.config.sra_work_dir(accession)}:/data -w /data {self.config.qiime2_docker_image} {line}")
+        else:
+            raise ValueError("Container must be None, singularity or docker")
+        
+        if save:
+            with open(qiime2_work_dir.joinpath("qiime2.sh"),"w") as f:
+                f.write(qiime2_bash_str)
+        if run:
+            subprocess.run(["bash",str(qiime2_work_dir.joinpath("qiime2.sh"))],cwd=str(qiime2_work_dir))
+        
+        return qiime2_bash_str
+
 
 
 
@@ -1264,5 +1385,5 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    Metagenomics=Metagenomics(Configs.Metagenomics())
-    Metagenomics.seqs_from_sra("SRP395763")
+    db=Database(Configs.Database())
+    print(db.get_metagenomics_studies()["SRA_accession"])

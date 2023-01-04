@@ -34,6 +34,15 @@ class Reaction_Toolkit:
         self.compound_db = compound_db
         self.reaction_db = reaction_db
 
+class Kbase:
+    def __init__(self,
+                 base_dir=os.path.join(Main_Dir,"Database","Kbase"),
+                 metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.csv"),
+                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.csv"),):
+
+        self.metagenomics_studies = metagenomics_studies
+        self.experimental_data_references = experimental_data_references
+        self.base_dir = base_dir
 
 class Database:
 
@@ -51,7 +60,8 @@ class Database:
                 base_dir=os.path.join(Main_Dir,"Database"),
                 csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
                 feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
-                protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),):
+                protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
+                kbase_db=Kbase()):
         self.compound_db = compound_db
         self.reaction_db = reaction_db
         self.local_compound_db = local_compound_db
@@ -60,6 +70,7 @@ class Database:
         self.csv_reaction_db = csv_reaction_db
         self.feed_db = feed_db
         self.protein_db = protein_db
+        self.kbase_db = kbase_db
 
 
 
@@ -114,6 +125,11 @@ class Metagenomics:
                 """ sets the working directory for the SRA project id """
                 
                 return os.path.join(self.sra, sra_project_id)
+        
+        def qiime_work_dir(self, sra_project_id: str):
+                """ sets the working directory for the SRA project id """
+                
+                return os.path.join(self.qiime_outputs_dir, sra_project_id)
 
 
 
@@ -167,13 +183,5 @@ class Documentation:
                  readme=os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","README.md")):
         self.readme = readme
 
-class Kbase:
-    def __init__(self,
-                 base_dir=os.path.join(Main_Dir,"Database","Kbase"),
-                 metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.csv"),
-                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.csv"),):
 
-        self.metagenomics_studies = metagenomics_studies
-        self.experimental_data_references = experimental_data_references
-        self.base_dir = base_dir
 
