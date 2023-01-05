@@ -1262,7 +1262,7 @@ class Metagenomics:
 
         return cod
     
-    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True)-> tuple[str,str,dict]:
+    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True)-> tuple[str,str]:
         """ 
         Requires:
             <R>project_accession</R>
@@ -1275,7 +1275,6 @@ class Metagenomics:
             <if> save=True</if><S>sra_seq_prefetch_bash_file</S>
             <if> save=True</if><S>sra_seq_fasterq_dump_bash_file</S>
             <if> run=True</if><S>.fastq_files</S>
-            <if> run=True</if><S>manifest_files</S>
             
         Args:
             accession (str): The accession number of the SRA project or run
@@ -1285,7 +1284,6 @@ class Metagenomics:
         Returns:
             prefetch_script (str): The bash script that will be used to download the SRA files in python string format
             fasterq_dump_script (str): The bash script that will be used to convert the SRA files to fastq files in python string format
-            manifest (dict): A metadata dictionary that contains the information about the SRA project samples
     
         """   
         prefetch_script=f"""#!/bin/bash
@@ -1306,46 +1304,23 @@ class Metagenomics:
             subprocess.run(["bash",str(project_path.joinpath("prefetch.sh"))],cwd=str(project_path))
             subprocess.run(["bash",str(project_path.joinpath("fasterq_dump.sh"))],cwd=str(project_path))
             
-            seqs=project_path.joinpath("seqs")
-            manifest={'sample-id':[],'absolute-filepath':[],'direction':[]}
-            for i in seqs.iterdir():
-                if i.is_dir():
-                    for j in i.iterdir():
-                        if len(list(i.glob("*.fastq"))) == 2:
-                            if j.suffix==".fastq":
-                                manifest['sample-id'].append(j.stem)
-                                manifest['absolute-filepath'].append(str(j))
-                                manifest['direction'].append("forward" if '_1' in j.stem else "reverse")
-                        elif len(list(i.glob("*.fastq"))) == 1:
-                            manifest['sample-id'].append(j.stem)
-                            manifest['absolute-filepath'].append(str(j))
-                            manifest['direction'].append("forward")
-                        elif len(list(i.glob("*.fastq"))) == 0:
-                            continue
-                        else:
-                            raise Exception("Each sample must have 1 or 2 fastq files.")
-            if save:
-                with open(project_path.joinpath("prefetch.sh"),"w") as f:
-                    f.write(prefetch_script)
-                with open(project_path.joinpath("fasterq_dump.sh"),"w") as f:
-                    f.write(fasterq_dump_script)
-                pd.DataFrame(manifest).to_csv(project_path.joinpath("manifest.csv"),sep=',',index=False)
+            
         
-        return prefetch_script,fasterq_dump_script,manifest
+        return prefetch_script,fasterq_dump_script
     
-    def run_qiime2_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str='None'):
+    def run_qiime2_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
         """
         Requires:
             <R>project_accession</R>
             <R>Configs.Metagenomics</R>
             <R>sra_project_dir</R>
             <R>.fastq_files</R>
-        
         Satisfies:
             <S>qiime2_work_dir</S>
             <S>qiime2_bash_str</S>
+            <S>manifest.csv</S>
             <if>save=True</if><S>qiime2_bash_file</S>
-            <if>run=True</if><S>qiime2_output</S>
+            <if>run=True</if><S>qiime2_outputs</S>
         Args:
             accession (str): The accession number of the SRA project or run
             save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
@@ -1353,6 +1328,11 @@ class Metagenomics:
             container (str, optional): If you want to run the qiime2 commands in a container, specify the container name here. Defaults to 'None'.
         Returns:
             qiime2_bash_str (str): The bash script that will be used to run qiime2 in python string format
+            manifest (dict): The manifest file that will be used to run qiime2 in python dictionary format
+        
+        TODO:
+            add the ability to submit slurm jobs to cluster
+            add singularity support
 
         """
         qiime2_work_dir=pathlib.Path(self.config.qiime2_work_dir(accession))
@@ -1360,10 +1340,26 @@ class Metagenomics:
             qiime2_work_dir.mkdir(parents=True)
         
         sra_project_dir=pathlib.Path(self.config.sra_work_dir(accession))
-        manifest=sra_project_dir/"manifest.csv"
-        metadata=pd.read_table(manifest,sep=',')
-        paired_end=metadata['direction'].nunique()==2
-
+        seqs=sra_project_dir.joinpath("seqs")
+        manifest={'sample-id':[],'absolute-filepath':[],'direction':[]}
+        
+        for i in seqs.iterdir():
+            if i.is_dir():
+                for j in i.iterdir():
+                    if len(list(i.glob("*.fastq"))) == 2:
+                        if j.suffix==".fastq":
+                            manifest['sample-id'].append(j.stem)
+                            manifest['absolute-filepath'].append(str(j))
+                            manifest['direction'].append("forward" if '_1' in j.stem else "reverse")
+                    elif len(list(i.glob("*.fastq"))) == 1:
+                        manifest['sample-id'].append(j.stem)
+                        manifest['absolute-filepath'].append(str(j))
+                        manifest['direction'].append("forward")
+                    elif len(list(i.glob("*.fastq"))) == 0:
+                        continue
+                    else:
+                        raise Exception("Each sample must have 1 or 2 fastq files.")
+        paired_end=True if len(set(manifest['direction'])) == 2 else False
   
         if paired_end:
             qiime2_bash_str=f"""#!/bin/bash 
@@ -1420,8 +1416,11 @@ class Metagenomics:
             --m-input-file <qiime2_work_dir>/stats.qza \
             --o-visualization <qiime2_work_dir>/stats.qzv
             """
+
+        manifest_dir=sra_project_dir.joinpath("manifest.tsv")
+
         if container=="None":
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest))
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir))
         
         elif container=="docker":
@@ -1429,20 +1428,27 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime"):
-                    qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data -w data  {self.config.qiime2_docker_image}"+" "+line
+                    qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
+            manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
+
         else:
             raise ValueError("Container must be None, singularity or docker")
         
+        
         if save:
+            pd.DataFrame(manifest).to_csv(sra_project_dir.joinpath("manifest.tsv"),sep='\t',index=False)
             with open(qiime2_work_dir.joinpath("qiime2.sh"),"w") as f:
                 f.write(qiime2_bash_str)
         if run:
             subprocess.run(["bash",str(qiime2_work_dir.joinpath("qiime2.sh"))],cwd=str(qiime2_work_dir))
         
-        return qiime2_bash_str
+        return qiime2_bash_str,manifest
+    
+    def extract_taxonomy_features(self):
+        pass
 
 
 
