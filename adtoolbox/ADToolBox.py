@@ -1368,9 +1368,6 @@ class Metagenomics:
             --input-path <manifest> \
             --output-path <qiime2_work_dir>/demux-paired-end.qza \
             --input-format PairedEndFastqManifestPhred33V2
-            qiime demux summarize \
-            --i-data <qiime2_work_dir>/demux-paired-end.qza \
-            --o-visualization <qiime2_work_dir>/demux.qzv
             qiime dada2 denoise-paired \
             --i-demultiplexed-seqs <qiime2_work_dir>/demux-paired-end.qza \
             --p-trunc-len-f 0 \
@@ -1378,16 +1375,13 @@ class Metagenomics:
             --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
             --o-table <qiime2_work_dir>/table.qza \
             --o-denoising-stats <qiime2_work_dir>/stats.qza
-            qiime feature-table summarize \
-            --i-table <qiime2_work_dir>/table.qza \
-            --o-visualization <qiime2_work_dir>/table.qzv \
-            --m-sample-metadata-file <qiime2_work_dir>/sample-metadata.tsv
-            qiime feature-table tabulate-seqs \
-            --i-data <qiime2_work_dir>/rep-seqs.qza \
-            --o-visualization <qiime2_work_dir>/rep-seqs.qzv
-            qiime metadata tabulate \
-            --m-input-file <qiime2_work_dir>/stats.qza \
-            --o-visualization <qiime2_work_dir>/stats.qzv
+            qiime tools export \
+            --input-path  <qiime2_work_dir>/feature-table.qza \
+            --output-path  <qiime2_work_dir>/feature-table.tsv
+            qiime tools export \
+            --input-path  <qiime2_work_dir>/rep-seqs.qza \
+            --output-path  <qiime2_work_dir>/rep-seqs.fastq
+
             """
         else:
             qiime2_bash_str=f"""#!/bin/bash
@@ -1396,25 +1390,19 @@ class Metagenomics:
             --input-path <manifest> \
             --output-path <qiime2_work_dir>/demux-single-end.qza \
             --input-format SingleEndFastqManifestPhred33V2
-            qiime demux summarize \
-            --i-data <qiime2_work_dir>/demux-single-end.qza \
-            --o-visualization <qiime2_work_dir>/demux.qzv
             qiime dada2 denoise-single \
             --i-demultiplexed-seqs <qiime2_work_dir>/demux-single-end.qza \
-            --p-trunc-len 0 \
+            --p-trunc-len 120 \
             --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
-            --o-table <qiime2_work_dir>/table.qza \
+            --o-table <qiime2_work_dir>/feature-table.qza \
             --o-denoising-stats <qiime2_work_dir>/stats.qza
-            qiime feature-table summarize \
-            --i-table <qiime2_work_dir>/table.qza \
-            --o-visualization <qiime2_work_dir>/table.qzv \
-            --m-sample-metadata-file <qiime2_work_dir>/sample-metadata.tsv
-            qiime feature-table tabulate-seqs \
-            --i-data <qiime2_work_dir>/rep-seqs.qza \
-            --o-visualization <qiime2_work_dir>/rep-seqs.qzv
-            qiime metadata tabulate \
-            --m-input-file <qiime2_work_dir>/stats.qza \
-            --o-visualization <qiime2_work_dir>/stats.qzv
+            qiime tools export \
+            --input-path  <qiime2_work_dir>/feature-table.qza \
+            --output-path  <qiime2_work_dir>
+            qiime tools export \
+            --input-path  <qiime2_work_dir>/rep-seqs.qza \
+            --output-path  <qiime2_work_dir>/
+            biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv
             """
 
         manifest_dir=sra_project_dir.joinpath("manifest.tsv")
@@ -1427,7 +1415,7 @@ class Metagenomics:
             qiime2_bash_str=qiime2_bash_str.splitlines()
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
-                if line.startswith("qiime"):
+                if line.startswith("qiime") or line.startswith("biom"):
                     qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
