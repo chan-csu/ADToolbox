@@ -97,7 +97,10 @@ class Metagenomics:
                 csv_reaction_db=Database().csv_reaction_db,
                 sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
                 bit_score=40,
-                e_value=10**-5
+                e_value=10**-5,
+                qiime2_docker_image="quay.io/qiime2/core:2022.11",
+                qiime2_singularity_image="docker://quay.io/qiime2/core:2022.11"
+
 
                  ):
                 self.k = amplicon2genome_k
@@ -119,6 +122,8 @@ class Metagenomics:
                 self.genome_adm_map_json=genome_adm_map_json
                 self.csv_reaction_db=csv_reaction_db
                 self.sra=sra
+                self.qiime2_singularity_image=qiime2_singularity_image
+                self.qiime2_docker_image=qiime2_docker_image
 
 
         def sra_work_dir(self, sra_project_id: str):
@@ -126,10 +131,10 @@ class Metagenomics:
                 
                 return os.path.join(self.sra, sra_project_id)
         
-        def qiime_work_dir(self, sra_project_id: str):
+        def qiime2_work_dir(self, sra_project_id: str):
                 """ sets the working directory for the SRA project id """
                 
-                return os.path.join(self.qiime_outputs_dir, sra_project_id)
+                return os.path.join(self.sra_work_dir(sra_project_id), "qiime2")
 
 
 

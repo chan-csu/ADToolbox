@@ -85,7 +85,6 @@ class Pipeline:
     def run(self):
         pass
     
-    def 
 
 class Feed:
 
@@ -1263,7 +1262,7 @@ class Metagenomics:
 
         return cod
     
-    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True):
+    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True)-> tuple[str,str,dict]:
         """ 
         Requires:
             <R>project_accession</R>
@@ -1272,9 +1271,11 @@ class Metagenomics:
             <S>sra_project_dir</S>
             <S>sra_seq_prefetch_bash_str</S>
             <S>sra_seq_fasterq_dump_bash_str</S>
+            <S>manifest_dict</S>
             <if> save=True</if><S>sra_seq_prefetch_bash_file</S>
             <if> save=True</if><S>sra_seq_fasterq_dump_bash_file</S>
             <if> run=True</if><S>.fastq_files</S>
+            <if> run=True</if><S>manifest_files</S>
             
         Args:
             accession (str): The accession number of the SRA project or run
@@ -1284,6 +1285,7 @@ class Metagenomics:
         Returns:
             prefetch_script (str): The bash script that will be used to download the SRA files in python string format
             fasterq_dump_script (str): The bash script that will be used to convert the SRA files to fastq files in python string format
+            manifest (dict): A metadata dictionary that contains the information about the SRA project samples
     
         """   
         prefetch_script=f"""#!/bin/bash
@@ -1299,17 +1301,39 @@ class Metagenomics:
         if not project_path.exists():
             project_path.mkdir(parents=True)
 
-        if save:
-            with open(project_path.joinpath("prefetch.sh"),"w") as f:
-                f.write(prefetch_script)
-            with open(project_path.joinpath("fasterq_dump.sh"),"w") as f:
-                f.write(fasterq_dump_script)
+
         if run:
             subprocess.run(["bash",str(project_path.joinpath("prefetch.sh"))],cwd=str(project_path))
             subprocess.run(["bash",str(project_path.joinpath("fasterq_dump.sh"))],cwd=str(project_path))
-        return prefetch_script,fasterq_dump_script
+            
+            seqs=project_path.joinpath("seqs")
+            manifest={'sample-id':[],'absolute-filepath':[],'direction':[]}
+            for i in seqs.iterdir():
+                if i.is_dir():
+                    for j in i.iterdir():
+                        if len(list(i.glob("*.fastq"))) == 2:
+                            if j.suffix==".fastq":
+                                manifest['sample-id'].append(j.stem)
+                                manifest['absolute-filepath'].append(str(j))
+                                manifest['direction'].append("forward" if '_1' in j.stem else "reverse")
+                        elif len(list(i.glob("*.fastq"))) == 1:
+                            manifest['sample-id'].append(j.stem)
+                            manifest['absolute-filepath'].append(str(j))
+                            manifest['direction'].append("forward")
+                        elif len(list(i.glob("*.fastq"))) == 0:
+                            continue
+                        else:
+                            raise Exception("Each sample must have 1 or 2 fastq files.")
+            if save:
+                with open(project_path.joinpath("prefetch.sh"),"w") as f:
+                    f.write(prefetch_script)
+                with open(project_path.joinpath("fasterq_dump.sh"),"w") as f:
+                    f.write(fasterq_dump_script)
+                pd.DataFrame(manifest).to_csv(project_path.joinpath("manifest.csv"),sep=',',index=False)
+        
+        return prefetch_script,fasterq_dump_script,manifest
     
-    def run_qiime2(self,accession:str,save:bool=True,run:bool=True,container:str='None'):
+    def run_qiime2_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str='None'):
         """
         Requires:
             <R>project_accession</R>
@@ -1322,46 +1346,93 @@ class Metagenomics:
             <S>qiime2_bash_str</S>
             <if>save=True</if><S>qiime2_bash_file</S>
             <if>run=True</if><S>qiime2_output</S>
-            """
-        qiime2_work_dir=self.config.qiime2_work_dir(accession)
-    
-        qiime2_bash_str=f"""#!/bin/bash
-        qiime tools import \
-        --type 'SampleData[PairedEndSequencesWithQuality]' \
-        --input-path {qiime2_work_dir} \
-        --output-path {qiime2_work_dir}/demux-paired-end.qza \
-        --input-format PairedEndFastqManifestPhred33V2
-        qiime demux summarize \
-        --i-data {qiime2_work_dir}/demux-paired-end.qza \
-        --o-visualization {qiime2_work_dir}/demux.qzv
-        qiime dada2 denoise-paired \
-        --i-demultiplexed-seqs {qiime2_work_dir}/demux-paired-end.qza \
-        --p-trunc-len-f 0 \
-        --p-trunc-len-r 0 \
-        --o-representative-sequences {qiime2_work_dir}/rep-seqs.qza \
-        --o-table {qiime2_work_dir}/table.qza \
-        --o-denoising-stats {qiime2_work_dir}/stats.qza
-        qiime feature-table summarize \
-        --i-table {qiime2_work_dir}/table.qza \
-        --o-visualization {qiime2_work_dir}/table.qzv \
-        --m-sample-metadata-file {qiime2_work_dir}/sample-metadata.tsv
-        qiime feature-table tabulate-seqs \
-        --i-data {qiime2_work_dir}/rep-seqs.qza \
-        --o-visualization {qiime2_work_dir}/rep-seqs.qzv
-        qiime metadata tabulate \
-        --m-input-file {qiime2_work_dir}/stats.qza \
-        --o-visualization {qiime2_work_dir}/stats.qzv
+        Args:
+            accession (str): The accession number of the SRA project or run
+            save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
+            run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
+            container (str, optional): If you want to run the qiime2 commands in a container, specify the container name here. Defaults to 'None'.
+        Returns:
+            qiime2_bash_str (str): The bash script that will be used to run qiime2 in python string format
+
         """
+        qiime2_work_dir=pathlib.Path(self.config.qiime2_work_dir(accession))
+        if not qiime2_work_dir.exists():
+            qiime2_work_dir.mkdir(parents=True)
+        
+        sra_project_dir=pathlib.Path(self.config.sra_work_dir(accession))
+        manifest=sra_project_dir/"manifest.csv"
+        metadata=pd.read_table(manifest,sep=',')
+        paired_end=metadata['direction'].nunique()==2
+
+  
+        if paired_end:
+            qiime2_bash_str=f"""#!/bin/bash 
+            qiime tools import \
+            --type 'SampleData[PairedEndSequencesWithQuality]' \
+            --input-path <manifest> \
+            --output-path <qiime2_work_dir>/demux-paired-end.qza \
+            --input-format PairedEndFastqManifestPhred33V2
+            qiime demux summarize \
+            --i-data <qiime2_work_dir>/demux-paired-end.qza \
+            --o-visualization <qiime2_work_dir>/demux.qzv
+            qiime dada2 denoise-paired \
+            --i-demultiplexed-seqs <qiime2_work_dir>/demux-paired-end.qza \
+            --p-trunc-len-f 0 \
+            --p-trunc-len-r 0 \
+            --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
+            --o-table <qiime2_work_dir>/table.qza \
+            --o-denoising-stats <qiime2_work_dir>/stats.qza
+            qiime feature-table summarize \
+            --i-table <qiime2_work_dir>/table.qza \
+            --o-visualization <qiime2_work_dir>/table.qzv \
+            --m-sample-metadata-file <qiime2_work_dir>/sample-metadata.tsv
+            qiime feature-table tabulate-seqs \
+            --i-data <qiime2_work_dir>/rep-seqs.qza \
+            --o-visualization <qiime2_work_dir>/rep-seqs.qzv
+            qiime metadata tabulate \
+            --m-input-file <qiime2_work_dir>/stats.qza \
+            --o-visualization <qiime2_work_dir>/stats.qzv
+            """
+        else:
+            qiime2_bash_str=f"""#!/bin/bash
+            qiime tools import \
+            --type 'SampleData[SequencesWithQuality]' \
+            --input-path <manifest> \
+            --output-path <qiime2_work_dir>/demux-single-end.qza \
+            --input-format SingleEndFastqManifestPhred33V2
+            qiime demux summarize \
+            --i-data <qiime2_work_dir>/demux-single-end.qza \
+            --o-visualization <qiime2_work_dir>/demux.qzv
+            qiime dada2 denoise-single \
+            --i-demultiplexed-seqs <qiime2_work_dir>/demux-single-end.qza \
+            --p-trunc-len 0 \
+            --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
+            --o-table <qiime2_work_dir>/table.qza \
+            --o-denoising-stats <qiime2_work_dir>/stats.qza
+            qiime feature-table summarize \
+            --i-table <qiime2_work_dir>/table.qza \
+            --o-visualization <qiime2_work_dir>/table.qzv \
+            --m-sample-metadata-file <qiime2_work_dir>/sample-metadata.tsv
+            qiime feature-table tabulate-seqs \
+            --i-data <qiime2_work_dir>/rep-seqs.qza \
+            --o-visualization <qiime2_work_dir>/rep-seqs.qzv
+            qiime metadata tabulate \
+            --m-input-file <qiime2_work_dir>/stats.qza \
+            --o-visualization <qiime2_work_dir>/stats.qzv
+            """
         if container=="None":
-            pass
-        elif container=="singularity":
-            for line in qiime2_bash_str.splitlines():
-                if line.startswith("qiime"):
-                    qiime2_bash_str=qiime2_bash_str.replace(line,f"singularity exec {self.config.qiime2_singularity_image} {line}")
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir))
+        
         elif container=="docker":
-            for line in qiime2_bash_str.splitlines():
+            qiime2_bash_str=qiime2_bash_str.splitlines()
+            for idx,line in enumerate(qiime2_bash_str):
+                line=line.lstrip()
                 if line.startswith("qiime"):
-                    qiime2_bash_str=qiime2_bash_str.replace(line,f"docker run -v {self.config.sra_work_dir(accession)}:/data -w /data {self.config.qiime2_docker_image} {line}")
+                    qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data -w data  {self.config.qiime2_docker_image}"+" "+line
+            qiime2_bash_str="\n".join(qiime2_bash_str)
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
         else:
             raise ValueError("Container must be None, singularity or docker")
         
@@ -1385,5 +1456,6 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    db=Database(Configs.Database())
-    print(db.get_metagenomics_studies()["SRA_accession"])
+    config=Configs.Metagenomics()
+    metag=Metagenomics(config)
+    metag.run_qiime2_from_sra("ERP119739",run=True,save=True,container="docker")
