@@ -66,24 +66,68 @@ class Pipeline:
         self.modified_adm_config=kwargs.get("modified_adm_config",Configs.Modified_ADM())
         
     
-    def validate(self):
+    def validate(self,verbose:bool=True):
         """Validates the pipeline commands. Runs the following checks:
         1. Input to the first command is correct."""
-        succsess=[]
-        fail=[]
+    
+        satisfied=["Configs.Metagenomics",
+                    "Configs.Database",
+                    "Configs.Reaction_Toolkit",
+                    "Configs.Kbase",
+                    "Configs.Alignment",
+                    ]
+        requirements=[]
+        failure={
+            com.__name__ :[] for com in self.commands
+         }
+        success=[]
         for command in self.commands:
-            try:
-                pass
-            except Exception as e:
-                fail.append((command.__name___,e))
-            else:
-                succsess.append(command.__name___)
-        rich.print(f"[bold green]Succsessful commands: {succsess}")
-        rich.print(f"[bold red]Failed commands:\n {fail}")
+            satisfied.extend(Pipeline.extract_reqs_sats(command)[1])
+            requirements=Pipeline.extract_reqs_sats(command)[0]
+            for req in requirements:
+                if req not in satisfied:
+                    failure[command.__name__].append(req)
+            if len(failure[command.__name__])==0:
+                success.append(command)
+        if verbose:
+            rich.print("[bold green]The following commands are valid:[/bold green]")
+            for com in success:
+                failure.__delitem__(com.__name__)
+                print(com.__name__)
+            rich.print("[bold red]The following commands are invalid:[/bold red]")
+            for com in failure.keys():
+                print(f"{com} : {failure[com]}")
+
+
+        return success,failure
+
+            
+        
+
+
+
+
 
 
     def run(self):
         pass
+
+    @staticmethod
+    def extract_reqs_sats(command):
+        """Extracts the requirements and satisfactions from a command using the tags in the docstrings"""
+        
+        if "Requires:" in command.__doc__ and "Satisfies:" in command.__doc__:
+            reqs=re.findall("<R>.+</R>",command.__doc__)
+            for ind,i in enumerate(reqs):
+                reqs[ind]=i.replace("<R>","").replace("</R>","")
+            sats=re.findall("<S>.+</S>",command.__doc__)
+            for ind,i in enumerate(sats):
+                sats[ind]=i.replace("<S>","").replace("</S>","")
+        else:
+            raise Exception(f"The command docstring for {command.__name__} is not properly formatted. Please use the following tags: <R> and <S> for requirements and satisfactions respectively.")
+
+        return reqs,sats
+
     
 
 class Feed:
@@ -802,6 +846,12 @@ class Database:
     def get_metagenomics_studies(self) -> list:
         """
         This function will return accession numbers in all metagenomics studies on the kbase.
+        Requires:
+            <R>Configs.Database</R>
+        Satisfies:
+            <S>project_accession</S>
+
+
         """
         try:
             metagenomics_studies=pd.read_table(self.config.kbase_db.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
@@ -1450,6 +1500,5 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    config=Configs.Metagenomics()
-    metag=Metagenomics(config)
-    metag.run_qiime2_from_sra("ERP119739",run=True,save=True,container="docker")
+    pipeline=Pipeline([Database.get_metagenomics_studies,Metagenomics.seqs_from_sra,Metagenomics.run_qiime2_from_sra],executer=None)
+    pipeline.validate()
