@@ -1,4 +1,7 @@
-"""This module inludes the functionalities to populate the ADToolbox kbase. It is based on sqlite3"""
+"""This module inludes the functionalities to populate the ADToolbox kbase
+TODO:
+- kbase class design
+"""
 import os
 from __init__ import Main_Dir
 import rich
@@ -8,6 +11,8 @@ import dash.html as html
 import pandas as pd
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
+
+
 
 
 
@@ -168,4 +173,3 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
     # }
     app.run_server(debug=True)
 
-dash_app(configs=Configs.Kbase(),table='all')

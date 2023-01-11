@@ -1349,7 +1349,15 @@ class Metagenomics:
         if not project_path.exists():
             project_path.mkdir(parents=True)
 
-
+        if save:
+            
+            with open(project_path.joinpath("prefetch.sh"),"w") as f:
+                f.write(prefetch_script)
+            
+            with open(project_path.joinpath("fasterq_dump.sh"),"w") as f:
+                f.write(fasterq_dump_script)
+                
+        
         if run:
             subprocess.run(["bash",str(project_path.joinpath("prefetch.sh"))],cwd=str(project_path))
             subprocess.run(["bash",str(project_path.joinpath("fasterq_dump.sh"))],cwd=str(project_path))
