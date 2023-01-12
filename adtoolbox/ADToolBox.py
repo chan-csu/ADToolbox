@@ -29,6 +29,7 @@ from rich.progress import track,Progress
 import rich
 from __init__ import Main_Dir
 from typing import Union
+from utils import wrap_for_slurm
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
@@ -1399,25 +1400,26 @@ class Metagenomics:
         
         sra_project_dir=pathlib.Path(self.config.sra_work_dir(accession))
         seqs=sra_project_dir.joinpath("seqs")
-        manifest={'sample-id':[],'absolute-filepath':[],'direction':[]}
+        manifest_single={'sample-id':[],'absolute-filepath':[]}
+        manifest_paired={'sample-id':[],'forward-absolute-filepath':[],'reverse-absolute-filepath':[]}
         
         for i in seqs.iterdir():
             if i.is_dir():
                 for j in i.iterdir():
                     if len(list(i.glob("*.fastq"))) == 2:
-                        if j.suffix==".fastq":
-                            manifest['sample-id'].append(j.stem)
-                            manifest['absolute-filepath'].append(str(j))
-                            manifest['direction'].append("forward" if '_1' in j.stem else "reverse")
+                        r1=list(i.glob("*_1.fastq"))[0]
+                        r2=list(i.glob("*_2.fastq"))[0]
+                        manifest_paired['sample-id'].append(i.name)
+                        manifest_paired['forward-absolute-filepath'].append(str(r1))
+                        manifest_paired['reverse-absolute-filepath'].append(str(r2))
+                        paired_end=True
                     elif len(list(i.glob("*.fastq"))) == 1:
-                        manifest['sample-id'].append(j.stem)
-                        manifest['absolute-filepath'].append(str(j))
-                        manifest['direction'].append("forward")
-                    elif len(list(i.glob("*.fastq"))) == 0:
-                        continue
-                    else:
-                        raise Exception("Each sample must have 1 or 2 fastq files.")
-        paired_end=True if len(set(manifest['direction'])) == 2 else False
+                        r1=list(i.glob("*.fastq"))[0]
+                        manifest_single['sample-id'].append(i.name)
+                        manifest_single['absolute-filepath'].append(str(r1))
+                        paired_end=False
+                    
+        manifest=pd.DataFrame(manifest_single) if not paired_end else pd.DataFrame(manifest_paired)
   
         if paired_end:
             qiime2_bash_str=f"""#!/bin/bash 
@@ -1430,6 +1432,7 @@ class Metagenomics:
             --i-demultiplexed-seqs <qiime2_work_dir>/demux-paired-end.qza \
             --p-trunc-len-f 0 \
             --p-trunc-len-r 0 \
+            --p-n-threads 0 \
             --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
             --o-table <qiime2_work_dir>/table.qza \
             --o-denoising-stats <qiime2_work_dir>/stats.qza
@@ -1439,7 +1442,7 @@ class Metagenomics:
             qiime tools export \
             --input-path  <qiime2_work_dir>/rep-seqs.qza \
             --output-path  <qiime2_work_dir>/rep-seqs.fastq
-
+            biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv
             """
         else:
             qiime2_bash_str=f"""#!/bin/bash
@@ -1450,7 +1453,8 @@ class Metagenomics:
             --input-format SingleEndFastqManifestPhred33V2
             qiime dada2 denoise-single \
             --i-demultiplexed-seqs <qiime2_work_dir>/demux-single-end.qza \
-            --p-trunc-len 120 \
+            --p-trunc-len 0 \
+            --p-n-threads 0 \
             --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
             --o-table <qiime2_work_dir>/feature-table.qza \
             --o-denoising-stats <qiime2_work_dir>/stats.qza
@@ -1508,5 +1512,6 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    pipeline=Pipeline([Database.get_metagenomics_studies,Metagenomics.seqs_from_sra,Metagenomics.run_qiime2_from_sra],executer=None)
-    pipeline.validate()
+    metag_ins=Metagenomics(Configs.Metagenomics())
+    out=metag_ins.seqs_from_sra("SRP000001",run=False,save=False)
+    script=wrap_for_slurm(out[0],run=False,config=Configs.Utils())

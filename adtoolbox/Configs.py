@@ -1,5 +1,5 @@
 import os
-from __init__ import Main_Dir
+from __init__ import Main_Dir,PKG_DATA
 
 """
 This module contains all the paths to the files and directories used in the program.
@@ -190,3 +190,20 @@ class Documentation:
 
 
 
+class Utils:
+
+	def __init__(self,
+	slurm_template:str=os.path.join(PKG_DATA,"slurm_template.txt"),
+	docker_template_qiime:str=None,
+	singularity_template_qiime:str=None,
+	slurm_executer:str='',
+	slurm_wall_time:str='24:00:00',
+	slurm_job_name:str='qiime2',
+	) -> None:
+		self.slurm_template = slurm_template
+		self.docker_template_qiime = docker_template_qiime
+		self.singularity_template_qiime = singularity_template_qiime
+		self.slurm_executer = slurm_executer
+		self.slurm_wall_time = slurm_wall_time
+		self.slurm_job_name = slurm_job_name
+		self.slurm_outlog=self.slurm_job_name + ".out"
