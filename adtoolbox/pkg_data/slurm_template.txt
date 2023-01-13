@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ADToolbox_<sample_name>
 #SBATCH --partition=<executer>
-#SBATCH --time=<wall_time
+#SBATCH --time=<wall_time>
 #SBATCH --ntasks=<cpus>
 #SBATCH --output=<sample_outlog>.log
 

@@ -1,0 +1,21 @@
+#!/bin/bash
+qiime tools import \
+--type 'SampleData[SequencesWithQuality]' \
+--input-path <manifest> \
+--output-path <qiime2_work_dir>/demux-single-end.qza \
+--input-format SingleEndFastqManifestPhred33V2
+qiime dada2 denoise-single \
+--i-demultiplexed-seqs <qiime2_work_dir>/demux-single-end.qza \
+--p-trunc-len 0 \
+--p-n-threads 0 \
+--o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
+--o-table <qiime2_work_dir>/feature-table.qza \
+--o-denoising-stats <qiime2_work_dir>/stats.qza
+qiime tools export \
+--input-path  <qiime2_work_dir>/feature-table.qza \
+--output-path  <qiime2_work_dir>
+qiime tools export \
+--input-path  <qiime2_work_dir>/rep-seqs.qza \
+--output-path  <qiime2_work_dir>/
+
+biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv

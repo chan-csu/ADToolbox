@@ -1422,50 +1422,11 @@ class Metagenomics:
         manifest=pd.DataFrame(manifest_single) if not paired_end else pd.DataFrame(manifest_paired)
   
         if paired_end:
-            qiime2_bash_str=f"""#!/bin/bash 
-            qiime tools import \
-            --type 'SampleData[PairedEndSequencesWithQuality]' \
-            --input-path <manifest> \
-            --output-path <qiime2_work_dir>/demux-paired-end.qza \
-            --input-format PairedEndFastqManifestPhred33V2
-            qiime dada2 denoise-paired \
-            --i-demultiplexed-seqs <qiime2_work_dir>/demux-paired-end.qza \
-            --p-trunc-len-f 0 \
-            --p-trunc-len-r 0 \
-            --p-n-threads 0 \
-            --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
-            --o-table <qiime2_work_dir>/table.qza \
-            --o-denoising-stats <qiime2_work_dir>/stats.qza
-            qiime tools export \
-            --input-path  <qiime2_work_dir>/feature-table.qza \
-            --output-path  <qiime2_work_dir>/feature-table.tsv
-            qiime tools export \
-            --input-path  <qiime2_work_dir>/rep-seqs.qza \
-            --output-path  <qiime2_work_dir>/rep-seqs.fastq
-            biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv
-            """
+            with open(self.config.qiime2_paired_end_bash_str,"r") as f:
+                qiime2_bash_str=f.read()
         else:
-            qiime2_bash_str=f"""#!/bin/bash
-            qiime tools import \
-            --type 'SampleData[SequencesWithQuality]' \
-            --input-path <manifest> \
-            --output-path <qiime2_work_dir>/demux-single-end.qza \
-            --input-format SingleEndFastqManifestPhred33V2
-            qiime dada2 denoise-single \
-            --i-demultiplexed-seqs <qiime2_work_dir>/demux-single-end.qza \
-            --p-trunc-len 0 \
-            --p-n-threads 0 \
-            --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
-            --o-table <qiime2_work_dir>/feature-table.qza \
-            --o-denoising-stats <qiime2_work_dir>/stats.qza
-            qiime tools export \
-            --input-path  <qiime2_work_dir>/feature-table.qza \
-            --output-path  <qiime2_work_dir>
-            qiime tools export \
-            --input-path  <qiime2_work_dir>/rep-seqs.qza \
-            --output-path  <qiime2_work_dir>/
-            biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv
-            """
+            with open(self.config.qiime2_single_end_bash_str,"r") as f:
+                qiime2_bash_str=f.read()
 
         manifest_dir=sra_project_dir.joinpath("manifest.tsv")
 
@@ -1482,6 +1443,23 @@ class Metagenomics:
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
+            if not paired_end:
+                manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
+            
+            else:
+                manifest['forward-absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['forward-absolute-filepath']]
+                manifest['reverse-absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['reverse-absolute-filepath']]
+        
+        elif container=="singularity":
+            qiime2_bash_str=qiime2_bash_str.splitlines()
+            for idx,line in enumerate(qiime2_bash_str):
+                line=line.lstrip()
+                if line.startswith("qiime") or line.startswith("biom"):
+                    qiime2_bash_str[idx]=f"singularity exec --bind  {sra_project_dir}:/  {self.config.qiime2_singularity_image} " +line
+            qiime2_bash_str="\n".join(qiime2_bash_str)
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir))
+
             if not paired_end:
                 manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
             else:
@@ -1517,5 +1495,7 @@ class Metagenomics:
 
 if __name__ == "__main__":
     metag_ins=Metagenomics(Configs.Metagenomics())
-    out=metag_ins.seqs_from_sra("SRP000001",run=False,save=False)
+    out=metag_ins.run_qiime2_from_sra("SRR17182623",run=False,save=False,container="singularity")
     script=wrap_for_slurm(out[0],run=False,config=Configs.Utils())
+    with open("/Users/parsaghadermarzi/Desktop/test_slurm.sh","w") as f:
+        f.write(script)

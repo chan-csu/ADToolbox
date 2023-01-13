@@ -99,8 +99,9 @@ class Metagenomics:
                 bit_score=40,
                 e_value=10**-5,
                 qiime2_docker_image="quay.io/qiime2/core:2022.11",
-                qiime2_singularity_image="docker://quay.io/qiime2/core:2022.11"
-
+                qiime2_singularity_image="docker://quay.io/qiime2/core:2022.11",
+                qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
+                qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 
                  ):
                 self.k = amplicon2genome_k
@@ -124,6 +125,8 @@ class Metagenomics:
                 self.sra=sra
                 self.qiime2_singularity_image=qiime2_singularity_image
                 self.qiime2_docker_image=qiime2_docker_image
+                self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
+                self.qiime2_single_end_bash_str=qiime2_single_end_bash_str
 
 
         def sra_work_dir(self, sra_project_id: str):
