@@ -173,4 +173,3 @@ def dash_app(configs:Configs.Kbase,table:str='all') -> None:
     # }
     app.run_server(debug=True)
 
-dash_app(Configs.Kbase(),table='all')
