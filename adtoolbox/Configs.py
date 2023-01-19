@@ -38,11 +38,14 @@ class Kbase:
     def __init__(self,
                  base_dir=os.path.join(Main_Dir,"Database","Kbase"),
                  metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.csv"),
-                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.csv"),):
-
+                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.csv"),
+                urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.csv',
+                        'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.csv'
+                        }):
         self.metagenomics_studies = metagenomics_studies
         self.experimental_data_references = experimental_data_references
         self.base_dir = base_dir
+        self.urls = urls
 
 class Database:
 
@@ -61,7 +64,17 @@ class Database:
                 csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
                 feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
                 protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
-                kbase_db=Kbase()):
+                kbase_db=Kbase(),
+                seed_rxn_url="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
+                protein_db_url="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta",
+                adtoolbox_rxn_db_url="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
+                feed_db_url="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
+                escher_files_urls=[
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
+        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"],
+        ):
         self.compound_db = compound_db
         self.reaction_db = reaction_db
         self.local_compound_db = local_compound_db
@@ -70,9 +83,14 @@ class Database:
         self.csv_reaction_db = csv_reaction_db
         self.feed_db = feed_db
         self.protein_db = protein_db
-        self.kbase_db_base = kbase_db.base_dir
-        self.kbase_db_metagenomics_studies = kbase_db.metagenomics_studies
-        self.kbase_db_experimental_data_references = kbase_db.experimental_data_references
+        self.kbase_db = kbase_db
+        self.seed_rxn_url = seed_rxn_url
+        self.protein_db_url = protein_db_url
+        self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url
+        self.feed_db_url = feed_db_url
+        self.escher_files_urls = escher_files_urls
+
+
 
 
 
@@ -190,7 +208,7 @@ class Modified_ADM:
 
 class Documentation:
     def __init__(self,
-                 readme=os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","README.md")):
+                 readme=os.path.join(PKG_DATA,"README.md")):
         self.readme = readme
 
 

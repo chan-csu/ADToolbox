@@ -806,43 +806,34 @@ class Database:
             f.write(r.content)
         
         
-    @staticmethod
-    def download_seed_databases(directory:str) -> None :
-        reactions="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json"
-        r = requests.get(reactions, allow_redirects=True,stream=True)
-        with open(directory, 'wb') as f:
-            f.write(r.content)        
-    @staticmethod
-    def download_protein_database(directory:str) -> None:
-        protein_db="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta"
-        r = requests.get(protein_db, allow_redirects=True)
-        with open(directory, 'wb') as f:
+    
+    def download_seed_databases(self) -> None :
+        "Download the modelseed rection database"
+        r = requests.get(self.config.seed_rxn_url, allow_redirects=True,stream=True)
+        with open(self.config.reaction_db, 'wb') as f:
+            f.write(r.content)
+
+    def download_protein_database(self) -> None:
+        r = requests.get(self.config.protein_db_url, allow_redirects=True)
+        with open(self.config.protein_db, 'wb') as f:
             f.write(r.content)
         
-    @staticmethod
-    def download_reaction_database(directory: str)->None:
-        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv"
-        r = requests.get(reactions, allow_redirects=True)
-        with open(directory, 'wb') as f:
+    def download_reaction_database(self)->None:
+        r = requests.get(self.config.adtoolbox_rxn_db_url, allow_redirects=True)
+        with open(self.config.csv_reaction_db, 'wb') as f:
             f.write(r.content)
-    @staticmethod
-    def download_feed_database(directory:str)-> None:
-        feed="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json"
-        r = requests.get(feed, allow_redirects=True)
-        with open(directory, 'wb') as f:
+
+    
+    def download_feed_database(self)-> None:
+        r = requests.get(self.config.feed_db_url, allow_redirects=True)
+        with open(self.config.feed_db, 'wb') as f:
             f.write(r.content)
-    @staticmethod
-    def download_escher_files(directory:str)-> None:
-        escher_files=[
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"]
-        
-        for i in escher_files:
-            r = requests.get(i, allow_redirects=True)
-            with open(os.path.join(directory,i.split("/")[-1]), 'wb') as f:
-                f.write(r.content)
+
+    # def download_escher_files(self)-> None:
+    #     for i in self.config.escher_files_urls:
+    #         r = requests.get(i, allow_redirects=True)
+    #         with open(os.path.join(self.config.,i.split("/")[-1]), 'wb') as f:
+    #             f.write(r.content)
 
     def get_metagenomics_studies(self) -> list:
         """
@@ -864,21 +855,37 @@ class Database:
 
         return metagenomics_studies.to_dict(orient="list")
     
-    def download_kbase_database(self):
+    def download_kbase_database(self)->None:
         """
-        This function will download the kbase database from the github.
+        This function will download the kbase database from the remote repository.
         """
-        if not os.path.exists(self.config.kbase_db_base):
-            os.mkdirs(self.config.kbase_db_base)
-        url = {'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.csv',
-        'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.csv'
-        }
-        for i in url:
-            r = requests.get(url[i], allow_redirects=True)
-            with open(os.path.join(self.config.kbase_db_base,i), 'wb') as f:
-                f.write(r.content)
-            rich.print(f"[bold green]Downloaded {i}[/bold green]")
         
+        
+        r = requests.get(self.config.kbase_db.urls['metagenomics_studies'], allow_redirects=True)
+        with open(os.path.join(self.config.kbase_db.metagenomics_studies), 'wb') as f:
+            f.write(r.content)
+        rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls['metagenomics_studies']}[/bold green]")
+    
+        r = requests.get(self.config.kbase_db.urls['exmpermental_data_references'], allow_redirects=True)
+        with open(os.path.join(self.config.kbase_db.experimental_data_references), 'wb') as f:
+            f.write(r.content)
+
+        rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls['exmpermental_data_references']}[/bold green]")  
+
+    def download_all_databases(self)->None:
+        """
+        This function will download all the required databases for the ADToolbox.
+        """
+        if not os.path.exists(self.config.base_dir):
+            os.makedirs(self.config.base_dir)
+        self.download_seed_databases()
+        self.download_protein_database()
+        self.download_reaction_database()
+        self.download_feed_database()
+        self.download_kbase_database()
+        
+
+     
 
 class Metagenomics:
 
