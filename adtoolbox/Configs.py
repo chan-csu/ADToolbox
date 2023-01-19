@@ -70,7 +70,9 @@ class Database:
         self.csv_reaction_db = csv_reaction_db
         self.feed_db = feed_db
         self.protein_db = protein_db
-        self.kbase_db = kbase_db
+        self.kbase_db_base = kbase_db.base_dir
+        self.kbase_db_metagenomics_studies = kbase_db.metagenomics_studies
+        self.kbase_db_experimental_data_references = kbase_db.experimental_data_references
 
 
 

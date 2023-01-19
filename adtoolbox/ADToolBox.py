@@ -863,6 +863,22 @@ class Database:
 
 
         return metagenomics_studies.to_dict(orient="list")
+    
+    def download_kbase_database(self):
+        """
+        This function will download the kbase database from the github.
+        """
+        if not os.path.exists(self.config.kbase_db_base):
+            os.mkdirs(self.config.kbase_db_base)
+        url = {'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.csv',
+        'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.csv'
+        }
+        for i in url:
+            r = requests.get(url[i], allow_redirects=True)
+            with open(os.path.join(self.config.kbase_db_base,i), 'wb') as f:
+                f.write(r.content)
+            rich.print(f"[bold green]Downloaded {i}[/bold green]")
+        
 
 class Metagenomics:
 
