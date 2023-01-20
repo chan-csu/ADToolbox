@@ -1,5 +1,6 @@
 import Configs
-def wrap_for_slurm(command:str,run:bool,config:Configs.Utils())->str:
+
+def wrap_for_slurm(command:str,run:bool,save:bool,config:Configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.
     All resource allocation configuration is obtained from config argument
@@ -21,6 +22,12 @@ def wrap_for_slurm(command:str,run:bool,config:Configs.Utils())->str:
     slurm_script = slurm_script.replace("<executer>",config.slurm_executer)
     slurm_script = slurm_script.replace("<job_name>",config.slurm_job_name)
     slurm_script = slurm_script.replace("<sample_outlog>",config.slurm_outlog)
+    slurm_script = slurm_script.replace("<cpus>",config.slurm_cpus)
+    
+    if save:
+        with open(config.slurm_outlog,'w') as f:
+            f.write(slurm_script)
+
     if run:
         import subprocess
         subprocess.run(slurm_script)

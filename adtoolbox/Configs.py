@@ -48,51 +48,51 @@ class Kbase:
         self.urls = urls
 
 class Database:
-
-    "A class for database configurations"
-
-    def __init__(self,
-                compound_db=os.path.join(
-                     Main_Dir, "Database", 'compounds.json'),
-                reaction_db=os.path.join(
-                     Main_Dir, "Database", 'reactions.json'),
-                local_compound_db=os.path.join(
-                        Main_Dir, "Database", 'Local_compounds.json'),
-                local_reaction_db=os.path.join(
-                        Main_Dir, "Database", 'Local_reactions.json'),
-                base_dir=os.path.join(Main_Dir,"Database"),
-                csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
-                feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
-                protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
-                kbase_db=Kbase(),
-                seed_rxn_url="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
-                protein_db_url="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta",
-                adtoolbox_rxn_db_url="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
-                feed_db_url="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
-                escher_files_urls=[
+	"A class for database configurations"
+	
+	def __init__(self,
+		compound_db=os.path.join(
+		     Main_Dir, "Database", 'compounds.json'),
+		reaction_db=os.path.join(
+		     Main_Dir, "Database", 'reactions.json'),
+		local_compound_db=os.path.join(
+		        Main_Dir, "Database", 'Local_compounds.json'),
+		local_reaction_db=os.path.join(
+		        Main_Dir, "Database", 'Local_reactions.json'),
+		base_dir=os.path.join(Main_Dir,"Database"),
+		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
+		feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
+		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
+		kbase_db=Kbase(),
+		seed_rxn_url:str ="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
+		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta",
+		adtoolbox_rxn_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
+		feed_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
+		escher_files_urls:list[str]=[
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"],
-        ):
-        self.compound_db = compound_db
-        self.reaction_db = reaction_db
-        self.local_compound_db = local_compound_db
-        self.local_reaction_db = local_reaction_db
-        self.base_dir = base_dir
-        self.csv_reaction_db = csv_reaction_db
-        self.feed_db = feed_db
-        self.protein_db = protein_db
-        self.kbase_db = kbase_db
-        self.seed_rxn_url = seed_rxn_url
-        self.protein_db_url = protein_db_url
-        self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url
-        self.feed_db_url = feed_db_url
-        self.escher_files_urls = escher_files_urls
+		qiime_classifier_db:str=os.path.join(Main_Dir, "Database", 'qiime2_classifier_db.qza'),
+		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-seqs.qza"
+		):
 
-
-
-
+		self.compound_db = compound_db
+		self.reaction_db = reaction_db
+		self.local_compound_db = local_compound_db
+		self.local_reaction_db = local_reaction_db
+		self.base_dir = base_dir
+		self.csv_reaction_db = csv_reaction_db
+		self.feed_db = feed_db
+		self.protein_db = protein_db
+		self.kbase_db = kbase_db
+		self.seed_rxn_url = seed_rxn_url
+		self.protein_db_url = protein_db_url
+		self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url
+		self.feed_db_url = feed_db_url
+		self.escher_files_urls = escher_files_urls
+		self.qiime_classifier_db = qiime_classifier_db
+		self.qiime_classifier_db_url = qiime_classifier_db_url
 
 class Metagenomics:
         """
@@ -124,29 +124,30 @@ class Metagenomics:
                 qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 
                  ):
-                self.k = amplicon2genome_k
-                self.amplicon2genome_similarity = amplicon2genome_similarity
-                self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
-                self.amplicon2genome_db = amplicon2genome_db
-                self.qiime_outputs_dir = qiime_outputs_dir
-                self.genomes_json_info = genomes_json_info
-                self.feature_table_dir = feature_table_dir
-                self.rep_seq_fasta = rep_seq_fasta
-                self.taxonomy_table_dir = taxonomy_table_dir
-                self.protein_db=Database().protein_db
-                self.seed_rxn_db=Seed_RXN_DB
-                self.genome_alignment_output = genome_alignment_output
-                self.genome_alignment_output_json=genome_alignment_output_json
-                self.bit_score = bit_score
-                self.e_value = e_value
-                self.vsearch=vsearch
-                self.genome_adm_map_json=genome_adm_map_json
-                self.csv_reaction_db=csv_reaction_db
-                self.sra=sra
-                self.qiime2_singularity_image=qiime2_singularity_image
-                self.qiime2_docker_image=qiime2_docker_image
-                self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
-                self.qiime2_single_end_bash_str=qiime2_single_end_bash_str
+            self.k = amplicon2genome_k
+            self.amplicon2genome_similarity = amplicon2genome_similarity
+            self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
+            self.amplicon2genome_db = amplicon2genome_db
+            self.qiime_outputs_dir = qiime_outputs_dir
+            self.genomes_json_info = genomes_json_info
+            self.feature_table_dir = feature_table_dir
+            self.rep_seq_fasta = rep_seq_fasta
+            self.taxonomy_table_dir = taxonomy_table_dir
+            self.protein_db=Database().protein_db
+            self.seed_rxn_db=Seed_RXN_DB
+            self.genome_alignment_output = genome_alignment_output
+            self.genome_alignment_output_json=genome_alignment_output_json
+            self.bit_score = bit_score
+            self.e_value = e_value
+            self.vsearch=vsearch
+            self.genome_adm_map_json=genome_adm_map_json
+            self.csv_reaction_db=csv_reaction_db
+            self.sra=sra
+            self.qiime2_singularity_image=qiime2_singularity_image
+            self.qiime2_docker_image=qiime2_docker_image
+            self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
+            self.qiime2_single_end_bash_str=qiime2_single_end_bash_str
+
 
 
         def sra_work_dir(self, sra_project_id: str):
@@ -221,7 +222,9 @@ class Utils:
 	singularity_template_qiime:str=None,
 	slurm_executer:str='',
 	slurm_wall_time:str='24:00:00',
-	slurm_job_name:str='qiime2',
+	slurm_job_name:str='ADToolbox',
+    slurm_cpus:str="12",
+	slurm_save_dir:str=os.getcwd()
 	) -> None:
 		self.slurm_template = slurm_template
 		self.docker_template_qiime = docker_template_qiime
@@ -229,4 +232,6 @@ class Utils:
 		self.slurm_executer = slurm_executer
 		self.slurm_wall_time = slurm_wall_time
 		self.slurm_job_name = slurm_job_name
-		self.slurm_outlog=self.slurm_job_name + ".out"
+		self.slurm_outlog=self.slurm_job_name
+		self.slurm_cpus = slurm_cpus
+		self.slurm_save_dir = slurm_save_dir

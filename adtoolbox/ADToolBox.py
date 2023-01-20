@@ -828,6 +828,11 @@ class Database:
         r = requests.get(self.config.feed_db_url, allow_redirects=True)
         with open(self.config.feed_db, 'wb') as f:
             f.write(r.content)
+    
+    def download_qiime_classifier_db(self)->None:
+        r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True)
+        with open(self.config.qiime_classifier_db, 'wb') as f:
+            f.write(r.content)
 
     # def download_escher_files(self)-> None:
     #     for i in self.config.escher_files_urls:
@@ -1517,8 +1522,14 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    metag_ins=Metagenomics(Configs.Metagenomics())
-    out=metag_ins.run_qiime2_from_sra("SRR17182623",run=False,save=False,container="singularity")
-    script=wrap_for_slurm(out[0],run=False,config=Configs.Utils())
-    with open("/Users/parsaghadermarzi/Desktop/test_slurm.sh","w") as f:
-        f.write(script)
+    # metag_ins=Metagenomics(Configs.Metagenomics())
+    # out=metag_ins.run_qiime2_from_sra("SRR17182623",run=False,save=False,container="singularity")
+    # util_config=Configs.Utils(
+    #     slurm_executer='amilan',
+    #     slurm_job_name='test',)
+    
+    # script=wrap_for_slurm(out[0],run=False,save=False,config=util_config)
+    # with open("/Users/parsaghadermarzi/Desktop/test_slurm.sh","w") as f:
+    #     f.write(script)
+    db=Database(Configs.Database())
+    db.download_qiime_classifier_db()
