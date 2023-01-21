@@ -830,9 +830,23 @@ class Database:
             f.write(r.content)
     
     def download_qiime_classifier_db(self)->None:
-        r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True)
+        r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True,stream=True)
+        block_size = 1024
+        total_size = int(r.headers.get('content-length', 0))
+        if not os.path.exists(Path(self.config.qiime_classifier_db).parent):
+            os.makedirs(Path(self.config.qiime_classifier_db).parent)
         with open(self.config.qiime_classifier_db, 'wb') as f:
-            f.write(r.content)
+            with Progress() as progress:
+                task = progress.add_task("Downloading the qiime's classifier database...", total=total_size)
+                for data in r.iter_content(block_size):
+                    progress.update(task, advance=len(data))
+                    f.write(data)
+        
+        rich.print(f"[bold green]Download finished[/bold green]")
+            
+
+
+        
 
     # def download_escher_files(self)-> None:
     #     for i in self.config.escher_files_urls:
@@ -1461,16 +1475,18 @@ class Metagenomics:
         if container=="None":
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir))
+            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(self.config.qiime_classifier_db))
         
         elif container=="docker":
             qiime2_bash_str=qiime2_bash_str.splitlines()
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data -w /data  {self.config.qiime2_docker_image}"+" "+line
+                    qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data/ -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",os.path.join(str(Path(self.config.qiime_classifier_db).parent.name),str(Path(self.config.qiime_classifier_db).name)))
             if not paired_end:
                 manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
             
@@ -1483,7 +1499,7 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"singularity exec --bind  {sra_project_dir}:/  {self.config.qiime2_singularity_image} " +line
+                    qiime2_bash_str[idx]=f"singularity exec --bind  {Path(self.config.qiime_classifier_db).parent}:/ --bind {sra_project_dir}:/  {self.config.qiime2_singularity_image} " +line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir))
@@ -1510,26 +1526,8 @@ class Metagenomics:
     def extract_taxonomy_features(self):
         pass
 
-
-
-
-            
-
-
-
-        
-
-
-
 if __name__ == "__main__":
-    # metag_ins=Metagenomics(Configs.Metagenomics())
-    # out=metag_ins.run_qiime2_from_sra("SRR17182623",run=False,save=False,container="singularity")
-    # util_config=Configs.Utils(
-    #     slurm_executer='amilan',
-    #     slurm_job_name='test',)
-    
-    # script=wrap_for_slurm(out[0],run=False,save=False,config=util_config)
-    # with open("/Users/parsaghadermarzi/Desktop/test_slurm.sh","w") as f:
-    #     f.write(script)
-    db=Database(Configs.Database())
-    db.download_qiime_classifier_db()
+    mg=Metagenomics(Configs.Metagenomics())
+    outs=mg.run_qiime2_from_sra("ERR3861428",container="docker",save=False,run=False)
+    with open("/Users/parsaghadermarzi/Desktop/test.sh","w") as f:
+        f.write(outs[0])

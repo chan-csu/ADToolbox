@@ -12,10 +12,20 @@ qiime dada2 denoise-paired \
 --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
 --o-table <qiime2_work_dir>/table.qza \
 --o-denoising-stats <qiime2_work_dir>/stats.qza
+
+qiime feature-classifier classify-sklearn \
+--i-classifier <classifier> \
+--i-reads <qiime2_work_dir>/rep-seqs.qza \
+--o-classification <qiime2_work_dir>/taxonomy.qza
+
 qiime tools export \
 --input-path  <qiime2_work_dir>/feature-table.qza \
 --output-path  <qiime2_work_dir>/feature-table.tsv
 qiime tools export \
 --input-path  <qiime2_work_dir>/rep-seqs.qza \
 --output-path  <qiime2_work_dir>/rep-seqs.fastq
+qiime tools export \
+--input-path  <qiime2_work_dir>/taxonomy.qza \
+--output-path  <qiime2_work_dir>/
+
 biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv

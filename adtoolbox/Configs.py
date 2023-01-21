@@ -73,7 +73,7 @@ class Database:
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"],
-		qiime_classifier_db:str=os.path.join(Main_Dir, "Database", 'qiime2_classifier_db.qza'),
+		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
 		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-seqs.qza"
 		):
 
@@ -95,70 +95,68 @@ class Database:
 		self.qiime_classifier_db_url = qiime_classifier_db_url
 
 class Metagenomics:
-        """
-        A class for Amplicon2Genome Configs
-
-        """
-
-        def __init__(self, 
-                amplicon2genome_k=10,
-                amplicon2genome_similarity=0.97,
-                amplicon2genome_outputs_dir=os.path.join(Main_Dir,"Genomes"),
-                amplicon2genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
-                qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
-                genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
-                feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
-                rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
-                taxonomy_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","taxonomy.tsv"),
-                genome_alignment_output=os.path.join(Main_Dir,"Outputs"),
-                genome_alignment_output_json=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
-                vsearch=os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")),
-                genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
-                csv_reaction_db=Database().csv_reaction_db,
-                sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
-                bit_score=40,
-                e_value=10**-5,
-                qiime2_docker_image="quay.io/qiime2/core:2022.11",
-                qiime2_singularity_image="docker://quay.io/qiime2/core:2022.11",
-                qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
-                qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
-
-                 ):
-            self.k = amplicon2genome_k
-            self.amplicon2genome_similarity = amplicon2genome_similarity
-            self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
-            self.amplicon2genome_db = amplicon2genome_db
-            self.qiime_outputs_dir = qiime_outputs_dir
-            self.genomes_json_info = genomes_json_info
-            self.feature_table_dir = feature_table_dir
-            self.rep_seq_fasta = rep_seq_fasta
-            self.taxonomy_table_dir = taxonomy_table_dir
-            self.protein_db=Database().protein_db
-            self.seed_rxn_db=Seed_RXN_DB
-            self.genome_alignment_output = genome_alignment_output
-            self.genome_alignment_output_json=genome_alignment_output_json
-            self.bit_score = bit_score
-            self.e_value = e_value
-            self.vsearch=vsearch
-            self.genome_adm_map_json=genome_adm_map_json
-            self.csv_reaction_db=csv_reaction_db
-            self.sra=sra
-            self.qiime2_singularity_image=qiime2_singularity_image
-            self.qiime2_docker_image=qiime2_docker_image
-            self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
-            self.qiime2_single_end_bash_str=qiime2_single_end_bash_str
-
+	"""	
+	A class for Amplicon2Genome Configs
+	"""
+	def __init__(self, 
+            amplicon2genome_k=10,
+            amplicon2genome_similarity=0.97,
+            amplicon2genome_outputs_dir=os.path.join(Main_Dir,"Genomes"),
+            amplicon2genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
+            qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
+            genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
+            feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
+            rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
+            taxonomy_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","taxonomy.tsv"),
+            genome_alignment_output=os.path.join(Main_Dir,"Outputs"),
+            genome_alignment_output_json=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
+            vsearch=os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")),
+            genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
+            csv_reaction_db=Database().csv_reaction_db,
+            sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
+            bit_score=40,
+            e_value=10**-5,
+            qiime2_docker_image="quay.io/qiime2/core:2022.11",
+            qiime2_singularity_image="docker://quay.io/qiime2/core:2022.11",
+            qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
+            qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
+			qiime_classifier_db=Database().qiime_classifier_db,
+             ):
+		self.k = amplicon2genome_k
+		self.amplicon2genome_similarity = amplicon2genome_similarity
+		self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
+		self.amplicon2genome_db = amplicon2genome_db
+		self.qiime_outputs_dir = qiime_outputs_dir
+		self.genomes_json_info = genomes_json_info
+		self.feature_table_dir = feature_table_dir
+		self.rep_seq_fasta = rep_seq_fasta
+		self.taxonomy_table_dir = taxonomy_table_dir
+		self.protein_db=Database().protein_db
+		self.seed_rxn_db=Seed_RXN_DB
+		self.genome_alignment_output = genome_alignment_output
+		self.genome_alignment_output_json=genome_alignment_output_json
+		self.bit_score = bit_score
+		self.e_value = e_value
+		self.vsearch=vsearch
+		self.genome_adm_map_json=genome_adm_map_json
+		self.csv_reaction_db=csv_reaction_db
+		self.sra=sra
+		self.qiime2_singularity_image=qiime2_singularity_image
+		self.qiime2_docker_image=qiime2_docker_image
+		self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
+		self.qiime2_single_end_bash_str=qiime2_single_end_bash_str 
+		self.qiime_classifier_db=qiime_classifier_db
 
 
-        def sra_work_dir(self, sra_project_id: str):
-                """ sets the working directory for the SRA project id """
-                
-                return os.path.join(self.sra, sra_project_id)
-        
-        def qiime2_work_dir(self, sra_project_id: str):
-                """ sets the working directory for the SRA project id """
-                
-                return os.path.join(self.sra_work_dir(sra_project_id), "qiime2")
+
+	def sra_work_dir(self, sra_project_id: str):
+		""" sets the working directory for the SRA project id """
+	
+		return os.path.join(self.sra, sra_project_id)
+	
+	def qiime2_work_dir(self, sra_project_id: str):
+		""" sets the working directory for the SRA project id """
+		return os.path.join(self.sra_work_dir(sra_project_id), "qiime2")
 
 
 
