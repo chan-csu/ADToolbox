@@ -74,7 +74,7 @@ class Database:
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
         "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"],
 		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
-		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-seqs.qza"
+		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza"
 		):
 
 		self.compound_db = compound_db
@@ -116,8 +116,8 @@ class Metagenomics:
             sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
             bit_score=40,
             e_value=10**-5,
-            qiime2_docker_image="quay.io/qiime2/core:2022.11",
-            qiime2_singularity_image="docker://quay.io/qiime2/core:2022.11",
+            qiime2_docker_image="quay.io/qiime2/core:2022.2",
+            qiime2_singularity_image="quay.io/qiime2/core:2022.2",
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,

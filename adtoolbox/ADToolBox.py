@@ -1482,7 +1482,7 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"docker run -v {sra_project_dir}:/data/ -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
+                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {sra_project_dir}:/data/ -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
@@ -1527,7 +1527,5 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    mg=Metagenomics(Configs.Metagenomics())
-    outs=mg.run_qiime2_from_sra("ERR3861428",container="docker",save=False,run=False)
-    with open("/Users/parsaghadermarzi/Desktop/test.sh","w") as f:
-        f.write(outs[0])
+    db=Database(Configs.Database())
+    db.download_qiime_classifier_db()
