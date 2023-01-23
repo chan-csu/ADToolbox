@@ -117,7 +117,7 @@ class Metagenomics:
             bit_score=40,
             e_value=10**-5,
             qiime2_docker_image="quay.io/qiime2/core:2022.2",
-            qiime2_singularity_image="quay.io/qiime2/core:2022.2",
+            qiime2_singularity_image="docker://quay.io/qiime2/core:2022.2",
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,

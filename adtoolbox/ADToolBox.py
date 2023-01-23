@@ -1527,5 +1527,5 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    db=Database(Configs.Database())
-    db.download_qiime_classifier_db()
+    metag=Metagenomics(Configs.Metagenomics())
+    metag.run_qiime2_from_sra("ERR3861428",container="singularity",save=True,run=False)
