@@ -881,6 +881,8 @@ class Database:
         
         
         r = requests.get(self.config.kbase_db.urls['metagenomics_studies'], allow_redirects=True)
+        if not os.path.exists(self.config.kbase_db.base_dir):
+            os.makedirs(self.config.kbase_db.base_dir,exist_ok=True)
         with open(os.path.join(self.config.kbase_db.metagenomics_studies), 'wb') as f:
             f.write(r.content)
         rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls['metagenomics_studies']}[/bold green]")
