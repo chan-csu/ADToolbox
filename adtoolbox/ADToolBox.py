@@ -1503,9 +1503,9 @@ class Metagenomics:
                 if line.startswith("qiime") or line.startswith("biom"):
                     qiime2_bash_str[idx]=f"singularity exec --bind  {Path(self.config.qiime_classifier_db).parent}:/data/ --bind {sra_project_dir}:/data/  {self.config.qiime2_singularity_image} " +line
             qiime2_bash_str="\n".join(qiime2_bash_str)
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",os.path.join("data",str(manifest_dir.name)))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",os.path.join("data",str(qiime2_work_dir.name)))
-            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",os.path.join("data",str(Path(self.config.qiime_classifier_db).parent.name),str(Path(self.config.qiime_classifier_db).name)))
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",os.path.join("/data",str(manifest_dir.name)))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",os.path.join("/data",str(qiime2_work_dir.name)))
+            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",os.path.join("/data",str(Path(self.config.qiime_classifier_db).parent.name),str(Path(self.config.qiime_classifier_db).name)))
 
             if not paired_end:
                 manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
