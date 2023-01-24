@@ -24,6 +24,7 @@ def wrap_for_slurm(command:str,run:bool,save:bool,config:Configs.Utils())->str:
     slurm_script = slurm_script.replace("<executer>",config.slurm_executer)
     slurm_script = slurm_script.replace("<job_name>",config.slurm_job_name)
     slurm_script = slurm_script.replace("<sample_outlog>",config.slurm_outlog)
+    slurm_script = slurm_script.replace("<memory>",config.slurm_memory)
     slurm_script = slurm_script.replace("<cpus>",config.slurm_cpus)
     
     if save:

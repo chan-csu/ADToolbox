@@ -16,7 +16,7 @@ qiime dada2 denoise-paired \
 qiime feature-classifier classify-sklearn \
 --i-classifier <classifier> \
 --i-reads <qiime2_work_dir>/rep-seqs.qza \
---p-n-jobs -1 \
+--p-n-jobs 4 \
 --o-classification <qiime2_work_dir>/taxonomy.qza
 
 qiime tools export \
