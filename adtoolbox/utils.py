@@ -1,5 +1,7 @@
 import Configs
-
+import subprocess
+import pathlib
+import os
 def wrap_for_slurm(command:str,run:bool,save:bool,config:Configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.
@@ -29,8 +31,9 @@ def wrap_for_slurm(command:str,run:bool,save:bool,config:Configs.Utils())->str:
             f.write(slurm_script)
 
     if run:
-        import subprocess
-        subprocess.run(slurm_script)
+        workingdir=pathlib.Path(config.slurm_save_dir).parents[1]
+        slurmfile=pathlib.Path(config.slurm_save_dir)
+        subprocess.run([f"sbatch {str(slurmfile.relative_to(workingdir))}"],cwd=workingdir,shell=True)        
     return slurm_script
 
 
