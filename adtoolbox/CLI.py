@@ -1,12 +1,12 @@
 import argparse
 from re import M
-import Configs
-import ADToolBox
+import configs
+import adtoolbox
 from __init__ import __version__
 from __init__ import Main_Dir
 from rich.console import Console
 import rich
-from ADM import *
+from adm import *
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
@@ -20,7 +20,7 @@ class AParser(argparse.ArgumentParser):
         rich.print(message, file=file)
 
 def main():
-    db_class=Database(config=Configs.Database())
+    db_class=Database(config=configs.Database())
     parser = AParser(prog="ADToolBox",
         description="[italic yellow]ADToolBox, a Toolbox for Anaerobic Digestion Modeling",
         epilog="ADToolBox-Chan Lab.")
@@ -72,7 +72,7 @@ def main():
     
     
     ### Metagenomics Module ###
-    meta_config_defult=Configs.Metagenomics()
+    meta_config_defult=configs.Metagenomics()
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help='Metagenomics Module of ADToolBox')
     metag_subp=subparser_metagenomics.add_subparsers(dest='metag_Subparser',help='[yellow] Available Metagenomics Commands:')
     
@@ -158,17 +158,17 @@ def main():
         meta_config_defult.amplicon2genome_db=args.amplicon_to_genome_db
         meta_config_defult.k=args.k
         meta_config_defult.amplicon2genome_similarity=args.similarity
-        ADToolBox.Metagenomics(meta_config_defult).amplicon2genome()
+        adtoolbox.Metagenomics(meta_config_defult).amplicon2genome()
 
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="map-genomes-to-adm":
         meta_config_defult.genome_alignment_output_json=args.input_file
         model_reactions=args.model
         meta_config_defult.genome_adm_map_json=args.output_dir
         if model_reactions=="Modified_adm_reactions":
-            reactions=Configs.Modified_ADM().reactions
+            reactions=configs.Modified_ADM().reactions
             with open(reactions,"r") as f:
                 reactions=json.load(f)
-            ADToolBox.Metagenomics(meta_config_defult).adm_from_alignment_json(reactions,Model=model_reactions)
+            adtoolbox.Metagenomics(meta_config_defult).adm_from_alignment_json(reactions,Model=model_reactions)
         else:
             rich.print(f"[red] No Reaction mapping exists for {model_reactions}; execution aborted!")
 
@@ -176,24 +176,24 @@ def main():
 
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="align-genomes":
         if "input_file" in args and "output_dir" in args:
-            Meta_Config=Configs.Metagenomics(genomes_json_info=args.input_file,genome_alignment_output=args.output_dir,genome_alignment_output_json=os.path.join(args.output_dir,"Alignment_Info.json"))
-            ADToolBox.Metagenomics(Meta_Config).Align_Genomes()
+            Meta_Config=configs.Metagenomics(genomes_json_info=args.input_file,genome_alignment_output=args.output_dir,genome_alignment_output_json=os.path.join(args.output_dir,"Alignment_Info.json"))
+            adtoolbox.Metagenomics(Meta_Config).Align_Genomes()
 
     
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="make-json-from-genomes":
-        ADToolBox.Metagenomics.make_json_from_genomes(args.input_file,args.output_file)
+        adtoolbox.Metagenomics.make_json_from_genomes(args.input_file,args.output_file)
 
 
 
 
 
     if args.ADToolbox_Module == 'Documentations' and args.show:
-        with open(Configs.Documentation().readme,'r') as f:
+        with open(configs.Documentation().readme,'r') as f:
             T=f.read()
             console.print(markdown.Markdown(T))
     
     if args.ADToolbox_Module == 'Database' and "Database_Module" in args and args.Database_Module=="build-protein-db" :
-            ecs=db_class.ec_from_csv(Configs.Database().csv_reaction_db)
+            ecs=db_class.ec_from_csv(configs.Database().csv_reaction_db)
             rich.print(u"[bold green]\u2713 All EC numbers were extracted!\n")
             db_class._initialize_database()
             db_class.protein_db_from_ec(ecs)
@@ -217,7 +217,7 @@ def main():
         rich.print(u"[bold green]\u2713 SEED Reaction Database was downloaded!\n")
     
     if args.ADToolbox_Module == 'Database' and  "Database_Module" in args and args.Database_Module=="show-feed-db":
-        with open(Configs.Database().feed_db, 'r') as f:
+        with open(configs.Database().feed_db, 'r') as f:
             feed_db = json.load(f)
         colnames=feed_db[0].keys()
         feed_table = Table(title="Feed Database",expand=True,safe_box=True)
@@ -229,7 +229,7 @@ def main():
         console.print(feed_table)
     
     if "Initialize_feed_db" in args and bool(args.initialize_feed_db):
-        ADToolBox.Database.init_feedstock_database(db_class)
+        adtoolbox.Database.init_feedstock_database(db_class)
     if "extend_feed_db" in args and bool(args.extend_feed_db):
         db_class.add_feedstock_to_database_from_file(args.extend_feed_db)
     
@@ -238,20 +238,20 @@ def main():
             with open(args.model_parameters) as f:
                 asm_model_parameters=json.load(f)
         else:
-            with open(Configs.Original_ADM1().model_parameters) as f:
+            with open(configs.Original_ADM1().model_parameters) as f:
                 asm_model_parameters=json.load(f)
         if args.base_parameters:
             with open(args.base_parameters) as f:
                 adm_base_parameters=json.load(f)
         else:
-            with open(Configs.Original_ADM1().base_parameters) as f:
+            with open(configs.Original_ADM1().base_parameters) as f:
                 adm_base_parameters=json.load(f)
 
         if args.initial_conditions:
             with open(args.initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
         else:
-            with open(Configs.Original_ADM1().initial_conditions) as f:
+            with open(configs.Original_ADM1().initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
 
         
@@ -259,7 +259,7 @@ def main():
             with open(args.inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
         else:
-            with open(Configs.Original_ADM1().inlet_conditions) as f:
+            with open(configs.Original_ADM1().inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
 
         
@@ -267,21 +267,21 @@ def main():
             with open(args.reactions) as f:
                 adm_reactions=json.load(f)
         else:
-            with open(Configs.Original_ADM1().reactions) as f:
+            with open(configs.Original_ADM1().reactions) as f:
                 adm_reactions=json.load(f)
         
         if args.species:
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(Configs.Original_ADM1().species) as f:
+            with open(configs.Original_ADM1().species) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
             with open(args.metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
         else:
-            with open(Configs.Original_ADM1().metagenome_report) as f:
+            with open(configs.Original_ADM1().metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
         
         ADM1 = Model(asm_model_parameters, adm_base_parameters, adm_initial_conditions,
@@ -303,20 +303,20 @@ def main():
             with open(args.model_parameters) as f:
                 adm_model_parameters=json.load(f)
         else:
-            with open(Configs.Modified_ADM().model_parameters) as f:
+            with open(configs.Modified_ADM().model_parameters) as f:
                 adm_model_parameters=json.load(f)
         if args.base_parameters:
             with open(args.base_parameters) as f:
                 adm_base_parameters=json.load(f)
         else:
-            with open(Configs.Modified_ADM().base_parameters) as f:
+            with open(configs.Modified_ADM().base_parameters) as f:
                 adm_base_parameters=json.load(f)
 
         if args.initial_conditions:
             with open(args.initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
         else:
-            with open(Configs.Modified_ADM().initial_conditions) as f:
+            with open(configs.Modified_ADM().initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
 
         
@@ -324,7 +324,7 @@ def main():
             with open(args.inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
         else:
-            with open(Configs.Modified_ADM().inlet_conditions) as f:
+            with open(configs.Modified_ADM().inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
 
         
@@ -332,22 +332,22 @@ def main():
             with open(args.reactions) as f:
                 adm_reactions=json.load(f)
         else:
-            with open(Configs.Modified_ADM().reactions) as f:
+            with open(configs.Modified_ADM().reactions) as f:
                 adm_reactions=json.load(f)
         
         if args.species:
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(Configs.Modified_ADM().species) as f:
+            with open(configs.Modified_ADM().species) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
             with open(args.metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
         else:
-            if os.path.exists(Configs.Modified_ADM().metagenome_report):
-                with open(Configs.Modified_ADM().metagenome_report) as f:
+            if os.path.exists(configs.Modified_ADM().metagenome_report):
+                with open(configs.Modified_ADM().metagenome_report) as f:
                     adm_metagenome_report=json.load(f)
             else:
                 adm_metagenome_report=None
@@ -392,24 +392,24 @@ def main():
 
 
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-studies':
-        kbase_show_studies(Configs.Kbase().studies)
+        kbase_show_studies(configs.Kbase().studies)
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'create-metagenomics-studies-db':
-        kbase.create_metagenoics_studies_table(Configs.Kbase().studies)
+        kbase.create_metagenoics_studies_table(configs.Kbase().studies)
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'add-metagenomics-study':
         try:
-            last_study_id=kbase._get_last_study_id(Configs.Kbase().studies)[0][0]
+            last_study_id=kbase._get_last_study_id(configs.Kbase().studies)[0][0]
         except:
             last_study_id=0
-            kbase._create_study_table(Configs.Kbase().studies)
-            kbase._create_metagenoics_studies_table(Configs.Kbase().studies)
+            kbase._create_study_table(configs.Kbase().studies)
+            kbase._create_metagenoics_studies_table(configs.Kbase().studies)
         study_id=last_study_id+1
-        kbase._add_study(Configs.Kbase().studies,args.name,"Metagenomics",args.reference)
-        kbase.add_metagenomics_study(Configs.Kbase().studies, args.name, study_id, args.type, args.microbiome,args.sra_accession, args.reference, args.comments)
+        kbase._add_study(configs.Kbase().studies,args.name,"Metagenomics",args.reference)
+        kbase.add_metagenomics_study(configs.Kbase().studies, args.name, study_id, args.type, args.microbiome,args.sra_accession, args.reference, args.comments)
 
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-metagenomics-studies':
-        kbase_show_metagenomics_studies(Configs.Kbase().studies)
+        kbase_show_metagenomics_studies(configs.Kbase().studies)
     
     
     
@@ -476,27 +476,27 @@ def download_all_databases():
     """
     This function will download all the databases required by the ADToolbox.
     """
-    MetaG=ADToolBox.Metagenomics(Configs.Metagenomics())
+    MetaG=adtoolbox.Metagenomics(configs.Metagenomics())
     rich.print(u"[yellow] Downloading Amplicon to Genome databases ...\n")
     MetaG.get_requirements_a2g()
     rich.print(u"[bold green]\u2713 Amplicon to Genome databases were downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Seed database ...\n")
-    ADToolBox.Database().download_seed_databases(Configs.Seed_RXN_DB)
+    adtoolbox.Database().download_seed_databases(configs.Seed_RXN_DB)
     rich.print(u"[bold green]\u2713 Seed database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Original-ADM1 database ...\n")
-    ADToolBox.Database().download_adm1_parameters(Configs.Original_ADM1())
+    adtoolbox.Database().download_adm1_parameters(configs.Original_ADM1())
     rich.print(u"[bold green]\u2713 Original-ADM1 database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Modified-ADM database ...\n")
-    ADToolBox.Database().download_modified_adm_parameters(Configs.Modified_ADM())
+    adtoolbox.Database().download_modified_adm_parameters(configs.Modified_ADM())
     rich.print(u"[bold green]\u2713 Modified-ADM database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading protein database ...\n")
-    ADToolBox.Database().download_protein_database(Configs.Database().protein_db)
+    adtoolbox.Database().download_protein_database(configs.Database().protein_db)
     rich.print(u"[bold green]\u2713 Protein database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Reaction database ...\n")
-    ADToolBox.Database().download_reaction_database(Configs.Database().csv_reaction_db)
+    adtoolbox.Database().download_reaction_database(configs.Database().csv_reaction_db)
     rich.print(u"[bold green]All the databases were downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading the feed database ...\n")
-    ADToolBox.Database().download_feed_database(Configs.Database().feed_db)
+    adtoolbox.Database().download_feed_database(configs.Database().feed_db)
     rich.print(u"[bold green]\u2713 Feed database was downloaded successfuly!\n")
 
 

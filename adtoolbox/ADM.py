@@ -10,11 +10,11 @@ import plotly.express as px
 from dash import Dash, html, dcc
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output,dash_table
-from ADToolBox import Database as Database
-from ADToolBox import Reaction_Toolkit as Reaction_Toolkit
+from adtoolbox import Database as Database
+from adtoolbox import Reaction_Toolkit as Reaction_Toolkit
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
-from ADToolBox import Reaction
+from adtoolbox import Reaction
 from collections import OrderedDict
 import rich
 from rich.console import Console
@@ -22,7 +22,7 @@ from rich.table import Table
 from __init__ import Main_Dir,PKG_DATA
 from rich.style import Style
 import dash_escher
-import Configs
+import configs
 import pdb
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
@@ -33,7 +33,7 @@ import pdb
 # ----------
 
 
-RT = Reaction_Toolkit(reaction_db=Configs.Reaction_Toolkit().reaction_db)
+RT = Reaction_Toolkit(reaction_db=configs.Reaction_Toolkit().reaction_db)
 
 class _Fake_Sol:
     def __init__(self, y,t):

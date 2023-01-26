@@ -1,14 +1,16 @@
-import Configs
+import configs
 import subprocess
 import pathlib
 import os
-def wrap_for_slurm(command:str,run:bool,save:bool,config:Configs.Utils())->str:
+
+def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.
     All resource allocation configuration is obtained from config argument
     Args:
         command: bash command to run in python string format
         run: if True, the slurm script is executed
+        save: if True, the slurm script is saved to the path specified in config
         config: Configs.Utils object that detemines the template form and slurm options
     
     Returns:
@@ -39,4 +41,26 @@ def wrap_for_slurm(command:str,run:bool,save:bool,config:Configs.Utils())->str:
 
 
     
+def fasta_to_dict(fasta:str)->dict:
+    """
+    This function converts a fasta file to a dictionary
+    Args:
+        fasta: the affress fasta file as a string
     
+    Returns:
+        A dictionary with the fasta labels as keys and the fasta sequences as values
+    """
+    Dictionary={}
+    
+    with open(fasta,'r') as f:
+        for line in f:
+            if line.startswith('>'):
+                label = line.lstrip(">")
+                Dictionary[label]=""
+            else:
+                Dictionary[label] += line.strip()
+
+                
+                
+
+

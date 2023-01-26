@@ -98,19 +98,23 @@ class Metagenomics:
 	"""	
 	A class for Amplicon2Genome Configs
 	"""
+	### Here we have some class variables that are used in the class
+	gtdb_dir="bac120_ssu_reps_r207.fna"
 	def __init__(self, 
             amplicon2genome_k=10,
             amplicon2genome_similarity=0.97,
             amplicon2genome_outputs_dir=os.path.join(Main_Dir,"Genomes"),
             amplicon2genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
+			amplicon2genome_top_repseq_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","top_repseqs.fasta"),
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
+			vsearch_threads:int=4,
+			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
             feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
             rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
             taxonomy_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","taxonomy.tsv"),
             genome_alignment_output=os.path.join(Main_Dir,"Outputs"),
             genome_alignment_output_json=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
-            vsearch=os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")),
             genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
             csv_reaction_db=Database().csv_reaction_db,
             sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
@@ -121,6 +125,7 @@ class Metagenomics:
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
+
              ):
 		self.k = amplicon2genome_k
 		self.amplicon2genome_similarity = amplicon2genome_similarity
@@ -128,6 +133,7 @@ class Metagenomics:
 		self.amplicon2genome_db = amplicon2genome_db
 		self.qiime_outputs_dir = qiime_outputs_dir
 		self.genomes_json_info = genomes_json_info
+		self.amplicon2genome_top_repseq_dir = amplicon2genome_top_repseq_dir
 		self.feature_table_dir = feature_table_dir
 		self.rep_seq_fasta = rep_seq_fasta
 		self.taxonomy_table_dir = taxonomy_table_dir
@@ -137,7 +143,7 @@ class Metagenomics:
 		self.genome_alignment_output_json=genome_alignment_output_json
 		self.bit_score = bit_score
 		self.e_value = e_value
-		self.vsearch=vsearch
+		self.vsearch_threads=vsearch_threads
 		self.genome_adm_map_json=genome_adm_map_json
 		self.csv_reaction_db=csv_reaction_db
 		self.sra=sra
@@ -146,8 +152,8 @@ class Metagenomics:
 		self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
 		self.qiime2_single_end_bash_str=qiime2_single_end_bash_str 
 		self.qiime_classifier_db=qiime_classifier_db
-
-
+		self.gtdb_dir_fasta=os.path.join(self.amplicon2genome_db,Metagenomics.gtdb_dir)
+		self.vsearch_script_dir=vsearch_script_dir
 
 	def sra_work_dir(self, sra_project_id: str):
 		""" sets the working directory for the SRA project id """

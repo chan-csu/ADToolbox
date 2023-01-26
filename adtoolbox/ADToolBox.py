@@ -11,9 +11,10 @@ import numpy as np
 import re
 import requests
 import time
+import warnings
 from requests.adapters import HTTPAdapter
 from sympy import Li
-import Configs
+import configs
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
@@ -23,13 +24,12 @@ from collections import Counter
 import pathlib
 import gzip
 import shutil
-import Configs
-import Bio_seq
+import configs
 from rich.progress import track,Progress
 import rich
 from __init__ import Main_Dir
 from typing import Union
-from utils import wrap_for_slurm
+from utils import wrap_for_slurm,fasta_to_dict
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
@@ -58,13 +58,13 @@ class Pipeline:
     def __init__(self,commands:list[tuple],executer:str,**kwargs):
         self.commands=commands
         self.executer=executer
-        self.kbase_config=kwargs.get("kbase_config",Configs.Kbase())
-        self.database_config=kwargs.get("database_config",Configs.Database())
-        self.reaction_toolkit_config=kwargs.get("reaction_toolkit_config",Configs.Reaction_Toolkit())
-        self.metagenomics_config=kwargs.get("metagenomics_config",Configs.Metagenomics())
-        self.alignment_config=kwargs.get("alignment_config",Configs.Alignment())
-        self.original_adm_config=kwargs.get("original_adm_config",Configs.Original_ADM1())
-        self.modified_adm_config=kwargs.get("modified_adm_config",Configs.Modified_ADM())
+        self.kbase_config=kwargs.get("kbase_config",configs.Kbase())
+        self.database_config=kwargs.get("database_config",configs.Database())
+        self.reaction_toolkit_config=kwargs.get("reaction_toolkit_config",configs.Reaction_Toolkit())
+        self.metagenomics_config=kwargs.get("metagenomics_config",configs.Metagenomics())
+        self.alignment_config=kwargs.get("alignment_config",configs.Alignment())
+        self.original_adm_config=kwargs.get("original_adm_config",configs.Original_ADM1())
+        self.modified_adm_config=kwargs.get("modified_adm_config",configs.Modified_ADM())
         
     
     def validate(self,verbose:bool=True):
@@ -213,7 +213,7 @@ class Reaction_Toolkit:
 
     """
 
-    def __init__(self, compound_db:str =Configs.Reaction_Toolkit().compound_db, reaction_db=Configs.Reaction_Toolkit().reaction_db) -> None:
+    def __init__(self, compound_db:str =configs.Reaction_Toolkit().compound_db, reaction_db=configs.Reaction_Toolkit().reaction_db) -> None:
         self.reaction_db = reaction_db
         self.compound_db = compound_db
 
@@ -353,7 +353,7 @@ class Database:
     This class will handle all of the database tasks in ADToolBox
     '''
 
-    def __init__(self, config:Configs.Database=Configs.Database()):
+    def __init__(self, config:configs.Database=configs.Database()):
 
         self.config = config
 
@@ -366,10 +366,10 @@ class Database:
 
     
     def filter_seed_from_ec(self, ec_list,
-                            reaction_db=Configs.Database().reaction_db,
-                            compound_db=Configs.Database().compound_db,
-                            local_reaction_db=Configs.Database().local_reaction_db,
-                            local_compound_db=Configs.Database().local_compound_db) -> tuple:
+                            reaction_db=configs.Database().reaction_db,
+                            compound_db=configs.Database().compound_db,
+                            local_reaction_db=configs.Database().local_reaction_db,
+                            local_compound_db=configs.Database().local_compound_db) -> tuple:
         """
 
         This function takes a list of ec numbers Generates a mini-seed JSON files. This is supposed to
@@ -925,7 +925,7 @@ class Metagenomics:
 
     This class will use other classes to generate the required files for downstream analysis.
     """
-    def __init__(self,config:Configs.Metagenomics):
+    def __init__(self,config:configs.Metagenomics):
         self.config=config
     
     def get_requirements_a2g(self,progress=True):
@@ -986,82 +986,132 @@ class Metagenomics:
                     with open(os.path.join(self.config.amplicon2genome_db, keys+'.tar.gz'), 'wb') as f:
                         f.write(r.content)
 
+    
+    def find_top_k_repseqs(self,
+                            sample_names:Union[list[str],None]=None
+                            ,save:bool=True)->dict:
 
-    def amplicon2genome(self,
-                        sample_name:list[str]=None,
-                        download_databases: bool=False,
-                        )->dict:
+        """This function takes three inputs from qiime:
+        1. feature table: This is the abundance of each feature in each sample (TSV).
+        2. taxonomy table: This is the taxonomy of each feature (TSV). 
+        3. rep seqs: This is the representative sequence of each feature (fasta).
+        It then finds the top k features for each sample and then finds the genomes for each feature (if there is one).
+        It then returns a dictionary of the genomes for the sample(s) along with the NCBI name and the
+        address where they are stored.
 
-        """This function will take the amplicon data and will fetch the genomes.
-        it is created to start from QIIMEII outputs, and download the genomes from NCBI.
-        
+        Requires:
+
+        Satisfies:
+
         Args:
             sample_name (str, optional): The name of the sample. Defaults to None.
             if None, it will find top k genomes for all samples.
-            download_databases (bool, optional): If True, it will download the required databases. Defaults to False.
+            save (bool, optional): Whether to save the top k repseqs. Defaults to True.
         
         Returns:
-            dict: A dictionary of the genomes for the sample(s) along with the NCBI name and the
-            address where they are stored.
-        """    
+            dict: A dictionary of information about the top k features/taxa
+        """
 
-        if not os.path.exists(self.config.qiime_outputs_dir):
-            os.mkdir(self.config.qiime_outputs_dir)
-            print("Please provide the QIIME output files in: "+ self.config.qiime_outputs_dir)
-            return 0
-        try:
-            feature_table = pd.read_table(
-                self.config.feature_table_dir, sep='\t')
-            starting_column=["#OTU ID","featureid"]
-            for i in starting_column:
-                if i in list(feature_table.columns):
-                    feature_table=feature_table.rename(columns={i:"#OTU ID"})
-                    break
-            rel_abundances = feature_table.iloc[:, list(
-                feature_table.columns).index('#OTU ID') + 1:]
+        feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
+        taxonomy_table = pd.read_table(self.config.taxonomy_table_dir, delimiter='\t')
+        with open(self.config.rep_seq_fasta, 'w') as f:
+            repseqs=fasta_to_dict(self.config.rep_seq_fasta)
 
-        except FileNotFoundError as errormsg:
-            rich.print(errormsg)
-            rich.print(
-                '[red]Feature Table was not found in the directory. Please check the directory and try again!')
-            return
-
+        if sample_names is None:
+            pass 
         else:
-           
-            rich.print(
-                "[green] ---> feature_table_dir was found in the directory, and was loaded successfully!")
+            feature_table = feature_table[sample_names]
+
+        top_featureids = {}
+        top_repseqs = {}
+        top_k_taxa = {}
+
+
+        for sample in sample_names:
+            top_featureids[sample] = list(feature_table.sort_values(
+                sample, ascending=False)['#OTU ID'].head(self.config.k))
+            top_k_taxa[sample] = [ taxonomy_table[taxonomy_table["Feature ID"]==feature]["Taxon"] for feature in top_featureids[sample]]
+            top_repseqs |= {feature:repseqs[feature] for feature in top_featureids[sample]}
+        
+        if save:
+            pd.DataFrame(top_featureids).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_FeatureIDs.csv'))
+            pd.DataFrame(top_k_taxa).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_Taxa.csv'))
+            with open(os.path.join(self.config.amplicon2genome_top_repseq_dir), 'w') as f:
+                for feature in top_repseqs:
+                    f.write('>'+feature+'\n'+top_repseqs[feature]+'\n')                
+
+        return {'top_featureids':top_featureids,'top_k_taxa':top_k_taxa,'top_repseqs':top_repseqs}
+
+        
+    
+    def align_to_gtdb(self,run:bool=True,save:bool=True,container:str="None")->str:
+        """This function takes the representative sequences of the top k features and generates the script to
+        align these feature sequences to gtdb using VSEARCH. If you intend to run this you either
+        need to have VSEARCH installed or run it with a container option. You can use either the docker or singularity
+        as container options. Otherwise you can use None and run it with the assumption that VSEARCH is installed.
+        If you only want the script and not to run it, set run to False.
+
+        Requires:
+
+        Satisfies:
+
+        Args:
+            run (bool, optional): Whether to run the script. Defaults to True.
+            save (bool, optional): Whether to save the script. Defaults to True.
+            container (str, optional): The container to use. Defaults to "None".
+        
+        Returns:
+            dict: A dictionary containing the generated scripts and address of the genomes downloaded or
+            tobe downloaded after running the script if you are not using this function to run it.
+        """
+        if container=="None":
+            script = os.path.join(self.config.amplicon2genome_outputs_dir,'Align_to_gtdb.sh')
+            alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
+            bash_scipt=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
+                        os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
+                        os.path.join(self.config.amplicon2genome_top_repseq_dir)+
+                        ' --db '+os.path.join(self.config.gtdb_dir_fasta)+
+                        ' --id' +str(self.config.amplicon2genome_similarity)+
+                        ' --threads '+str(self.config.vsearch_threads)+
+                        '--alnout'+ alignment_dir+
+                        ' --top_hits_only'+'\n')
+        
+        if container=="docker":
+            warnings.warn("Docker is not supported yet")
+        
+        
+        if container=="singularity":
+            warnings.warn("Singularity is not supported yet")
+
+        if save:
+            with open(self.config.vsearch_script_dir, 'w') as f:
+                f.write(bash_scipt)
+        
+        if run:
+            subprocess.run(bash_scipt,shell=True)
+        
+        return bash_scipt
+
+
+
+    
             
-            time.sleep(3)
 
-        if download_databases:
-            Metagenomics.get_requirements_a2g()
 
-        try:
+    def amplicon2genome(self,
+                        sample_names:Union[list[str],None]=None,
+                        )->dict:
 
-            taxconomy_table = pd.read_table(
-                self.config.taxonomy_table_dir, delimiter='\t', header=0)
+  
 
-        except FileNotFoundError as errormsg:
-            print(errormsg)
-            print(
-                '[red]Taxonomy Table was not found in the directory! Please check the input directory')
-            return
-
+        feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
+        if sample_names is None:
+            pass 
         else:
+            feature_table = feature_table[sample_names]
 
-            rich.print(
-                "[green] ---> taxonomy_table_dir is found in the directory, and was loaded successfully!")
-            time.sleep(3)
+        taxconomy_table = pd.read_table(self.config.taxonomy_table_dir, delimiter='\t')
 
-        rel_abundances['#OTU ID'] = feature_table['#OTU ID']
-        rel_abundances = feature_table.iloc[:, list(
-            feature_table.columns).index('#OTU ID') + 1:]
-        rel_abundances['#OTU ID'] = feature_table['#OTU ID']
-        if sample_name is None:
-            Samples = list(feature_table.columns)[list(
-                feature_table.columns).index('#OTU ID') + 1:]
-        else:
-            Samples = sample_name
         featureids = {}
         repSeqs = {}
         taxa = {}
@@ -1083,15 +1133,14 @@ class Metagenomics:
                 [top_genomes.append(RepSeq) for RepSeq in featureids[Sample]]
             top_genomes = list(set(top_genomes))
             with open(self.config.rep_seq_fasta) as D:
-                repseqs = Bio_seq.Fasta(D).Fasta_To_Dict()
+                repseqs = bio_seq.Fasta(D).Fasta_To_Dict()
             for featureid in top_genomes:
                 f.write('>'+featureid+'\n'+repseqs[featureid]+'\n')
 
         for Sample in Samples:
             genome_accessions[Sample] = ['None']*self.config.k
         alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-        subprocess.run([os.path.join(Main_Dir,self.config.vsearch,"vsearch"), '--top_hits_only', '--blast6out', os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast'), '--usearch_global',
-                        os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'), '--db', os.path.join(self.config.amplicon2genome_db,"bac120_ssu_reps_r207.fna"), '--id', str(self.config.amplicon2genome_similarity), '--alnout', alignment_dir])
+
         
         with open(alignment_dir, 'r') as f:
             alignment_dict = {}
@@ -1248,7 +1297,7 @@ class Metagenomics:
         relative_abundances={}
         for sample in sample_names:
             with open(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'),'r') as f:
-                Top_k_RepSeq = Bio_seq.Fasta(f).Fasta_To_Dict()
+                Top_k_RepSeq = bio_seq.Fasta(f).Fasta_To_Dict()
             feature_genome_map={}
             top_k_features = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'),sep=',')
             top_k_genomes = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'),sep=',')
@@ -1530,5 +1579,5 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    metag=Metagenomics(Configs.Metagenomics())
+    metag=Metagenomics(configs.Metagenomics())
     metag.run_qiime2_from_sra("ERR3861428",container="singularity",save=True,run=False)

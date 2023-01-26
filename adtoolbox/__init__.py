@@ -19,15 +19,16 @@ with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),"r") as f:
 if Main_Dir and os.path.exists(Main_Dir):
     pass
 elif Main_Dir and not os.path.exists(Main_Dir):
-    Main_Dir=input(f"Base directory is not configured properly. Please input the correct path for the base directory:")
-    os.makedirs(Main_Dir)
-    rich.print(f"[yellow]Base directory is set to {Main_Dir}")
+    Main_Dir=input(f"Base directory is not configured properly.\nPlease input the correct path for the base directory:")
+    if not os.path.exists(Main_Dir):
+        os.makedirs(Main_Dir)
+    rich.print(f"[green]Base directory is set to {Main_Dir}")
 else:
-    Main_Dir=Prompt.ask("[yellow]No Base Directory Found: \nWhere do you want to store your ADToolBox Data?")  
+    Main_Dir=Prompt.ask("No Base Directory Found: \nWhere do you want to store your ADToolBox Data?")  
 
 if not os.path.exists(Main_Dir):
     os.mkdir(Main_Dir)
-    rich.print("\n[yellow]Directory did not exist. Created directory: [yellow]{}".format(Main_Dir))
+    rich.print(f"\nDirectory did not exist. Created directory: {Main_Dir}")
 
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","ADToolbox_Configs.json"),"w") as f:
     conf["Base_Dir"]=Main_Dir

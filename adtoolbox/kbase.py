@@ -5,7 +5,7 @@ TODO:
 import os
 from __init__ import Main_Dir
 import rich
-import Configs
+import configs
 import dash
 import dash.html as html
 import pandas as pd
@@ -16,7 +16,7 @@ import dash_bootstrap_components as dbc
 
 
 
-def get_studies(Config=Configs.Kbase()):
+def get_studies(Config=configs.Kbase()):
     metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
     experimental_data_references=pd.read_csv(Config.experimental_data_references,delimiter="ᚢ",encoding="utf-8",engine="python")
     studies={"Name":[],"Type":[],"Reference":[],"Comments":[]}
@@ -42,26 +42,26 @@ def delete_metagenomics_study(metagenomics_studies_table, metagenomics_study_id)
     rich.print(f"[bold green]The metagenomics study with id '{metagenomics_study_id}' was deleted successfully!")
     return metagenomics_studies_table
 
-def get_metagenomics_studies(Config=Configs.Kbase()):
+def get_metagenomics_studies(Config=configs.Kbase()):
     metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
     return metagenomics_studies
 
-def write_metagenomics_studies(metagenomics_studies_table,Config=Configs.Kbase()):
+def write_metagenomics_studies(metagenomics_studies_table,Config=configs.Kbase()):
     metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="ᚢ",encoding="utf-8")
 
-def create_metagenomics_study_table(Config=Configs.Kbase()):
+def create_metagenomics_study_table(Config=configs.Kbase()):
     metagenomics_studies_table={"Name":[],"Type":[],"Microbiome":[],"SRA_accession":[],"Reference":[],"Comments":[]}
     metagenomics_studies_table=pd.DataFrame(metagenomics_studies_table)
     metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="ᚢ",encoding="utf-8")
     rich.print(f"[bold green]The metagenomics studies table was created successfully!")
 
-def create_experimental_data_references_table(Config=Configs.Kbase()):
+def create_experimental_data_references_table(Config=configs.Kbase()):
     experimental_data_references_table={"Name":[],"Type":[],"Reference":[],"Comments":[]}
     experimental_data_references_table=pd.DataFrame(experimental_data_references_table)
     experimental_data_references_table.to_csv(Config.experimental_data_references,index=False,sep="ᚢ",encoding="utf-8")
     rich.print(f"[bold green]The experimental data references table was created successfully!")
 
-def _initialize_databases(Config=Configs.Kbase()):
+def _initialize_databases(Config=configs.Kbase()):
     if not os.path.exists(Config.base_dir):
         os.makedirs(Config.base_dir)
     if not os.path.exists(Config.metagenomics_studies):
@@ -69,11 +69,11 @@ def _initialize_databases(Config=Configs.Kbase()):
     if not os.path.exists(Config.experimental_data_references):
         create_experimental_data_references_table(Config)
     
-def dash_app(configs:Configs.Kbase,table:str='all') -> None:
+def dash_app(configs:configs.Kbase,table:str='all') -> None:
     """Main function of the app."""
     # Create the app.
     app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
-    _initialize_databases(Configs.Kbase())
+    _initialize_databases(configs.Kbase())
 
     if table=='all':
         studies=get_studies(configs)
