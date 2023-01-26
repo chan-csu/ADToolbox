@@ -1014,8 +1014,7 @@ class Metagenomics:
 
         feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
         taxonomy_table = pd.read_table(self.config.taxonomy_table_dir, delimiter='\t')
-        with open(self.config.rep_seq_fasta, 'w') as f:
-            repseqs=fasta_to_dict(self.config.rep_seq_fasta)
+        repseqs=fasta_to_dict(self.config.rep_seq_fasta)
 
         if sample_names is None:
             pass 
@@ -1027,10 +1026,10 @@ class Metagenomics:
         top_k_taxa = {}
 
 
-        for sample in sample_names:
+        for sample in feature_table.columns[1:]:
             top_featureids[sample] = list(feature_table.sort_values(
                 sample, ascending=False)['#OTU ID'].head(self.config.k))
-            top_k_taxa[sample] = [ taxonomy_table[taxonomy_table["Feature ID"]==feature]["Taxon"] for feature in top_featureids[sample]]
+            top_k_taxa[sample] = [ taxonomy_table[taxonomy_table["Feature ID"]==feature]["Taxon"].item() for feature in top_featureids[sample]]
             top_repseqs |= {feature:repseqs[feature] for feature in top_featureids[sample]}
         
         if save:
@@ -1065,15 +1064,15 @@ class Metagenomics:
             tobe downloaded after running the script if you are not using this function to run it.
         """
         if container=="None":
-            script = os.path.join(self.config.amplicon2genome_outputs_dir,'Align_to_gtdb.sh')
             alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
             bash_scipt=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
                         os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
+                        ' --usearch_global '+
                         os.path.join(self.config.amplicon2genome_top_repseq_dir)+
                         ' --db '+os.path.join(self.config.gtdb_dir_fasta)+
-                        ' --id' +str(self.config.amplicon2genome_similarity)+
+                        ' --id ' +str(self.config.amplicon2genome_similarity)+
                         ' --threads '+str(self.config.vsearch_threads)+
-                        '--alnout'+ alignment_dir+
+                        ' --alnout '+ alignment_dir+
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
@@ -1091,57 +1090,23 @@ class Metagenomics:
             subprocess.run(bash_scipt,shell=True)
         
         return bash_scipt
-
-
-
     
-            
+    def get_genomes_from_alignment(self,save:bool=True)->dict:
+        """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
+        using the GTDB-Tk. if you want to save the information as a json file set save to True.
 
+        Requires:
 
-    def amplicon2genome(self,
-                        sample_names:Union[list[str],None]=None,
-                        )->dict:
+        Satisfies:
 
-  
-
-        feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
-        if sample_names is None:
-            pass 
-        else:
-            feature_table = feature_table[sample_names]
-
-        taxconomy_table = pd.read_table(self.config.taxonomy_table_dir, delimiter='\t')
-
-        featureids = {}
-        repSeqs = {}
-        taxa = {}
-
-        top_k_taxa = {}
-        for i in range(len(taxconomy_table)):
-            taxa[taxconomy_table.iloc[i, 0]] = taxconomy_table.iloc[i, 1]
-        genome_accessions = {}
-        top_genomes = []
-        with open(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'), 'w') as f:
+        Args:
+            save (bool, optional): Whether to save the feature:genome_id mapping as a json file. Defaults to True.
         
-            for Sample in Samples:
-
-                featureids[Sample] = list(rel_abundances.sort_values(
-                Sample, ascending=False)['#OTU ID'].head(self.config.k))
-
-                top_k_taxa[Sample] = list([taxa[Feature]
-                                           for Feature in featureids[Sample]])
-                [top_genomes.append(RepSeq) for RepSeq in featureids[Sample]]
-            top_genomes = list(set(top_genomes))
-            with open(self.config.rep_seq_fasta) as D:
-                repseqs = bio_seq.Fasta(D).Fasta_To_Dict()
-            for featureid in top_genomes:
-                f.write('>'+featureid+'\n'+repseqs[featureid]+'\n')
-
-        for Sample in Samples:
-            genome_accessions[Sample] = ['None']*self.config.k
+        Returns:
+            dict: A dictionary containing
+        """
         alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-
-        
+        genomes = {}
         with open(alignment_dir, 'r') as f:
             alignment_dict = {}
             for lines in f:
@@ -1149,56 +1114,61 @@ class Metagenomics:
                     f.readline()
                     alignment_dict[lines.split(
                         '>')[1][:-1]] = re.search("  [A-Z][A-Z]_.*", f.readline()).group(0)[2:]
-            
-        for Sample in Samples:
-            for featureid in featureids[Sample]:
-                if featureid in alignment_dict.keys():
-                    genome_accessions[Sample][featureids[Sample].index(
-                        featureid)] = alignment_dict[featureid]
-
-        Base_NCBI_Dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
-        for feature_id in alignment_dict.keys():
-            Genome_Out = os.path.join(self.config.amplicon2genome_outputs_dir,alignment_dict[feature_id])
-            # if not os.path.exists(Outputs_Dir+alignment_dict[feature_id]):
-            #    os.makedirs(Outputs_Dir+alignment_dict[feature_id])
-
-        # I think the next line can be done much more regorously by regexp which is easy
-
-            Specific_NCBI_Dir = alignment_dict[feature_id][3:6]+'/'+alignment_dict[feature_id][7:10]+'/' +\
-                alignment_dict[feature_id][10:13]+'/' + \
-                alignment_dict[feature_id][13:16]
-
-            subprocess.run(['rsync', '--copy-links', '--times', '--verbose',
-                            '--recursive', Base_NCBI_Dir+Specific_NCBI_Dir, self.config.amplicon2genome_outputs_dir])
-
-        pd.DataFrame(featureids).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'))
-        pd.DataFrame(genome_accessions).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'))
-        pd.DataFrame(top_k_taxa).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'top_k_taxa.csv'))
-
-        if len(list(Path(self.config.amplicon2genome_outputs_dir).rglob('*_genomic.fna.gz'))) > 0:
-            for path in Path(self.config.amplicon2genome_outputs_dir).rglob('*_genomic.fna.gz'):
-                if "cds" not in path.__str__() and "rna" not in path.__str__():
-                    with gzip.open(path, 'rb') as f_in:
-                        with open(path.__str__()[:-3], 'wb') as f_out:
-                            shutil.copyfileobj(f_in, f_out)
-        genomes_dirs = list([path.__str__()
-                            for path in Path(self.config.amplicon2genome_outputs_dir).rglob('*_genomic.fna')])
-        output_json = {}
-        for sample in Samples:
-            for genome in genome_accessions[sample]:
-                if genome != 'None':
-                    if genome not in output_json.keys():
-                        output_json[genome] = {}
-                        output_json[genome]["NCBI_Name"] = top_k_taxa[sample][genome_accessions[sample].index(
-                            genome)]
-                        for Items in genomes_dirs:
-                            if genome[3:] in Items:
-                                output_json[genome]["Genome_Dir"] = Items
-        with open(os.path.join(self.config.amplicon2genome_outputs_dir,"Amplicon2Genome_OutInfo.json"), "w") as J:
-            json.dump(output_json, J)
-
-        return output_json
+        
+        for feature in alignment_dict:
+            genomes[feature] = alignment_dict[feature].split('_')[1]
+        
+        if save:
+            with open(self.config.feature_to_taxa, 'w') as f:
+                json.dump(genomes, f)
+        
+        return genomes
     
+    
+    def download_genomes(self,identifiers:list[str],save:bool=True,container:str="None")->dict:
+        """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
+        If you want to save the json file that is holding the information for each genome, set save to True.
+        Note that this function uses rsync to download the genomes. Also this function does not come with a run option.
+    
+
+        Requires:
+
+        Satisfies:
+
+        Args:
+            identifier list[str]: The list of identifiers for the genomes. It can be either refseq or genbank.
+            save (bool, optional): Whether to save the genome information as a json file. Defaults to True.
+            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
+        
+        Returns:
+            dict: A dictionary containing the genome information.
+
+        """
+        genome_info = {}
+        base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
+        for identifier in identifiers:
+            specific_ncbi_dir = identifier[3:6]+'/'+\
+                                identifier[7:10]+'/'+\
+                                identifier[10:13]+'/'+\
+                                identifier[13:16]
+            if container=="None":
+                subprocess.run('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
+
+            if container=="docker":
+                warnings.warn("Docker is not supported yet")
+
+            if container=="singularity":
+                warnings.warn("Singularity is not supported yet")
+            
+            genome_info[identifier] = self.config.genome_save_dir(identifier)
+        
+        if save:
+            with open(self.config.genomes_json_info, 'w') as f:
+                json.dump(genome_info, f)
+        
+        return genome_info
+    
+
     def align_genomes(self):
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
@@ -1227,6 +1197,7 @@ class Metagenomics:
             json.dump(genomes_info, f)
 
         return genomes_info
+    
     @staticmethod
     def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
         """
@@ -1297,7 +1268,7 @@ class Metagenomics:
         relative_abundances={}
         for sample in sample_names:
             with open(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'),'r') as f:
-                Top_k_RepSeq = bio_seq.Fasta(f).Fasta_To_Dict()
+                Top_k_RepSeq = fasta_to_dict(f)
             feature_genome_map={}
             top_k_features = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'),sep=',')
             top_k_genomes = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'),sep=',')
@@ -1579,5 +1550,16 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    metag=Metagenomics(configs.Metagenomics())
-    metag.run_qiime2_from_sra("ERR3861428",container="singularity",save=True,run=False)
+    config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
+    feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
+    taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
+    rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
+    amplicon2genome_top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
+    vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",)
+    metag=Metagenomics(config_1)
+    b=metag.find_top_k_repseqs(sample_names=None,save=True)
+    metag.align_to_gtdb(run=True,save=True,container="None")
+
+
+
+

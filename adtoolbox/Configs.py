@@ -114,6 +114,7 @@ class Metagenomics:
             rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
             taxonomy_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","taxonomy.tsv"),
             genome_alignment_output=os.path.join(Main_Dir,"Outputs"),
+			feature_to_taxa=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature_to_taxa.json"),
             genome_alignment_output_json=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
             genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
             csv_reaction_db=Database().csv_reaction_db,
@@ -145,6 +146,7 @@ class Metagenomics:
 		self.e_value = e_value
 		self.vsearch_threads=vsearch_threads
 		self.genome_adm_map_json=genome_adm_map_json
+		self.feature_to_taxa=feature_to_taxa
 		self.csv_reaction_db=csv_reaction_db
 		self.sra=sra
 		self.qiime2_singularity_image=qiime2_singularity_image
@@ -154,6 +156,10 @@ class Metagenomics:
 		self.qiime_classifier_db=qiime_classifier_db
 		self.gtdb_dir_fasta=os.path.join(self.amplicon2genome_db,Metagenomics.gtdb_dir)
 		self.vsearch_script_dir=vsearch_script_dir
+	
+	def genome_save_dir(self, accession_id: str):
+		""" sets the working directory for the accession id """
+		return os.path.join(self.amplicon2genome_outputs_dir, accession_id)
 
 	def sra_work_dir(self, sra_project_id: str):
 		""" sets the working directory for the SRA project id """

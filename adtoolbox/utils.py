@@ -55,10 +55,11 @@ def fasta_to_dict(fasta:str)->dict:
     with open(fasta,'r') as f:
         for line in f:
             if line.startswith('>'):
-                label = line.lstrip(">")
+                label = line.lstrip(">").strip()
                 Dictionary[label]=""
             else:
                 Dictionary[label] += line.strip()
+    return Dictionary
 
                 
                 
