@@ -1068,7 +1068,8 @@ class Metagenomics:
             bash_scipt=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
                         os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
                         ' --usearch_global '+
-                        os.path.join(self.config.amplicon2genome_top_repseq_dir)+
+                        os.path.join(        
+                            self.config.amplicon2genome_top_repseq_dir)+
                         ' --db '+os.path.join(self.config.gtdb_dir_fasta)+
                         ' --id ' +str(self.config.amplicon2genome_similarity)+
                         ' --threads '+str(self.config.vsearch_threads)+
@@ -1106,23 +1107,21 @@ class Metagenomics:
             dict: A dictionary containing
         """
         alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-        genomes = {}
         with open(alignment_dir, 'r') as f:
             alignment_dict = {}
             for lines in f:
                 if lines.startswith('Query >'):
-                    f.readline()
-                    alignment_dict[lines.split(
-                        '>')[1][:-1]] = re.search("  [A-Z][A-Z]_.*", f.readline()).group(0)[2:]
+                    feature=lines.split('>')[1].strip()
+                    next(f)
+                    outs=next(f)
+                    alignment_dict[feature] = "".join(re.search("  [A-Z][A-Z]_.*", outs).group(0).lstrip().split('_')[1:])
         
-        for feature in alignment_dict:
-            genomes[feature] = alignment_dict[feature].split('_')[1]
         
         if save:
             with open(self.config.feature_to_taxa, 'w') as f:
-                json.dump(genomes, f)
+                json.dump(alignment_dict, f)
         
-        return genomes
+        return alignment_dict
     
     
     def download_genomes(self,identifiers:list[str],save:bool=True,container:str="None")->dict:
@@ -1147,10 +1146,10 @@ class Metagenomics:
         genome_info = {}
         base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
         for identifier in identifiers:
-            specific_ncbi_dir = identifier[3:6]+'/'+\
-                                identifier[7:10]+'/'+\
-                                identifier[10:13]+'/'+\
-                                identifier[13:16]
+            specific_ncbi_dir = identifier[0:3]+'/'+\
+                                identifier[3:6]+'/'+\
+                                identifier[6:9]+'/'+\
+                                identifier[9:].split('.')[0]
             if container=="None":
                 subprocess.run('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
 
@@ -1160,7 +1159,13 @@ class Metagenomics:
             if container=="singularity":
                 warnings.warn("Singularity is not supported yet")
             
-            genome_info[identifier] = self.config.genome_save_dir(identifier)
+            for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*fna.gz'):
+                if 'rna' not in i.name.lower():
+                    if 'cds' not in i.name.lower():
+                        if 'genomic' in i.name.lower():
+                            genomics_file=str(i)
+
+            genome_info[identifier] = genomics_file
         
         if save:
             with open(self.config.genomes_json_info, 'w') as f:
@@ -1169,34 +1174,68 @@ class Metagenomics:
         return genome_info
     
 
-    def align_genomes(self):
+    def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->dict:
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
-        and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value
+        and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value.
+        If you want to save the scripts, set save to True. Note that the alignment tables will be saved in any case.
+        Note that this function uses mmseqs2 to align the genomes to the protein database. So, to run this function without 
+        any container you need to have mmseqs2 installed on your system. However, if you want to run this function with a container,
+        you need to have the container installed on your system. You may select from "None", "docker", "singularity".
+
+        Requires:
+
+        Satisfies:
+
+        Args:
+            run (bool, optional): Whether to run the alignment. Defaults to True.
+            save (bool, optional): Whether to save the alignment scripts. Defaults to True.
+            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
+        
+        Returns:
+            dict: A dictionary containing the alignment results.
+
+
         """
         with open(self.config.genomes_json_info, 'r') as f:
             genomes_info = json.load(f)
         valid_genomes = 0
         for genome_ids in track(genomes_info.keys(),description="Fetching Genomes ..."):
             Totall_Genomes = len(genomes_info.keys())
-            if os.path.exists(genomes_info[genome_ids]["Genome_Dir"]):
+            if os.path.exists(genomes_info[genome_ids]):
                 valid_genomes += 1
         rich.print(f"[green]{valid_genomes}/{Totall_Genomes} Genomes are valid")
-        time.sleep(3)
-
-        
+        genome_alignment_files={}
+        bash_script = "#!/bin/bash\n"
         for genome_id in genomes_info.keys():
-            subprocess.run(['mmseqs', 'easy-search', genomes_info[genome_id]['Genome_Dir'], self.config.protein_db,
-                            os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genomes_info[genome_id]['Genome_Dir'].split("/")[-1][:-4]+".tsv"), 'tmp'])
-            genomes_info[genome_id]['Alignment_File'] = os.path.join(self.config.genome_alignment_output, \
-                "Alignment_Results_mmseq_" + \
-                genomes_info[genome_id]['Genome_Dir'].split(
-                    "/")[-1][:-4]+".tsv")
+            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
+            bash_script += "mmseqs easy-search " + \
+                genomes_info[genome_id] + " " + \
+                self.config.protein_db + " " + \
+                alignment_file+ " tmp\n\n"
+            genome_alignment_files[genome_id]=alignment_file
+            
+
 
         with open(self.config.genome_alignment_output_json, 'w') as f:
-            json.dump(genomes_info, f)
+            json.dump(genome_alignment_files, f)
+        
+        if save:
+            with open(self.config.genome_alignment_script, 'w') as f:
+                f.write(bash_script)
 
-        return genomes_info
+        if run:
+
+            if container=="None":
+                os.system(bash_script)
+
+            if container=="docker":
+                warnings.warn("Docker is not supported yet")
+
+            if container=="singularity":
+                warnings.warn("Singularity is not supported yet")
+
+        return genome_alignment_files
     
     @staticmethod
     def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
@@ -1218,6 +1257,8 @@ class Metagenomics:
             json.dump(genomes_json,fp)
         return
     
+
+
     def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
         rt = Reaction_Toolkit(reaction_db=self.config.seed_rxn_db)
         with open(self.config.genome_alignment_output_json) as f:
@@ -1258,44 +1299,36 @@ class Metagenomics:
         # So far it has gotten really complicated, after making sure it works, instead of adding ec numbers I'll add [SEED,STR] so
         # that it can be used for downstream analysis
     
-    def extract_relative_abundances(self,sample_names:list[str])->dict:
+    def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
         
         """
         This function will extract relative abundances for top k taxa from top k taxa table
-        and feature table. It will return a dictionary with the top k taxa as keys and the relative abundances as values
+        and feature table. It will return a dictionary with the top k taxa genomes as keys and the relative abundances as values
 
         """
-        relative_abundances={}
-        for sample in sample_names:
-            with open(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_RepSeq.fasta'),'r') as f:
-                Top_k_RepSeq = fasta_to_dict(f)
-            feature_genome_map={}
-            top_k_features = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_featureids.csv'),sep=',')
-            top_k_genomes = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_genome_accessions.csv'),sep=',')
-            feature_table = pd.read_table(os.path.join(self.config.amplicon2genome_outputs_dir,'feature-table.tsv'),sep='\t')
-            starting_column=["#OTU ID","FeatureID"]
-            for i in starting_column:
-                if i in list(feature_table.columns):
-                    feature_table.rename(columns={i:"#OTU ID"},inplace=True)
-                    break
-            feature_table.set_index('#OTU ID',inplace=True)
-            col_ind=top_k_genomes.columns.get_loc(sample)
-            
-            for row in range(top_k_features.shape[0]):
-
-                if top_k_genomes.iloc[row,col_ind] !="None":
-                    feature_genome_map[top_k_features.iloc[row,col_ind]]=top_k_genomes.iloc[row,col_ind]
-                else:
-                    feature_genome_map[top_k_features.iloc[row,col_ind]]="None"
-
-            valid_genomes = [(feature,feature_genome_map[feature]) for feature in feature_genome_map.keys() if feature_genome_map[feature]!="None"]
-            warn(f"{len(feature_genome_map.keys())-len(valid_genomes)} out of {len(feature_genome_map.keys())} features were not assigned to a genome")   
-            abundances=dict([(feature[1],feature_table.loc[feature[0],sample]) for feature in valid_genomes])
-            relative_abundances[sample]= dict([(genome,abundances[genome]/sum(abundances.values())) for genome in abundances.keys()])
+        feature_table = pd.read_table(self.config.feature_table_dir,sep='\t',skiprows=1)
+        if sample_names is None:
+            sample_names = feature_table.columns[1:]
+        relative_abundances={sample:[] for sample in sample_names}
+        with open(os.path.join(self.config.feature_to_taxa)) as f:
+            feature_genome_map = json.load(f)
+        features=list(feature_genome_map.keys())
+        genomes=[feature_genome_map[feature] for feature in features]
         
-        return relative_abundances
+        for sample in sample_names:
+            for feature in features:
+                relative_abundances[sample].append(feature_table.loc[feature_table['#OTU ID']==feature,sample].item())
 
-    def calculate_microbial_portions(self,microbe_reaction_map:dict,genome_info:dict,relative_abundances:dict)-> dict:
+        abundances=pd.DataFrame(relative_abundances,index=genomes)
+        rel_abunds=abundances/abundances.sum(axis=0)
+        rel_abunds=rel_abunds.T.to_dict('index')
+
+        if save:
+            with open(self.config.genome_relative_abundances,'w') as f:
+                json.dump(rel_abunds,f)
+        return rel_abunds
+
+    def calculate_microbial_portions(self,microbe_reaction_map:dict)-> dict:
         
         """This method calculates COD fraction of each microbial term in a model
         
@@ -1347,18 +1380,24 @@ class Metagenomics:
         """
 
         cod={}
-        for sample in relative_abundances.keys():
+        reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
+        reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
+        reaction_db.set_index("EC_Numbers",inplace=True)
+        model_species=list(set(microbe_reaction_map.values()))
         
-            reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
-            reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
+        with open(self.config.genome_relative_abundances,'r') as f:
+            relative_abundances=json.load(f)
 
-            reaction_db.set_index("EC_Numbers",inplace=True)
-            model_species=list(set(microbe_reaction_map.values()))
+        with open(self.config.genome_alignment_output_json,'r') as f:    
+            genome_info=json.load(f)
+        
+        for sample in relative_abundances.keys():
+
             cod_portion=Additive_Dict([(i,0) for i in model_species])
 
             for genome_id in relative_abundances[sample].keys():
                 temp_tsv = pd.read_table(
-                            genome_info[genome_id]['Alignment_File'], sep='\t',header=None)
+                            genome_info[genome_id], sep='\t',header=None)
                 filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
                             temp_tsv.iloc[:, -2] < self.config.e_value)
                 temp_tsv = temp_tsv[filter]
@@ -1366,6 +1405,7 @@ class Metagenomics:
                 cleaned_reaction_list=[]
                 [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
                 pathway_counts=Counter(cleaned_reaction_list)
+                pathway_counts.__delitem__("")
                 SUM=sum([pathway_counts[key] for key in pathway_counts])
                 for i in pathway_counts:
                     pathway_counts[i]=pathway_counts[i]/SUM
@@ -1555,10 +1595,45 @@ if __name__ == "__main__":
     taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
     rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
     amplicon2genome_top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
-    vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",)
+    vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
+    amplicon2genome_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
+    genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
+    feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
+    amplicon2genome_similarity=0.9
+    )
     metag=Metagenomics(config_1)
-    b=metag.find_top_k_repseqs(sample_names=None,save=True)
-    metag.align_to_gtdb(run=True,save=True,container="None")
+    # b=metag.find_top_k_repseqs(sample_names=None,save=True)
+    # metag.align_to_gtdb(run=False,save=False,container="None")
+    # genomes=metag.get_genomes_from_alignment()
+    # identifiers=[ids for _,ids in genomes.items()]
+    # metag.download_genomes(identifiers,save=True,container="None")
+    # metag.align_genomes_to_protein_db(save=True,run=True,container="None")
+    microbe_reaction_map={
+                            "Hydrolysis carbohydrates":"X_ch",
+                            "Hydrolysis proteins":"X_pr",
+                            "Hydrolysis lipids":"X_li",
+                            "Uptake of sugars":"X_su",
+                            "Uptake of amino acids":"X_aa",
+                            "Uptake of LCFA":"X_fa",
+                            "Uptake of acetate_et":"X_ac_et",
+                            "Uptake of acetate_lac":"X_ac_lac",
+                            "Uptake of propionate_et":"X_chain_et",
+                            "Uptake of propionate_lac":"X_chain_lac",
+                            "Uptake of butyrate_et":"X_chain_et",
+                            "Uptake of butyrate_lac":"X_chain_lac",
+                            "Uptake of valerate":"X_VFA_deg",
+                            "Uptake of caproate":"X_VFA_deg",
+                            "Methanogenessis from acetate and h2":"X_Me_ac",
+                            "Methanogenessis from CO2 and h2":"X_Me_CO2",
+                            "Uptake of ethanol":"X_et",
+                            "Uptake of lactate":"X_lac",} 
+        
+    rel_abunds=metag.extract_relative_abundances()
+    proporsions=metag.calculate_microbial_portions(microbe_reaction_map)
+
+
 
 
 

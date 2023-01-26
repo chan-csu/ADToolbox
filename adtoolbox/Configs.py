@@ -107,6 +107,7 @@ class Metagenomics:
             amplicon2genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
 			amplicon2genome_top_repseq_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","top_repseqs.fasta"),
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
+			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
 			vsearch_threads:int=4,
 			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
@@ -118,6 +119,7 @@ class Metagenomics:
             genome_alignment_output_json=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
             genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
             csv_reaction_db=Database().csv_reaction_db,
+			genome_relative_abundances=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_relative_abundances.json"),
             sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
             bit_score=40,
             e_value=10**-5,
@@ -156,7 +158,11 @@ class Metagenomics:
 		self.qiime_classifier_db=qiime_classifier_db
 		self.gtdb_dir_fasta=os.path.join(self.amplicon2genome_db,Metagenomics.gtdb_dir)
 		self.vsearch_script_dir=vsearch_script_dir
-	
+		self.genome_alignment_script=genome_alignment_script	
+		self.genome_relative_abundances=genome_relative_abundances
+
+
+
 	def genome_save_dir(self, accession_id: str):
 		""" sets the working directory for the accession id """
 		return os.path.join(self.amplicon2genome_outputs_dir, accession_id)
