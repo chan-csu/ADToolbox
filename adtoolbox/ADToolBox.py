@@ -1328,7 +1328,7 @@ class Metagenomics:
                 json.dump(rel_abunds,f)
         return rel_abunds
 
-    def calculate_microbial_portions(self,microbe_reaction_map:dict)-> dict:
+    def calculate_microbial_portions(self,microbe_reaction_map:dict,save:bool=True)-> dict:
         
         """This method calculates COD fraction of each microbial term in a model
         
@@ -1413,6 +1413,9 @@ class Metagenomics:
                 cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[sample][genome_id]
             
             cod[sample]=cod_portion
+        if save:
+            with open(self.config.cod_output_json,'w') as f:
+                json.dump(cod,f)
         
 
         return cod
@@ -1601,6 +1604,8 @@ if __name__ == "__main__":
     genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
     genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
     feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
+    cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
+    genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
     amplicon2genome_similarity=0.9
     )
     metag=Metagenomics(config_1)

@@ -128,6 +128,7 @@ class Metagenomics:
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
+			cod_output_json=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","cod_output.json"),
 
              ):
 		self.k = amplicon2genome_k
@@ -160,6 +161,7 @@ class Metagenomics:
 		self.vsearch_script_dir=vsearch_script_dir
 		self.genome_alignment_script=genome_alignment_script	
 		self.genome_relative_abundances=genome_relative_abundances
+		self.cod_output_json=cod_output_json
 
 
 
