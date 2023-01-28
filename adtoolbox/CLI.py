@@ -1,7 +1,7 @@
 import argparse
 from re import M
 import configs
-import adtoolbox
+import core
 from __init__ import __version__
 from __init__ import Main_Dir
 from rich.console import Console
@@ -158,7 +158,7 @@ def main():
         meta_config_defult.amplicon2genome_db=args.amplicon_to_genome_db
         meta_config_defult.k=args.k
         meta_config_defult.amplicon2genome_similarity=args.similarity
-        adtoolbox.Metagenomics(meta_config_defult).amplicon2genome()
+        core.Metagenomics(meta_config_defult).amplicon2genome()
 
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="map-genomes-to-adm":
         meta_config_defult.genome_alignment_output_json=args.input_file
@@ -168,7 +168,7 @@ def main():
             reactions=configs.Modified_ADM().reactions
             with open(reactions,"r") as f:
                 reactions=json.load(f)
-            adtoolbox.Metagenomics(meta_config_defult).adm_from_alignment_json(reactions,Model=model_reactions)
+            core.Metagenomics(meta_config_defult).adm_from_alignment_json(reactions,Model=model_reactions)
         else:
             rich.print(f"[red] No Reaction mapping exists for {model_reactions}; execution aborted!")
 
@@ -177,11 +177,11 @@ def main():
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="align-genomes":
         if "input_file" in args and "output_dir" in args:
             Meta_Config=configs.Metagenomics(genomes_json_info=args.input_file,genome_alignment_output=args.output_dir,genome_alignment_output_json=os.path.join(args.output_dir,"Alignment_Info.json"))
-            adtoolbox.Metagenomics(Meta_Config).Align_Genomes()
+            core.Metagenomics(Meta_Config).Align_Genomes()
 
     
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="make-json-from-genomes":
-        adtoolbox.Metagenomics.make_json_from_genomes(args.input_file,args.output_file)
+        core.Metagenomics.make_json_from_genomes(args.input_file,args.output_file)
 
 
 
@@ -229,7 +229,7 @@ def main():
         console.print(feed_table)
     
     if "Initialize_feed_db" in args and bool(args.initialize_feed_db):
-        adtoolbox.Database.init_feedstock_database(db_class)
+        core.Database.init_feedstock_database(db_class)
     if "extend_feed_db" in args and bool(args.extend_feed_db):
         db_class.add_feedstock_to_database_from_file(args.extend_feed_db)
     
@@ -476,27 +476,27 @@ def download_all_databases():
     """
     This function will download all the databases required by the ADToolbox.
     """
-    MetaG=adtoolbox.Metagenomics(configs.Metagenomics())
+    MetaG=core.Metagenomics(configs.Metagenomics())
     rich.print(u"[yellow] Downloading Amplicon to Genome databases ...\n")
     MetaG.get_requirements_a2g()
     rich.print(u"[bold green]\u2713 Amplicon to Genome databases were downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Seed database ...\n")
-    adtoolbox.Database().download_seed_databases(configs.Seed_RXN_DB)
+    core.Database().download_seed_databases(configs.Seed_RXN_DB)
     rich.print(u"[bold green]\u2713 Seed database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Original-ADM1 database ...\n")
-    adtoolbox.Database().download_adm1_parameters(configs.Original_ADM1())
+    core.Database().download_adm1_parameters(configs.Original_ADM1())
     rich.print(u"[bold green]\u2713 Original-ADM1 database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Modified-ADM database ...\n")
-    adtoolbox.Database().download_modified_adm_parameters(configs.Modified_ADM())
+    core.Database().download_modified_adm_parameters(configs.Modified_ADM())
     rich.print(u"[bold green]\u2713 Modified-ADM database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading protein database ...\n")
-    adtoolbox.Database().download_protein_database(configs.Database().protein_db)
+    core.Database().download_protein_database(configs.Database().protein_db)
     rich.print(u"[bold green]\u2713 Protein database was downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading Reaction database ...\n")
-    adtoolbox.Database().download_reaction_database(configs.Database().csv_reaction_db)
+    core.Database().download_reaction_database(configs.Database().csv_reaction_db)
     rich.print(u"[bold green]All the databases were downloaded successfuly!\n")
     rich.print(u"[yellow] Downloading the feed database ...\n")
-    adtoolbox.Database().download_feed_database(configs.Database().feed_db)
+    core.Database().download_feed_database(configs.Database().feed_db)
     rich.print(u"[bold green]\u2713 Feed database was downloaded successfuly!\n")
 
 

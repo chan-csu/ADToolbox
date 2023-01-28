@@ -10,11 +10,11 @@ import plotly.express as px
 from dash import Dash, html, dcc
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output,dash_table
-from adtoolbox import Database as Database
-from adtoolbox import Reaction_Toolkit as Reaction_Toolkit
+from core import Database as Database
+from core import Reaction_Toolkit as Reaction_Toolkit
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
-from adtoolbox import Reaction
+from core import Reaction
 from collections import OrderedDict
 import rich
 from rich.console import Console
