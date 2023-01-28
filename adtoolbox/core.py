@@ -1411,6 +1411,10 @@ class Metagenomics:
                     pathway_counts[i]=pathway_counts[i]/SUM
                 microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
                 cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[sample][genome_id]
+                SUM=sum([cod_portion[key] for key in cod_portion])
+                for i in cod_portion:
+                    cod_portion[i]=cod_portion[i]/SUM
+                
             
             cod[sample]=cod_portion
         if save:
