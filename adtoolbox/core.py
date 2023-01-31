@@ -1063,46 +1063,53 @@ class Metagenomics:
             dict: A dictionary containing the generated scripts and address of the genomes downloaded or
             tobe downloaded after running the script if you are not using this function to run it.
         """
+        alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
+        match_table=os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')
+        gtdb_dir_fasta=self.config.gtdb_dir_fasta
+        query=self.config.amplicon2genome_top_repseq_dir
+        vsearch_docker='vsearch'
+        dirs=[alignment_dir,
+            match_table,
+            gtdb_dir_fasta,
+            query
+            ]
         if container=="None":
-            alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-            bash_scipt=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
-                        os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
-                        ' --usearch_global '+
-                        os.path.join(        
-                            self.config.amplicon2genome_top_repseq_dir)+
-                        ' --db '+os.path.join(self.config.gtdb_dir_fasta)+
-                        ' --id ' +str(self.config.amplicon2genome_similarity)+
+            
+            bash_script=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
+                        match_table+
+                        ' --usearch_global '+ query +
+                        ' --db '+ gtdb_dir_fasta +
+                        ' --id ' +str(self.config.amplicon2genome_similarity) +
                         ' --threads '+str(self.config.vsearch_threads)+
-                        ' --alnout '+ alignment_dir+
+                        ' --alnout '+ alignment_dir +
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
             alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-            warnings.warn("Docker is not  fully supported yet")
-            bash_scipt=("#!/bin/bash\n" + f'docker run -it -v {self.config.amplicon2genome_outputs_dir}:{self.config.amplicon2genome_outputs_dir} -v {self.config.gtdb_dir_fasta}:{self.config.gtdb_dir_fasta} vsearch vsearch --top_hits_only --blast6out ' +
-                        os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
-                        ' --usearch_global '+
-                        os.path.join(
-                            self.config.amplicon2genome_top_repseq_dir)+
-                        ' --db '+self.config.gtdb_dir_fasta+
-                        ' --id ' +str(self.config.amplicon2genome_similarity)+
+            bash_script="#!/bin/bash\n" +'docker run -it '
+            for dir in dirs:
+                bash_script+=('-v '+dir+':'+dir+' ')
+            
+            bash_script += (vsearch_docker+' vsearch --top_hits_only --blast6out '+
+                        match_table+
+                        ' --usearch_global '+ query +
+                        ' --db '+ gtdb_dir_fasta +
+                        ' --id ' +str(self.config.amplicon2genome_similarity) +
                         ' --threads '+str(self.config.vsearch_threads)+
-                        ' --alnout '+ alignment_dir+
-                        ' --top_hits_only'+'\n'
-                        )
-        
+                        ' --alnout '+ alignment_dir +
+                        ' --top_hits_only'+'\n')
         
         if container=="singularity":
             warnings.warn("Singularity is not supported yet")
 
         if save:
             with open(self.config.vsearch_script_dir, 'w') as f:
-                f.write(bash_scipt)
+                f.write(bash_script)
         
         if run:
-            subprocess.run(bash_scipt,shell=True)
+            subprocess.run(bash_script,shell=True)
         
-        return bash_scipt
+        return bash_script
     
     def get_genomes_from_alignment(self,save:bool=True)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
@@ -1118,17 +1125,11 @@ class Metagenomics:
         Returns:
             dict: A dictionary containing
         """
-        alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-        with open(alignment_dir, 'r') as f:
-            alignment_dict = {}
-            for lines in f:
-                if lines.startswith('Query >'):
-                    feature=lines.split('>')[1].strip()
-                    next(f)
-                    outs=next(f)
-                    alignment_dict[feature] = "".join(re.search("  [A-Z][A-Z]_.*", outs).group(0).lstrip().split('_')[1:])
-        
-        
+        matches = os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')
+        aligned=pd.read_table(matches,header=None,delimiter='\t')
+        aligned.drop_duplicates(1,inplace=True)
+        aligned[1]=aligned[1].apply(lambda x: "".join(x.split('_')[1:]))
+        alignment_dict=dict(zip(aligned[0],aligned[1]))
         if save:
             with open(self.config.feature_to_taxa, 'w') as f:
                 json.dump(alignment_dict, f)
@@ -1167,7 +1168,7 @@ class Metagenomics:
 
             if container=="docker":
                 warnings.warn("Docker is not supported yet")
-
+                subprocess.run('docker run -it -v '+self.config.genome_save_dir(identifier)+':'+self.config.genome_save_dir(identifier)+ ' vsearch rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
             if container=="singularity":
                 warnings.warn("Singularity is not supported yet")
             
@@ -1630,7 +1631,11 @@ if __name__ == "__main__":
     amplicon2genome_similarity=0.9
     )
     metag=Metagenomics(config_1)
-    metag.align_to_gtdb(run=True,save=True,container="docker")
+    # metag.align_to_gtdb(run=True,save=True,container="docker")
+    rep_gens=metag.get_genomes_from_alignment(save=True)
+    metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
+
+
 
 
 
