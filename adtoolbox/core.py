@@ -1077,7 +1077,19 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
+            alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
             warnings.warn("Docker is not supported yet")
+            bash_scipt=("#!/bin/bash\n" + 'docker run -it  quay.io/biocontainers/vsearch vsearch ' +
+                        os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
+                        ' --usearch_global '+
+                        os.path.join(
+                            self.config.amplicon2genome_top_repseq_dir)+
+                        ' --db '+os.path.join(self.config.gtdb_dir_fasta)+
+                        ' --id ' +str(self.config.amplicon2genome_similarity)+
+                        ' --threads '+str(self.config.vsearch_threads)+
+                        ' --alnout '+ alignment_dir+
+                        ' --top_hits_only'+'\n'
+                        )
         
         
         if container=="singularity":
@@ -1412,8 +1424,13 @@ class Metagenomics:
                 microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
                 cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[sample][genome_id]
                 SUM=sum([cod_portion[key] for key in cod_portion])
-                for i in cod_portion:
-                    cod_portion[i]=cod_portion[i]/SUM
+                if SUM==0:
+                    for i in cod_portion:
+                        
+                        cod_portion[i]=0
+                else:
+                    for i in cod_portion:
+                        cod_portion[i]=cod_portion[i]/SUM
                 
             
             cod[sample]=cod_portion
@@ -1613,34 +1630,8 @@ if __name__ == "__main__":
     amplicon2genome_similarity=0.9
     )
     metag=Metagenomics(config_1)
-    # b=metag.find_top_k_repseqs(sample_names=None,save=True)
-    # metag.align_to_gtdb(run=False,save=False,container="None")
-    # genomes=metag.get_genomes_from_alignment()
-    # identifiers=[ids for _,ids in genomes.items()]
-    # metag.download_genomes(identifiers,save=True,container="None")
-    # metag.align_genomes_to_protein_db(save=True,run=True,container="None")
-    microbe_reaction_map={
-                            "Hydrolysis carbohydrates":"X_ch",
-                            "Hydrolysis proteins":"X_pr",
-                            "Hydrolysis lipids":"X_li",
-                            "Uptake of sugars":"X_su",
-                            "Uptake of amino acids":"X_aa",
-                            "Uptake of LCFA":"X_fa",
-                            "Uptake of acetate_et":"X_ac_et",
-                            "Uptake of acetate_lac":"X_ac_lac",
-                            "Uptake of propionate_et":"X_chain_et",
-                            "Uptake of propionate_lac":"X_chain_lac",
-                            "Uptake of butyrate_et":"X_chain_et",
-                            "Uptake of butyrate_lac":"X_chain_lac",
-                            "Uptake of valerate":"X_VFA_deg",
-                            "Uptake of caproate":"X_VFA_deg",
-                            "Methanogenessis from acetate and h2":"X_Me_ac",
-                            "Methanogenessis from CO2 and h2":"X_Me_CO2",
-                            "Uptake of ethanol":"X_et",
-                            "Uptake of lactate":"X_lac",} 
-        
-    rel_abunds=metag.extract_relative_abundances()
-    proporsions=metag.calculate_microbial_portions(microbe_reaction_map)
+    metag.align_to_gtdb(run=True,save=True,container="docker")
+
 
 
 
