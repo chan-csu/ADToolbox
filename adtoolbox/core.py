@@ -1078,13 +1078,13 @@ class Metagenomics:
         
         if container=="docker":
             alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-            warnings.warn("Docker is not supported yet")
-            bash_scipt=("#!/bin/bash\n" + 'docker run -it  quay.io/biocontainers/vsearch vsearch ' +
+            warnings.warn("Docker is not  fully supported yet")
+            bash_scipt=("#!/bin/bash\n" + f'docker run -it -v {self.config.amplicon2genome_outputs_dir}:{self.config.amplicon2genome_outputs_dir} -v {self.config.gtdb_dir_fasta}:{self.config.gtdb_dir_fasta} vsearch vsearch --top_hits_only --blast6out ' +
                         os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')+
                         ' --usearch_global '+
                         os.path.join(
                             self.config.amplicon2genome_top_repseq_dir)+
-                        ' --db '+os.path.join(self.config.gtdb_dir_fasta)+
+                        ' --db '+self.config.gtdb_dir_fasta+
                         ' --id ' +str(self.config.amplicon2genome_similarity)+
                         ' --threads '+str(self.config.vsearch_threads)+
                         ' --alnout '+ alignment_dir+
