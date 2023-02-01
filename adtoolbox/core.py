@@ -1006,10 +1006,15 @@ class Metagenomics:
         Args:
             sample_name (str, optional): The name of the sample. Defaults to None.
             if None, it will find top k genomes for all samples.
-            save (bool, optional): Whether to save the top k repseqs. Defaults to True.
+            save (bool, optional): Whether to save the top k repseqs. Defaults to True. If true it saves three files:
+            1. top_k_repseqs.fasta: this is the fasta file of the top k repseqs. The header is the feature id and the sequence is the 
+            representative sequence.
+            2. top_featureids: This is a table that has the feature ids for the top k features for each sample.
+            3. top_k_taxa: This is a table that has the taxonomy identifier for the top k features for each sample.
+
         
         Returns:
-            dict: A dictionary of information about the top k features/taxa
+            dict: A dictionary has all top_repseqs, top_featureids, and top_k_taxa. You can access them with the corresponding keys. 
         """
 
         feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
@@ -1060,8 +1065,7 @@ class Metagenomics:
             container (str, optional): The container to use. Defaults to "None".
         
         Returns:
-            dict: A dictionary containing the generated scripts and address of the genomes downloaded or
-            tobe downloaded after running the script if you are not using this function to run it.
+            str: The script that was run or supposed to be running later.
         """
         alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
         match_table=os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')
@@ -1083,7 +1087,6 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
-            alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
             bash_script="#!/bin/bash\n" +'docker run -it '
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
@@ -1098,7 +1101,21 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         
         if container=="singularity":
-            warnings.warn("Singularity is not supported yet")
+            warnings.warn("Singularity is not fully supported yet")
+            bash_script="#!/bin/bash\n" +'singularity run '
+            for dir in dirs:
+                bash_script+=('-B '+dir+':'+dir+' ')
+            
+            bash_script += (self.config.amplicon2genome_singularity+' vsearch --top_hits_only --blast6out '+
+                        match_table+
+                        ' --usearch_global '+ query +
+                        ' --db '+ gtdb_dir_fasta +
+                        ' --id ' +str(self.config.amplicon2genome_similarity) +
+                        ' --threads '+str(self.config.vsearch_threads)+
+                        ' --alnout '+ alignment_dir +
+                        ' --top_hits_only'+'\n')
+
+
 
         if save:
             with open(self.config.vsearch_script_dir, 'w') as f:
@@ -1109,7 +1126,7 @@ class Metagenomics:
         
         return bash_script
     
-    def get_genomes_from_alignment(self,save:bool=True)->dict:
+    def get_genomes_from_gtdb_alignment(self,save:bool=True)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
         using the GTDB-Tk. if you want to save the information as a json file set save to True.
 
@@ -1135,7 +1152,7 @@ class Metagenomics:
         return alignment_dict
     
     
-    def download_genomes(self,identifiers:list[str],save:bool=True,container:str="None")->dict:
+    def download_genomes(self,identifiers:list[str],save:bool=True,run:bool=True,container:str="None")->tuple[dict, str]:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         If you want to save the json file that is holding the information for each genome, set save to True.
         Note that this function uses rsync to download the genomes. Also this function does not come with a run option.
@@ -1151,11 +1168,13 @@ class Metagenomics:
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
         
         Returns:
-            dict: A dictionary containing the genome information.
+            dict: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
+            str: The bash script that is used to download the genomes or to be used to download the genomes.
 
         """
         genome_info = {}
         base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
+        bash_script="#!/bin/bash\n"
         for identifier in identifiers:
             specific_ncbi_dir = identifier[0:3]+'/'+\
                                 identifier[3:6]+'/'+\
@@ -1165,15 +1184,14 @@ class Metagenomics:
             genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
             
             if container=="None":
-                subprocess.run('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
+                bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
 
             
             if container=="docker":
-                warnings.warn("Docker is not supported yet")
-                subprocess.run('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ ' vsearch rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir),shell=True)
+                bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.amplicon2genome_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
             if container=="singularity":
-                warnings.warn("Singularity is not supported yet")
+                bash_script+=('singularity run -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.amplicon2genome_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
             for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*fna.gz'):
                 if 'rna' not in i.name.lower():
@@ -1187,10 +1205,10 @@ class Metagenomics:
             with open(self.config.genomes_json_info, 'w') as f:
                 json.dump(genome_info, f)
         
-        return genome_info
+        return genome_info, bash_script
     
 
-    def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->dict:
+    def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->tuple[dict,str]:
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
         and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value.
@@ -1210,6 +1228,7 @@ class Metagenomics:
         
         Returns:
             dict: A dictionary containing the alignment results.
+            str: The bash script that is used to align the genomes or to be used to align the genomes.
 
 
         """
@@ -1235,7 +1254,6 @@ class Metagenomics:
                 genome_alignment_files[genome_id]=alignment_file
         
         if container=="docker":
-            warnings.warn("Docker is not supported yet")
             bash_script = "#!/bin/bash\n"
             for genome_id in genomes_info.keys():
                 alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
@@ -1244,6 +1262,20 @@ class Metagenomics:
                 " -v "+self.config.protein_db+":"+self.config.protein_db+ \
                 " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
                 f" {self.config.amplicon2genome_docker}  mmseqs easy-search " + \
+                    genomes_info[genome_id] + " " + \
+                    self.config.protein_db + " " + \
+                    alignment_file+ " tmpfiles\n\n"
+                genome_alignment_files[genome_id]=alignment_file
+        
+        if container=="singularity":
+            bash_script = "#!/bin/bash\n"
+            for genome_id in genomes_info.keys():
+                alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
+                bash_script +="singularity run -B "+ \
+                " -B "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
+                " -B "+self.config.protein_db+":"+self.config.protein_db+ \
+                " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+                f" {self.config.amplicon2genome_singularity}  mmseqs easy-search " + \
                     genomes_info[genome_id] + " " + \
                     self.config.protein_db + " " + \
                     alignment_file+ " tmpfiles\n\n"
@@ -1260,9 +1292,9 @@ class Metagenomics:
 
         if run:
 
-            os.system(bash_script)
+            subprocess.run(bash_script,shell=True)
 
-        return genome_alignment_files
+        return genome_alignment_files, bash_script
     
     @staticmethod
     def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
@@ -1659,7 +1691,7 @@ if __name__ == "__main__":
     )
     metag=Metagenomics(config_1)
     metag.align_to_gtdb(run=True,save=True,container="docker")
-    rep_gens=metag.get_genomes_from_alignment(save=True)
+    rep_gens=metag.get_genomes_from_gtdb_alignment(save=True)
     metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
     metag.align_genomes_to_protein_db(run=True,save=True,container="docker")
 
