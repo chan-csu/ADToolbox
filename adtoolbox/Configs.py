@@ -64,6 +64,10 @@ class Database:
 		feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
 		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
 		kbase_db=Kbase(),
+		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
+                  "http://www.cazy.org/Polysaccharide-Lyases.html",
+                  "http://www.cazy.org/Carbohydrate-Esterases.html"
+                  ],
 		seed_rxn_url:str ="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
 		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta",
 		adtoolbox_rxn_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
@@ -93,6 +97,7 @@ class Database:
 		self.escher_files_urls = escher_files_urls
 		self.qiime_classifier_db = qiime_classifier_db
 		self.qiime_classifier_db_url = qiime_classifier_db_url
+		self.cazy_links = cazy_links
 
 class Metagenomics:
 	"""	

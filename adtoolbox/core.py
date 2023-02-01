@@ -350,77 +350,80 @@ class Metabolite:
 class Database:
 
     '''
-    This class will handle all of the database tasks in ADToolBox
+    This class will handle all of the functions required for providing the database for ADToolbox.
     '''
+
 
     def __init__(self, config:configs.Database=configs.Database()):
 
         self.config = config
 
 
-    def _initialize_database(self):
+    def _initialize_protein_database(self):
+        """This function intializes ADToolbox's protein database by creating an empty fasta file.
+        Be careful, this will overwrite any existing file with the same name."""
 
         with open(self.config.protein_db, 'w') as f:
             pass
-            # The rest is for other possible formats; fastq or gzipped fasta or gzipped fastq
 
     
     def filter_seed_from_ec(self, ec_list,
                             reaction_db=configs.Database().reaction_db,
                             compound_db=configs.Database().compound_db,
                             local_reaction_db=configs.Database().local_reaction_db,
-                            local_compound_db=configs.Database().local_compound_db) -> tuple:
+                            local_compound_db=configs.Database().local_compound_db,
+                            save:bool=True) -> tuple:
         """
 
         This function takes a list of ec numbers Generates a mini-seed JSON files. This is supposed to
-        make the code a lot faster, but makes no difference in terms of outputs, adn won't probably need
+        make the code a lot faster, but makes no difference in terms of outputs, and won't probably need
         frequent updates.
 
+        Args:
+            ec_list (list): The list of EC numbers that you want the mini seed database to include.
+            reaction_db (str, optional): The path to the main model seed reaction database. Defaults to configs.Database().reaction_db.
+            compound_db (str, optional): The path to the main model seed compound database. Defaults to configs.Database().compound_db.
+            local_reaction_db (str, optional): Path to where you want the mini seed reaction database to be saved. Defaults to configs.Database().local_reaction_db.
+            local_compound_db (str, optional): Path to where you want the mini seed compound database to be saved. Defaults to configs.Database().local_compound_db.
+        
+        Returns:
+            tuple: A tuple containing the mini seed reaction database and the mini seed compound database.
+
         """
+        ## TODO: Make this function more efficient by using pandas an search using .str.contains. This would be way faster
         with open(reaction_db, 'r') as f:
             main_reaction_db = json.load(f)
         with open(compound_db, 'r') as f:
             main_compound_db = json.load(f)
 
-        RT = Reaction_Toolkit()
         cached_compounds = []
-        filtered_rxns_db = {}
         local_rxn_db = []
         local_comp_db = []
-        counter = 0
-        for ec in ec_list:
+        for ec in track(ec_list,description="Extracting the relevant reactions:"):
             for ind, rxn in enumerate(main_reaction_db):
-
-                if main_reaction_db[ind]['ec_numbers'] != None and ec in main_reaction_db[ind]['ec_numbers']:
+                if  ec in rxn.setdefault('ec_numbers', []):
                     local_rxn_db.append(rxn)
                     for Mets in rxn["compound_ids"].split(";"):
                         if Mets not in cached_compounds:
                             cached_compounds.append(Mets)
-            counter += 1
-            print(" -> Percent of ecs processed: ",end=" ")
-            print("%"+str(int(Counter/len(ec_list)*100)), end="\r")
 
-        counter = 0
-        for compound in cached_compounds:
+        cached_compounds = list(set(cached_compounds))
+
+        for compound in track(cached_compounds,description="Extracting the relevant compounds:"):
             for ind, Comp in enumerate(main_compound_db):
                 if compound == Comp["id"]:
                     local_comp_db.append(Comp)
-            counter += 1
-            print(" -> Percent of compunds processed: ",end=" ")
-            print("%"+str(int(Counter/len(cached_compounds)*100)), end="\r")
 
-        with open(local_reaction_db, 'w') as f:
-            json.dump(local_rxn_db, f)
-        with open(local_compound_db, 'w') as f:
-            json.dump(local_comp_db, f)
 
-        return (local_rxn_db, local_comp_db)
+        if save:
+            with open(local_reaction_db, 'w') as f:
+                json.dump(local_rxn_db, f)
+            with open(local_compound_db, 'w') as f:
+                json.dump(local_comp_db, f)
 
-    # The complete pandas objec can be used as input
-    session = requests.Session()
-    retry = Retry(connect=3, backoff_factor=0.5)
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
+        return local_rxn_db, local_comp_db
+
+
 
     # def add_protein_from_uniprot(self, uniprot_ecs):
 
@@ -448,19 +451,34 @@ class Database:
     #                 f.write(''.join(file.text.split('\n')[1:-1]))
     #                 f.write('\n')
     
-    def protein_db_from_ec(self, ec_list,mode="a"):
-        # 5.1.1.2 and 5.1.1.20 should be distinguished: So far it seems like they are distinguished automatically by Uniprot
+    def protein_db_from_ec(self, ec_list:list,mode:str="a") -> dict:
+        """This function takes a list of EC numbers and fetches the protein sequences mapped to those EC numbers from Uniprot.
+        The protein sequences are then written to the protein database file.
+        
+        Args:
+            ec_list (list): A list of EC numbers.
+            mode (str, optional): The mode in which the protein database file is opened. Defaults to "a".
+            
+        Returns: 
+            dict: A dictionary containing the protein sequences mapped to the EC numbers."""
+        session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        
+        protein_seqs={}
+        
         with open(self.config.protein_db, mode) as f:
-            for ec in track(ec_list,description="[yellow]   --> Writing the protein database:"):
+            for ec in track(ec_list,description="Writing the protein database:"):
                 try:
-                    file = Database.session.get(
+                    file = session.get(
                         f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=1000)
 
                 except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
 
                     print("Request Error! Trying again ...")
                     time.sleep(30)
-                    file = Database.session.get(
+                    file = session.get(
                         f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=1000)
                 # This alsp does a sanity check
 
@@ -471,20 +489,34 @@ class Database:
                     if line.startswith('>'):
                         uniprot=line.split('|')[1]
                         f.write(f'>{uniprot}|{ec}\n')
+                        
                     else:
                         f.write(f'{line}\n')
+                        protein_seqs[uniprot]=line
+        
+        return protein_seqs
 
 
     @staticmethod
     def ec_from_csv(csv_file:str, Sep=',')->list:
 
-        """This function reads a csv file and returns a list of ec numbers"""
+        """This function reads a csv file and returns a list of ec numbers. The csv file should have a column named "EC_Numbers" and the delimiter 
+        that is used in in your file should be defined as an argument.
+        
+        Args:
+            csv_file (str): The path to the csv file.
+            Sep (str, optional): The delimiter used in the csv file. Defaults to ','.
+        
+        Returns:
+            list: A cleaned list of ec numbers."""
         
 
         try:
 
             ec_list = pd.read_table(csv_file, sep=Sep,dtype="str")
             ec_list.dropna(axis=0)
+            ec_list.drop_duplicates(subset="EC_Numbers", inplace=True)
+
             output_ec_list = list(ec_list["EC_Numbers"])
             assert len(
                 output_ec_list) > 0, "The ec list is empty; Check the file"
@@ -505,51 +537,20 @@ class Database:
 
         return output_ec_list
 
-    def ec_from_uniprot(self, uniprot_id):
 
-        Base_URL = 'https://www.uniprot.org/uniprot/'
+    
 
-        try:
-            file = Database.session.get(
-                Base_URL+uniprot_id+".txt", timeout=10)
-
-        except requests.exceptions.ConnectionError:
-
-            print("Request Error! Trying again ...")
-            time.sleep(30)
-            file = Database.session.get(
-                Base_URL+uniprot_id+".txt", timeout=10)
-
-            if file.ok:
-
-                print("Retry was successful!")
-
-        for line in file:
-            if re.search("ec=[0-9]+", line.decode("utf-8")):
-                ec = re.sub("ec=", "", re.search(
-                    "ec=[.0-9]+", line.decode("utf-8")).group(0))
-                break
-
-        else:
-
-            print("Retry was unsuccessful!")
-            return None
-
-        return ec
-
-    cazy_links = ["http://www.cazy.org/Glycoside-Hydrolases.html",
-                  "http://www.cazy.org/Polysaccharide-Lyases.html",
-                  "http://www.cazy.org/Carbohydrate-Esterases.html"
-                  ]
-
-    def cazy_ec_from_link(self):
+    def cazy_ec(self):
         '''
-        Extracts the ec numbers from a link to the Cazy website
+        Scraps the ec numbers from links of the Cazy website.
+
+        Returns:
+            list: A list of ec numbers.
 
         '''
 
         ec_list = []
-        for link in Database.cazy_links:
+        for link in Database.config.cazy_links:
 
             page = requests.get(link)
             soup = BeautifulSoup(page.content, "html.parser")
@@ -564,13 +565,23 @@ class Database:
         return ec_list
 
     
-    def seed_from_ec(self,ec_Number, mode='Single_Match'):
+    def seed_from_ec(self,ec_Number:str, mode:str='single_match')->list:
+        """ Given EC number, this function returns the corresponding Seed IDs from the SEED reaction database.
+        
+        Args:
+            ec_Number (str): The EC number.
+            mode (str, optional): The mode in which the function should run. Defaults to 'single_match'. You can choose between 'single_match' and 'Multiple_Match'.
+            
+        Returns:
+            list: A list of Seed IDs."""
+
+        ##TODO This function can use pandas to speed up the process
 
         with open(self.config.reaction_db,'r') as f: 
 
             data = json.load(f)
 
-        if mode == 'Single_Match':
+        if mode == 'single_match':
 
             for i in data:
 
@@ -578,7 +589,7 @@ class Database:
 
                     if ec_Number in i['ec_numbers']:
 
-                        return i["id"]
+                        return [i["id"]]
 
         elif mode == 'Multiple_Match':
 
@@ -607,6 +618,8 @@ class Database:
             rxn_list: A list including reaction instances in the database class for each seed ID in input list.
 
         """
+        ## TODO: This function can be sped up by using pandas
+
         rxn_list = []
         with open(self.config.reaction_db) as f:
 
@@ -649,7 +662,7 @@ class Database:
                       "Reaction_Names": [], "Pathways": []}
         rich.print("Finding ec Metadata ...\n")
         for ec in track(ec_list, description= "Collecting Metadata for ec numbers"):
-            seed_id = self.Seed_From_ec(ec, Mode='Multiple_Match')
+            seed_id = self.seed_from_ec(ec, Mode='Multiple_Match')
             full_table['ec_Numbers'].append(ec)
             full_table['seed_ids'].append(seed_id)
             Temp_rxns = Database().instantiate_rxn_from_seed(seed_id)
@@ -664,7 +677,6 @@ class Database:
 
         return full_table
 
-    ###-----FeedStock_Database_Functions-----###
     def init_feedstock_database(self)-> None:
         '''
         Makes an empty feedstock database json file.
@@ -874,7 +886,7 @@ class Database:
 
         return metagenomics_studies.to_dict(orient="list")
     
-    def download_kbase_database(self)->None:
+    def get_experimental_data_studies(self)->None:
         """
         This function will download the kbase database from the remote repository.
         """
