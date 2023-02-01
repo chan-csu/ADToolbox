@@ -1067,9 +1067,7 @@ class Metagenomics:
         match_table=os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')
         gtdb_dir_fasta=self.config.gtdb_dir_fasta
         query=self.config.amplicon2genome_top_repseq_dir
-        vsearch_docker='vsearch'
-        dirs=[alignment_dir,
-            match_table,
+        dirs=[self.config.amplicon2genome_outputs_dir,
             gtdb_dir_fasta,
             query
             ]
@@ -1090,7 +1088,7 @@ class Metagenomics:
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
             
-            bash_script += (vsearch_docker+' vsearch --top_hits_only --blast6out '+
+            bash_script += (self.config.amplicon2genome_docker+' vsearch --top_hits_only --blast6out '+
                         match_table+
                         ' --usearch_global '+ query +
                         ' --db '+ gtdb_dir_fasta +
@@ -1164,13 +1162,15 @@ class Metagenomics:
                                 identifier[6:9]+'/'+\
                                 identifier[9:].split('.')[0]
             
+            genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
+            
             if container=="None":
                 subprocess.run('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
 
             
             if container=="docker":
                 warnings.warn("Docker is not supported yet")
-                subprocess.run('docker run -it -v '+self.config.genome_save_dir(identifier)+':'+self.config.genome_save_dir(identifier)+ ' vsearch rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
+                subprocess.run('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ ' vsearch rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir),shell=True)
             
             if container=="singularity":
                 warnings.warn("Singularity is not supported yet")
@@ -1242,11 +1242,11 @@ class Metagenomics:
                 bash_script +="docker run -it "+ \
                 " -v "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
                 " -v "+self.config.protein_db+":"+self.config.protein_db+ \
-                " -v "+alignment_file+":"+alignment_file+ \
+                " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
                 f" {self.config.amplicon2genome_docker}  mmseqs easy-search " + \
                     genomes_info[genome_id] + " " + \
                     self.config.protein_db + " " + \
-                    alignment_file+ " /data/\n\n"
+                    alignment_file+ " tmpfiles\n\n"
                 genome_alignment_files[genome_id]=alignment_file
             
 
@@ -1658,9 +1658,9 @@ if __name__ == "__main__":
     amplicon2genome_similarity=0.9
     )
     metag=Metagenomics(config_1)
-    # metag.align_to_gtdb(run=True,save=True,container="docker")
-    # rep_gens=metag.get_genomes_from_alignment(save=True)
-    # metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
+    metag.align_to_gtdb(run=True,save=True,container="docker")
+    rep_gens=metag.get_genomes_from_alignment(save=True)
+    metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
     metag.align_genomes_to_protein_db(run=True,save=True,container="docker")
 
 
