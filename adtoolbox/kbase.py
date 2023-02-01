@@ -73,7 +73,7 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
     """Main function of the app."""
     # Create the app.
     app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
-    _initialize_databases(configs.Kbase())
+    _initialize_databases(configs)
 
     if table=='all':
         studies=get_studies(configs)
@@ -173,3 +173,6 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
     # }
     app.run_server(debug=True)
 
+
+if __name__ == '__main__':
+    dash_app(configs.Kbase())

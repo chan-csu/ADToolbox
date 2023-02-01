@@ -1163,12 +1163,15 @@ class Metagenomics:
                                 identifier[3:6]+'/'+\
                                 identifier[6:9]+'/'+\
                                 identifier[9:].split('.')[0]
+            
             if container=="None":
                 subprocess.run('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
 
+            
             if container=="docker":
                 warnings.warn("Docker is not supported yet")
                 subprocess.run('docker run -it -v '+self.config.genome_save_dir(identifier)+':'+self.config.genome_save_dir(identifier)+ ' vsearch rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier),shell=True)
+            
             if container=="singularity":
                 warnings.warn("Singularity is not supported yet")
             
@@ -1218,15 +1221,33 @@ class Metagenomics:
             if os.path.exists(genomes_info[genome_ids]):
                 valid_genomes += 1
         rich.print(f"[green]{valid_genomes}/{Totall_Genomes} Genomes are valid")
+
+
         genome_alignment_files={}
-        bash_script = "#!/bin/bash\n"
-        for genome_id in genomes_info.keys():
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
-            bash_script += "mmseqs easy-search " + \
-                genomes_info[genome_id] + " " + \
-                self.config.protein_db + " " + \
-                alignment_file+ " tmp\n\n"
-            genome_alignment_files[genome_id]=alignment_file
+        if container=="None":
+            bash_script = "#!/bin/bash\n"
+            for genome_id in genomes_info.keys():
+                alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
+                bash_script += "mmseqs easy-search " + \
+                    genomes_info[genome_id] + " " + \
+                    self.config.protein_db + " " + \
+                    alignment_file+ " tmp\n\n"
+                genome_alignment_files[genome_id]=alignment_file
+        
+        if container=="docker":
+            warnings.warn("Docker is not supported yet")
+            bash_script = "#!/bin/bash\n"
+            for genome_id in genomes_info.keys():
+                alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
+                bash_script +="docker run -it "+ \
+                " -v "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
+                " -v "+self.config.protein_db+":"+self.config.protein_db+ \
+                " -v "+alignment_file+":"+alignment_file+ \
+                f" {self.config.amplicon2genome_docker}  mmseqs easy-search " + \
+                    genomes_info[genome_id] + " " + \
+                    self.config.protein_db + " " + \
+                    alignment_file+ " /data/\n\n"
+                genome_alignment_files[genome_id]=alignment_file
             
 
 
@@ -1239,14 +1260,7 @@ class Metagenomics:
 
         if run:
 
-            if container=="None":
-                os.system(bash_script)
-
-            if container=="docker":
-                warnings.warn("Docker is not supported yet")
-
-            if container=="singularity":
-                warnings.warn("Singularity is not supported yet")
+            os.system(bash_script)
 
         return genome_alignment_files
     
@@ -1442,8 +1456,16 @@ class Metagenomics:
 
         return cod
     
-    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True)-> tuple[str,str]:
+    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str]:
         """ 
+        This method downloads the fastq files from the SRA database using the accession number of the project or run.
+        The method uses the fasterq-dump tool to download the fastq files. The method also creates two bash scripts
+        that can be used to download the fastq files. The first bash script is used to download the SRA files using the
+        prefetch tool. The second bash script is used to convert the SRA files to fastq files using the fasterq-dump tool.
+        depending on the prefered containerization tool, the bash scripts can be converted to singularity or docker containers commands.
+        In the case of docker or singularity you do not need to install the SRA tools on your machine. However, you need to have the
+        containerization tool installed on your machine.
+
         Requires:
             <R>project_accession</R>
             <R>Configs.Metagenomics</R>
@@ -1466,15 +1488,20 @@ class Metagenomics:
             fasterq_dump_script (str): The bash script that will be used to convert the SRA files to fastq files in python string format
     
         """   
-        prefetch_script=f"""#!/bin/bash
-        prefetch {accession} -O {os.path.join(self.config.sra_work_dir(accession),"seqs")}"""
+        if container=="None":
+            prefetch_script=f"""#!/bin/bash
+            prefetch {accession} -O {os.path.join(self.config.sra_work_dir(accession),"seqs")}"""
 
-        fasterq_dump_script=f"""#!/bin/bash
-        for i in $(ls ./seqs/) ; do
-        fasterq-dump --split-files seqs/$i/*.sra -O seqs/$i/
-        rm seqs/$i/*.sra
-        done
-        """
+            fasterq_dump_script=f"""#!/bin/bash
+            for i in $(ls ./seqs/) ; do
+            fasterq-dump --split-files seqs/$i/*.sra -O seqs/$i/
+            rm seqs/$i/*.sra
+            done
+            """
+        
+        elif container=="docker":
+            warn("Docker is not supported yet")
+
         project_path=pathlib.Path(self.config.sra_work_dir(accession))
         if not project_path.exists():
             project_path.mkdir(parents=True)
@@ -1632,8 +1659,9 @@ if __name__ == "__main__":
     )
     metag=Metagenomics(config_1)
     # metag.align_to_gtdb(run=True,save=True,container="docker")
-    rep_gens=metag.get_genomes_from_alignment(save=True)
-    metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
+    # rep_gens=metag.get_genomes_from_alignment(save=True)
+    # metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
+    metag.align_genomes_to_protein_db(run=True,save=True,container="docker")
 
 
 

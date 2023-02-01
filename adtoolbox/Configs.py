@@ -109,6 +109,7 @@ class Metagenomics:
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
 			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
+			amplicon2genome_docker="vsearch",
 			vsearch_threads:int=4,
 			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
             feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
@@ -152,6 +153,7 @@ class Metagenomics:
 		self.feature_to_taxa=feature_to_taxa
 		self.csv_reaction_db=csv_reaction_db
 		self.sra=sra
+		self.amplicon2genome_docker=amplicon2genome_docker
 		self.qiime2_singularity_image=qiime2_singularity_image
 		self.qiime2_docker_image=qiime2_docker_image
 		self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
