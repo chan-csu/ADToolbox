@@ -660,8 +660,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#adtoolbox.adm.build_adm1_stoiciometric_Matrix" class="md-nav__link">
-    build_adm1_stoiciometric_Matrix()
+  <a href="#adtoolbox.adm.build_adm1_stoiciometric_matrix" class="md-nav__link">
+    build_adm1_stoiciometric_matrix()
   </a>
   
 </li>
@@ -1163,8 +1163,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#adtoolbox.adm.build_adm1_stoiciometric_Matrix" class="md-nav__link">
-    build_adm1_stoiciometric_Matrix()
+  <a href="#adtoolbox.adm.build_adm1_stoiciometric_matrix" class="md-nav__link">
+    build_adm1_stoiciometric_matrix()
   </a>
   
 </li>
@@ -8790,6 +8790,8 @@ containerization tool installed on your machine.</p>
   </div>
 
 </div><h2 id="adm">adm</h2>
+<p>Here is a schematic view of adm API:</p>
+<p><img alt="adm" src="../ADM.svg" /></p>
 <p>You can access this module by:</p>
 <pre><code>from adtoolbox import adm 
 
@@ -11599,8 +11601,8 @@ No testing is done.</p>
 
 
 
-<h2 id="adtoolbox.adm.build_adm1_stoiciometric_Matrix" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">build_adm1_stoiciometric_Matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">,</span> <span class="n">reactons</span><span class="p">,</span> <span class="n">species</span><span class="p">)</span></code>
+<h2 id="adtoolbox.adm.build_adm1_stoiciometric_matrix" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">build_adm1_stoiciometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">,</span> <span class="n">reactons</span><span class="p">,</span> <span class="n">species</span><span class="p">)</span></code>
 
 </h2>
 
@@ -11727,7 +11729,7 @@ No testing is done.</p>
 <span class="normal">727</span>
 <span class="normal">728</span>
 <span class="normal">729</span>
-<span class="normal">730</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_adm1_stoiciometric_Matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">reactons</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">species</span><span class="p">:</span><span class="nb">list</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="normal">730</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_adm1_stoiciometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">reactons</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">species</span><span class="p">:</span><span class="nb">list</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This function builds the stoichiometric matrix for the original ADM Model.</span>
 <span class="sd">    No testing is done.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
