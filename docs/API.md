@@ -72,6 +72,10 @@ Here is a schematic view of core.Metagenomics API:
 
 ## adm
 
+Here is a schematic view of adm API:
+
+![adm](ADM.svg)
+
 You can access this module by:
 
 ```

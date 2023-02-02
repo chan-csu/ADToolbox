@@ -612,7 +612,7 @@ class Model:
                   index=True)
 
 
-def build_adm1_stoiciometric_Matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list)-> np.ndarray:
+def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list)-> np.ndarray:
     """This function builds the stoichiometric matrix for the original ADM Model.
     No testing is done.
     """
