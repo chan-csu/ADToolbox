@@ -1,5 +1,6 @@
 import os
 from __init__ import Main_Dir,PKG_DATA
+import pathlib
 
 """
 This module contains all the paths to the files and directories used in the program.
@@ -11,8 +12,17 @@ RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 
 Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
 
+def get_base_dir():
+	return Main_Dir
 
-
+def set_base_dir(path:str):
+	ans=input("This will change the base directory of the program. Are you sure you want to continue? (y/n)")
+	if ans == "y":
+		with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'w') as f:
+			f.write(path)
+	else:
+		print("Base directory not changed")
+	
 
 class Alignment:
     """
