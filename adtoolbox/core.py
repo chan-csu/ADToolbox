@@ -858,14 +858,6 @@ class Database:
             
 
 
-        
-
-    # def download_escher_files(self)-> None:
-    #     for i in self.config.escher_files_urls:
-    #         r = requests.get(i, allow_redirects=True)
-    #         with open(os.path.join(self.config.,i.split("/")[-1]), 'wb') as f:
-    #             f.write(r.content)
-
     def get_metagenomics_studies(self) -> list:
         """
         This function will return accession numbers in all metagenomics studies on the kbase.
@@ -885,6 +877,8 @@ class Database:
 
 
         return metagenomics_studies.to_dict(orient="list")
+
+    
     
     def get_experimental_data_studies(self)->None:
         """
@@ -905,6 +899,18 @@ class Database:
 
         rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls['exmpermental_data_references']}[/bold green]")  
 
+    def download_kbase_database(self)->None:
+        """
+        This function will download the kbase database from the remote repository.
+        """
+        for i in self.config.kbase_db.urls:
+            r = requests.get(self.config.kbase_db.urls[i], allow_redirects=True)
+            if not os.path.exists(self.config.kbase_db.base_dir):
+                os.makedirs(self.config.kbase_db.base_dir,exist_ok=True)
+            with open(os.path.join(self.config.kbase_db.base_dir,i), 'wb') as f:
+                f.write(r.content)
+            rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls[i]}[/bold green]")
+            
     def download_all_databases(self)->None:
         """
         This function will download all the required databases for the ADToolbox.

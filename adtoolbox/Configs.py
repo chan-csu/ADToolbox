@@ -272,3 +272,4 @@ class Utils:
 		self.slurm_cpus = slurm_cpus
 		self.slurm_save_dir = slurm_save_dir
 		self.slurm_memory = slurm_memory
+
