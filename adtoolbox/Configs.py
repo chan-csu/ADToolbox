@@ -47,10 +47,10 @@ class Reaction_Toolkit:
 class Kbase:
     def __init__(self,
                  base_dir=os.path.join(Main_Dir,"Database","Kbase"),
-                 metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.csv"),
-                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.csv"),
-                urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.csv',
-                        'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.csv'
+                 metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.tsv"),
+                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.tsv"),
+                urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv',
+                        'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.tsv'
                         }):
         self.metagenomics_studies = metagenomics_studies
         self.experimental_data_references = experimental_data_references

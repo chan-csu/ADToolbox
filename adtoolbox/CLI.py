@@ -10,7 +10,7 @@ from adm import *
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
-import kbase
+import studies
 console = Console()
 
 
@@ -395,18 +395,18 @@ def main():
         kbase_show_studies(configs.Kbase().studies)
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'create-metagenomics-studies-db':
-        kbase.create_metagenoics_studies_table(configs.Kbase().studies)
+        studies.create_metagenoics_studies_table(configs.Kbase().studies)
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'add-metagenomics-study':
         try:
-            last_study_id=kbase._get_last_study_id(configs.Kbase().studies)[0][0]
+            last_study_id=studies._get_last_study_id(configs.Kbase().studies)[0][0]
         except:
             last_study_id=0
-            kbase._create_study_table(configs.Kbase().studies)
-            kbase._create_metagenoics_studies_table(configs.Kbase().studies)
+            studies._create_study_table(configs.Kbase().studies)
+            studies._create_metagenoics_studies_table(configs.Kbase().studies)
         study_id=last_study_id+1
-        kbase._add_study(configs.Kbase().studies,args.name,"Metagenomics",args.reference)
-        kbase.add_metagenomics_study(configs.Kbase().studies, args.name, study_id, args.type, args.microbiome,args.sra_accession, args.reference, args.comments)
+        studies._add_study(configs.Kbase().studies,args.name,"Metagenomics",args.reference)
+        studies.add_metagenomics_study(configs.Kbase().studies, args.name, study_id, args.type, args.microbiome,args.sra_accession, args.reference, args.comments)
 
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-metagenomics-studies':
         kbase_show_metagenomics_studies(configs.Kbase().studies)
@@ -416,31 +416,31 @@ def main():
     
 
 def kbase_show_studies(studies_db):
-    if os.path.exists(studies_db) and kbase.get_studies(studies_db):
+    if os.path.exists(studies_db) and studies.get_studies(studies_db):
         print("The following studies are available in the database:\n")
         study_table = Table(title="[bold]Studies",expand=True,safe_box=True)
         colnames = ['ID','Name', 'Type', 'Reference']
         for i in colnames:
             study_table.add_column(i, justify="center", style="cyan", no_wrap=True)
-        for i in kbase.get_studies(studies_db):
+        for i in studies.get_studies(studies_db):
             study_table.add_row(*map(str, i))
         console.print(study_table)
-    elif kbase.get_studies(studies_db) is not None and len(kbase.get_studies(studies_db))==0:
+    elif studies.get_studies(studies_db) is not None and len(studies.get_studies(studies_db))==0:
         print("There are no studies in the database")
     else:
         print("The database Does not exist. Please build/download the kbase databases first.")
 
 def kbase_show_metagenomics_studies(metagenomics_studies_db):
-    if os.path.exists(metagenomics_studies_db) and kbase.get_metagenomics_studies(metagenomics_studies_db):
+    if os.path.exists(metagenomics_studies_db) and studies.get_metagenomics_studies(metagenomics_studies_db):
         print("The following metagenomics studies are available in the database:\n")
         study_table = Table(title="[bold]Metagenomics Studies",expand=True,safe_box=True)
         colnames = ['ID','Name', 'Study ID', 'Type', 'Microbiome', 'SRA Accession', 'Reference', 'Comments']
         for i in colnames:
             study_table.add_column(i, justify="center", style="cyan", no_wrap=True)
-        for i in kbase.get_metagenomics_studies(metagenomics_studies_db):
+        for i in studies.get_metagenomics_studies(metagenomics_studies_db):
             study_table.add_row(*map(str, i))
         console.print(study_table)
-    elif kbase.get_metagenomics_studies(metagenomics_studies_db) is not None and len(kbase.get_metagenomics_studies(metagenomics_studies_db))==0:
+    elif studies.get_metagenomics_studies(metagenomics_studies_db) is not None and len(studies.get_metagenomics_studies(metagenomics_studies_db))==0:
         print("There are no metagenomics studies in the database")
     else:
         print("The database Does not exist. Please build/download the kbase databases first.")

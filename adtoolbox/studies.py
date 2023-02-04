@@ -13,52 +13,69 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 
 
+def get_studies(config=configs.Kbase()):
+    """Collects all of the studies in the databases
+    
+    args:
+        config (configs.Kbase): The configuration file for studies database
+    Returns:
+        pd.DataFrame: The studies table
+        
+    """
+    metagenomics_studies=pd.read_csv(config.metagenomics_studies,delimiter="\t")
+    experimental_data_references=pd.read_csv(config.experimental_data_references,delimiter="\t")
+    studies=pd.concat([metagenomics_studies,experimental_data_references],axis=0,join="inner")
+    return studies
 
 
 
-def get_studies(Config=configs.Kbase()):
-    metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
-    experimental_data_references=pd.read_csv(Config.experimental_data_references,delimiter="ᚢ",encoding="utf-8",engine="python")
-    studies={"Name":[],"Type":[],"Reference":[],"Comments":[]}
-    studies['Name'].extend(metagenomics_studies['Name'].tolist())
-    studies['Type'].extend(["Metagenomics"]*metagenomics_studies.shape[0])
-    studies['Reference'].extend(metagenomics_studies['Reference'].tolist())
-    studies['Comments'].extend(metagenomics_studies['Comments'].tolist())
-    studies['Name'].extend(experimental_data_references['Name'].tolist())
-    studies['Type'].extend(["experimental"]*experimental_data_references.shape[0])
-    studies['Reference'].extend(experimental_data_references['Reference'].tolist())
-    studies['Comments'].extend(experimental_data_references['Comments'].tolist())
-    return pd.DataFrame(studies)
-
-
-
-def add_metagenomics_study(metagenomics_studies_table, name, type, microbiome,SRA_accession, reference,comments):
+def add_metagenomics_study(metagenomics_studies_table:str, name:str, type:str, microbiome,SRA_accession:str, reference:str,comments:str):
+    """Adds a metagenomics study to the database
+    Args:
+        metagenomics_studies_table (pd.DataFrame): The metagenomics studies table
+        name (str): The name of the metagenomics study
+        type (str): The type of the metagenomics study 16s or shotgun
+        microbiome (str): The microbiome of the metagenomics study
+        SRA_accession (str): The SRA accession of the metagenomics study
+        reference (str): The reference of the metagenomics study
+        comments (str): The comments of the metagenomics study
+    Returns:
+        pd.DataFrame: The updated metagenomics studies table
+    """ 
     metagenomics_studies_table=metagenomics_studies_table.append({"Name":name,"Type":type,"Microbiome":microbiome,"SRA_accession":SRA_accession,"Reference":reference,"Comments":comments},ignore_index=True)
     rich.print(f"[bold green]The metagenomics study '{name}' was added successfully!")
     return metagenomics_studies_table
 
-def delete_metagenomics_study(metagenomics_studies_table, metagenomics_study_id):
+def delete_metagenomics_study(metagenomics_studies_table:pd.DataFrame, metagenomics_study_id:int):
+    """Deletes a metagenomics study from the database
+    Args:
+        metagenomics_studies_table (pd.DataFrame): The metagenomics studies table
+        metagenomics_study_id (str): The id of the metagenomics study to be deleted
+    Returns:
+        pd.DataFrame: The updated metagenomics studies table
+        """
     metagenomics_studies_table.drop(labels=metagenomics_study_id,inplace=True,axis=0)
     rich.print(f"[bold green]The metagenomics study with id '{metagenomics_study_id}' was deleted successfully!")
     return metagenomics_studies_table
 
 def get_metagenomics_studies(Config=configs.Kbase()):
-    metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
+    """Collects all of the metagenomics studies in the databases"""
+    metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="\t")
     return metagenomics_studies
 
-def write_metagenomics_studies(metagenomics_studies_table,Config=configs.Kbase()):
-    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="ᚢ",encoding="utf-8")
+def write_metagenomics_studies(metagenomics_studies_table:pd.DataFrame,Config=configs.Kbase()):
+    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="\t")
 
 def create_metagenomics_study_table(Config=configs.Kbase()):
     metagenomics_studies_table={"Name":[],"Type":[],"Microbiome":[],"SRA_accession":[],"Reference":[],"Comments":[]}
     metagenomics_studies_table=pd.DataFrame(metagenomics_studies_table)
-    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="ᚢ",encoding="utf-8")
+    metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="\t")
     rich.print(f"[bold green]The metagenomics studies table was created successfully!")
 
 def create_experimental_data_references_table(Config=configs.Kbase()):
     experimental_data_references_table={"Name":[],"Type":[],"Reference":[],"Comments":[]}
     experimental_data_references_table=pd.DataFrame(experimental_data_references_table)
-    experimental_data_references_table.to_csv(Config.experimental_data_references,index=False,sep="ᚢ",encoding="utf-8")
+    experimental_data_references_table.to_csv(Config.experimental_data_references,index=False,sep="\t")
     rich.print(f"[bold green]The experimental data references table was created successfully!")
 
 def _initialize_databases(Config=configs.Kbase()):
@@ -111,7 +128,7 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
                                      style_data={'whiteSpace': 'normal',
                                                 'height': 'auto'},
                                      style_table={'overflowX': 'auto'},
-                                     export_format='csv',
+                                     export_format='tsv',
                                     editable=True,
                                     row_deletable=True,
                                      ),
@@ -175,4 +192,4 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
 
 
 if __name__ == '__main__':
-    dash_app(configs.Kbase())
+    get_studies(configs.Kbase())
