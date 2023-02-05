@@ -44,11 +44,11 @@ class Reaction_Toolkit:
         self.compound_db = compound_db
         self.reaction_db = reaction_db
 
-class Kbase:
+class Studies:
     def __init__(self,
-                 base_dir=os.path.join(Main_Dir,"Database","Kbase"),
-                 metagenomics_studies=os.path.join(Main_Dir,"Database","Kbase","metagenomics_studies.tsv"),
-                 experimental_data_references=os.path.join(Main_Dir,"Database","Kbase","experimental_data_references.tsv"),
+                 base_dir=os.path.join(Main_Dir,"Database","Studies"),
+                 metagenomics_studies=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
+                 experimental_data_references=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.tsv"),
                 urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv',
                         'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.tsv'
                         }):
@@ -73,7 +73,7 @@ class Database:
 		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
 		feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
 		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
-		kbase_db=Kbase(),
+		kbase_db=Studies(),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
                   "http://www.cazy.org/Polysaccharide-Lyases.html",
                   "http://www.cazy.org/Carbohydrate-Esterases.html"

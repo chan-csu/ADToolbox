@@ -13,11 +13,11 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 
 
-def get_studies(config=configs.Kbase()):
+def get_studies(config=configs.Studies()):
     """Collects all of the studies in the databases
     
     args:
-        config (configs.Kbase): The configuration file for studies database
+        config (configs.Studies): The configuration file for studies database
     Returns:
         pd.DataFrame: The studies table
         
@@ -58,27 +58,27 @@ def delete_metagenomics_study(metagenomics_studies_table:pd.DataFrame, metagenom
     rich.print(f"[bold green]The metagenomics study with id '{metagenomics_study_id}' was deleted successfully!")
     return metagenomics_studies_table
 
-def get_metagenomics_studies(Config=configs.Kbase()):
+def get_metagenomics_studies(Config=configs.Studies()):
     """Collects all of the metagenomics studies in the databases"""
     metagenomics_studies=pd.read_csv(Config.metagenomics_studies,delimiter="\t")
     return metagenomics_studies
 
-def write_metagenomics_studies(metagenomics_studies_table:pd.DataFrame,Config=configs.Kbase()):
+def write_metagenomics_studies(metagenomics_studies_table:pd.DataFrame,Config=configs.Studies()):
     metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="\t")
 
-def create_metagenomics_study_table(Config=configs.Kbase()):
+def create_metagenomics_study_table(Config=configs.Studies()):
     metagenomics_studies_table={"Name":[],"Type":[],"Microbiome":[],"SRA_accession":[],"Reference":[],"Comments":[]}
     metagenomics_studies_table=pd.DataFrame(metagenomics_studies_table)
     metagenomics_studies_table.to_csv(Config.metagenomics_studies,index=False,sep="\t")
     rich.print(f"[bold green]The metagenomics studies table was created successfully!")
 
-def create_experimental_data_references_table(Config=configs.Kbase()):
+def create_experimental_data_references_table(Config=configs.Studies()):
     experimental_data_references_table={"Name":[],"Type":[],"Reference":[],"Comments":[]}
     experimental_data_references_table=pd.DataFrame(experimental_data_references_table)
     experimental_data_references_table.to_csv(Config.experimental_data_references,index=False,sep="\t")
     rich.print(f"[bold green]The experimental data references table was created successfully!")
 
-def _initialize_databases(Config=configs.Kbase()):
+def _initialize_databases(Config=configs.Studies()):
     if not os.path.exists(Config.base_dir):
         os.makedirs(Config.base_dir)
     if not os.path.exists(Config.metagenomics_studies):
@@ -86,10 +86,10 @@ def _initialize_databases(Config=configs.Kbase()):
     if not os.path.exists(Config.experimental_data_references):
         create_experimental_data_references_table(Config)
     
-def dash_app(configs:configs.Kbase,table:str='all') -> None:
+def dash_app(configs:configs.Studies,table:str='all') -> None:
     """Main function of the app."""
     # Create the app.
-    app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app = dash.Dash(__name__,external_stylesheets=[dbc.themes.DARKLY])
     _initialize_databases(configs)
 
     if table=='all':
@@ -98,42 +98,57 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
         if studies.shape[0]:
             studies=studies.to_dict(orient='records')
         else:
-            studies=[{"Index":"","Name":"","Type":"","Reference":""}]
+            studies=[{"Name":"","Type":"","Reference":""}]
             
         if metagenomics_studies.shape[0]:
             metagenomics_studies=metagenomics_studies.to_dict(orient='records')
         else:
-            metagenomics_studies=[{"Index":"","Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
+            metagenomics_studies=[{"Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
             
 
-    app.layout = html.Div(children=[html.P("All Studies"),
+    app.layout = html.Div(children=[html.P("All Studies",style={'fontSize': 30}),
                                     dash.dash_table.DataTable(studies,
                                     columns=[{"name": i, "id": i} for i in studies[0].keys()],
                                      id='studies_table',
                                      style_cell={'textAlign': 'left',
                                      'fontSize':15, 'font-family':'sans-serif',
-                                     'maxWidth': '250px'},
+                                     'maxWidth': '250px',},
                                      style_data={'whiteSpace': 'normal',
-                                    'height': 'auto',},
-                                    style_table={'overflowX': 'auto'},
-                                    export_format='csv'),
+                                     'backgroundColor': 'rgb(50, 50, 50)',
+                                        'color': 'white',
+                                        'height': 'auto',
+                                        'fontSize':20},
+                                    style_header={'backgroundColor': 'rgb(30, 30, 30)',
+                                        'fontWeight': 'bold',
+                                        'color': 'white',
+                                        'fontSize':30},
+                                    style_table={'height':'700px','overflowX': 'auto'},
+                                    page_size=10,),
                                     html.Br(),
-                                    html.P("Metagenomics Studies"),
+                                    html.P("Metagenomics Studies" ,style={'fontSize': 30}),
                                     dash.dash_table.DataTable(metagenomics_studies,
                                      id='metagenomics_studies_table',
                                         columns=[{"name": i, "id": i} for i in metagenomics_studies[0].keys()],
                                      style_cell={'textAlign': 'left',
                                      'fontSize':15, 'font-family':'sans-serif',
                                      'maxWidth': '250px'},
+
                                      style_data={'whiteSpace': 'normal',
-                                                'height': 'auto'},
-                                     style_table={'overflowX': 'auto'},
-                                     export_format='tsv',
+                                                'height': 'auto',
+                                                'backgroundColor': 'rgb(50, 50, 50)',
+                                                'color': 'white',
+                                                'fontSize':20},
+                                    style_header={'backgroundColor': 'rgb(30, 30, 30)',
+                                                'color': 'white',
+                                                'fontWeight': 'bold',
+                                                'fontSize':30},
+                                     style_table={'height':'700px','overflowX': 'auto'},
+                                     page_size=10,
                                     editable=True,
                                     row_deletable=True,
                                      ),
-                                     html.Button('Add metagenomics study', id='add-metagenomics-study', n_clicks=0),
-                                     html.Button('Submit metagenomics study', id='submit-metagenomics-study', n_clicks=0),
+                                     html.Button('Add metagenomics study', id='add-metagenomics-study', n_clicks=0,style={'font-size': '25px'}),
+                                     html.Button('Submit metagenomics study', id='submit-metagenomics-study', n_clicks=0,style={'font-size': '25px'}),
                                      html.Div(id='submission-status'),
     ])
     @app.callback(
@@ -161,13 +176,13 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
             if rows:
                 write_metagenomics_studies(pd.DataFrame(rows),configs)
             else:
-                rows=[{"Index":"","Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
+                rows=[{"Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
                 write_metagenomics_studies(pd.DataFrame(columns=rows[0].keys()),configs)
             studies=get_studies(configs)
             if studies.shape[0]:
                 studies=studies.to_dict(orient='records')
             else:
-                studies=[{"Index":"","Name":"","Type":"","Reference":""}]
+                studies=[{"Name":"","Type":"","Reference":""}]
 
             
         return html.Div([dbc.Alert(f"All of the changes were made successfully!", color="success")]),studies
@@ -192,4 +207,4 @@ def dash_app(configs:configs.Kbase,table:str='all') -> None:
 
 
 if __name__ == '__main__':
-    get_studies(configs.Kbase())
+    dash_app(configs.Studies())
