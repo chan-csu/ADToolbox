@@ -16,6 +16,7 @@ from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
 from core import Reaction
 from collections import OrderedDict
+import dash_bootstrap_components as dbc
 import rich
 from rich.console import Console
 from rich.table import Table
@@ -209,7 +210,7 @@ class Model:
             cobra_model=json.load(f)
 
 
-        app = Dash(__name__)
+        app = Dash(__name__, external_stylesheets=[dbc.themes.FLATLY]) 
         colors = {
             'background': '#659dbd',
             'text': '#3e4444'
@@ -253,51 +254,42 @@ class Model:
                 )
             fig.update_traces(line=dict(width=5))
 
-        with_report=[html.Div(style={'backgroundColor': 'rgb(200, 200, 200)', 'height':'300px', "margin-top":'-50px'}, children=[html.H1(
-            children='ADToolbox',
-            style={
-                'textAlign': 'center',
-                'color': colors['text'],
-                'font-size': '60px',
-                # 'font-family': 'sans-serif',
-                'padding-top': '30px',
-                'color': "rgb(30, 30, 30)",
-
-            }),html.H2(children="A toolbox for modeleing and optimization of anaerobic digestion process",
-            style={
-                'textAlign': 'center',
-                'color': "rgb(30, 30, 30)",
-                'font-family': 'sans-serif'
-
-            })
-            ]),
+        with_report=[dbc.Container(
+            html.H1("ADToolbox Web Interface",style={"font-size":"70px", "padding-top":"50px"}),className="text-white bg-primary",style={"height":"300px","text-align": "center"}, fluid=True),
+        
 
             html.H2(f"{self.name} Concentration Plot", style={
                     'textAlign': 'left',
                     'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
+                    'font-size': '15',
+                    'padding-top': '20px',
+                    'padding-bottom': '20px',
+                    'padding-left': '20px'
+
+    
                     }),
-            
+        
 
             dcc.Graph(figure=fig, id='Concentrations_Line_Plot',
             style={
                 "backgroundColor": "#171010",
-                "height":"600px"
+                "height":"600px",
+
             }
             ),
 
 
-
             html.Br(),
 
-            html.H3("base_parameters", style={
+            html.H3("Base Parameters", style={
                     'textAlign': 'left',
                     'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
+                    'font-size': '15',
+                    'padding-top': '20px',
+                    'padding-bottom': '20px',
+                    'padding-left': '20px'
+
+
                     }),
             
             dash_table.DataTable(
@@ -305,27 +297,30 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.base_parameters.keys())],
             data=pd.DataFrame(self.base_parameters,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '30px',
                 },
             style_data={
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
-            'font-size': '20px',
-            'font-family': 'Trebuchet MS',
+            'font-size': '25px',
+            
             }),
 
 
             html.Br(),
-            html.H3("model_parameters", style={
+            html.H3("Model Parameters", style={
                     'textAlign': 'left',
                     'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
+                    'font-size': '15',
+                    'padding-top': '20px',
+                    'padding-bottom': '20px',
+                    'padding-left': '20px'
+
+
                     }),
 
 
@@ -335,16 +330,16 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.model_parameters.keys())],
             data=pd.DataFrame(self.model_parameters,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '30px',
                 },
             style_data={
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '25px',
             'font-family': 'Trebuchet MS',
             }
             ,
@@ -357,9 +352,11 @@ class Model:
             html.H3("Initial_Conditions", style={
                     'textAlign': 'left',
                     'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
+                    'font-size': '15',
+                    'padding-top': '20px',
+                    'padding-bottom': '20px',
+
+                    'padding-left': '20px'
                     }),
             
             dash_table.DataTable(
@@ -367,44 +364,45 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._ic.keys())],
             data=pd.DataFrame(self._ic,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '30px',
                 },
             style_data={
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '25px',
             'font-family': 'Trebuchet MS',
             }
             
             ),
 
             html.Br(),
-            html.H3("inlet_conditions", style={
+            html.H3("Inlet_conditions", style={
                     'textAlign': 'left',
                     'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
+                    'font-size': '15',
+                    'padding-top': '20px',
+                    'padding-bottom': '20px',
+                    'padding-left': '20px'
                     }),
             dash_table.DataTable(
             id='inlet_conditions',
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._inc.keys())],
             data=pd.DataFrame(self._inc,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '30px',
                 },
             style_data={
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
-            'font-size': '20px',
+            'font-size': '25px',
             'font-family': 'Trebuchet MS',
             },
             export_format='csv',
@@ -413,16 +411,18 @@ class Model:
 
             html.Br(),
 
-                        html.H2("Escher Map", style={
+            html.H2("Escher Map", style={
                     'textAlign': 'left',
                     'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
+                    'font-size': '15',
+                    'padding-top': '20px',
+                    'padding-bottom': '20px',
+                    'padding-left': '20px'
+
                     }) ,
             
             dcc.Dropdown(["Show Map","Hide Map"],
-                         self.reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down_Escher"),
+                         self.reactions[0], style={"width": "300px","font-size":25,'padding-left':'2-px'}, id="Drop_Down_Escher"),
             html.Br(),
             html.Div(children=None,id="Escher_"),
             html.Div(children=None,id="Escher"),
