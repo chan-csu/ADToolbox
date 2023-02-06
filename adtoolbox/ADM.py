@@ -234,7 +234,9 @@ class Model:
             "font_size": 30,
             'xanchor': 'center',
             'yanchor': 'top'},
-            legend=dict(font=dict(size= 20))
+            legend=dict(font=dict(size= 20),),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
 
                 )
             fig.update_xaxes(
@@ -254,40 +256,43 @@ class Model:
                 )
             fig.update_traces(line=dict(width=5))
 
+        styles={
+            'table_width': '95%',
+            'padding-left': '20px',
+            'container_width': '85%'
+        }
         with_report=[dbc.Container(
             html.H1("ADToolbox Web Interface",style={"font-size":"70px", "padding-top":"50px"}),className="text-white bg-primary",style={"height":"300px","text-align": "center"}, fluid=True),
-        
+            dbc.Container([
+                            dbc.Row(dbc.Card([
 
-            html.H2(f"{self.name} Concentration Plot", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '15',
-                    'padding-top': '20px',
-                    'padding-bottom': '20px',
-                    'padding-left': '20px'
+                                        html.H2(f"{self.name} Concentration Plot", style={
+                                            'textAlign': 'left',
+                                            'color': colors['text'],
+                                            'font-size': '15',
+                                            'padding-top': '50px',
+                                            'padding-bottom': '20px',
+                                            'padding-left': styles['padding-left']
 
-    
-                    }),
-        
+                            
+                                            }),
+                                        dcc.Graph(figure=fig, id='Concentrations_Line_Plot',
+                                            style={
+                                                "height":"600px",
+                                                "padding-left": styles['padding-left'],
+                                                'background-color': 'rgba(0,0,0,0)',
 
-            dcc.Graph(figure=fig, id='Concentrations_Line_Plot',
-            style={
-                "backgroundColor": "#171010",
-                "height":"600px",
-
-            }
-            ),
-
-
-            html.Br(),
+                                
+                                            }
+                                            ),],className="bg-light"),className="bg-light"),
 
             html.H3("Base Parameters", style={
                     'textAlign': 'left',
                     'color': colors['text'],
                     'font-size': '15',
-                    'padding-top': '20px',
+                    'padding-top': '50px',
                     'padding-bottom': '20px',
-                    'padding-left': '20px'
+                    'padding-left': styles['padding-left']
 
 
                     }),
@@ -297,7 +302,7 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.base_parameters.keys())],
             data=pd.DataFrame(self.base_parameters,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px', 'width': styles['table_width']},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
@@ -311,14 +316,13 @@ class Model:
             }),
 
 
-            html.Br(),
             html.H3("Model Parameters", style={
                     'textAlign': 'left',
                     'color': colors['text'],
                     'font-size': '15',
-                    'padding-top': '20px',
+                    'padding-top': '50px',
                     'padding-bottom': '20px',
-                    'padding-left': '20px'
+                    'padding-left': styles['padding-left']
 
 
                     }),
@@ -330,7 +334,7 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.model_parameters.keys())],
             data=pd.DataFrame(self.model_parameters,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px','width': styles['table_width']},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
@@ -340,23 +344,20 @@ class Model:
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
             'font-size': '25px',
-            'font-family': 'Trebuchet MS',
             }
             ,
 
             
                 ),            
 
-            html.Br(),
 
-            html.H3("Initial_Conditions", style={
+            html.H3("Initial Conditions", style={
                     'textAlign': 'left',
                     'color': colors['text'],
                     'font-size': '15',
-                    'padding-top': '20px',
+                    'padding-top': '50px',
                     'padding-bottom': '20px',
-
-                    'padding-left': '20px'
+                    'padding-left': styles['padding-left']
                     }),
             
             dash_table.DataTable(
@@ -364,7 +365,7 @@ class Model:
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._ic.keys())],
             data=pd.DataFrame(self._ic,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px','width': styles['table_width']},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
@@ -374,26 +375,24 @@ class Model:
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
             'font-size': '25px',
-            'font-family': 'Trebuchet MS',
             }
             
             ),
 
-            html.Br(),
-            html.H3("Inlet_conditions", style={
+            html.H3("Inlet Conditions", style={
                     'textAlign': 'left',
                     'color': colors['text'],
                     'font-size': '15',
-                    'padding-top': '20px',
+                    'padding-top': '50px',
                     'padding-bottom': '20px',
-                    'padding-left': '20px'
+                    'padding-left': styles['padding-left']
                     }),
             dash_table.DataTable(
             id='inlet_conditions',
             columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._inc.keys())],
             data=pd.DataFrame(self._inc,index=[0]).to_dict('records'),
             editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px'},
+            style_table={'overflowX': 'scroll', 'padding-left': '20px',   'width': styles['table_width']},
             style_header={
             'backgroundColor': 'rgb(200, 200, 200)',
             'color': 'black',
@@ -403,13 +402,9 @@ class Model:
             'backgroundColor': 'rgb(250, 250, 250)',
             'color': 'black',
             'font-size': '25px',
-            'font-family': 'Trebuchet MS',
             },
-            export_format='csv',
-            export_headers='display',
-            merge_duplicate_headers=True),
+            merge_duplicate_headers=True),],fluid=True,className="bg-light",style={"width": styles['container_width']}),
 
-            html.Br(),
 
             html.H2("Escher Map", style={
                     'textAlign': 'left',
@@ -417,7 +412,7 @@ class Model:
                     'font-size': '15',
                     'padding-top': '20px',
                     'padding-bottom': '20px',
-                    'padding-left': '20px'
+                    'padding-left': styles['padding-left']
 
                     }) ,
             
@@ -440,11 +435,7 @@ class Model:
                          self.reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down") ,
 
             dcc.Graph(figure=None, id="Annotation_Graph", style={
-            "height": "650px"}),
-
-
-            
-         ]
+            "height": "650px"}),]
         without_report=with_report[:-3]
         
         
@@ -572,7 +563,9 @@ class Model:
             "font_size": 30,
             'xanchor': 'center',
             'yanchor': 'top'},
-            legend=dict(font=dict(size= 20))
+            legend=dict(font=dict(size= 20)),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
 
                 )
             fig.update_xaxes(
