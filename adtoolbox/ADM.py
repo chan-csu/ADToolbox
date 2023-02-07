@@ -209,8 +209,7 @@ class Model:
         with open(os.path.join(PKG_DATA,"Modified_ADM_Model.json"),'rb') as f:
             cobra_model=json.load(f)
 
-
-        app = Dash(__name__, external_stylesheets=[dbc.themes.FLATLY]) 
+        app = Dash(__name__, external_stylesheets=[dbc.themes.FLATLY])
         colors = {
             'background': '#659dbd',
             'text': '#3e4444'
@@ -392,9 +391,9 @@ class Model:
             
                                     dcc.Dropdown(["Show Map","Hide Map"],
                                      self.reactions[0], style={"width": "300px","font-size":25,'padding-left':'2-px'}, id="Drop_Down_Escher"),
-                                    html.Div(children=None,id="Escher_",style={"height": "100px"}),
-                                    html.Div(children=None,id="Escher"),
+                                    html.Div(children=None,id="Escher_",style={"height": "100px",'padding-buttom':'20px'}),
                                     ])], fluid=True,className="bg-light pb-3",style={"width": styles['container_width']}),
+            dbc.Container(html.Div(children=None,id="Escher",style={'align':'center'}),fluid=True,className="bg-light pb-3",style={"width": styles['container_width']}),
             dbc.Container([dbc.Row([
                                     html.H2("Microbial Association", style={
                                             'textAlign': 'left',
@@ -403,8 +402,6 @@ class Model:
                                             "BackgroundColor": "#fbeec1",
                                             "font-family": "Trebuchet MS",
                                             }) ,
-
-
                                     dcc.Dropdown(self.reactions,
                                                  self.reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down") ,
 
@@ -423,7 +420,7 @@ class Model:
                 for i in range(0,self.sim_time,int(self.sim_time/20)):
                     Labels[i]={'label':str(i),'style':{'color': '#77b0b1'}}
                 Labels[self.sim_time]=self.sim_time
-                return [html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0,self.sim_time,int(self.sim_time/20),value=0,id="Escher_Slider",marks=None,tooltip={"placement": "bottom", "always_visible": True},verticalHeight=50)]
+                return [html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0,self.sim_time,int(self.sim_time/20),value=0,id="Escher_Slider",marks=None,tooltip={"placement": "bottom", "always_visible": True})]
 
         @app.callback(Output(component_id="Escher", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'),
         Input(component_id="Escher_Slider", component_property='value'))        
