@@ -244,17 +244,22 @@ class Model:
             "text": "Time (Days)",
             "font_size": 25,
                 },
-                 tickfont_size=20
+                 tickfont_size=20,
+            linecolor='grey',
+            gridcolor='grey',
                 )
             fig.update_yaxes(
             title={
             "text": "Concentrations (kg COD/m^3)",
             "font_size": 25,
              },
-             tickfont_size=20
+            tickfont_size=20,
+            linecolor='grey',
+            gridcolor='grey',
+
             
                 )
-            fig.update_traces(line=dict(width=5))
+            fig.update_traces(line=dict(width=3))
 
         styles={
             'table_width': '95%',
@@ -262,9 +267,9 @@ class Model:
             'container_width': '85%'
         }
         with_report=[dbc.Container(
-            html.H1("ADToolbox Web Interface",style={"font-size":"70px", "padding-top":"50px"}),className="text-white bg-primary",style={"height":"300px","text-align": "center"}, fluid=True),
-            dbc.Container([
-                            dbc.Row(dbc.Card([
+                        html.H1("ADToolbox Web Interface",style={"font-size":"70px", "padding-top":"50px"}),className="text-white bg-primary",style={"height":"300px","text-align": "center"}, fluid=True),
+                        dbc.Container([dbc.Row(
+                                    [dbc.Card([
 
                                         html.H2(f"{self.name} Concentration Plot", style={
                                             'textAlign': 'left',
@@ -272,179 +277,144 @@ class Model:
                                             'font-size': '15',
                                             'padding-top': '50px',
                                             'padding-bottom': '20px',
-                                            'padding-left': styles['padding-left']
-
-                            
-                                            }),
+                                            'padding-left': styles['padding-left'] },
+                                             className="card-title"),
                                         dcc.Graph(figure=fig, id='Concentrations_Line_Plot',
-                                            style={
+                                                style={
                                                 "height":"600px",
                                                 "padding-left": styles['padding-left'],
-                                                'background-color': 'rgba(0,0,0,0)',
+                                                'background-color': 'rgba(0,0,0,0)'}
+                                                ),],className='bg-light'),
 
-                                
-                                            }
-                                            ),],className="bg-light"),className="bg-light"),
+                                    dbc.Card([html.H3("Base Parameters", style={
+                                        'textAlign': 'left',
+                                        'color': colors['text'],
+                                        'font-size': '15',
+                                        'padding-top': '50px',
+                                        'padding-bottom': '20px',
+                                        'padding-left': styles['padding-left']
+                                        }),
+                                        dash_table.DataTable(
+                                        id='base_parameters',
+                                        columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.base_parameters.keys())],
+                                        data=pd.DataFrame(self.base_parameters,index=[0]).to_dict('records'),
+                                        editable=True,
+                                        style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
+                                        style_header={
+                                        'color': 'black',
+                                        'font-size': '30px',
+                                            },
+                                        style_data={
+                                        'backgroundColor': 'rgb(250, 250, 250)',
+                                        'color': 'black',
+                                        'font-size': '25px'}),],className="bg-light"),
 
-            html.H3("Base Parameters", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '15',
-                    'padding-top': '50px',
-                    'padding-bottom': '20px',
-                    'padding-left': styles['padding-left']
+                                    dbc.Card([html.H3("Model Parameters", style={
+                                        'textAlign': 'left',
+                                        'color': colors['text'],
+                                        'font-size': '15',
+                                        'padding-top': '50px',
+                                        'padding-bottom': '20px',
+                                        'padding-left': styles['padding-left']
+                                        }),
+                                        dash_table.DataTable(
+                                        id='model_parameters',
+                                        columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.model_parameters.keys())],
+                                        data=pd.DataFrame(self.model_parameters,index=[0]).to_dict('records'),
+                                        editable=True,
+                                        style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
+                                        style_header={
+                                        'color': 'black',
+                                        'font-size': '30px',
+                                            },
+                                        style_data={
+                                        'backgroundColor': 'rgb(250, 250, 250)',
+                                        'color': 'black',
+                                        'font-size': '25px'}),],className="bg-light"),
+                                    
+                                    dbc.Card([html.H3("Initial Conditions", style={
+                                        'textAlign': 'left',
+                                        'color': colors['text'],
+                                        'font-size': '15',
+                                        'padding-top': '50px',
+                                        'padding-bottom': '20px',
+                                        'padding-left': styles['padding-left']
+                                        }),
+                                        dash_table.DataTable(
+                                        id='initial_conditions',
+                                        columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._ic.keys())],
+                                        data=pd.DataFrame(self._ic,index=[0]).to_dict('records'),
+                                        editable=True,
+                                        style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
+                                        style_header={
+                                        'color': 'black',
+                                        'font-size': '30px',
+                                            },
+                                        style_data={
+                                        'backgroundColor': 'rgb(250, 250, 250)',
+                                        'color': 'black',
+                                        'font-size': '25px'}),],className="bg-light"),
 
+                                    dbc.Card([html.H3("Inlet Conditions", style={
+                                        'textAlign': 'left',
+                                        'color': colors['text'],
+                                        'font-size': '15',
+                                        'padding-top': '50px',
+                                        'padding-bottom': '20px',
+                                        'padding-left': styles['padding-left']
+                                        }),
+                                        dash_table.DataTable(
+                                        id='inlet_conditions',
+                                        columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._inc.keys())],
+                                        data=pd.DataFrame(self._inc,index=[0]).to_dict('records'),
+                                        editable=True,
+                                        style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
+                                        style_header={
+                                        'color': 'black',
+                                        'font-size': '30px',
+                                            },
+                                        style_data={
+                                        'backgroundColor': 'rgb(250, 250, 250)',
+                                        'color': 'black',
+                                        'font-size': '25px'}),],className="bg-light"),
+                                        ],className="bg-light")],fluid=True,className="bg-light",style={"width": styles['container_width']}),
 
-                    }),
+            dbc.Container([dbc.Row(
+                                    [
+                                    html.H2("Escher Map", style={
+                                    'textAlign': 'left',
+                                    'color': colors['text'],
+                                    'font-size': '15',
+                                    'padding-top': '20px',
+                                    'padding-bottom': '20px',
+                                    'padding-left': styles['padding-left']
+                                    }) ,
             
-            dash_table.DataTable(
-            id='base_parameters',
-            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.base_parameters.keys())],
-            data=pd.DataFrame(self.base_parameters,index=[0]).to_dict('records'),
-            editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px', 'width': styles['table_width']},
-            style_header={
-            'backgroundColor': 'rgb(200, 200, 200)',
-            'color': 'black',
-            'font-size': '30px',
-                },
-            style_data={
-            'backgroundColor': 'rgb(250, 250, 250)',
-            'color': 'black',
-            'font-size': '25px',
-            
-            }),
+                                    dcc.Dropdown(["Show Map","Hide Map"],
+                                     self.reactions[0], style={"width": "300px","font-size":25,'padding-left':'2-px'}, id="Drop_Down_Escher"),
+                                    html.Div(children=None,id="Escher_",style={"height": "100px"}),
+                                    html.Div(children=None,id="Escher"),
+                                    ])], fluid=True,className="bg-light pb-3",style={"width": styles['container_width']}),
+            dbc.Container([dbc.Row([
+                                    html.H2("Microbial Association", style={
+                                            'textAlign': 'left',
+                                            'color': colors['text'],
+                                            'font-size': '20px',
+                                            "BackgroundColor": "#fbeec1",
+                                            "font-family": "Trebuchet MS",
+                                            }) ,
 
 
-            html.H3("Model Parameters", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '15',
-                    'padding-top': '50px',
-                    'padding-bottom': '20px',
-                    'padding-left': styles['padding-left']
+                                    dcc.Dropdown(self.reactions,
+                                                 self.reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down") ,
 
+                                    dcc.Graph(figure=None, id="Annotation_Graph", style={
+                                    "height": "650px"})
+                                    ])], fluid=True,className="bg-light",style={"width": styles['container_width']}),
+        ]
 
-                    }),
-
-
-
-            dash_table.DataTable(
-            id='model_parameters',
-            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.model_parameters.keys())],
-            data=pd.DataFrame(self.model_parameters,index=[0]).to_dict('records'),
-            editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px','width': styles['table_width']},
-            style_header={
-            'backgroundColor': 'rgb(200, 200, 200)',
-            'color': 'black',
-            'font-size': '30px',
-                },
-            style_data={
-            'backgroundColor': 'rgb(250, 250, 250)',
-            'color': 'black',
-            'font-size': '25px',
-            }
-            ,
-
-            
-                ),            
-
-
-            html.H3("Initial Conditions", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '15',
-                    'padding-top': '50px',
-                    'padding-bottom': '20px',
-                    'padding-left': styles['padding-left']
-                    }),
-            
-            dash_table.DataTable(
-            id='Initial_Conditions',
-            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._ic.keys())],
-            data=pd.DataFrame(self._ic,index=[0]).to_dict('records'),
-            editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px','width': styles['table_width']},
-            style_header={
-            'backgroundColor': 'rgb(200, 200, 200)',
-            'color': 'black',
-            'font-size': '30px',
-                },
-            style_data={
-            'backgroundColor': 'rgb(250, 250, 250)',
-            'color': 'black',
-            'font-size': '25px',
-            }
-            
-            ),
-
-            html.H3("Inlet Conditions", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '15',
-                    'padding-top': '50px',
-                    'padding-bottom': '20px',
-                    'padding-left': styles['padding-left']
-                    }),
-            dash_table.DataTable(
-            id='inlet_conditions',
-            columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._inc.keys())],
-            data=pd.DataFrame(self._inc,index=[0]).to_dict('records'),
-            editable=True,
-            style_table={'overflowX': 'scroll', 'padding-left': '20px',   'width': styles['table_width']},
-            style_header={
-            'backgroundColor': 'rgb(200, 200, 200)',
-            'color': 'black',
-            'font-size': '30px',
-                },
-            style_data={
-            'backgroundColor': 'rgb(250, 250, 250)',
-            'color': 'black',
-            'font-size': '25px',
-            },
-            merge_duplicate_headers=True),],fluid=True,className="bg-light",style={"width": styles['container_width']}),
-
-
-            html.H2("Escher Map", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '15',
-                    'padding-top': '20px',
-                    'padding-bottom': '20px',
-                    'padding-left': styles['padding-left']
-
-                    }) ,
-            
-            dcc.Dropdown(["Show Map","Hide Map"],
-                         self.reactions[0], style={"width": "300px","font-size":25,'padding-left':'2-px'}, id="Drop_Down_Escher"),
-            html.Br(),
-            html.Div(children=None,id="Escher_"),
-            html.Div(children=None,id="Escher"),
-
-            html.H2("Microbial Association", style={
-                    'textAlign': 'left',
-                    'color': colors['text'],
-                    'font-size': '20px',
-                    "BackgroundColor": "#fbeec1",
-                    "font-family": "Trebuchet MS",
-                    }) ,
-            
-
-            dcc.Dropdown(self.reactions,
-                         self.reactions[0], style={"width": "300px","font-size":25}, id="Drop_Down") ,
-
-            dcc.Graph(figure=None, id="Annotation_Graph", style={
-            "height": "650px"}),]
-        without_report=with_report[:-3]
-        
-        
-        
+        without_report=with_report[:-1]
         app.layout = html.Div(with_report) if self.metagenome_report else html.Div(without_report)
-
-
-
-
 
         @app.callback(Output(component_id="Escher_", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'))
         def escher_wrapper(drop_down_escher):
@@ -453,7 +423,7 @@ class Model:
                 for i in range(0,self.sim_time,int(self.sim_time/20)):
                     Labels[i]={'label':str(i),'style':{'color': '#77b0b1'}}
                 Labels[self.sim_time]=self.sim_time
-                return [html.Br(),html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0,self.sim_time,int(self.sim_time/20),value=0,id="Escher_Slider",marks=Labels),html.Br()]
+                return [html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0,self.sim_time,int(self.sim_time/20),value=0,id="Escher_Slider",marks=None,tooltip={"placement": "bottom", "always_visible": True},verticalHeight=50)]
 
         @app.callback(Output(component_id="Escher", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'),
         Input(component_id="Escher_Slider", component_property='value'))        
