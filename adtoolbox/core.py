@@ -1506,7 +1506,7 @@ class Metagenomics:
 
         return cod
     
-    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str]:
+    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str,dict]:
         """ 
         This method downloads the fastq files from the SRA database using the accession number of the project or run.
         The method uses the fasterq-dump tool to download the fastq files. The method also creates two bash scripts
@@ -1532,10 +1532,12 @@ class Metagenomics:
             accession (str): The accession number of the SRA project or run
             save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
             run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
+            container (str, optional): The containerization tool that will be used to run the bash scripts. Defaults to "None". Options are "None","docker","singularity"
         
         Returns:
             prefetch_script (str): The bash script that will be used to download the SRA files in python string format
             fasterq_dump_script (str): The bash script that will be used to convert the SRA files to fastq files in python string format
+            sample_metadata (dict): A dictionary that contains the sample metadata
     
         """   
         if container=="None":
@@ -1555,6 +1557,8 @@ class Metagenomics:
         project_path=pathlib.Path(self.config.sra_work_dir(accession))
         if not project_path.exists():
             project_path.mkdir(parents=True)
+        
+        sample_metadata=self.get_sample_metadata_from_accession(accession)
 
         if save:
             
@@ -1571,7 +1575,45 @@ class Metagenomics:
             
             
         
-        return prefetch_script,fasterq_dump_script
+        return prefetch_script,fasterq_dump_script,sample_metadata
+    
+    def get_sample_metadata_from_accession(self,accession:str,save:bool=True)->dict:
+        """This function returns a dictionary that contains the sample metadata from the SRA database.
+        
+        Requires:
+            <R>project_accession</R>
+            <R>Configs.Metagenomics</R>
+            
+        Satisfies:
+            <S>sample_metadata</S>
+        
+        Args:
+            accession (str): The accession number of the SRA project or run
+            save (bool): If True, the sample metadata will be saved in the SRA work directory
+            
+        Returns:
+            sample_metadata (dict): A dictionary that contains the sample metadata
+        """
+        metadata={}
+        res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
+        res=json.loads(res.stdout)[0]
+        metadata["host"]=res.setdefault("host","Unknown")
+        metadata["library_strategy"]=res["library_strategy"].lower() if res["library_strategy"] else "Unknown"
+        metadata["library_layout"]=res.setdefault("library_layout","Unknown").lower()
+        metadata["base_count"]=float(res.setdefault("base_count",-1))
+        metadata["read_count"]=float(res.setdefault("read_count",-1))
+        avg_read_len=int(metadata["base_count"]/metadata["read_count"])
+        metadata["read_length"]=avg_read_len if metadata["library_layout"]=="single" else avg_read_len/2
+        if save:
+            with open(pathlib.Path(self.config.sra_work_dir(accession)).joinpath(f"sample_metadata_{accession}.json"),"w") as f:
+                json.dump(metadata,f)
+        return metadata
+
+        
+
+
+
+
     
     def run_qiime2_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
         """
@@ -1708,11 +1750,7 @@ if __name__ == "__main__":
     amplicon2genome_similarity=0.9
     )
     metag=Metagenomics(config_1)
-    metag.align_to_gtdb(run=True,save=True,container="docker")
-    rep_gens=metag.get_genomes_from_gtdb_alignment(save=True)
-    metag.download_genomes([val for val in rep_gens.values()],save=True,container="docker")
-    metag.align_genomes_to_protein_db(run=True,save=True,container="docker")
-
+    metag.get_sample_metadata_from_accession("ERR3861428")
 
 
 
