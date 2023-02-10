@@ -159,7 +159,7 @@ class Feed:
     One assumption is that feed is a mix of total solids and water. This way total cod = total solids in COD.
 
     """
-    total_cod:float
+    # total_cod:float Transfer to base parameters
     carbohydrates:float
     lipids:float
     proteins:float
@@ -690,19 +690,16 @@ class Database:
         return full_table
 
     def init_feedstock_database(self)-> None:
-        '''
-        Makes an empty feedstock database json file.
-        BE CAREFUL: This will overwrite the current database file.
-        '''
-        dec=input("Are you sure you want to create a new database? (y/n): ")
-        if dec=="y":
+        """Initializes the feedstock database as an empty table.
+        """
+        if os.path.exists(self.config.feed_db):
+            answer=input("Feedstock database already exists. Do you want to overwrite it? (y/n)")
+            if answer=='n':
+                return
+            else:
+                
+                
 
-            with open(self.config.feed_db, 'w') as f:
-                json.dump([], f)
-        else:
-            print("Aborting!")
-            return
-        ## TO-DO: Error and Failure handling
 
     def _add_feedstock_to_database(self, feedstock):
         

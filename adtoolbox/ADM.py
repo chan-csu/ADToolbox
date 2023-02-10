@@ -67,14 +67,10 @@ class Model:
         self.model_parameters = model_parameters
         self.base_parameters = base_parameters
         self.feed=feed
-        
-
         for items in control_state.keys():
             initial_conditions[items]
             initial_conditions[items]=control_state[items]
         self.control_state=control_state
-
-
         self.inlet_conditions = np.array(
             [inlet_conditions[i+"_in"] for i in species])[:, np.newaxis]
         self.reactions = reactions
@@ -122,6 +118,7 @@ class Model:
             >>> inlet_conditions={'a_in':.001,'b_in':.002,'c_in':.003}
             >>> model_parameters={'k1':0.001,'k2':0.002}
             >>> base_parameters={'T':0.1}
+            >>> feed=Feed(10,20,20,20)
             >>> def Build_Stoiciometric_Matrix(base_parameters,model_parameters,reactions,species):
             ...    S = np.zeros((len(species), len(reactions)))
             ...    S[[0,1],0]=[-1,0.001]
@@ -1416,10 +1413,8 @@ if __name__ == "__main__":
    #    (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
 
     # adm1.Dash_App(Sol)
-    with open("../Optimization/Tuned_Params.json", 'r') as f:
+    with open("/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization/Tuned_Params.json", 'r') as f:
         mp=json.load(f)
-    with open('/Users/parsaghadermarzi/Desktop/ADM_Mapping.json', 'r') as f:
-        MR=json.load(f)
     with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_base_parameters.json', 'r') as f:
         BP=json.load(f)
     with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Initial_Conditions.json', 'r') as f:
@@ -1431,7 +1426,9 @@ if __name__ == "__main__":
     with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_species.json', 'r') as f:
         s=json.load(f)
     
-    mod_adm1 = Model(mp, BP, IC, InC, r,
-                     s, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state={"S_H_ion":0},name="Modified_ADM1", switch="DAE",metagenome_report=MR)
+    feed=Feed(10,40,20,20,40,10,20)
+    mod_adm1 = Model(mp, BP, IC, InC, feed,r,
+                     s, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state={"S_H_ion":0},name="Modified_ADM1", switch="DAE")
+    
     Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
     mod_adm1.dash_app(Sol_mod_adm1)
