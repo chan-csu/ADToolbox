@@ -29,6 +29,8 @@ from rich.progress import track,Progress
 import rich
 from __init__ import Main_Dir
 from typing import Union
+from dataclasses import dataclass
+import dataclasses
 from utils import wrap_for_slurm,fasta_to_dict
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
@@ -129,8 +131,7 @@ class Pipeline:
 
         return reqs,sats
 
-    
-
+@dataclass
 class Feed:
 
     """
@@ -142,33 +143,44 @@ class Feed:
 
     https://extension.okstate.edu/fact-sheets/solids-content-of-wastewater-and-manure.html
 
-
-    Carbohydrates <=> the fraction of carbohydrates in the feed
-    Lipids <=> the fraction of lipids in the feed
-    Proteins <=> the fraction of proteins in the feed
-    TS <=> the total solids in the feed %mass
-    TSS <=> the total soluble solids in the feed %mass
+    Totall_COD <=> the total COD of the feed that is fed to the reactor
+    Carbohydrates <=> the fraction of carbohydrates in the feed out of 100
+    Lipids <=> the fraction of lipids in the feed out of 100
+    Proteins <=> the fraction of proteins in the feed out of 100
+    TSS <=> the total soluble solids in the feed out of 100 (100 being all the solids or TS)
     'The portion of TS that remains after heating at 550
     C for 1 hour is called Total Fixed Solids (TFS);
     the portion lost during heating is Total Volatile Solids (TVS).'
     TS = TDS + TSS
     TS = TFS + TVS
+    SI <=> the fraction of soluble inorganics in the feed out of 100
+    XI <=> the fraction of insoluble inorganics in the feed out of 100
     Sometimes the fixed solids content,TFS, is called the Ash Content.
+    One assumption is that feed is a mix of total solids and water. This way total cod = total solids in COD.
 
     """
+    total_cod:float
+    carbohydrates:float
+    lipids:float
+    proteins:float
+    tss:float
+    si:float
+    xi:float
 
-    def __init__(self, carbohydrates, lipids, proteins, ts, tss,si,pi):
-        self.carbohydrates = carbohydrates
-        self.lipids = lipids
-        self.proteins = proteins
-        self.ts = ts
-        self.tss = tss
-        self.tds = ts-tss
-        self.si=si
-        self.pi=pi
+    def __post_init__(self):
+        self.tss=self.tss/100
+        self.tds=1-self.tss
+        self.si_tds=self.si/100*self.tds
+        self.xi_tss=self.xi/100*self.tss
+        self.ch_tds=self.carbohydrates/100
+        self.lip_tds=self.lipids/100
+        self.prot_tds=self.proteins/100
+        self.ch_tss=self.carbohydrates/100
+        self.lip_tss=self.lipids/100
+        self.prot_tss=self.proteins/100
 
-    def Report(self):
-        return "Feed Characteristics:\nCarbohydrates: "+str(self.carbohydrates)+""+"\nLipids: "+str(self.lipids)+"\nProteins: "+str(self.proteins)+"\nFast Degrading portion: "+str(1-self.tds)+"\nSouluble Inerts: "+str(self.pi)+"\nParticulate Inerts: "+str(self.pi)
+
+
 
 
 class Sequence_Toolkit:
@@ -1609,13 +1621,8 @@ class Metagenomics:
                 json.dump(metadata,f)
         return metadata
 
-        
-
-
-
-
     
-    def run_qiime2_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
+    def run_qiime2_from_sra(self,accession:str,include_metadata:bool=True,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
         """
         Requires:
             <R>project_accession</R>
@@ -1734,23 +1741,24 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
-    feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
-    taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
-    rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
-    amplicon2genome_top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
-    vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
-    amplicon2genome_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
-    genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
-    feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
-    cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
-    genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
-    amplicon2genome_similarity=0.9
-    )
-    metag=Metagenomics(config_1)
-    metag.get_sample_metadata_from_accession("ERR3861428")
+    # config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
+    # feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
+    # taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
+    # rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
+    # amplicon2genome_top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
+    # vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
+    # amplicon2genome_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    # genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
+    # genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    # genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
+    # feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
+    # cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
+    # genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
+    # amplicon2genome_similarity=0.9
+    # )
+    # metag=Metagenomics(config_1)
+    # print(metag.get_sample_metadata_from_accession("ERR3861428"))
+    pass
 
 
 

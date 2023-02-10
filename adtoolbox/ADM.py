@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output,dash_table
 from core import Database as Database
 from core import Reaction_Toolkit as Reaction_Toolkit
+from core import Feed
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
 from core import Reaction
@@ -47,14 +48,14 @@ class Model:
 
     """General Class For a Model
     Args:
-        Model Parameters (dict): a dictionary which contains model parameters
+        model_parameters (dict): a dictionary which contains model parameters
         base_parameters (dict): a dictionary which contains base paramters
-        Initial Conditions (dict): a dictionary containing inlet conditions for all species
-        Inlet Conditions (dict): a dictionary containing inlet conditions for all species
+        initial_conditions (dict): a dictionary containing inlet conditions for all species
+        inlet_conditions (dict): a dictionary containing inlet conditions for all species
         reactions (list): a list containing all types of reactions
         species (list): a list containing all species
-        ODE_System (function): a function which solves inital value ODEs
-        Build Stoiciometric Matrix (function): a function which outputs a matrix for of all reactions
+        ode_system (function): a function which solves inital value ODEs
+        build_stoichiometric_matrix(function): a function which outputs a matrix for of all reactions
         
     Returns:
         adtoolbox.ADM.Model: returns a model instance for downstream purposes.
@@ -62,9 +63,10 @@ class Model:
     
 
 
-    def __init__(self, model_parameters: dict, base_parameters: dict, initial_conditions: dict, inlet_conditions:dict, reactions: list, species: list, ode_system:Callable, build_stoichiometric_matrix:Callable,control_state:dict={},metagenome_report=None, name="ADM1", switch="DAE",simulation_time=30):
+    def __init__(self, model_parameters: dict, base_parameters: dict, initial_conditions: dict, inlet_conditions:dict,feed:Feed, reactions: list, species: list, ode_system:Callable, build_stoichiometric_matrix:Callable,control_state:dict={},metagenome_report=None, name="ADM1", switch="DAE",simulation_time=30):
         self.model_parameters = model_parameters
         self.base_parameters = base_parameters
+        self.feed=feed
         
 
         for items in control_state.keys():
@@ -85,7 +87,7 @@ class Model:
         self.name = name
         self.metagenome_report = metagenome_report
         self.S = build_stoichiometric_matrix(
-            base_parameters, model_parameters, reactions, species)
+            base_parameters, model_parameters, reactions, species,self.feed)
         self.ode_system = ode_system
         self.sim_time=simulation_time
 
@@ -807,7 +809,7 @@ def adm1_ode_sys(t: float, c: np.ndarray, adm1_instance:Model)-> np.ndarray:
     return dCdt[:, 0]
 
 
-def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parameters: dict, reactions: list, species: list)->np.ndarray:
+def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parameters: dict, reactions: list, species: list,feed:Feed)->np.ndarray:
     """ 
     This function builds the stoichiometric matrix for the modified ADM Model.
         
@@ -823,9 +825,9 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
     """
     S = np.zeros((len(species), len(reactions)))
     S[list(map(species.index, ["TSS", "X_ch", "X_pr", "X_li", "X_I"])),
-      reactions.index('TSS_Disintegration')] = [-1, model_parameters['f_ch_TSS'], model_parameters['f_pr_TSS'], model_parameters['f_li_TSS'], model_parameters['f_xI_TSS']]
+      reactions.index('TSS_Disintegration')] = [-1,feed.ch_tss, feed.prot_tss, feed.lip_tss, feed.xi_tss]
     S[list(map(species.index, ["TDS", "X_ch", "X_pr", "X_li", "S_I"])), reactions.index('TDS_Disintegration')] = [-1,
-                                                                                                                  model_parameters['f_ch_TDS'], model_parameters['f_pr_TDS'], model_parameters['f_li_TDS'], model_parameters['f_sI_TDS']]
+                                                                                                                  feed.ch_tds, feed.prot_tds, feed.lip_tds, feed.si_tds]
     S[list(map(species.index, ["X_ch", "S_su"])),
       reactions.index('Hydrolysis carbohydrates')] = [-1, 1]
     S[list(map(species.index, ["X_pr", "S_aa"])),
