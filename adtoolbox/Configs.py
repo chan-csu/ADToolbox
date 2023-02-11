@@ -71,22 +71,32 @@ class Database:
 		        Main_Dir, "Database", 'Local_reactions.json'),
 		base_dir=os.path.join(Main_Dir,"Database"),
 		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
-		feed_db=os.path.join(Main_Dir, "Database", 'Feed_DB.json'),
+		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
 		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
 		kbase_db=Studies(),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
                   "http://www.cazy.org/Polysaccharide-Lyases.html",
                   "http://www.cazy.org/Carbohydrate-Esterases.html"
                   ],
+		adm_parameters_urls:dict=dict(
+		adm1_model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json",
+        adm1_base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json",
+        adm1_initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Initial_Conditions.json",
+        adm1_inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Inlet_Conditions.json",
+        adm1_reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Reactions.json",
+        adm1_species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Species.json",
+		model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Model_Parameters.json",
+        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Base_Parameters.json",
+        initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Initial_Conditions.json",
+        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Inlet_Conditions.json",
+        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Reactions.json",
+        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Species.json",
+		),
+		adm_parameters_base_dir:str=os.path.join(Main_Dir, "Database","ADM_Parameters"),
 		seed_rxn_url:str ="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
 		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta",
 		adtoolbox_rxn_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
 		feed_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
-		escher_files_urls:list[str]=[
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/LICENSE",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/Modified_ADM.json",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/escher.min.js",
-        "https://github.com/ParsaGhadermazi/Database/raw/main/escher/index.html"],
 		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
 		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza"
 		):
@@ -104,10 +114,11 @@ class Database:
 		self.protein_db_url = protein_db_url
 		self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url
 		self.feed_db_url = feed_db_url
-		self.escher_files_urls = escher_files_urls
 		self.qiime_classifier_db = qiime_classifier_db
 		self.qiime_classifier_db_url = qiime_classifier_db_url
 		self.cazy_links = cazy_links
+		self.adm_parameters_urls = adm_parameters_urls
+		self.adm_parameters_base_dir = adm_parameters_base_dir
 
 class Metagenomics:
 	"""	
@@ -197,48 +208,6 @@ class Metagenomics:
 
 
 
-
-
-class Original_ADM1:
-
-    def __init__(self,
-                base_dir=os.path.join(Main_Dir, "Database","ADM1"),
-                model_parameters=os.path.join(Main_Dir, "Database","ADM1",'ADM1_Model_Parameters.json'),
-                reactions=os.path.join(Main_Dir, "Database","ADM1",'ADM1_Reactions.json'),
-                species=os.path.join(Main_Dir, "Database","ADM1",'ADM1_Species.json'),
-                base_parameters=os.path.join(Main_Dir, "Database","ADM1", 'ADM1_Base_Parameters.json'),
-                initial_conditions=os.path.join(Main_Dir,"Database","ADM1","ADM1_Initial_Conditions.json"),
-                inlet_conditions=os.path.join(Main_Dir,"Database","ADM1","ADM1_Inlet_Conditions.json"),
-                metagenome_report=Metagenomics().genome_adm_map_json):
-        self.model_parameters = model_parameters
-        self.base_parameters = base_parameters
-        self.initial_conditions = initial_conditions
-        self.inlet_conditions = inlet_conditions
-        self.metagenome_report = metagenome_report
-        self.reactions = reactions
-        self.species = species
-        self.base_dir = base_dir
-
-class Modified_ADM:
-
-    def __init__(self,
-                base_dir=os.path.join(Main_Dir, "Database","Modified_ADM"),
-                model_parameters=os.path.join(Main_Dir, "Database","Modified_ADM",'Modified_ADM_Model_Parameters.json'),
-                base_parameters=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Base_Parameters.json"),
-                initial_conditions=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Initial_Conditions.json"),
-                inlet_conditions=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Inlet_Conditions.json"),
-                reactions=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Reactions.json"),
-                species=os.path.join(Main_Dir,"Database","Modified_ADM","Modified_ADM_Species.json"),
-                metagenome_report=Metagenomics().genome_adm_map_json):
-
-        self.model_parameters = model_parameters
-        self.base_parameters = base_parameters
-        self.initial_conditions = initial_conditions
-        self.inlet_conditions = inlet_conditions
-        self.metagenome_report = metagenome_report
-        self.reactions = reactions
-        self.species = species
-        self.base_dir = base_dir
 
 
 

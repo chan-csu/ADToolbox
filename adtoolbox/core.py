@@ -166,21 +166,19 @@ class Feed:
     tss:float
     si:float
     xi:float
+    reference:str=''
 
     def __post_init__(self):
-        self.tss=self.tss/100
-        self.tds=1-self.tss
-        self.si_tds=self.si/100*self.tds
-        self.xi_tss=self.xi/100*self.tss
-        self.ch_tds=self.carbohydrates/100
-        self.lip_tds=self.lipids/100
-        self.prot_tds=self.proteins/100
-        self.ch_tss=self.carbohydrates/100
-        self.lip_tss=self.lipids/100
-        self.prot_tss=self.proteins/100
-
-
-
+        tss_sum=self.carbohydrates/100+self.lipids/100+self.proteins/100+self.xi/100
+        self.ch_tss=self.carbohydrates/100/tss_sum
+        self.lip_tss=self.lipids/100/tss_sum
+        self.prot_tss=self.proteins/100/tss_sum
+        self.xi_tss=self.xi/100/tss_sum
+        tds_sum=self.carbohydrates/100+self.lipids/100+self.proteins/100+self.si/100
+        self.ch_tds=self.carbohydrates/100/tds_sum
+        self.lip_tds=self.lipids/100/tds_sum
+        self.prot_tds=self.proteins/100/tds_sum
+        self.si_tds=self.si/100/tds_sum
 
 
 class Sequence_Toolkit:
@@ -692,163 +690,91 @@ class Database:
     def init_feedstock_database(self)-> None:
         """Initializes the feedstock database as an empty table.
         """
+        feed_dict = {
+                        'carbohydrates':[],
+                        'lipids':[],
+                        'proteins':[],
+                        'tss':[],
+                        'si':[],
+                        'xi':[],
+                        'reference':[]
+                    }
+        feed_df = pd.DataFrame(feed_dict)
         if os.path.exists(self.config.feed_db):
-            answer=input("Feedstock database already exists. Do you want to overwrite it? (y/n)")
-            if answer=='n':
+            answer=input("Feedstock database already exists. Do you want to overwrite it? (y/n)").lower()
+            if answer!='y':
+                rich.print("[red]Feedstock database not initialized!")
                 return
             else:
-                
-                
+                feed_df.to_csv(self.config.feed_db, index=False,sep='\t')
+                rich.print("[green]Feedstock database initialized!")
+        else:
+            feed_df.to_csv(self.config.feed_db, index=False,sep='\t') 
+            rich.print("[green]Feed stock database initialized!")            
 
 
-    def _add_feedstock_to_database(self, feedstock):
+    def add_feedstock_to_database(self, feed:Feed)->None:
         
         '''
-        Adds a feedstock to the feedstock database.
-        A Feed Stock must be a dictionary with the following keys:
-        "Name": Name of the feedstock
-        "TS": Totall Solids (in COD)
-        "TSS": Totall Suspended Solids (in COD)
-        "Lipids": Lipids (in COD)
-        "Proteins": Proteins (in COD)
-        "Carbohydrates": Carbohydrates (in COD)
-        "PI": Particulate Inerts
-        "SI": Soluble Inerts
-        "Notes": Additional notes like the source of the data
+        Adds a feedstock to the feedstock database. feed must be an instance of the Feed class.
+
+        Args:
+            feed (Feed): An instance of the Feed class.
+        
+        Returns:
+            None
 
         '''
-        try:
-            with open(self.config.feed_db, 'r') as f:
-                database=json.load(f)
-        except FileNotFoundError:
-            print("Feedstock database not found! Creating new one...")
-            self.init_feedstock_database()
-        
-        finally:
-        
-            database.append(feedstock)
-            with open(self.config.feed_db, 'w') as f:
-                json.dump(database, f)
-        
-    def add_feedstock_to_database_from_file(self, file_path):
-        '''
-        Adds a feedstock to the feedstock database from a csv file.
-        A Feed Stock spreadsheet must be a table with the following columns:
-        "Name", "TS", "TSS", "Lipids", "Proteins", "Carbohydrates", "PI", "SI", "Notes"
-        File_Path does not come with a default path, since it is advised to not populate the
-        project directory with feedstock spreadsheets unwanted.
-        '''
-        try:
-            f=pd.read_table(file_path, sep=',')
-        except FileNotFoundError:
-            print("File not found!")
+        if not isinstance(feed,Feed):
+            print("Feed must be an instance of the Feed class!")
             return
-        counter=0
-        for i in f.index:
-            feedstock=f.loc[i,:].to_dict()
-            self._add_feedstock_to_database(feedstock)
-            counter+=1
-        print("{} Feedstocks added to the database!".format(counter))
+        
+        feed_db=pd.read_table(self.config.feed_db, sep='\t')
+        feed_db=feed_db.append(dataclasses.asdict(feed), ignore_index=True)
+        feed_db.to_csv(self.config.feed_db, index=False,sep='\t')
+        rich.print("[green]Feedstock added to the database!")
 
-    @staticmethod
-    def download_adm1_parameters(config):
+
+    def download_adm_parameters(self)->None:
         '''
-        Downloads the parameters needed for running ADM models in ADToolbox
+        Downloads the parameters needed for running ADM models in ADToolbox.
         
         '''
-        if not os.path.exists(config.base_dir):
-            os.makedirs(config.base_dir)
-        model_parameters_dir=config.model_parameters
-        base_parameters_dir=config.base_parameters
-        initial_conditions_dir=config.initial_conditions
-        inlet_conditions_dir=config.inlet_conditions
-        reactions_dir=config.reactions
-        species_dir=config.species
-        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json"
-        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json"
-        initial_conditions="https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/ADM1/ADM1_Initial_Conditions.json"
-        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Inlet_Conditions.json"
-        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Reactions.json"
-        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Species.json"
-        r = requests.get(model_parameters, allow_redirects=True)
-        with open(model_parameters_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(base_parameters, allow_redirects=True)
-        with open(base_parameters_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(initial_conditions, allow_redirects=True)
-        with open(initial_conditions_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(inlet_conditions, allow_redirects=True)
-        with open(inlet_conditions_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(reactions, allow_redirects=True)
-        with open(reactions_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(species, allow_redirects=True)
-        with open(species_dir, 'wb') as f:
-            f.write(r.content)
-    @staticmethod
-    def download_modified_adm_parameters(config):    
-        '''
-        Downloads the parameters needed for running ADM models in ADToolbox
-        '''
-        if not os.path.exists(config.base_dir):
-            os.makedirs(config.base_dir)
-        model_parameters_dir=config.model_parameters
-        base_parameters_dir=config.base_parameters
-        initial_conditions_dir=config.initial_conditions
-        inlet_conditions_dir=config.inlet_conditions
-        reactions_dir=config.reactions
-        species_dir=config.species
-        model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Model_Parameters.json"
-        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Base_Parameters.json"
-        initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Initial_Conditions.json"
-        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Inlet_Conditions.json"
-        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Reactions.json"
-        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Species.json"
-        r = requests.get(model_parameters, allow_redirects=True,stream=True)
-        with open(model_parameters_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(base_parameters, allow_redirects=True)
-        with open(base_parameters_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(initial_conditions, allow_redirects=True)
-        with open(initial_conditions_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(inlet_conditions, allow_redirects=True)
-        with open(inlet_conditions_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(reactions, allow_redirects=True)
-        with open(reactions_dir, 'wb') as f:
-            f.write(r.content)
-        r = requests.get(species, allow_redirects=True)
-        with open(species_dir, 'wb') as f:
-            f.write(r.content)
+        if not os.path.exists(self.config.adm_parameters_base_dir):
+            os.makedirs(self.config.adm_parameters_base_dir)
         
+        for url in track(self.config.adm_parameters_urls.values(),description="Downloading ADM parameters"):
+            r = requests.get(url, allow_redirects=True)
+            with open(os.path.join(self.config.adm_parameters_base_dir,url.split("/")[-1]), 'wb') as f:
+                f.write(r.content)
+        rich.print(f"[green]ADM parameters were downloaded to {self.config.adm_parameters_base_dir}")
+ 
         
-    
     def download_seed_databases(self) -> None :
         "Download the modelseed rection database"
         r = requests.get(self.config.seed_rxn_url, allow_redirects=True,stream=True)
         with open(self.config.reaction_db, 'wb') as f:
             f.write(r.content)
+        rich.print(f"[green]Reaction database downloaded to {self.config.reaction_db}")
 
     def download_protein_database(self) -> None:
         r = requests.get(self.config.protein_db_url, allow_redirects=True)
         with open(self.config.protein_db, 'wb') as f:
             f.write(r.content)
+        rich.print(f"[green]Protein database downloaded to {self.config.protein_db}")
         
     def download_reaction_database(self)->None:
         r = requests.get(self.config.adtoolbox_rxn_db_url, allow_redirects=True)
         with open(self.config.csv_reaction_db, 'wb') as f:
             f.write(r.content)
+        rich.print(f"[green]Reaction database downloaded to {self.config.csv_reaction_db}")
 
     
     def download_feed_database(self)-> None:
         r = requests.get(self.config.feed_db_url, allow_redirects=True)
         with open(self.config.feed_db, 'wb') as f:
             f.write(r.content)
+        rich.print(f"[green]Feed database downloaded to {self.config.feed_db}")
     
     def download_qiime_classifier_db(self)->None:
         r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True,stream=True)
@@ -858,12 +784,12 @@ class Database:
             os.makedirs(Path(self.config.qiime_classifier_db).parent)
         with open(self.config.qiime_classifier_db, 'wb') as f:
             with Progress() as progress:
-                task = progress.add_task("Downloading the qiime's classifier database...", total=total_size)
+                task = progress.add_task("Downloading the qiime's classifier database:", total=total_size)
                 for data in r.iter_content(block_size):
                     progress.update(task, advance=len(data))
                     f.write(data)
         
-        rich.print(f"[bold green]Download finished[/bold green]")
+        rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
             
 
 
@@ -874,21 +800,10 @@ class Database:
             <R>Configs.Database</R>
         Satisfies:
             <S>project_accession</S>
-
-
         """
-        try:
-            metagenomics_studies=pd.read_table(self.config.kbase_db.metagenomics_studies,delimiter="ᚢ",encoding="utf-8",engine="python")
-
-        except FileNotFoundError:
-
-            rich.print("[bold red]KBase Database is not found. Please download/build/configure the database first.[/bold red]")
-
-
+        metagenomics_studies=pd.read_table(self.config.kbase_db.metagenomics_studies,delimiter="\t")
         return metagenomics_studies.to_dict(orient="list")
 
-    
-    
     def get_experimental_data_studies(self)->None:
         """
         This function will download the kbase database from the remote repository.
@@ -922,11 +837,12 @@ class Database:
             
     def download_all_databases(self)->None:
         """
-        This function will download all the required databases for the ADToolbox.
+        This function will download all the required databases for all the functionalities of ADToolbox.
         """
         if not os.path.exists(self.config.base_dir):
             os.makedirs(self.config.base_dir)
         self.download_seed_databases()
+        self.download_adm_parameters()
         self.download_protein_database()
         self.download_reaction_database()
         self.download_feed_database()
@@ -938,19 +854,7 @@ class Database:
 class Metagenomics:
 
     """
-    A Core class that handles the metganomics data
-    Init this with a Metagenomics class of config module
-    
-    
-    
-    It takes three diferent types of input:
-
-
-    1- QIIMEII Outputs -> Refer to the documentation for the required files and format
-    2- Shotgun Short reads -> Refer to the documentation for the required files and format
-    3- MAGs -> Refer to the documentation for the required files and format
-
-    This class will use other classes to generate the required files for downstream analysis.
+    This is the main class for Metagenomics functionality of ADToolbox. You instantiate this class with a config.Metagenomics object.
     """
     def __init__(self,config:configs.Metagenomics):
         self.config=config
@@ -1755,8 +1659,9 @@ if __name__ == "__main__":
     # )
     # metag=Metagenomics(config_1)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
-    pass
-
+    db_config = configs.Database(feed_db="/Users/parsaghadermarzi/Desktop/feed_db.tsv")
+    db = Database(db_config)
+    db.download_adm_parameters()
 
 
 
