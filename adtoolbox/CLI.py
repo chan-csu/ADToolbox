@@ -21,6 +21,8 @@ class AParser(argparse.ArgumentParser):
 
 def main():
     db_class=Database(config=configs.Database())
+    meta_config_defult=configs.Metagenomics()
+
     parser = AParser(prog="ADToolBox",
         description="[italic yellow]ADToolBox, a Toolbox for Anaerobic Digestion Modeling",
         epilog="ADToolBox-Chan Lab.")
@@ -29,28 +31,18 @@ def main():
     subparsers = parser.add_subparsers(dest="ADToolbox_Module", help='ADToolbox Modules:')
     ### Database Module -------------------------------------------------------------
     subparser_database = subparsers.add_parser('Database', help='Database Module of ADToolBox')
-    db_subp=subparser_database.add_subparsers(dest="Database_Module", help='Database Modules:')
-    db_subp.add_parser("initialize-feed-db", help="Initialize the Feed DB")
-    exfdb=db_subp.add_parser("extend-feed-db", help="Extend the Feed Database using a CSV file")
-    exfdb.add_argument("-d", "--dir", help="CSV file to be used for extending the Feed DB",required=True)
-    db_subp.add_parser("show-feed-db", help="Display the Current Feed Database")
+    db_subp=subparser_database.add_subparsers(dest="database_module", help='Database commands:')
+    db_subp.add_parser("initialize-feed-db", help="Initialize the Feed DB") 
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("download-seed-reaction-db", help="Downloads the seed reaction database in JSON format")
     db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
     db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format")
     db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
     db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases")
-    ### kbase module -----------------------------------------------------------------
-    subparser_kbase = subparsers.add_parser('Kbase', help='Kbase Module of ADToolBox')
-    kbase_subp=subparser_kbase.add_subparsers(dest="Kbase_Module", help='Kbase Modules:')
-    
-    kbase_subp.add_parser("show-studies", help="Show the list of all studies in Kbase")
-    
+    db_subp.add_parser("download-all-databases", help="downloads all databases that are required by ADToolbox at once")
+    db_subp.add_parser("show-tables", help="Show the list of all studies in Kbase")
 
-    
-    kbase_subp.add_parser("show-metagenomics-studies", help="Show the list of all metagenomics studies in Kbase")
-    
-    add_metagenomics_study=kbase_subp.add_parser("add-metagenomics-study", help="Add a metagenomics study to the Kbase")
+    add_metagenomics_study=db_subp.add_parser("add-metagenomics-study", help="Add a metagenomics study to the Kbase")
     add_metagenomics_study.add_argument("-n", "--name", help="Metagenomics Study Name to be added to the Kbase",required=True)
     add_metagenomics_study.add_argument("-t", "--type", help="Metagenomics Study Type to be added to the Kbase",required=True)
     add_metagenomics_study.add_argument("-r", "--reference", help="Metagenomics Study Reference to be added to the Kbase",required=True)
@@ -58,23 +50,18 @@ def main():
     add_metagenomics_study.add_argument("-s","--sra_accession", help="SRA accession ID for the project",required=True)
     add_metagenomics_study.add_argument("-c","--comments", help="Comments on the study of interest",required=True)
 
-    kbase_subp.add_parser("show-experimental-data-studies", help="Show the list of all studies with experimental data in Kbase")
 
-    add_experimental_data_study=kbase_subp.add_parser("add-experimental-data-study", help="Add a study with experimental data to the Kbase")
+    add_experimental_data_study=db_subp.add_parser("add-experimental-data-study", help="Add a study with experimental data to the Kbase")
     add_experimental_data_study.add_argument("-i", "--study-id", help="Study ID to be added to the Kbase",required=True)
     add_experimental_data_study.add_argument("-n", "--name", help="Study Name to be added to the Kbase",required=True)
     add_experimental_data_study.add_argument("-t", "--type", help="Study Type to be added to the Kbase",required=True)
     add_experimental_data_study.add_argument("-r", "--reference", help="Study Reference to be added to the Kbase",required=True)
 
-    kbase_subp.add_parser("create-metagenomics-studies-db", help="Create the metagenomics studies database")
-    kbase_subp.add_parser("create-experimental-data-studies-db", help="Create the studies with experimental data database")
-    
     
     
     ### Metagenomics Module ###
-    meta_config_defult=configs.Metagenomics()
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help='Metagenomics Module of ADToolBox')
-    metag_subp=subparser_metagenomics.add_subparsers(dest='metag_Subparser',help='[yellow] Available Metagenomics Commands:')
+    metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='[yellow] Available Metagenomics Commands:')
     
     metag_subp_2=metag_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
     metag_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=meta_config_defult.qiime_outputs_dir)
@@ -118,6 +105,7 @@ def main():
     subparser_adm1.add_argument("--species", action="store", help="Provide json file with species for original ADM1")
     subparser_adm1.add_argument("--metagenome-report", action="store", help="Provide json file with metagenome report for original ADM1")
     subparser_adm1.add_argument("--report", action="store", help="Describe how to report the results of original ADM1. Current options are: 'dash' and 'csv'")
+    
     mod_adm_subp=adm_subp.add_parser('modified-adm',help='Modified ADM:')
     mod_adm_subp.add_argument("--model-parameters", action="store", help="Model parameters for Modified ADM")
     mod_adm_subp.add_argument("--base-parameters", action="store", help="Provide json file with base parameters for modified ADM")
@@ -134,22 +122,32 @@ def main():
 
     # Mod_ADM_args=subparser_adm.add_subparsers(help='Modified ADM Args:')
 
-
-    subparser_Report = subparsers.add_parser('Report', help='Report Module of ADToolBox')
-    subparser_Utility = subparsers.add_parser('Utility', help='Utility Module of ADToolBox')
     subparser_Configs = subparsers.add_parser('Configs', help='Configurations of ADToolBox')
     conf_subp=subparser_Configs.add_subparsers(dest='Configs_Subparser',help='Available Configs Commands:')
-    subparser_configs1 = conf_subp.add_parser('set-base-dir',help='Determine the address of the base directory for ADToolBox to work with')
-    subparser_configs2= conf_subp.add_parser('build-folder-structure',help='Builds the folder structure for ADToolBox to work properly')
-    subparser_configs3= conf_subp.add_parser('download-all-databases',help='Downloads all the databases for ADToolBox to work properly, and puts them in the right directory in Databases')
-    subparser_configs1.add_argument("-d", "--directory", action="store", help="Provide the address of the base directory for ADToolBox to work with",required=True)
-
+    subparser_configs1 = conf_subp.add_parser('set-base-dir',action="store",help='Determine the address of the base directory for ADToolBox to work with')
+    conf_subp.add_parser('build-folder-structure',help='Builds the folder structure for ADToolBox to work properly')
+    
+    
+    ### PARSE ARGS ###
 
     args=parser.parse_args()
-    ### Block for running ADM Module ###
+    
+    ### Database ###
+
+    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="initialize-feed-db":
+        db_class.init_feedstock_database()
+    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="download-reaction-db":
+        db_class.download_reaction_database()
+    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="download-seed-reaction-db":
+        db_class.download_seed_databases()
+    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="build-protein-db":
+        ecs=core.Database.ec_from_csv(configs.Database().csv_reaction_db)
+        db_class.protein_db_from_ec(ecs)
+        rich.print("[green]Protein DB built successfully")
+    
         ### Block for running Original ADM1 ###
     #### Metagenomics Module #####
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="amplicon-to-genome":
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_Subparser=="amplicon-to-genome":
         meta_config_defult.feature_table_dir=args.feature_table_dir
         meta_config_defult.qiime_outputs_dir=args.qiime_outputs_dir
         meta_config_defult.rep_seq_fasta=args.rep_Seq_dir

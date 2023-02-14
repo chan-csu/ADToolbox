@@ -131,7 +131,7 @@ class Pipeline:
 
         return reqs,sats
 
-@dataclass
+@dataclass(frozen=True)
 class Feed:
 
     """
