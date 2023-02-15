@@ -22,8 +22,7 @@ from datetime import datetime
 from pathlib import Path
 from collections import Counter
 import pathlib
-import gzip
-import shutil
+import tarfile
 import configs
 from rich.progress import track,Progress
 import rich
@@ -834,37 +833,13 @@ class Database:
             with open(os.path.join(self.config.kbase_db.base_dir,i), 'wb') as f:
                 f.write(r.content)
             rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls[i]}[/bold green]")
-            
-    def download_all_databases(self)->None:
-        """
-        This function will download all the required databases for all the functionalities of ADToolbox.
-        """
-        if not os.path.exists(self.config.base_dir):
-            os.makedirs(self.config.base_dir)
-        self.download_seed_databases()
-        self.download_adm_parameters()
-        self.download_protein_database()
-        self.download_reaction_database()
-        self.download_feed_database()
-        self.download_kbase_database()
-        
-
-     
-
-class Metagenomics:
-
-    """
-    This is the main class for Metagenomics functionality of ADToolbox. You instantiate this class with a config.Metagenomics object.
-    """
-    def __init__(self,config:configs.Metagenomics):
-        self.config=config
     
-    def get_requirements_a2g(self,progress=True):
+    def download_amplicon_to_genome_db(self,progress=True):
         """
         This function will automatically download the required files for Amplicon to Genome functionality.
         """
-        if not os.path.exists(self.config.amplicon2genome_db):
-            os.mkdir(self.config.amplicon2genome_db)
+        if not os.path.exists(self.config.amplicon_to_genome_db):
+            os.mkdir(self.config.amplicon_to_genome_db)
 
         url = {'Version': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/VERSION',
                'MD5SUM': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/MD5SUM',
@@ -880,7 +855,7 @@ class Metagenomics:
                     block_size = 1024
                     with Progress() as progress:
                         task1 = progress.add_task("Downloading " + keys, total=total_size)
-                        with open(os.path.join(self.config.amplicon2genome_db, keys), 'wb') as f:
+                        with open(os.path.join(self.config.amplicon_to_genome_db, keys), 'wb') as f:
                             for data in r.iter_content(block_size):
                                 progress.update(task1, advance=len(data))
                                 f.write(data)
@@ -889,7 +864,7 @@ class Metagenomics:
                 block_size = 1024
                 with Progress() as progress:
                     task1 = progress.add_task("Downloading metadata_field_desc.tsv", total=total_size)
-                    with open(os.path.join(self.config.amplicon2genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
+                    with open(os.path.join(self.config.amplicon_to_genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
                         for data in r.iter_content(block_size):
                             progress.update(task1, advance=len(data))
                             f.write(data)
@@ -900,22 +875,59 @@ class Metagenomics:
                     block_size = 1024
                     with Progress() as progress:
                         task1 = progress.add_task("Downloading " + keys, total=total_size)
-                        with open(os.path.join(self.config.amplicon2genome_db, keys+'.tar.gz'), 'wb') as f:
+                        with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]), 'wb') as f:
                             for data in r.iter_content(block_size):
                                 progress.update(task1, advance=len(data))
                                 f.write(data)
+                with tarfile.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1])) as f_in:
+                    f_in.extractall(self.config.amplicon_to_genome_db)
+
+                
+                os.remove(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]))
         else:
             for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
                 with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
-                    with open(os.path.join(self.config.amplicon2genome_db, keys), 'wb') as f:
+                    with open(os.path.join(self.config.amplicon_to_genome_db, keys), 'wb') as f:
                         f.write(r.content)
             with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=progress) as r:
-                with open(os.path.join(self.config.amplicon2genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
+                with open(os.path.join(self.config.amplicon_to_genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
                     f.write(r.content)
             for keys in ['bac120_metadata', 'bac120_ssu']:
                 with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
-                    with open(os.path.join(self.config.amplicon2genome_db, keys+'.tar.gz'), 'wb') as f:
+                    with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]), 'wb') as f:
                         f.write(r.content)
+                with tarfile.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1])) as f_in:
+                    f_in.extractall(self.config.amplicon_to_genome_db)
+        
+        rich.print("[bold green]Downloaded all the required files for Amplicon to Genome functionality.[/bold green]")
+                    
+                        
+
+            
+    def download_all_databases(self)->None:
+        """
+        This function will download all the required databases for all the functionalities of ADToolbox.
+        """
+        if not os.path.exists(self.config.base_dir):
+            os.makedirs(self.config.base_dir)
+        self.download_seed_databases()
+        self.download_adm_parameters()
+        self.download_protein_database()
+        self.download_reaction_database()
+        self.download_feed_database()
+        self.download_kbase_database()
+        self.download_amplicon_to_genome_db()
+        
+
+     
+
+class Metagenomics:
+
+    """
+    This is the main class for Metagenomics functionality of ADToolbox. You instantiate this class with a config.Metagenomics object.
+    """
+    def __init__(self,config:configs.Metagenomics):
+        self.config=config
 
     
     def find_top_k_repseqs(self,

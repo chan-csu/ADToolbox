@@ -1,6 +1,8 @@
 import os
 from __init__ import Main_Dir,PKG_DATA
 import pathlib
+import rich
+import json
 
 """
 This module contains all the paths to the files and directories used in the program.
@@ -12,17 +14,8 @@ RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 
 Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
 
-def get_base_dir():
-	return Main_Dir
 
-def set_base_dir(path:str):
-	ans=input("This will change the base directory of the program. Are you sure you want to continue? (y/n)")
-	if ans == "y":
-		with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'w') as f:
-			f.write(path)
-	else:
-		print("Base directory not changed")
-	
+
 
 class Alignment:
     """
@@ -73,6 +66,7 @@ class Database:
 		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
 		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
 		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
+		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
 		kbase_db=Studies(),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
                   "http://www.cazy.org/Polysaccharide-Lyases.html",
@@ -119,6 +113,7 @@ class Database:
 		self.cazy_links = cazy_links
 		self.adm_parameters_urls = adm_parameters_urls
 		self.adm_parameters_base_dir = adm_parameters_base_dir
+		self.amplicon_to_genome_db = amplicon_to_genome_db
 
 class Metagenomics:
 	"""	
@@ -130,7 +125,7 @@ class Metagenomics:
             amplicon2genome_k=10,
             amplicon2genome_similarity=0.97,
             amplicon2genome_outputs_dir=os.path.join(Main_Dir,"Genomes"),
-            amplicon2genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
+            amplicon2genome_db=Database().amplicon_to_genome_db,
 			amplicon2genome_top_repseq_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","top_repseqs.fasta"),
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
 			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
@@ -242,3 +237,24 @@ class Utils:
 		self.slurm_save_dir = slurm_save_dir
 		self.slurm_memory = slurm_memory
 
+def get_base_dir():
+	return Main_Dir
+
+def set_base_dir(path:str):
+	ans=input("This will change the base directory of the program. Are you sure you want to continue? (y/n)")
+	if ans == "y":
+		with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'r') as f:
+			conf = json.load(f)
+			try:
+				os.makedirs(path,exist_ok=True)
+			except Exception:
+				rich.print("[red]Base directory not changed")
+				return
+			else:
+				rich.print("[green]Base directory changed")
+				conf["Base_Dir"]=path
+
+			with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'w') as f:
+				json.dump(conf,f)
+	else:
+		rich.print("[red]Base directory not changed")

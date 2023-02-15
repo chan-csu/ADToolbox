@@ -6,11 +6,15 @@ from __init__ import __version__
 from __init__ import Main_Dir
 from rich.console import Console
 import rich
-from adm import *
+import adm
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
 import studies
+import json
+import os
+import pdb
+import numpy as np
 console = Console()
 
 
@@ -20,7 +24,7 @@ class AParser(argparse.ArgumentParser):
         rich.print(message, file=file)
 
 def main():
-    db_class=Database(config=configs.Database())
+    db_class=core.Database(config=configs.Database())
     meta_config_defult=configs.Metagenomics()
 
     parser = AParser(prog="ADToolBox",
@@ -116,36 +120,55 @@ def main():
     mod_adm_subp.add_argument("--metagenome-report", action="store", help="Provide json file with metagenome report for modified ADM")
     mod_adm_subp.add_argument("--control-states", action="store", help="Provide a json file that contains the control states, and their values ")
     mod_adm_subp.add_argument("--report", action="store", help="Describe how to report the results of modified ADM. Current options are: 'dash' and 'csv'")
-    ####
-
-    # subparser_adm.add_argument( "Modified-ADM-dash", help="Runs the dash app in the browser",action="store_true")
 
     # Mod_ADM_args=subparser_adm.add_subparsers(help='Modified ADM Args:')
 
     subparser_Configs = subparsers.add_parser('Configs', help='Configurations of ADToolBox')
-    conf_subp=subparser_Configs.add_subparsers(dest='Configs_Subparser',help='Available Configs Commands:')
-    subparser_configs1 = conf_subp.add_parser('set-base-dir',action="store",help='Determine the address of the base directory for ADToolBox to work with')
-    conf_subp.add_parser('build-folder-structure',help='Builds the folder structure for ADToolBox to work properly')
-    
+    subparser_Configs.add_argument("-s", "--set-base-dir", action="store", help="Set the base directory for ADToolBox to work with")
+    subparser_Configs.add_argument("-g", "--get-base-dir", action="store_true", help="Get the current base directory for ADToolBox")
     
     ### PARSE ARGS ###
 
     args=parser.parse_args()
-    
+
+    ### CLI config block ###
+    if args.ADToolbox_Module == 'Configs':
+
+        if args.set_base_dir:
+            configs.set_base_dir(args.set_base_dir)
+        elif args.get_base_dir:
+            print(configs.get_base_dir())  
     ### Database ###
 
-    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="initialize-feed-db":
-        db_class.init_feedstock_database()
-    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="download-reaction-db":
-        db_class.download_reaction_database()
-    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="download-seed-reaction-db":
-        db_class.download_seed_databases()
-    if args.ADToolbox_Module == 'Database' and "database_module" in args and args.database_module=="build-protein-db":
-        ecs=core.Database.ec_from_csv(configs.Database().csv_reaction_db)
-        db_class.protein_db_from_ec(ecs)
-        rich.print("[green]Protein DB built successfully")
-    
-        ### Block for running Original ADM1 ###
+    if args.ADToolbox_Module == 'Database' and "database_module" in args:
+        if args.database_module=="initialize-feed-db":
+            db_class.init_feedstock_database()
+        
+        elif args.database_module=="download-reaction-db":
+            db_class.download_reaction_database()
+        
+        elif args.database_module=="download-seed-reaction-db":
+            db_class.download_seed_databases()
+        
+        elif args.database_module=="build-protein-db":
+            ecs=core.Database.ec_from_csv(configs.Database().csv_reaction_db)
+            db_class.protein_db_from_ec(ecs)
+            rich.print("[green]Protein DB built successfully")
+        
+        elif args.database_module=="download-feed-db":
+            db_class.download_feed_database()
+        
+        elif args.database_module=="download-protein-db":
+            db_class.download_protein_database()
+        
+        elif args.database_module=="download-amplicon-to-genome-dbs":
+            db_class.download_amplicon_to_genome_db()
+        
+        elif args.database_module=="download-all-databases":
+            db_class.download_all_databases()
+        
+        
+
     #### Metagenomics Module #####
     if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_Subparser=="amplicon-to-genome":
         meta_config_defult.feature_table_dir=args.feature_table_dir
@@ -226,8 +249,7 @@ def main():
             feed_table.add_row(*map(str,list(i.values())))
         console.print(feed_table)
     
-    if "Initialize_feed_db" in args and bool(args.initialize_feed_db):
-        core.Database.init_feedstock_database(db_class)
+
     if "extend_feed_db" in args and bool(args.extend_feed_db):
         db_class.add_feedstock_to_database_from_file(args.extend_feed_db)
     
@@ -282,8 +304,8 @@ def main():
             with open(configs.Original_ADM1().metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
         
-        ADM1 = Model(asm_model_parameters, adm_base_parameters, adm_initial_conditions,
-                 adm_inlet_conditions, adm_reactions, adm_species, adm1_ode_sys, build_adm1_stoiciometric_Matrix, metagenome_report=adm_metagenome_report, Name="ADM1", Switch="DAE")
+        ADM1 = adm.Model(asm_model_parameters, adm_base_parameters, adm_initial_conditions,
+                 adm_inlet_conditions, adm_reactions, adm_species, adm.adm1_ode_sys, adm.build_adm1_stoiciometric_matrix, metagenome_report=adm_metagenome_report, Name="ADM1", Switch="DAE")
         Sol = ADM1.solve_model(
         (0, 20), ADM1.initial_conditions[:, 0], np.linspace(0, 20, 100))
 
@@ -356,8 +378,8 @@ def main():
             
             adm_control_states={}
                 
-        mod_adm1 = Model(adm_model_parameters, adm_base_parameters, adm_initial_conditions, adm_inlet_conditions, adm_reactions,
-                     adm_species, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state=adm_control_states,name="Modified_ADM1", switch="DAE",metagenome_report=adm_metagenome_report)
+        mod_adm1 = adm.Model(adm_model_parameters, adm_base_parameters, adm_initial_conditions, adm_inlet_conditions, adm_reactions,
+                     adm_species, adm.modified_adm_ode_sys, adm.build_modified_adm_stoichiometric_matrix,control_state=adm_control_states,name="Modified_ADM1", switch="DAE",metagenome_report=adm_metagenome_report)
         Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
 
         if args.report == 'dash' or args.report==None:
@@ -368,137 +390,6 @@ def main():
         else:
             print('Please provide a valid report option')
     
-
-        
-
-
-
-    #############################
-    #### Configuration Block ####
-    #############################
-
-    if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='set-base-dir':
-        set_base_dir(args)
-
-    if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='build-folder-structure':
-        build_folder_structure()
-
-    if args.ADToolbox_Module == 'Configs' and args.Configs_Subparser=='download-all-databases':
-        download_all_databases()
-    
-### Kbase Block
-
-
-    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-studies':
-        kbase_show_studies(configs.Kbase().studies)
-    
-    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'create-metagenomics-studies-db':
-        studies.create_metagenoics_studies_table(configs.Kbase().studies)
-    
-    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'add-metagenomics-study':
-        try:
-            last_study_id=studies._get_last_study_id(configs.Kbase().studies)[0][0]
-        except:
-            last_study_id=0
-            studies._create_study_table(configs.Kbase().studies)
-            studies._create_metagenoics_studies_table(configs.Kbase().studies)
-        study_id=last_study_id+1
-        studies._add_study(configs.Kbase().studies,args.name,"Metagenomics",args.reference)
-        studies.add_metagenomics_study(configs.Kbase().studies, args.name, study_id, args.type, args.microbiome,args.sra_accession, args.reference, args.comments)
-
-    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'Kbase' and "Kbase_Module" in args and args.Kbase_Module == 'show-metagenomics-studies':
-        kbase_show_metagenomics_studies(configs.Kbase().studies)
-    
-    
-    
-    
-
-def kbase_show_studies(studies_db):
-    if os.path.exists(studies_db) and studies.get_studies(studies_db):
-        print("The following studies are available in the database:\n")
-        study_table = Table(title="[bold]Studies",expand=True,safe_box=True)
-        colnames = ['ID','Name', 'Type', 'Reference']
-        for i in colnames:
-            study_table.add_column(i, justify="center", style="cyan", no_wrap=True)
-        for i in studies.get_studies(studies_db):
-            study_table.add_row(*map(str, i))
-        console.print(study_table)
-    elif studies.get_studies(studies_db) is not None and len(studies.get_studies(studies_db))==0:
-        print("There are no studies in the database")
-    else:
-        print("The database Does not exist. Please build/download the kbase databases first.")
-
-def kbase_show_metagenomics_studies(metagenomics_studies_db):
-    if os.path.exists(metagenomics_studies_db) and studies.get_metagenomics_studies(metagenomics_studies_db):
-        print("The following metagenomics studies are available in the database:\n")
-        study_table = Table(title="[bold]Metagenomics Studies",expand=True,safe_box=True)
-        colnames = ['ID','Name', 'Study ID', 'Type', 'Microbiome', 'SRA Accession', 'Reference', 'Comments']
-        for i in colnames:
-            study_table.add_column(i, justify="center", style="cyan", no_wrap=True)
-        for i in studies.get_metagenomics_studies(metagenomics_studies_db):
-            study_table.add_row(*map(str, i))
-        console.print(study_table)
-    elif studies.get_metagenomics_studies(metagenomics_studies_db) is not None and len(studies.get_metagenomics_studies(metagenomics_studies_db))==0:
-        print("There are no metagenomics studies in the database")
-    else:
-        print("The database Does not exist. Please build/download the kbase databases first.")
-
-###########################
-#####Configs functions#####
-###########################
-
-def set_base_dir(args):
-    """
-    This function sets the base directory for the ADToolbox.
-    """
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","ADToolbox_Configs.json"), 'r') as f:
-        Conf = json.load(f)
-    Conf["Base_Dir"] = args.directory
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data","ADToolbox_Configs.json"), 'w') as f:
-        json.dump(Conf, f, indent=4)
-    if not os.path.exists(args.directory):
-        os.mkdir(args.directory)
-        rich.print("[yellow]Directory did not exist. Created directory: [green]{}".format(args.directory))
-
-def build_folder_structure():
-    """
-    This function will build the folder structure undrestandable by the ADToolbox.
-    """
-    Required_Folders=["Database","Outputs","Reports","Metagenomics_Data","Genomes","bin"]
-    for i in Required_Folders:
-        if not os.path.exists(os.path.join(Main_Dir,i)):
-            os.mkdir(os.path.join(Main_Dir,i))
-            rich.print(f"\n[yellow] {i} directory did not exist. Created directory: [green]{os.path.join(Main_Dir,i)}\n")
-
-def download_all_databases():
-    """
-    This function will download all the databases required by the ADToolbox.
-    """
-    MetaG=core.Metagenomics(configs.Metagenomics())
-    rich.print(u"[yellow] Downloading Amplicon to Genome databases ...\n")
-    MetaG.get_requirements_a2g()
-    rich.print(u"[bold green]\u2713 Amplicon to Genome databases were downloaded successfuly!\n")
-    rich.print(u"[yellow] Downloading Seed database ...\n")
-    core.Database().download_seed_databases(configs.Seed_RXN_DB)
-    rich.print(u"[bold green]\u2713 Seed database was downloaded successfuly!\n")
-    rich.print(u"[yellow] Downloading Original-ADM1 database ...\n")
-    core.Database().download_adm1_parameters(configs.Original_ADM1())
-    rich.print(u"[bold green]\u2713 Original-ADM1 database was downloaded successfuly!\n")
-    rich.print(u"[yellow] Downloading Modified-ADM database ...\n")
-    core.Database().download_modified_adm_parameters(configs.Modified_ADM())
-    rich.print(u"[bold green]\u2713 Modified-ADM database was downloaded successfuly!\n")
-    rich.print(u"[yellow] Downloading protein database ...\n")
-    core.Database().download_protein_database(configs.Database().protein_db)
-    rich.print(u"[bold green]\u2713 Protein database was downloaded successfuly!\n")
-    rich.print(u"[yellow] Downloading Reaction database ...\n")
-    core.Database().download_reaction_database(configs.Database().csv_reaction_db)
-    rich.print(u"[bold green]All the databases were downloaded successfuly!\n")
-    rich.print(u"[yellow] Downloading the feed database ...\n")
-    core.Database().download_feed_database(configs.Database().feed_db)
-    rich.print(u"[bold green]\u2713 Feed database was downloaded successfuly!\n")
-
-
-
 
 
 
