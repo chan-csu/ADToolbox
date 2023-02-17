@@ -8,6 +8,7 @@ import rich
 import configs
 import dash
 import dash.html as html
+import core
 import pandas as pd
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
@@ -78,53 +79,23 @@ def create_experimental_data_references_table(Config=configs.Studies()):
     experimental_data_references_table.to_csv(Config.experimental_data_references,index=False,sep="\t")
     rich.print(f"[bold green]The experimental data references table was created successfully!")
 
-def _initialize_databases(Config=configs.Studies()):
-    if not os.path.exists(Config.base_dir):
-        os.makedirs(Config.base_dir)
-    if not os.path.exists(Config.metagenomics_studies):
-        create_metagenomics_study_table(Config)
-    if not os.path.exists(Config.experimental_data_references):
-        create_experimental_data_references_table(Config)
     
-def dash_app(configs:configs.Studies,table:str='all') -> None:
-    """Main function of the app."""
+def dash_app(configs:configs.Database) -> None:
+    """ This function builds and runs the dash app that is made to display and edit the database tables of ADToolbox.
+    Since all the tables are addressed in configs.Datbase, you need to pass a configs.Database object to this function, 
+    that points to the addresses of the tables. You can also visit nd edit these tables using a spreadsheet software like excel.
+    Args:
+        configs (configs.Database): The configuration file for the databases
+    Returns:
+        None
+    """
     # Create the app.
+    database=core.Database(configs)
     app = dash.Dash(__name__,external_stylesheets=[dbc.themes.DARKLY])
-    _initialize_databases(configs)
 
-    if table=='all':
-        studies=get_studies(configs)
-        metagenomics_studies=get_metagenomics_studies(configs)
-        if studies.shape[0]:
-            studies=studies.to_dict(orient='records')
-        else:
-            studies=[{"Name":"","Type":"","Reference":""}]
+    metagenomics_studies=database.get_metagenomics_studies()
             
-        if metagenomics_studies.shape[0]:
-            metagenomics_studies=metagenomics_studies.to_dict(orient='records')
-        else:
-            metagenomics_studies=[{"Name":"","Type":"","Microbiome":"","SRA_accession":"","Reference":"","Comments":""}]
-            
-
-    app.layout = html.Div(children=[html.P("All Studies",style={'fontSize': 30}),
-                                    dash.dash_table.DataTable(studies,
-                                    columns=[{"name": i, "id": i} for i in studies[0].keys()],
-                                     id='studies_table',
-                                     style_cell={'textAlign': 'left',
-                                     'fontSize':15, 'font-family':'sans-serif',
-                                     'maxWidth': '250px',},
-                                     style_data={'whiteSpace': 'normal',
-                                     'backgroundColor': 'rgb(50, 50, 50)',
-                                        'color': 'white',
-                                        'height': 'auto',
-                                        'fontSize':20},
-                                    style_header={'backgroundColor': 'rgb(30, 30, 30)',
-                                        'fontWeight': 'bold',
-                                        'color': 'white',
-                                        'fontSize':30},
-                                    style_table={'height':'700px','overflowX': 'auto'},
-                                    page_size=10,),
-                                    html.Br(),
+    app.layout = html.Div(children=[
                                     html.P("Metagenomics Studies" ,style={'fontSize': 30}),
                                     dash.dash_table.DataTable(metagenomics_studies,
                                      id='metagenomics_studies_table',
@@ -203,8 +174,9 @@ def dash_app(configs:configs.Studies,table:str='all') -> None:
     #         'x': [c['name'] for c in columns]
     #     }]
     # }
-    app.run_server(debug=True)
+    app.run_server()
 
 
 if __name__ == '__main__':
-    dash_app(configs.Studies())
+    # dash_app(configs.Studies())
+    pass

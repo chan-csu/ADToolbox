@@ -129,8 +129,7 @@ class Pipeline:
             raise Exception(f"The command docstring for {command.__name__} is not properly formatted. Please use the following tags: <R> and <S> for requirements and satisfactions respectively.")
 
         return reqs,sats
-
-@dataclass(frozen=True)
+@dataclass
 class Feed:
 
     """
@@ -800,39 +799,34 @@ class Database:
         Satisfies:
             <S>project_accession</S>
         """
-        metagenomics_studies=pd.read_table(self.config.kbase_db.metagenomics_studies,delimiter="\t")
-        return metagenomics_studies.to_dict(orient="list")
+        metagenomics_studies=pd.read_table(self.config.studies.metagenomics_studies,delimiter="\t")
+        return metagenomics_studies.to_dict(orient="records")
 
-    def get_experimental_data_studies(self)->None:
-        """
-        This function will download the kbase database from the remote repository.
-        """
-        
-        
-        r = requests.get(self.config.kbase_db.urls['metagenomics_studies'], allow_redirects=True)
-        if not os.path.exists(self.config.kbase_db.base_dir):
-            os.makedirs(self.config.kbase_db.base_dir,exist_ok=True)
-        with open(os.path.join(self.config.kbase_db.metagenomics_studies), 'wb') as f:
-            f.write(r.content)
-        rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls['metagenomics_studies']}[/bold green]")
     
-        r = requests.get(self.config.kbase_db.urls['exmpermental_data_references'], allow_redirects=True)
-        with open(os.path.join(self.config.kbase_db.experimental_data_references), 'wb') as f:
-            f.write(r.content)
+    def get_experimental_data_studies(self)->list:
+        """
+        This function will retrieve the studies as a list of dictionaries.
 
-        rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls['exmpermental_data_references']}[/bold green]")  
+        Returns:
+            list: A list of dictionaries containing the studies.
 
-    def download_kbase_database(self)->None:
+        """
+        experimental_studies=pd.read_table(self.config.studies.experimental_data_references,delimiter="\t")
+        return experimental_studies.to_dict(orient="list")
+        
+         
+
+    def download_studies_database(self)->None:
         """
         This function will download the kbase database from the remote repository.
         """
-        for i in self.config.kbase_db.urls:
-            r = requests.get(self.config.kbase_db.urls[i], allow_redirects=True)
-            if not os.path.exists(self.config.kbase_db.base_dir):
-                os.makedirs(self.config.kbase_db.base_dir,exist_ok=True)
-            with open(os.path.join(self.config.kbase_db.base_dir,i), 'wb') as f:
+        for i in self.config.studies.urls:
+            r = requests.get(self.config.studies.urls[i], allow_redirects=True)
+            if not os.path.exists(self.config.studies.base_dir):
+                os.makedirs(self.config.studies.base_dir,exist_ok=True)
+            with open(os.path.join(self.config.studies.base_dir,self.config.studies.urls[i].split("/")[-1]), 'wb') as f:
                 f.write(r.content)
-            rich.print(f"[bold green]Downloaded {self.config.kbase_db.urls[i]}[/bold green]")
+            rich.print(f"[bold green]Downloaded {self.config.studies.urls[i]}[/bold green]")
     
     def download_amplicon_to_genome_db(self,progress=True):
         """
@@ -915,7 +909,7 @@ class Database:
         self.download_protein_database()
         self.download_reaction_database()
         self.download_feed_database()
-        self.download_kbase_database()
+        self.download_studies_database()
         self.download_amplicon_to_genome_db()
         
 

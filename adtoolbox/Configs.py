@@ -67,7 +67,7 @@ class Database:
 		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
 		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
 		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
-		kbase_db=Studies(),
+		studies=Studies(),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
                   "http://www.cazy.org/Polysaccharide-Lyases.html",
                   "http://www.cazy.org/Carbohydrate-Esterases.html"
@@ -103,7 +103,7 @@ class Database:
 		self.csv_reaction_db = csv_reaction_db
 		self.feed_db = feed_db
 		self.protein_db = protein_db
-		self.kbase_db = kbase_db
+		self.studies = studies
 		self.seed_rxn_url = seed_rxn_url
 		self.protein_db_url = protein_db_url
 		self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url

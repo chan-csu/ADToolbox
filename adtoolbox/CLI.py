@@ -10,31 +10,31 @@ import adm
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
-import studies
+import tables
 import json
 import os
 import pdb
 import numpy as np
-console = Console()
 
-
-console.rule("[bold red]ADToolBox")
 class AParser(argparse.ArgumentParser):
     def _print_message(self, message, file=None):
         rich.print(message, file=file)
 
 def main():
+    console = Console()
+    console.rule("[bold red]ADToolBox")
+    
     db_class=core.Database(config=configs.Database())
     meta_config_defult=configs.Metagenomics()
 
     parser = AParser(prog="ADToolBox",
-        description="[italic yellow]ADToolBox, a Toolbox for Anaerobic Digestion Modeling",
-        epilog="ADToolBox-Chan Lab.")
+        description="ADToolBox, a toolbox for anaerobic digestion modeling",
+        epilog="ADToolBox-Chan Lab at Colorado State University.")
     parser.add_argument("-v", "--version", action="version",help="Prints the version of ADToolBox") 
     parser.version = f"[green]ADToolBox v{__version__}"
     subparsers = parser.add_subparsers(dest="ADToolbox_Module", help='ADToolbox Modules:')
     ### Database Module -------------------------------------------------------------
-    subparser_database = subparsers.add_parser('Database', help='Database Module of ADToolBox')
+    subparser_database = subparsers.add_parser('Database', help='This module provides a command line interface to build or download the databases that ADToolbox requires')
     db_subp=subparser_database.add_subparsers(dest="database_module", help='Database commands:')
     db_subp.add_parser("initialize-feed-db", help="Initialize the Feed DB") 
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
@@ -64,7 +64,7 @@ def main():
     
     
     ### Metagenomics Module ###
-    subparser_metagenomics= subparsers.add_parser('Metagenomics', help='Metagenomics Module of ADToolBox')
+    subparser_metagenomics= subparsers.add_parser('Metagenomics', help="This module provides the import metagenomics functionalities of ADToolbox in the command line")
     metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='[yellow] Available Metagenomics Commands:')
     
     metag_subp_2=metag_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
@@ -98,7 +98,7 @@ def main():
     doc_parser.add_argument("-s", "--show", action="store_true", help="Documentation for a specific module")    
     
     ### ADM module ###
-    subparser_adm = subparsers.add_parser('ADM', help='ADM Module of ADToolBox')
+    subparser_adm = subparsers.add_parser('ADM', help='This module provides a command line interface for running and visualizing the ADToolbox ADM and modified ADM models')
     adm_subp=subparser_adm.add_subparsers(dest='adm_Subparser',help='Available ADM Commands:')
     subparser_adm1 = adm_subp.add_parser('original-adm1',help='Original ADM1:')
     subparser_adm1.add_argument("--model-parameters", action="store", help="Model parameters for ADM 1")
@@ -167,7 +167,10 @@ def main():
         elif args.database_module=="download-all-databases":
             db_class.download_all_databases()
         
+        elif args.database_module=="show-tables":
+            tables.dash_app(configs=configs.Database())
         
+
 
     #### Metagenomics Module #####
     if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_Subparser=="amplicon-to-genome":

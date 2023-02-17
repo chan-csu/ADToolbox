@@ -34,7 +34,12 @@ import pdb
 
 # ----------
 
-
+DEFAULT_FEED=Feed( carbohydrates=10,
+                    proteins=20, 
+                    lipids=20, 
+                    si=30,
+                    xi=50,
+                    tss=80)
 RT = Reaction_Toolkit(reaction_db=configs.Reaction_Toolkit().reaction_db)
 
 class _Fake_Sol:
@@ -1426,8 +1431,7 @@ if __name__ == "__main__":
     with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_species.json', 'r') as f:
         s=json.load(f)
     
-    feed=Feed(10,40,20,20,40,10,20)
-    mod_adm1 = Model(mp, BP, IC, InC, feed,r,
+    mod_adm1 = Model(mp, BP, IC, InC, DEFAULT_FEED,r,
                      s, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state={"S_H_ion":0},name="Modified_ADM1", switch="DAE")
     
     Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
