@@ -1498,6 +1498,8 @@ class Metagenomics:
     
     def get_sample_metadata_from_accession(self,accession:str,save:bool=True)->dict:
         """This function returns a dictionary that contains the sample metadata from the SRA database.
+        The function uses the bio command line tool to get the sample metadata. The function also saves the sample metadata if save=True.
+        if the download somehow fails, the function will return a dictionary with default values like -1 and "Unknown".
         
         Requires:
             <R>project_accession</R>
@@ -1515,14 +1517,23 @@ class Metagenomics:
         """
         metadata={}
         res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
-        res=json.loads(res.stdout)[0]
-        metadata["host"]=res.setdefault("host","Unknown")
-        metadata["library_strategy"]=res["library_strategy"].lower() if res["library_strategy"] else "Unknown"
-        metadata["library_layout"]=res.setdefault("library_layout","Unknown").lower()
-        metadata["base_count"]=float(res.setdefault("base_count",-1))
-        metadata["read_count"]=float(res.setdefault("read_count",-1))
-        avg_read_len=int(metadata["base_count"]/metadata["read_count"])
-        metadata["read_length"]=avg_read_len if metadata["library_layout"]=="single" else avg_read_len/2
+        if json.loads(res.stdout.decode("utf-8")):
+            res=json.loads(res.stdout.decode("utf-8"))[0]
+            metadata["host"]=res.setdefault("host","Unknown")
+            metadata["library_strategy"]=res["library_strategy"].lower() if res["library_strategy"] else "Unknown"
+            metadata["library_layout"]=res.setdefault("library_layout","Unknown").lower()
+            metadata["base_count"]=float(res.setdefault("base_count",-1))
+            metadata["read_count"]=float(res.setdefault("read_count",-1))
+            avg_read_len=int(metadata["base_count"]/metadata["read_count"])
+            metadata["read_length"]=avg_read_len if metadata["library_layout"]=="single" else avg_read_len/2
+        else:
+            metadata["host"]="Unknown"
+            metadata["library_strategy"]="Unknown"
+            metadata["library_layout"]="Unknown"
+            metadata["base_count"]=-1
+            metadata["read_count"]=-1
+            metadata["read_length"]=-1
+
         if save:
             with open(pathlib.Path(self.config.sra_work_dir(accession)).joinpath(f"sample_metadata_{accession}.json"),"w") as f:
                 json.dump(metadata,f)
@@ -1665,9 +1676,15 @@ if __name__ == "__main__":
     # )
     # metag=Metagenomics(config_1)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
-    db_config = configs.Database(feed_db="/Users/parsaghadermarzi/Desktop/feed_db.tsv")
-    db = Database(db_config)
-    db.download_adm_parameters()
+    db_class=Database(config=configs.Database())
+    metag_studies=db_class.get_metagenomics_studies()
+    metag_class=Metagenomics(configs.Metagenomics())
+    counter=0
+    for ind,study in enumerate(metag_studies):
+        metag_studies[ind]["Type"]=metag_class.get_sample_metadata_from_accession(study["SRA_accession"],save=False)["library_strategy"]
+        print(f"Study {ind} of {len(metag_studies)}")
+        counter+=1
+    pd.DataFrame(metag_studies).to_csv("/Users/parsaghadermarzi/Desktop/modified_studies_db",index=False)
 
 
 
