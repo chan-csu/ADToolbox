@@ -41,11 +41,6 @@ This toolbox is comprised of different modules:
 
 5. Documentations Module
 
-6. Report Module
-
-7. Utility Module
-
-
 
 -------------
 
@@ -64,71 +59,34 @@ This will give you a list of all functionalities that are related to the configu
 
 ```
 
-ADToolbox Configs set-base-dir -d ~/Desktop/ADToolbox
+ADToolbox Configs --set-base-dir ~/Desktop/ADToolbox
 
 ```
-
-Note that you ***must*** include -d after ```set-base-dir```.
 
 Anything that you will do from now on, will be saved in this directory.
 
-- build-folder-structure: Now you need to build the folder structure that is understandable by ADToolbox. You will do that by:
 
-```
-
-ADToolbox Configs build-folder-structure
-
-```
-
-- download-all-databases: The next step is to download all the necessary database files for ADToolbox to work properly. You will achieve this by: 
-
-```
-ADToolbox Configs download-all-databases
-
-```
-
-- download-escher-files: If you want to access the esher map functionalities of ADToolbox you need to download the required files by:
-
-```
-
-ADToolbox Configs download-escher-files
-
-```
-
-An overal view of the Configs module of ADToolbox can be obtained by:
-
-```
 
 ADToolbox Configs --help
 
+```
+
 ────────────────────────────────── ADToolBox───────────────────────────────────
-usage: ADToolBox Configs [-h]
-                         {set-base-dir,build-folder-structure,download-all-datab
-ases,download-escher-files}
-                         ...
 
-positional arguments:
-  {set-base-dir,build-folder-structure,download-all-databases,download-escher-fi
-les}
-                        Available Configs Commands:
-    set-base-dir        Determine the address of the base directory for
-                        ADToolBox to work with
-    build-folder-structure
-                        Builds the folder structure for ADToolBox to work
-                        properly
-    download-all-databases
-                        Downloads all the databases for ADToolBox to work
-                        properly, and puts them in the right directory in
-                        Databases
-    download-escher-files
-                        Downloads all files required for running the escher
-                        map functionality of ADToolBox
+usage: ADToolBox Configs [-h] [-s SET_BASE_DIR] [-g]
 
-options:
+optional arguments:
   -h, --help            show this help message and exit
+  -s SET_BASE_DIR, --set-base-dir SET_BASE_DIR
+                        Set the base directory for ADToolBox to work with
+  -g, --get-base-dir    Get the current base directory for ADToolBox
 
 
 ```
+
+-------------
+
+
 ### 2. Database Module
 
 Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:
