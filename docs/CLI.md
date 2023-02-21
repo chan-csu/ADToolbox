@@ -1,10 +1,8 @@
 # ADToolbox Commandline Interface
 
-Here we go over using the commandline interface, CLI, of ADToolbox.
-First, we need to initialize the CLI:
-
+-------------
 ## Initialization
-
+First, we need to initialize the CLI:
 After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:
 
 ```
@@ -15,7 +13,7 @@ You should see the following if you are running this for the first time:
 
 ```
 No Base Directory Found: 
-Where do you want to store your ADToolBox Data?:
+Where do you want to store your ADToolbox Data?:
 
 ```
 Type the **absolute path** directory of interest. Don't worry if you mess this part up. You can change this later as well. you can type '.' for now and change this later.
@@ -27,6 +25,7 @@ ADToolbox --help
 
 ```
 
+-------------
 ## ADToolbox Modules
 
 This toolbox is comprised of different modules:
@@ -41,16 +40,26 @@ This toolbox is comprised of different modules:
 
 5. Documentations Module
 
-
 -------------
-
 ### 1. Configs Module
-
-After installation, you have to download all the required files to run ADToolbox properly. To do this, first go to the Configs module by:
 
 ```
 
+After installation, the base working directory must be specified:
+
+
 ADToolbox Configs --help
+
+────────────────────────────────── ADToolBox───────────────────────────────────
+
+usage: ADToolBox Configs [-h] [-s SET_BASE_DIR] [-g] [--get-base-dir]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SET_BASE_DIR, --set-base-dir SET_BASE_DIR
+                        Set the base directory for ADToolBox to work with
+  -g, --get-base-dir    Get the current base directory for ADToolBox
+
 
 ```
 This will give you a list of all functionalities that are related to the configurations of the toolbox. Here we go one by one in the correct order:
@@ -66,27 +75,7 @@ ADToolbox Configs --set-base-dir ~/Desktop/ADToolbox
 Anything that you will do from now on, will be saved in this directory.
 
 
-
-ADToolbox Configs --help
-
-```
-
-────────────────────────────────── ADToolBox───────────────────────────────────
-
-usage: ADToolBox Configs [-h] [-s SET_BASE_DIR] [-g]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -s SET_BASE_DIR, --set-base-dir SET_BASE_DIR
-                        Set the base directory for ADToolBox to work with
-  -g, --get-base-dir    Get the current base directory for ADToolBox
-
-
-```
-
 -------------
-
-
 ### 2. Database Module
 
 Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:
@@ -107,8 +96,6 @@ positional arguments:
 nload-protein-db,download-amplicon-to-genome-dbs}
                         Database Modules:
     initialize-feed-db  Initialize the Feed DB
-    extend-feed-db      Extend the Feed Database using a CSV file
-    show-feed-db        Display the Current Feed Database
     download-reaction-db
                         Downloads the reaction database in CSV
                         format
@@ -125,7 +112,13 @@ nload-protein-db,download-amplicon-to-genome-dbs}
                         from reaction database.
     download-amplicon-to-genome-dbs
                         downloads amplicon to genome databases
-
+    download-all-databases
+                        downloads all databases that are required by ADToolbox at once
+    show-tables         Show the list of all studies in Kbase
+    add-metagenomics-study
+                        Add a metagenomics study to the Kbase
+    add-experimental-data-study
+                        Add a study with experimental data to the Kbase
 options:
   -h, --help            show this help message and exit
 ```
@@ -140,32 +133,9 @@ ADToolbox Database initialize-feed-db
 
 ```
 
-- extend-feed-db: you can add to your current feed database from a csv file with this command. The CSV file **must** follow this column configuration:
-
-|Name|TS|TSS|Lipids|Proteins|Carbohydrates|PI|SI|Notes|
-|----|--|---|------|--------|-------------|--|--|-----|
-
-
-You can add your CSV file by:
-
+*NOTE*: Skip the following download commands if you have run ```ADToolbox Configs download-all-databases```
 ```
 
-ADToolbox Database extend-feed-db -d [PATH TO YOUR CSV FILE]
-
-```
-
-- show-feed-db: You can pretty print your current feed table by
-
-```
-
-ADToolbox Database show-feed-db
-
-```
-
-This command will print a pretty table of your current feed database, which is the JSON file you initialized earlier and extended with a CSV file. This is made possible because of the great Rich library.
-
-
-*NOTE*: Skipp the following download commands if you ran ```ADToolbox Configs download-all-databases```
 - download-reaction-db: As the name implies, this will download the ADToolbox reaction database. This is required for many important modules of the toolbox
 
 ```
@@ -212,10 +182,11 @@ ADToolbox Database download-amplicon-to-genome-dbs
 ADToolbox Database download-seed-reaction-db
 
 ```
-
+```
+-------------
 ### 3. Metagenomics Module
 
-Metagenomics module of ADToolbox is designed to add metagenomics data into considewration when designing and AD process.
+Metagenomics module of ADToolbox is designed to input metagenomics data into consideration when designing an AD process.
 
 You can observe all the functionalities by:
 
@@ -468,7 +439,6 @@ ADToolbox Metagenomics map-genomes-to-adm -i ~/Desktop/alignment_info.json -m Mo
 
 
 -------------------------------
-
 ### 4. ADM Module
 
 ADM module provides all the tools needed to run instances of ADM Model. This include the originsl ADM, Batstone et al., and the Modified-ADM suggested by the Authors of ADToolbox. In order to find out about all the functionalities in this module, you can run:
@@ -484,7 +454,6 @@ positional arguments:
                         Available ADM Commands:
     original-adm1       Original ADM1:
     modified-adm        Modified ADM:
-    show-escher-map     makes an escher map for modified ADM
 
 options:
   -h, --help            show this help message and exit
@@ -597,10 +566,7 @@ ADToolbox ADM show-escher-map
 
 ```
 
-
---------------------------
- 
- 
+-------------
 ### 5. Documentations Module
 
 You can view the documentaion in your CLI using rich's markdown render. You can do this by:
@@ -609,11 +575,3 @@ You can view the documentaion in your CLI using rich's markdown render. You can 
 ADToolbox Documentations --show 
 
 ```
-
---------------------------
-
-### 6. Report Module
-
---------------------------
-
-### 7. Utility Module
