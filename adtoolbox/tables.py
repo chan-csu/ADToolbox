@@ -95,7 +95,33 @@ def dash_app(configs:configs.Database) -> None:
 
     metagenomics_studies=database.get_metagenomics_studies()
             
-    app.layout = html.Div(children=[
+    app.layout = html.Div([
+        
+    dbc.Accordion(
+        [
+            dbc.AccordionItem(
+                "This is the content of the first section", title="Item 1"
+            ),
+            dbc.AccordionItem(
+                "This is the content of the second section", title="Item 2"
+            ),
+            dbc.AccordionItem(
+                "This is the content of the third section", title="Item 3"
+            ),
+        ],
+        flush=True,
+    ),]
+)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    html.Div(children=[
                                     html.P("Metagenomics Studies" ,style={'fontSize': 30}),
                                     dash.dash_table.DataTable(metagenomics_studies,
                                      id='metagenomics_studies_table',

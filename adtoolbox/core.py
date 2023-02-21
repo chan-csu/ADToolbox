@@ -1516,7 +1516,10 @@ class Metagenomics:
             sample_metadata (dict): A dictionary that contains the sample metadata
         """
         metadata={}
-        res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
+        if os.name=="nt":
+            res=subprocess.run(["bio","search",accession,"--all"],shell=True,capture_output=True)
+        else:
+            res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
         if json.loads(res.stdout.decode("utf-8")):
             res=json.loads(res.stdout.decode("utf-8"))[0]
             metadata["host"]=res.setdefault("host","Unknown")
