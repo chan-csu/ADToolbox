@@ -1515,12 +1515,13 @@ class Metagenomics:
         Returns:
             sample_metadata (dict): A dictionary that contains the sample metadata
         """
+        
         metadata={}
         if os.name=="nt":
             res=subprocess.run(["bio","search",accession,"--all"],shell=True,capture_output=True)
         else:
             res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
-        if json.loads(res.stdout.decode("utf-8")):
+        try:
             res=json.loads(res.stdout.decode("utf-8"))[0]
             metadata["host"]=res.setdefault("host","Unknown")
             metadata["library_strategy"]=res["library_strategy"].lower() if res["library_strategy"] else "Unknown"
@@ -1529,7 +1530,7 @@ class Metagenomics:
             metadata["read_count"]=float(res.setdefault("read_count",-1))
             avg_read_len=int(metadata["base_count"]/metadata["read_count"])
             metadata["read_length"]=avg_read_len if metadata["library_layout"]=="single" else avg_read_len/2
-        else:
+        except Exception:
             metadata["host"]="Unknown"
             metadata["library_strategy"]="Unknown"
             metadata["library_layout"]="Unknown"
@@ -1687,7 +1688,7 @@ if __name__ == "__main__":
         metag_studies[ind]["Type"]=metag_class.get_sample_metadata_from_accession(study["SRA_accession"],save=False)["library_strategy"]
         print(f"Study {ind} of {len(metag_studies)}")
         counter+=1
-    pd.DataFrame(metag_studies).to_csv("/Users/parsaghadermarzi/Desktop/modified_studies_db",index=False)
+    pd.DataFrame(metag_studies).to_csv(os.path.join(Main_Dir,"metadata_added.csv"),index=False)
 
 
 
