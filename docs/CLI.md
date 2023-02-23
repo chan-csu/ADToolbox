@@ -43,11 +43,9 @@ This toolbox is comprised of different modules:
 -------------
 ### 1. Configs Module
 
-```
-
 After installation, the base working directory must be specified:
 
-
+```
 ADToolbox Configs --help
 
 ────────────────────────────────── ADToolBox───────────────────────────────────
