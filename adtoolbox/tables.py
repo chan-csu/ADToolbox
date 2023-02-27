@@ -14,7 +14,7 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 
 
-def get_studies(config=configs.Studies()):
+def get_studies(config=configs.Database()):
     """Collects all of the studies in the databases
     
     args:
@@ -23,8 +23,8 @@ def get_studies(config=configs.Studies()):
         pd.DataFrame: The studies table
         
     """
-    metagenomics_studies=pd.read_csv(config.metagenomics_studies,delimiter="\t")
-    experimental_data_references=pd.read_csv(config.experimental_data_references,delimiter="\t")
+    metagenomics_studies=pd.read_csv(config.studies.metagenomics_studies,delimiter="\t")
+    experimental_data_references=pd.read_csv(config.studies.experimental_data_references,delimiter="\t")
     studies=pd.concat([metagenomics_studies,experimental_data_references],axis=0,join="inner")
     return studies
 
@@ -91,28 +91,42 @@ def dash_app(configs:configs.Database) -> None:
     """
     # Create the app.
     database=core.Database(configs)
-    app = dash.Dash(__name__,external_stylesheets=[dbc.themes.DARKLY])
+    app = dash.Dash(__name__,external_stylesheets=[dbc.themes.FLATLY])
 
     metagenomics_studies=database.get_metagenomics_studies()
             
     app.layout = html.Div([
-        
-    dbc.Accordion(
-        [
-            dbc.AccordionItem(
-                "This is the content of the first section", title="Item 1"
-            ),
-            dbc.AccordionItem(
-                "This is the content of the second section", title="Item 2"
-            ),
-            dbc.AccordionItem(
-                "This is the content of the third section", title="Item 3"
-            ),
-        ],
-        flush=True,
-    ),]
-)
-    
+                dbc.Container(html.H1("ADToolbox Tables",style={"font-size":"70px", "padding-top":"50px"}),className="text-white bg-primary",style={"height":"300px","text-align": "center"}, fluid=True),
+                
+                dbc.Row(dbc.Card([dbc.Container("Metagenomics Studies", class_name="fs-1 m-1",style={"height": "70px",},fluid=True),
+                dbc.Container([dash.dash_table.DataTable(metagenomics_studies,
+                        id='metagenomics_studies_table',
+                        columns=[{"name": i, "id": i} for i in metagenomics_studies[0].keys()],
+                        style_cell={'textAlign': 'left',
+                                     'fontSize':30, 'font-family':'sans-serif',
+                                     'maxWidth': '250px'},
+
+                         style_data={'whiteSpace': 'normal',
+                                                'height': 'auto',
+                                                'backgroundColor': 'rgb(250, 250, 250)',
+                                                'color': 'black',
+                                                "padding": "10px",
+                                                'fontSize':30},
+                                    style_header={'backgroundColor': 'rgb(50, 50, 50)',
+                                                'color': 'rgb(255, 255, 255)',
+                                                "text-align": "center",
+                                                'fontWeight': 'bold',
+                                                "padding": "10px",
+                                                'fontSize':35},
+                                     style_table={'height':'700px','overflowX': 'auto'},
+                                     page_size=10,
+                                    editable=True,
+                                    row_deletable=True,
+                                     ),
+                                     html.Button('Add metagenomics study', id='add-metagenomics-study', n_clicks=0,style={'font-size': '25px'}),
+                                     html.Button('Submit metagenomics study', id='submit-metagenomics-study', n_clicks=0,style={'font-size': '25px'}),
+                                     html.Div(id='submission-status')],fluid=True)],style={"width":"80%",},className="bg-light"),justify="center"),])
+
     
     
     
@@ -204,5 +218,4 @@ def dash_app(configs:configs.Database) -> None:
 
 
 if __name__ == '__main__':
-    # dash_app(configs.Studies())
-    pass
+    dash_app(configs.Database())
