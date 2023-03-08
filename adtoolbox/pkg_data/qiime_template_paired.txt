@@ -21,10 +21,10 @@ qiime feature-classifier classify-sklearn \
 
 qiime tools export \
 --input-path  <qiime2_work_dir>/feature-table.qza \
---output-path  <qiime2_work_dir>/feature-table.tsv
+--output-path  <qiime2_work_dir>
 qiime tools export \
 --input-path  <qiime2_work_dir>/rep-seqs.qza \
---output-path  <qiime2_work_dir>/rep-seqs.fastq
+--output-path  <qiime2_work_dir>/
 qiime tools export \
 --input-path  <qiime2_work_dir>/taxonomy.qza \
 --output-path  <qiime2_work_dir>/
