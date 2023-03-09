@@ -10,7 +10,7 @@ qiime dada2 denoise-paired \
 --p-trunc-len-r 0 \
 --p-n-threads 0 \
 --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
---o-table <qiime2_work_dir>/table.qza \
+--o-table <qiime2_work_dir>/feature-table.qza \
 --o-denoising-stats <qiime2_work_dir>/stats.qza
 
 qiime feature-classifier classify-sklearn \

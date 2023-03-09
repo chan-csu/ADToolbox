@@ -132,6 +132,7 @@ class Metagenomics:
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
 			amplicon2genome_docker="vsearch",
 			vsearch_threads:int=4,
+			amplicon2genome_singularity="docker://parsaghadermazi/adtoolbox",
 			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
             feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
             rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
@@ -185,6 +186,8 @@ class Metagenomics:
 		self.genome_alignment_script=genome_alignment_script	
 		self.genome_relative_abundances=genome_relative_abundances
 		self.cod_output_json=cod_output_json
+		self.amplicon2genome_singularity=amplicon2genome_singularity
+
 
 
 

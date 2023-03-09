@@ -1041,11 +1041,11 @@ class Metagenomics:
             warnings.warn("Singularity is not fully supported yet")
             bash_script="#!/bin/bash\n" +'singularity run '
             for dir in dirs:
-                bash_script+=('-B '+dir+':'+dir+' ')
+                bash_script+=('-B '+str(dir)+':'+str(dir)+' ')
             
             bash_script += (self.config.amplicon2genome_singularity+' vsearch --top_hits_only --blast6out '+
                         match_table+
-                        ' --usearch_global '+ query +
+                        ' --usearch_global '+ str(query) +
                         ' --db '+ gtdb_dir_fasta +
                         ' --id ' +str(self.config.amplicon2genome_similarity) +
                         ' --threads '+str(self.config.vsearch_threads)+
