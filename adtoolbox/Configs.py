@@ -14,8 +14,11 @@ RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 
 Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
 
-
-
+ADTOOLBOX_CONTAINERS={
+	'docker_x86':"parsaghadermazi/adtoolbox:latest",
+	'docker_arm64':"parsaghadermazi/adtoolbox:arm64",
+	'singularity_x86':"docker://parsaghadermazi/adtoolbox:x86",
+	'singularity_arm64':"docker://parsaghadermazi/adtoolbox:arm64"}
 
 class Alignment:
     """
@@ -130,9 +133,9 @@ class Metagenomics:
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
 			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
-			amplicon2genome_docker="vsearch",
 			vsearch_threads:int=4,
-			amplicon2genome_singularity="docker://parsaghadermazi/adtoolbox",
+			adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
+			adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
 			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
             feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
             rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
@@ -175,7 +178,6 @@ class Metagenomics:
 		self.feature_to_taxa=feature_to_taxa
 		self.csv_reaction_db=csv_reaction_db
 		self.sra=sra
-		self.amplicon2genome_docker=amplicon2genome_docker
 		self.qiime2_singularity_image=qiime2_singularity_image
 		self.qiime2_docker_image=qiime2_docker_image
 		self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
@@ -186,7 +188,9 @@ class Metagenomics:
 		self.genome_alignment_script=genome_alignment_script	
 		self.genome_relative_abundances=genome_relative_abundances
 		self.cod_output_json=cod_output_json
-		self.amplicon2genome_singularity=amplicon2genome_singularity
+		self.adtoolbox_singularity=adtoolbox_singularity
+		self.adtoolbox_docker=adtoolbox_docker
+
 
 
 

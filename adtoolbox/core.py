@@ -1028,7 +1028,7 @@ class Metagenomics:
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
             
-            bash_script += (self.config.amplicon2genome_docker+' vsearch --top_hits_only --blast6out '+
+            bash_script += (self.config.adtoolbox_docker+' vsearch --top_hits_only --blast6out '+
                         match_table+
                         ' --usearch_global '+ query +
                         ' --db '+ gtdb_dir_fasta +
@@ -1043,7 +1043,7 @@ class Metagenomics:
             for dir in dirs:
                 bash_script+=('-B '+str(dir)+':'+str(dir)+' ')
             
-            bash_script += (self.config.amplicon2genome_singularity+' vsearch --top_hits_only --blast6out '+
+            bash_script += (self.config.adtoolbox_singularity+' vsearch --top_hits_only --blast6out '+
                         match_table+
                         ' --usearch_global '+ str(query) +
                         ' --db '+ gtdb_dir_fasta +
@@ -1125,10 +1125,10 @@ class Metagenomics:
 
             
             if container=="docker":
-                bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.amplicon2genome_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+                bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
             if container=="singularity":
-                bash_script+=('singularity run -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.amplicon2genome_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+                bash_script+=('singularity run -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
             for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*fna.gz'):
                 if 'rna' not in i.name.lower():
@@ -1198,7 +1198,7 @@ class Metagenomics:
                 " -v "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
                 " -v "+self.config.protein_db+":"+self.config.protein_db+ \
                 " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
-                f" {self.config.amplicon2genome_docker}  mmseqs easy-search " + \
+                f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
                     genomes_info[genome_id] + " " + \
                     self.config.protein_db + " " + \
                     alignment_file+ " tmpfiles\n\n"
@@ -1212,7 +1212,7 @@ class Metagenomics:
                 " -B "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
                 " -B "+self.config.protein_db+":"+self.config.protein_db+ \
                 " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
-                f" {self.config.amplicon2genome_singularity}  mmseqs easy-search " + \
+                f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
                     genomes_info[genome_id] + " " + \
                     self.config.protein_db + " " + \
                     alignment_file+ " tmpfiles\n\n"
