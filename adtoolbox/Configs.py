@@ -134,6 +134,7 @@ class Metagenomics:
 			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
 			vsearch_threads:int=4,
+			rsync_download_dir=os.path.join(Main_Dir,"Genomes","rsync_download.sh"),
 			adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
 			adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
 			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
@@ -190,6 +191,7 @@ class Metagenomics:
 		self.cod_output_json=cod_output_json
 		self.adtoolbox_singularity=adtoolbox_singularity
 		self.adtoolbox_docker=adtoolbox_docker
+		self.rsync_download_dir=rsync_download_dir
 
 
 

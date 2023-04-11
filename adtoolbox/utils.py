@@ -61,7 +61,18 @@ def fasta_to_dict(fasta:str)->dict:
                 Dictionary[label] += line.strip()
     return Dictionary
 
-                
-                
+def dict_to_fasta(dictionary:dict,fasta:str)->None:
+    """
+    This function converts a dictionary to a fasta file
+    Args:
+        dictionary: the dictionary to convert
+        fasta: the address of the fasta file to save
+    
+    Returns:
+        None
+    """
+    with open(fasta,'w') as f:
+        for label,seq in dictionary.items():
+            f.write(f">{label}\n{seq}\n")
 
 

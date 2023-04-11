@@ -1012,6 +1012,9 @@ class Metagenomics:
             gtdb_dir_fasta,
             query
             ]
+        for dir in dirs:
+            if not pathlib.Path(dir).exists():
+                os.mkdir(dir)
         if container=="None":
             
             bash_script=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
@@ -1121,7 +1124,7 @@ class Metagenomics:
             genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
             
             if container=="None":
-                bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
+                bash_script+=('\nrsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
 
             
             if container=="docker":
@@ -1129,18 +1132,23 @@ class Metagenomics:
             
             if container=="singularity":
                 bash_script+=('singularity run -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
-            
+        if run:
+            subprocess.run(bash_script,shell=True)
+        for identifier in identifiers:
             for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*fna.gz'):
                 if 'rna' not in i.name.lower():
                     if 'cds' not in i.name.lower():
                         if 'genomic' in i.name.lower():
                             genomics_file=str(i)
-
-            genome_info[identifier] = genomics_file
+                            genome_info[identifier] = genomics_file
         
         if save:
             with open(self.config.genomes_json_info, 'w') as f:
                 json.dump(genome_info, f)
+            with open(self.config.rsync_download_dir, 'w') as f:
+                f.write(bash_script)
+
+
         
         return genome_info, bash_script
     
