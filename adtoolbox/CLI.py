@@ -1,6 +1,7 @@
 import argparse
 from re import M
 import configs
+
 import core
 from __init__ import __version__
 from __init__ import Main_Dir
@@ -259,30 +260,29 @@ def main():
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'original-adm1':
         if args.model_parameters:
             with open(args.model_parameters) as f:
-                asm_model_parameters=json.load(f)
+                adm_model_parameters=json.load(f)
         else:
-            with open(configs.Original_ADM1().model_parameters) as f:
-                asm_model_parameters=json.load(f)
+            with open(configs.Database().adm1_model_parameters) as f:
+                adm_model_parameters=json.load(f)
         if args.base_parameters:
             with open(args.base_parameters) as f:
                 adm_base_parameters=json.load(f)
         else:
-            with open(configs.Original_ADM1().base_parameters) as f:
+            with open(configs.Database().adm1_base_parameters) as f:
                 adm_base_parameters=json.load(f)
 
         if args.initial_conditions:
             with open(args.initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
         else:
-            with open(configs.Original_ADM1().initial_conditions) as f:
+            with open(configs.Database().adm1_initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
 
-        
         if args.inlet_conditions:
             with open(args.inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
         else:
-            with open(configs.Original_ADM1().inlet_conditions) as f:
+            with open(configs.Database().inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
 
         
@@ -290,25 +290,34 @@ def main():
             with open(args.reactions) as f:
                 adm_reactions=json.load(f)
         else:
-            with open(configs.Original_ADM1().reactions) as f:
+            with open(configs.Database().adm1_reactions) as f:
                 adm_reactions=json.load(f)
         
         if args.species:
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(configs.Original_ADM1().species) as f:
+            with open(configs.Database().adm1_species) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
             with open(args.metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
         else:
-            with open(configs.Original_ADM1().metagenome_report) as f:
-                adm_metagenome_report=json.load(f)
+            pass
         
-        ADM1 = adm.Model(asm_model_parameters, adm_base_parameters, adm_initial_conditions,
-                 adm_inlet_conditions, adm_reactions, adm_species, adm.adm1_ode_sys, adm.build_adm1_stoiciometric_matrix, metagenome_report=adm_metagenome_report, Name="ADM1", Switch="DAE")
+        ADM1 = adm.Model(
+            model_parameters=adm_model_parameters,
+            base_parameters=adm_base_parameters,
+            initial_conditions= adm_initial_conditions,
+            inlet_conditions= adm_inlet_conditions,
+            feed=adm.DEFAULT_FEED,
+            reactions=adm_reactions, 
+            species=adm_species, 
+            ode_system=adm.adm1_ode_sys, 
+            build_stoichiometric_matrix=adm.build_adm1_stoiciometric_matrix,
+            name="ADM1",
+            Switch="DAE")
         Sol = ADM1.solve_model(
         (0, 20), ADM1.initial_conditions[:, 0], np.linspace(0, 20, 100))
 
@@ -326,20 +335,20 @@ def main():
             with open(args.model_parameters) as f:
                 adm_model_parameters=json.load(f)
         else:
-            with open(configs.Modified_ADM().model_parameters) as f:
+            with open(configs.Database().model_parameters) as f:
                 adm_model_parameters=json.load(f)
         if args.base_parameters:
             with open(args.base_parameters) as f:
                 adm_base_parameters=json.load(f)
         else:
-            with open(configs.Modified_ADM().base_parameters) as f:
+            with open(configs.Database().base_parameters) as f:
                 adm_base_parameters=json.load(f)
 
         if args.initial_conditions:
             with open(args.initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
         else:
-            with open(configs.Modified_ADM().initial_conditions) as f:
+            with open(configs.Database().initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
 
         
@@ -347,7 +356,7 @@ def main():
             with open(args.inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
         else:
-            with open(configs.Modified_ADM().inlet_conditions) as f:
+            with open(configs.Database().inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
 
         
@@ -355,25 +364,22 @@ def main():
             with open(args.reactions) as f:
                 adm_reactions=json.load(f)
         else:
-            with open(configs.Modified_ADM().reactions) as f:
+            with open(configs.Database().reactions) as f:
                 adm_reactions=json.load(f)
         
         if args.species:
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(configs.Modified_ADM().species) as f:
+            with open(configs.Database().species) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
             with open(args.metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
+
         else:
-            if os.path.exists(configs.Modified_ADM().metagenome_report):
-                with open(configs.Modified_ADM().metagenome_report) as f:
-                    adm_metagenome_report=json.load(f)
-            else:
-                adm_metagenome_report=None
+            adm_metagenome_report=None
         if args.control_states:
             with open(args.control_states) as f:
                 adm_control_states=json.load(f)
@@ -381,8 +387,19 @@ def main():
             
             adm_control_states={}
                 
-        mod_adm1 = adm.Model(adm_model_parameters, adm_base_parameters, adm_initial_conditions, adm_inlet_conditions, adm_reactions,
-                     adm_species, adm.modified_adm_ode_sys, adm.build_modified_adm_stoichiometric_matrix,control_state=adm_control_states,name="Modified_ADM1", switch="DAE",metagenome_report=adm_metagenome_report)
+        mod_adm1 = adm.Model(model_parameters=adm_model_parameters,
+                             base_parameters=adm_base_parameters, 
+                             initial_conditions=adm_initial_conditions, 
+                             inlet_conditions=adm_inlet_conditions,
+                             feed=adm.DEFAULT_FEED,
+                             reactions=adm_reactions,
+                            species=adm_species,
+                            ode_system=adm.modified_adm_ode_sys,
+                            build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
+                            control_state=adm_control_states,
+                            name="Modified_ADM1",
+                            switch="DAE",
+                            metagenome_report=adm_metagenome_report)
         Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
 
         if args.report == 'dash' or args.report==None:

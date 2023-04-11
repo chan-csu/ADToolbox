@@ -117,6 +117,22 @@ class Database:
 		self.adm_parameters_urls = adm_parameters_urls
 		self.adm_parameters_base_dir = adm_parameters_base_dir
 		self.amplicon_to_genome_db = amplicon_to_genome_db
+		self.adm1_model_parameters = os.path.join(self.adm_parameters_base_dir,"ADM1_Model_Parameters.json")
+		self.adm1_base_parameters = os.path.join(self.adm_parameters_base_dir,"ADM1_Base_Parameters.json")
+		self.adm1_initial_conditions = os.path.join(self.adm_parameters_base_dir,"ADM1_Initial_Conditions.json")
+		self.adm1_inlet_conditions = os.path.join(self.adm_parameters_base_dir,"ADM1_Inlet_Conditions.json")
+		self.adm1_reactions = os.path.join(self.adm_parameters_base_dir,"ADM1_Reactions.json")
+		self.adm1_species = os.path.join(self.adm_parameters_base_dir,"ADM1_Species.json")
+		self.model_parameters = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Model_Parameters.json")
+		self.base_parameters = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Base_Parameters.json")
+		self.initial_conditions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Initial_Conditions.json")
+		self.inlet_conditions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Inlet_Conditions.json")
+		self.reactions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Reactions.json")
+		self.species = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Species.json")
+
+
+
+
 
 class Metagenomics:
 	"""	

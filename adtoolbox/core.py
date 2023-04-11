@@ -1134,7 +1134,7 @@ class Metagenomics:
                 bash_script+=('singularity run -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
         if run:
             subprocess.run(bash_script,shell=True)
-        for identifier in identifiers:
+        
             for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*fna.gz'):
                 if 'rna' not in i.name.lower():
                     if 'cds' not in i.name.lower():
