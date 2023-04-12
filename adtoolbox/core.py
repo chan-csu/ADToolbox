@@ -1041,8 +1041,7 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         
         if container=="singularity":
-            warnings.warn("Singularity is not fully supported yet")
-            bash_script="#!/bin/bash\n" +'singularity run '
+            bash_script="#!/bin/bash\n" +'singularity exec '
             for dir in dirs:
                 bash_script+=('-B '+str(dir)+':'+str(dir)+' ')
             
@@ -1131,7 +1130,7 @@ class Metagenomics:
                 bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
             if container=="singularity":
-                bash_script+=('singularity run -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+                bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
         if run:
             subprocess.run(bash_script,shell=True)
         
@@ -1216,7 +1215,7 @@ class Metagenomics:
             bash_script = "#!/bin/bash\n"
             for genome_id in genomes_info.keys():
                 alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
-                bash_script +="singularity run "+ \
+                bash_script +="singularity exec "+ \
                 " -B "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
                 " -B "+self.config.protein_db+":"+self.config.protein_db+ \
                 " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
