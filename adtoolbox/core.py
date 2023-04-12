@@ -1237,7 +1237,7 @@ class Metagenomics:
 
         if run:
 
-            subprocess.run(["bash",self.config.genome_alignment_script],shell=True)
+            subprocess.run(["bash",self.config.genome_alignment_script],shell=True,cwd=pathlib.Path(self.config.genome_alignment_script).parent)
 
         return genome_alignment_files, bash_script
     
