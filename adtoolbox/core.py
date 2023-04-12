@@ -1216,7 +1216,7 @@ class Metagenomics:
             bash_script = "#!/bin/bash\n"
             for genome_id in genomes_info.keys():
                 alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
-                bash_script +="singularity run -B "+ \
+                bash_script +="singularity run "+ \
                 " -B "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
                 " -B "+self.config.protein_db+":"+self.config.protein_db+ \
                 " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
@@ -1237,7 +1237,7 @@ class Metagenomics:
 
         if run:
 
-            subprocess.run(bash_script,shell=True)
+            subprocess.run(["bash",self.config.genome_alignment_script],shell=True)
 
         return genome_alignment_files, bash_script
     
