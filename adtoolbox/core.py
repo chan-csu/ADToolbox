@@ -1134,7 +1134,7 @@ class Metagenomics:
         if run:
             subprocess.run(bash_script,shell=True)
         
-            for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*fna.gz'):
+            for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*.fna.gz'):
                 if 'rna' not in i.name.lower():
                     if 'cds' not in i.name.lower():
                         if 'genomic' in i.name.lower():
@@ -1151,7 +1151,45 @@ class Metagenomics:
         
         return genome_info, bash_script
     
+    def extract_zipped_genomes(self,save:bool=True,run:bool=True,container:str="None")->dict[str,str]:
+        """This function extracts the zipped genomes from the genome_info dictionary. If you want to save the genome information as a json file, set save to True.
+        Note that this function uses gunzip to extract the genomes. Also this function does not come with a run option.
 
+        Requires:
+
+        Satisfies:
+
+        Args:
+            genome_info (dict[str,str]): A dictionary containing the genome information.
+            save (bool, optional): Whether to save the genome information as a json file. Defaults to True.
+            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
+        
+        Returns:
+            dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
+        """
+        with open(self.config.genomes_json_info, 'r') as f:
+            genome_info = json.load(f)
+        bash_script="#!/bin/bash\n"
+        for identifier in genome_info.keys():
+            genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
+            if container=="None":
+                bash_script+=('\ngunzip '+genome_info[identifier])
+            
+            if container=="docker":
+                bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} gunzip '+genome_info[identifier])
+            
+            if container=="singularity":
+                bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} gunzip '+genome_info[identifier])
+        
+        if run:
+            subprocess.run(bash_script,shell=True)
+        
+        if save:
+            with open(self.config.rsync_download_dir, 'w') as f:
+                f.write(bash_script)
+        
+        return genome_info
+    
     def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->tuple[dict,str]:
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
