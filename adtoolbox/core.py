@@ -1167,6 +1167,7 @@ class Metagenomics:
         Returns:
             dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
         """
+        new_genome_info = {}
         with open(self.config.genomes_json_info, 'r') as f:
             genome_info = json.load(f)
         bash_script="#!/bin/bash\n"
@@ -1180,15 +1181,21 @@ class Metagenomics:
             
             if container=="singularity":
                 bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} gunzip '+genome_info[identifier])
-        
-        if run:
-            subprocess.run(bash_script,shell=True)
+
+            new_genome_info[identifier] = genome_info[identifier].replace('.gz','')
         
         if save:
-            with open(self.config.rsync_download_dir, 'w') as f:
+            with open(pathlib.Path(self.config.rsync_download_dir)/"unzip.sh", 'w') as f:
                 f.write(bash_script)
+            with open(self.config.genomes_json_info, 'w') as f:
+                json.dump(new_genome_info, f)
         
-        return genome_info
+        if run:
+            subprocess.run(["bash", ],shell=True)
+        
+
+        
+        return genome_info, bash_script
     
     def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->tuple[dict,str]:
         """
