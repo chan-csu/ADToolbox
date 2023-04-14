@@ -1174,7 +1174,7 @@ class Metagenomics:
         for identifier in genome_info.keys():
             genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
             if container=="None":
-                bash_script+=('\ngunzip '+genome_info[identifier])
+                bash_script+=('\ngzip -d '+genome_info[identifier])
             
             if container=="docker":
                 bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} gunzip '+genome_info[identifier])
@@ -1185,17 +1185,19 @@ class Metagenomics:
             new_genome_info[identifier] = genome_info[identifier].replace('.gz','')
         
         if save:
-            with open(pathlib.Path(self.config.rsync_download_dir)/"unzip.sh", 'w') as f:
+            save_script_dir=pathlib.Path(self.config.amplicon2genome_outputs_dir)/"unzip.sh"
+            with open(save_script_dir, 'w') as f:
                 f.write(bash_script)
             with open(self.config.genomes_json_info, 'w') as f:
                 json.dump(new_genome_info, f)
         
         if run:
-            subprocess.run(["bash", ],shell=True)
+            subprocess.run(["bash", save_script_dir],shell=True)
         
 
         
-        return genome_info, bash_script
+        return new_genome_info, bash_script
+ 
     
     def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->tuple[dict,str]:
         """
