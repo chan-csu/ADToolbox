@@ -1,8 +1,8 @@
 # Installation
 
-Although it is not mandatory, It is greatly advised to create a python environment for this project and install ADToolbox in that environment. Check for how to build and use python's virtual environments. 
+ADToolbox is a python package that can be executed locally by installation, or by using the containerized version with Docker. Any function that relies on external tools can be executed either adding the external tool to the operating system's environment or using the Docker or Singularity containers. Also with utility functions provided, each function can be executed through slurm job scheduler to provide interface for running in cloud/high-performance computer clusers. 
 
-***Note***: In order to access all of the metagenomics funtionalities, you **must** have [mmseqs2](https://github.com/soedinglab/mmseqs2) installed and have it in your system's path. However, you can access other modules without installing mmseqs2.
+Although it is not mandatory, It is greatly advised to create a python environment for this project and install ADToolbox in that environment. Check for how to build and use python's virtual environments. 
 
 There are severall methods that allow you to install or use ADToolbox:
 
@@ -28,7 +28,7 @@ pip install -e .
 2. Install using pip
 
 ```
-Not available yet
+pip install adtoolbox
 
 ```
 
