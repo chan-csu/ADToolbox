@@ -1070,7 +1070,7 @@ class Metagenomics:
         return alignment_dict
     
     
-    def download_genomes(self,identifier:str,container:str="None")-> str:
+    def download_genome(self,identifier:str,container:str="None")-> str:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         If you want to save the json file that is holding the information for each genome, set save to True.
         Note that this function uses rsync to download the genomes. Also this function does not come with a run option.
@@ -1107,7 +1107,7 @@ class Metagenomics:
         if container=="singularity":
             bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
         
-        return bash_script
+        return bash_script,
     
     def extract_genome_info(self,save:bool=True)->dict[str,str]:
         """This function extracts the genome information from the genomes base directory. If you want to save the genome information as a json file, set save to True.
@@ -1138,147 +1138,7 @@ class Metagenomics:
                 json.dump(genome_info, f)
                 
         return genome_info
-    
-    
-    def extract_zipped_genomes(self,save:bool=True,run:bool=True,container:str="None")->dict[str,str]:
-        """This function extracts the zipped genomes from the genome_info dictionary. If you want to save the genome information as a json file, set save to True.
-        Note that this function uses gunzip to extract the genomes. Also this function does not come with a run option.
-
-        Requires:
-
-        Satisfies:
-
-        Args:
-            genome_info (dict[str,str]): A dictionary containing the genome information.
-            save (bool, optional): Whether to save the genome information as a json file. Defaults to True.
-            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
-        
-        Returns:
-            dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
-        """
-        new_genome_info = {}
-        with open(self.config.genomes_json_info, 'r') as f:
-            genome_info = json.load(f)
-        bash_script="#!/bin/bash\n"
-        for identifier in genome_info.keys():
-            genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
-            if container=="None":
-                bash_script+=extract_zipped_file(genome_dir)
-            
-            if container=="docker":
-                bash_script+=extract_zipped_file(genome_dir,container="docker")
-            
-            if container=="singularity":
-                bash_script+=extract_zipped_file(genome_dir,container="singularity")
-
-            new_genome_info[identifier] = genome_info[identifier].replace('.gz','')
-        
-        if save:
-            save_script_dir=pathlib.Path(self.config.amplicon2genome_outputs_dir)/"unzip.sh"
-            with open(save_script_dir, 'w') as f:
-                f.write(bash_script)
-            with open(self.config.genomes_json_info, 'w') as f:
-                json.dump(new_genome_info, f)
-        
-        if run:
-            subprocess.run(["bash", save_script_dir],shell=True)
-        
-
-        
-        return new_genome_info, bash_script
- 
-
-        
-
-    def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->tuple[dict,str]:
-        """
-        This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
-        and then will return a dictionary of the alignment results with the aligned genome identifiers as key and the genome as value.
-        If you want to save the scripts, set save to True. Note that the alignment tables will be saved in any case.
-        Note that this function uses mmseqs2 to align the genomes to the protein database. So, to run this function without 
-        any container you need to have mmseqs2 installed on your system. However, if you want to run this function with a container,
-        you need to have the container installed on your system. You may select from "None", "docker", "singularity".
-
-        Requires:
-
-        Satisfies:
-
-        Args:
-            run (bool, optional): Whether to run the alignment. Defaults to True.
-            save (bool, optional): Whether to save the alignment scripts. Defaults to True.
-            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
-        
-        Returns:
-            dict: A dictionary containing the alignment results.
-            str: The bash script that is used to align the genomes or to be used to align the genomes.
-
-
-        """
-        with open(self.config.genomes_json_info, 'r') as f:
-            genomes_info = json.load(f)
-        valid_genomes = 0
-        for genome_ids in track(genomes_info.keys(),description="Fetching Genomes ..."):
-            Totall_Genomes = len(genomes_info.keys())
-            if os.path.exists(genomes_info[genome_ids]):
-                valid_genomes += 1
-        rich.print(f"[green]{valid_genomes}/{Totall_Genomes} Genomes are valid")
-
-
-        genome_alignment_files={}
-        if container=="None":
-            bash_script = "#!/bin/bash\n"
-            for genome_id in genomes_info.keys():
-                alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
-                bash_script += "mmseqs easy-search " + \
-                    genomes_info[genome_id] + " " + \
-                    self.config.protein_db + " " + \
-                    alignment_file+ " tmp\n\n"
-                genome_alignment_files[genome_id]=alignment_file
-        
-        if container=="docker":
-            bash_script = "#!/bin/bash\n"
-            for genome_id in genomes_info.keys():
-                alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
-                bash_script +="docker run -it "+ \
-                " -v "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
-                " -v "+self.config.protein_db+":"+self.config.protein_db+ \
-                " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
-                f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
-                    genomes_info[genome_id] + " " + \
-                    self.config.protein_db + " " + \
-                    alignment_file+ " tmpfiles\n\n"
-                genome_alignment_files[genome_id]=alignment_file
-        
-        if container=="singularity":
-            bash_script = "#!/bin/bash\n"
-            for genome_id in genomes_info.keys():
-                alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+genome_id+".tsv")
-                bash_script +="singularity exec "+ \
-                " -B "+genomes_info[genome_id]+":"+genomes_info[genome_id]+ \
-                " -B "+self.config.protein_db+":"+self.config.protein_db+ \
-                " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
-                f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
-                    genomes_info[genome_id] + " " + \
-                    self.config.protein_db + " " + \
-                    alignment_file+ " tmpfiles\n\n"
-                genome_alignment_files[genome_id]=alignment_file
-            
-
-
-        with open(self.config.genome_alignment_output_json, 'w') as f:
-            json.dump(genome_alignment_files, f)
-        
-        if save:
-            with open(self.config.genome_alignment_script, 'w') as f:
-                f.write(bash_script)
-
-        if run:
-
-            subprocess.run(["bash",self.config.genome_alignment_script],shell=True,cwd=pathlib.Path(self.config.genome_alignment_script).parent)
-
-        return genome_alignment_files, bash_script
-    
-    
+     
     def align_genome_to_protein_db(
             self,
             address:str,
@@ -1339,15 +1199,8 @@ class Metagenomics:
                 self.config.protein_db + " " + \
                 alignment_file+ " tmpfiles\n\n"
         
-        return alignment_file, bash_script
+        return  bash_script,alignment_file
 
-
-
-
-
-
-        
-        
     @staticmethod
     def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
         """
@@ -1409,7 +1262,7 @@ class Metagenomics:
         return json_adm_output
         # So far it has gotten really complicated, after making sure it works, instead of adding ec numbers I'll add [SEED,STR] so
         # that it can be used for downstream analysis
-    
+    ### NEED TO ADDRESS THIS
     def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
         
         """

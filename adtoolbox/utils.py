@@ -2,7 +2,8 @@ import configs
 import subprocess
 import pathlib
 import os
-from typing import Iterable
+import core
+from typing import Iterable, Any,Union
 def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.
@@ -73,40 +74,76 @@ def dict_to_fasta(dictionary:dict,fasta:str)->None:
         for label,seq in dictionary.items():
             f.write(f">{label}\n{seq}\n")
 
-def run_batch(
-    series:Iterable,
-    number_of_batches:int,
-    function:callable,
-    ):
-    pass
 
-# def file_finder(base_dir:str,pattern:str,save:bool=True)->dict[str:Iterable[str]]:
-#     """
-#     This function finds files in subdirectories of a base directory, and generates a dictionary
-#     with subdirectory names as keys and file addresses as values.
-    
-#     """
-#     base_dir=pathlib.Path(base_dir)
-#     files_dict={}
-#     for sub_dir in base_dir.iterdir():
-#         if sub_dir.is_dir():
-#             files_dict[sub_dir.name]=list(sub_dir.rglob(pattern))
-def extract_zipped_file(zipped_file:str,container:str="None")->str:
+
+def extract_zipped_file(input_file:str,container:str="None",configs=configs.Utils())->str:
     """
     This function extracts a zipped file to a directory
     Args:
-        zipped_file: the address of the zipped file as a string
         container: The container to run the script in. If None, the script is run locally    
     Returns:
         None
     """
     if container == "None":
-        script=f"gzip -d {zipped_file}"
+        script=f"gzip -d {input_file}"
     
     elif container =="singularity":
-        script=f"singularity exec -B {zipped_file}:{zipped_file} {configs.singularity_container} gzip -d {zipped_file}"
+        script=f"singularity exec -B {input_file}:{input_file} {configs.adtoolbox_singularity} gzip -d {input_file}"
         
     elif container =="docker":
-        script=f"docker run -v {zipped_file}:{zipped_file} {configs.docker_container} gzip -d {zipped_file}"
+        script=f"docker run -v {input_file}:{input_file} {configs.adtoolbox_docker} gzip -d {input_file}"
         
-    return script
+    return script,
+
+def generate_batch_script(
+    generator_function:callable,
+    number_of_batches:int,
+    input_series:list[list],
+    input_var:list[str],
+    container:str="None",
+    save:Union[str,None]=None,
+    run:bool=False,
+    header:str="#!/bin/bash\n",
+    **kwargs)->tuple:
+    """
+    This is a general function that generates an iterable of bash scripts for running a function
+    that creates a bash script on an iterable of inputs.
+    """
+    batch_size = len(list(zip(*input_series)))//number_of_batches+1
+    batches=[]
+    for i in range(len(input_series)):
+        batches.append([input_series[i][j:j+batch_size] for j in range(0,len(input_series[i]),batch_size)])
+    scripts=[]
+    
+    for inputs in zip(*batches):
+        script=header
+        for i,item in enumerate(zip(*inputs)):
+            for ind,inp in enumerate(input_var):
+                kwargs.update(dict([(inp,item[ind])]))
+            script_=generator_function(container=container,**kwargs)[0]
+            script=script+script_+"\n"
+        if save:
+            if not os.path.exists(save):
+                os.makedirs(save)
+            with open(os.path.join(save,f"{item[0]}.sh"),'w') as f:
+                f.write(script)
+        scripts.append(script)
+    if run:
+        for script in scripts:
+            subprocess.run([script],shell=True)
+            
+    return tuple(scripts)
+    
+
+    
+if __name__ == "__main__":
+    accessions=["AAA"+str(i) for i in range(100)]
+    names=["BBB"+str(i) for i in range(100)]
+    answers=generate_batch_script(
+        generator_function=core.Metagenomics(configs.Metagenomics()).align_genome_to_protein_db,
+        number_of_batches=5,
+        input_series=[accessions,names],
+        input_var=["address",'name'],
+        container="singularity",
+        save=os.path.join("/Users/parsaghadermarzi","Desktop","test_bash_generator",))
+    

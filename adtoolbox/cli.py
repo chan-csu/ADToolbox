@@ -73,10 +73,10 @@ def main():
     metag_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables",default=meta_config_defult.feature_table_dir)
     metag_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files",default=meta_config_defult.rep_seq_fasta)
     metag_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files",default=meta_config_defult.taxonomy_table_dir)
-    metag_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=meta_config_defult.amplicon2genome_outputs_dir)
+    metag_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=meta_config_defult.genomes_base_dir)
     metag_subp_2.add_argument("-a", "--amplicon-to-genome-db", action="store", help="The Amplicon to Genome Database to use",default=meta_config_defult.amplicon2genome_db)
     metag_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=meta_config_defult.k,type=int)
-    metag_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=meta_config_defult.amplicon2genome_similarity,type=float)
+    metag_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=meta_config_defult.vsearch_similarity,type=float)
     
     metag_subp_3=metag_subp.add_parser('align-genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
     metag_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned",default=meta_config_defult.genomes_json_info)
@@ -179,11 +179,12 @@ def main():
         meta_config_defult.qiime_outputs_dir=args.qiime_outputs_dir
         meta_config_defult.rep_seq_fasta=args.rep_Seq_dir
         meta_config_defult.taxonomy_table_dir=args.taxonomy_table_dir
-        meta_config_defult.amplicon2genome_outputs_dir=args.output_dir
+        meta_config_defult.genomes_base_dir=args.output_dir
         meta_config_defult.amplicon2genome_db=args.amplicon_to_genome_db
         meta_config_defult.k=args.k
-        meta_config_defult.amplicon2genome_similarity=args.similarity
-        core.Metagenomics(meta_config_defult).amplicon2genome()
+        meta_config_defult.vsearch_similarity=args.similarity
+        # core.Metagenomics(meta_config_defult).amplicon2genome()
+        ### UNDER CONSTRUCTION ###
 
     if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="map-genomes-to-adm":
         meta_config_defult.genome_alignment_output_json=args.input_file
