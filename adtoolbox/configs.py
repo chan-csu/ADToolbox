@@ -142,10 +142,11 @@ class Metagenomics:
 	gtdb_dir="bac120_ssu_reps_r207.fna"
 	def __init__(self, 
             amplicon2genome_k=10,
-            amplicon2genome_similarity=0.97,
-            amplicon2genome_outputs_dir=os.path.join(Main_Dir,"Genomes"),
+            vsearch_similarity=0.97,
+            genomes_base_dir=os.path.join(Main_Dir,"Genomes"),
+            align_to_gtdb_outputs_dir=os.path.join(Main_Dir,"Genomes"),
             amplicon2genome_db=Database().amplicon_to_genome_db,
-			amplicon2genome_top_repseq_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","top_repseqs.fasta"),
+			top_repseq_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","top_repseqs.fasta"),
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
 			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
             genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
@@ -175,12 +176,12 @@ class Metagenomics:
 
              ):
 		self.k = amplicon2genome_k
-		self.amplicon2genome_similarity = amplicon2genome_similarity
-		self.amplicon2genome_outputs_dir = amplicon2genome_outputs_dir
+		self.vsearch_similarity = vsearch_similarity
+		self.align_to_gtdb_outputs_dir = align_to_gtdb_outputs_dir
 		self.amplicon2genome_db = amplicon2genome_db
 		self.qiime_outputs_dir = qiime_outputs_dir
 		self.genomes_json_info = genomes_json_info
-		self.amplicon2genome_top_repseq_dir = amplicon2genome_top_repseq_dir
+		self.top_repseq_dir = top_repseq_dir
 		self.feature_table_dir = feature_table_dir
 		self.rep_seq_fasta = rep_seq_fasta
 		self.taxonomy_table_dir = taxonomy_table_dir
@@ -208,6 +209,7 @@ class Metagenomics:
 		self.adtoolbox_singularity=adtoolbox_singularity
 		self.adtoolbox_docker=adtoolbox_docker
 		self.rsync_download_dir=rsync_download_dir
+		self.genomes_base_dir=genomes_base_dir
 
 
 
@@ -215,7 +217,7 @@ class Metagenomics:
 
 	def genome_save_dir(self, accession_id: str):
 		""" sets the working directory for the accession id """
-		return os.path.join(self.amplicon2genome_outputs_dir, accession_id)
+		return os.path.join(self.genomes_base_dir, accession_id)
 
 	def sra_work_dir(self, sra_project_id: str):
 		""" sets the working directory for the SRA project id """
@@ -249,7 +251,9 @@ class Utils:
 	slurm_job_name:str='ADToolbox',
     slurm_cpus:str="12",
 	slurm_memory:str="100G",
-	slurm_save_dir:str=os.getcwd()
+	slurm_save_dir:str=os.getcwd(),
+	adtoolbox_singularity:str=ADTOOLBOX_CONTAINERS["singularity_x86"],
+	adtoolbox_docker:str=ADTOOLBOX_CONTAINERS["docker_x86"]
 	) -> None:
 		self.slurm_template = slurm_template
 		self.docker_template_qiime = docker_template_qiime
@@ -261,6 +265,9 @@ class Utils:
 		self.slurm_cpus = slurm_cpus
 		self.slurm_save_dir = slurm_save_dir
 		self.slurm_memory = slurm_memory
+		self.adtoolbox_singularity=adtoolbox_singularity
+		self.adtoolbox_docker=adtoolbox_docker
+  
 
 def get_base_dir():
 	return Main_Dir

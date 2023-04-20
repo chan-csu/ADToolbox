@@ -30,7 +30,7 @@ from __init__ import Main_Dir
 from typing import Union
 from dataclasses import dataclass
 import dataclasses
-from utils import wrap_for_slurm,fasta_to_dict
+from utils import wrap_for_slurm,fasta_to_dict,extract_zipped_file
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
@@ -922,70 +922,60 @@ class Metagenomics:
     """
     def __init__(self,config:configs.Metagenomics):
         self.config=config
-
     
-    def find_top_k_repseqs(self,
-                            sample_names:Union[list[str],None]=None
-                            ,save:bool=True)->dict:
-
-        """This function takes three inputs from qiime:
+    def find_top_taxa(
+        self,
+        sample_name:str,
+        treshold:Union[int,float],
+        mode:str='top_k',
+    )->dict:
+        """
+        This function takes three inputs from qiime:
         1. feature table: This is the abundance of each feature in each sample (TSV).
         2. taxonomy table: This is the taxonomy of each feature (TSV). 
         3. rep seqs: This is the representative sequence of each feature (fasta).
-        It then finds the top k features for each sample and then finds the genomes for each feature (if there is one).
-        It then returns a dictionary of the genomes for the sample(s) along with the NCBI name and the
-        address where they are stored.
-
+        It then finds the top k features or features that form specific percentile of the community of the sample.
+        
         Requires:
 
         Satisfies:
-
+        
         Args:
-            sample_name (str, optional): The name of the sample. Defaults to None.
-            if None, it will find top k genomes for all samples.
-            save (bool, optional): Whether to save the top k repseqs. Defaults to True. If true it saves three files:
-            1. top_k_repseqs.fasta: this is the fasta file of the top k repseqs. The header is the feature id and the sequence is the 
-            representative sequence.
-            2. top_featureids: This is a table that has the feature ids for the top k features for each sample.
-            3. top_k_taxa: This is a table that has the taxonomy identifier for the top k features for each sample.
-
+            sample_name (str): The name of the sample.
+            threshold (int, float): The threshold for the top k or the percentile.
+            mode (str, optional): Whether to find the top k features or features that form specific percentile of the community of the sample. Defaults to 'top_k'. Options: 'top_k', 'percentile'.
         
         Returns:
-            dict: A dictionary has all top_repseqs, top_featureids, and top_k_taxa. You can access them with the corresponding keys. 
+            dict: A dictionary of the top k features and their taxonomy.
         """
-
+        ### Load all the required files
         feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
         taxonomy_table = pd.read_table(self.config.taxonomy_table_dir, delimiter='\t')
         repseqs=fasta_to_dict(self.config.rep_seq_fasta)
-
-        if sample_names is None:
-            pass 
+        ### End Loading
+        if mode == 'top_k':
+            sorted_df=feature_table.sort_values(sample_name, ascending=False)
+            top_featureids=list(sorted_df['#OTU ID'].head(treshold))
+            top_taxa=[taxonomy_table[taxonomy_table['Feature ID']==featureid]['Taxon'].values[0] for featureid in top_featureids]
+            top_repseqs=[repseqs[featureid] for featureid in top_featureids]
+            top_abundances=list(sorted_df[sample_name].head(treshold)/sorted_df[sample_name].sum())
+            
+        elif mode == 'percentile':
+            feature_table[sample_name]=feature_table[sample_name]/feature_table[sample_name].sum()
+            sorted_df=feature_table.sort_values(sample_name, ascending=False)
+            sorted_df['cumsum']=sorted_df[sample_name].cumsum()*100
+            sorted_df_filtered=sorted_df[sorted_df['cumsum']<=treshold]
+            top_featureids=list(sorted_df_filtered['#OTU ID'])
+            top_taxa=[taxonomy_table[taxonomy_table['Feature ID']==featureid]['Taxon'].values[0] for featureid in top_featureids]
+            top_repseqs=[repseqs[featureid] for featureid in top_featureids]
+            top_abundances=sorted_df.loc[sorted_df_filtered.index][sample_name].values.tolist()
         else:
-            feature_table = feature_table[sample_names]
-
-        top_featureids = {}
-        top_repseqs = {}
-        top_k_taxa = {}
-
-
-        for sample in feature_table.columns[1:]:
-            top_featureids[sample] = list(feature_table.sort_values(
-                sample, ascending=False)['#OTU ID'].head(self.config.k))
-            top_k_taxa[sample] = [ taxonomy_table[taxonomy_table["Feature ID"]==feature]["Taxon"].item() for feature in top_featureids[sample]]
-            top_repseqs |= {feature:repseqs[feature] for feature in top_featureids[sample]}
+            raise ValueError("mode must be either 'top_k' or 'percentile'")
         
-        if save:
-            pd.DataFrame(top_featureids).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_FeatureIDs.csv'))
-            pd.DataFrame(top_k_taxa).to_csv(os.path.join(self.config.amplicon2genome_outputs_dir,'Top_k_Taxa.csv'))
-            with open(os.path.join(self.config.amplicon2genome_top_repseq_dir), 'w') as f:
-                for feature in top_repseqs:
-                    f.write('>'+feature+'\n'+top_repseqs[feature]+'\n')                
-
-        return {'top_featureids':top_featureids,'top_k_taxa':top_k_taxa,'top_repseqs':top_repseqs}
-
+        return {'top_featureids':top_featureids,'top_taxa':top_taxa,'top_repseqs':top_repseqs,'top_abundances':top_abundances}    
         
     
-    def align_to_gtdb(self,run:bool=True,save:bool=True,container:str="None")->str:
+    def align_to_gtdb(self,container:str="None")->str:
         """This function takes the representative sequences of the top k features and generates the script to
         align these feature sequences to gtdb using VSEARCH. If you intend to run this you either
         need to have VSEARCH installed or run it with a container option. You can use either the docker or singularity
@@ -997,18 +987,18 @@ class Metagenomics:
         Satisfies:
 
         Args:
-            run (bool, optional): Whether to run the script. Defaults to True.
-            save (bool, optional): Whether to save the script. Defaults to True.
             container (str, optional): The container to use. Defaults to "None".
         
         Returns:
-            str: The script that was run or supposed to be running later.
+            str: The script that is supposed to be running later.
         """
-        alignment_dir = os.path.join(self.config.amplicon2genome_outputs_dir,'Alignments')
-        match_table=os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')
+        ### Load all the required files
+        alignment_dir = os.path.join(self.config.align_to_gtdb_outputs_dir,'Alignments')
+        match_table=os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
         gtdb_dir_fasta=self.config.gtdb_dir_fasta
-        query=self.config.amplicon2genome_top_repseq_dir
-        dirs=[self.config.amplicon2genome_outputs_dir,
+        ### End Loading
+        query=self.config.top_repseq_dir
+        dirs=[self.config.align_to_gtdb_outputs_dir,
             gtdb_dir_fasta,
             query
             ]
@@ -1016,18 +1006,17 @@ class Metagenomics:
             if not pathlib.Path(dir).exists():
                 os.mkdir(dir)
         if container=="None":
-            
-            bash_script=("#!/bin/bash\n"+'vsearch --top_hits_only --blast6out '+
+            bash_script=('vsearch --top_hits_only --blast6out '+
                         match_table+
                         ' --usearch_global '+ query +
                         ' --db '+ gtdb_dir_fasta +
-                        ' --id ' +str(self.config.amplicon2genome_similarity) +
+                        ' --id ' +str(self.config.vsearch_similarity) +
                         ' --threads '+str(self.config.vsearch_threads)+
                         ' --alnout '+ alignment_dir +
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
-            bash_script="#!/bin/bash\n" +'docker run -it '
+            bash_script='docker run -it '
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
             
@@ -1035,13 +1024,13 @@ class Metagenomics:
                         match_table+
                         ' --usearch_global '+ query +
                         ' --db '+ gtdb_dir_fasta +
-                        ' --id ' +str(self.config.amplicon2genome_similarity) +
+                        ' --id ' +str(self.config.vsearch_similarity) +
                         ' --threads '+str(self.config.vsearch_threads)+
                         ' --alnout '+ alignment_dir +
                         ' --top_hits_only'+'\n')
         
         if container=="singularity":
-            bash_script="#!/bin/bash\n" +'singularity exec '
+            bash_script='singularity exec '
             for dir in dirs:
                 bash_script+=('-B '+str(dir)+':'+str(dir)+' ')
             
@@ -1049,20 +1038,10 @@ class Metagenomics:
                         match_table+
                         ' --usearch_global '+ str(query) +
                         ' --db '+ gtdb_dir_fasta +
-                        ' --id ' +str(self.config.amplicon2genome_similarity) +
+                        ' --id ' +str(self.config.vsearch_similarity) +
                         ' --threads '+str(self.config.vsearch_threads)+
                         ' --alnout '+ alignment_dir +
                         ' --top_hits_only'+'\n')
-
-
-
-        if save:
-            with open(self.config.vsearch_script_dir, 'w') as f:
-                f.write(bash_script)
-        
-        if run:
-            subprocess.run(bash_script,shell=True)
-        
         return bash_script
     
     def get_genomes_from_gtdb_alignment(self,save:bool=True)->dict:
@@ -1079,7 +1058,7 @@ class Metagenomics:
         Returns:
             dict: A dictionary containing
         """
-        matches = os.path.join(self.config.amplicon2genome_outputs_dir,'matches.blast')
+        matches = os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
         aligned=pd.read_table(matches,header=None,delimiter='\t')
         aligned.drop_duplicates(0,inplace=True)
         aligned[1]=aligned[1].apply(lambda x: "".join(x.split('_')[1:]))
@@ -1091,7 +1070,7 @@ class Metagenomics:
         return alignment_dict
     
     
-    def download_genomes(self,identifiers:list[str],save:bool=True,run:bool=True,container:str="None")->tuple[dict, str]:
+    def download_genomes(self,identifier:str,container:str="None")-> str:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         If you want to save the json file that is holding the information for each genome, set save to True.
         Note that this function uses rsync to download the genomes. Also this function does not come with a run option.
@@ -1103,53 +1082,63 @@ class Metagenomics:
 
         Args:
             identifier list[str]: The list of identifiers for the genomes. It can be either refseq or genbank.
+            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
+        
+        Returns:
+            str: The bash script that is used to download the genomes or to be used to download the genomes.
+
+        """
+        base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
+        bash_script=""
+
+        specific_ncbi_dir = identifier[0:3]+'/'+\
+                            identifier[3:6]+'/'+\
+                            identifier[6:9]+'/'+\
+                            identifier[9:].split('.')[0]
+            
+        genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
+            
+        if container=="None":
+            bash_script+=('\nrsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
+            
+        if container=="docker":
+            bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+            
+        if container=="singularity":
+            bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+        
+        return bash_script
+    
+    def extract_genome_info(self,save:bool=True)->dict[str,str]:
+        """This function extracts the genome information from the genomes base directory. If you want to save the genome information as a json file, set save to True.
+
+        Requires:
+
+        Satisfies:
+
+        Args:
+            genome_info (dict[str,str]): A dictionary containing the genome information.
             save (bool, optional): Whether to save the genome information as a json file. Defaults to True.
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
         
         Returns:
-            dict: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
-            str: The bash script that is used to download the genomes or to be used to download the genomes.
-
+            dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
         """
+        base_dir = pathlib.Path(self.config.genomes_base_dir)
         genome_info = {}
-        base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
-        bash_script="#!/bin/bash\n"
-        for identifier in identifiers:
-            specific_ncbi_dir = identifier[0:3]+'/'+\
-                                identifier[3:6]+'/'+\
-                                identifier[6:9]+'/'+\
-                                identifier[9:].split('.')[0]
-            
-            genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
-            
-            if container=="None":
-                bash_script+=('\nrsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
-
-            
-            if container=="docker":
-                bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
-            
-            if container=="singularity":
-                bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
-        if run:
-            subprocess.run(bash_script,shell=True)
-        
-            for i in pathlib.Path(self.config.genome_save_dir(identifier)).glob('**/*.fna.gz'):
-                if 'rna' not in i.name.lower():
-                    if 'cds' not in i.name.lower():
-                        if 'genomic' in i.name.lower():
-                            genomics_file=str(i)
-                            genome_info[identifier] = genomics_file
+        for genome_dir in base_dir.iterdir():
+            if genome_dir.is_dir():
+                candids=list(genome_dir.rglob('*genomic.fna.gz'))
+                for candid in candids:
+                    if "cds" not in candid.name and "rna" not in candid.name:
+                        genome_info[genome_dir.name]=str(candid.absolute())
         
         if save:
             with open(self.config.genomes_json_info, 'w') as f:
                 json.dump(genome_info, f)
-            with open(self.config.rsync_download_dir, 'w') as f:
-                f.write(bash_script)
-
-
-        
-        return genome_info, bash_script
+                
+        return genome_info
+    
     
     def extract_zipped_genomes(self,save:bool=True,run:bool=True,container:str="None")->dict[str,str]:
         """This function extracts the zipped genomes from the genome_info dictionary. If you want to save the genome information as a json file, set save to True.
@@ -1174,13 +1163,13 @@ class Metagenomics:
         for identifier in genome_info.keys():
             genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
             if container=="None":
-                bash_script+=('\ngzip -d '+genome_info[identifier])
+                bash_script+=extract_zipped_file(genome_dir)
             
             if container=="docker":
-                bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} gunzip '+genome_info[identifier])
+                bash_script+=extract_zipped_file(genome_dir,container="docker")
             
             if container=="singularity":
-                bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} gunzip '+genome_info[identifier])
+                bash_script+=extract_zipped_file(genome_dir,container="singularity")
 
             new_genome_info[identifier] = genome_info[identifier].replace('.gz','')
         
@@ -1198,7 +1187,9 @@ class Metagenomics:
         
         return new_genome_info, bash_script
  
-    
+
+        
+
     def align_genomes_to_protein_db(self,run:bool=True,save:bool=True,container:str="None")->tuple[dict,str]:
         """
         This is a function that will align genomes to the Protein Database of the ADToolbox using local alignment
@@ -1287,6 +1278,76 @@ class Metagenomics:
 
         return genome_alignment_files, bash_script
     
+    
+    def align_genome_to_protein_db(
+            self,
+            address:str,
+            name:str,
+            container:str="None",
+            )->tuple[str,str]:
+        """
+        This is a function that will align a genome to the Protein Database of the ADToolbox using mmseqs2.
+        If you want to save the scripts, set save to True. Note that the alignment tables will be saved in any case.
+        Note that this function uses mmseqs2 to align the genomes to the protein database. So, to run this function without
+        any container you need to have mmseqs2 installed on your system. However, if you want to run this function with a container,
+        you need to have the container installed on your system. You may select from "None", "docker", "singularity".
+
+        Requires:
+
+        Satisfies:
+
+        Args:
+            address (str): The address of the genome fasta file. The file must be in fasta format.
+            run (bool, optional): Whether to run the alignment. Defaults to True.
+            save (bool, optional): Whether to save the alignment scripts. Defaults to True.
+            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
+
+        Returns:
+            str: A dictionary containing the alignment files.
+            str: The bash script that is used to align the genomes or to be used to align the genomes.
+        """
+ 
+        if container=="None":
+            bash_script = ""
+            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            bash_script += "mmseqs easy-search " + \
+                address + " " + \
+                self.config.protein_db + " " + \
+                alignment_file+ " tmp\n\n"
+        
+        if container=="docker":
+            bash_script = ""
+            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            bash_script +="docker run -it "+ \
+            " -v "+address+":"+address+ \
+            " -v "+self.config.protein_db+":"+self.config.protein_db+ \
+            " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+            f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
+                address + " " + \
+                self.config.protein_db + " " + \
+                alignment_file+ " tmpfiles\n\n"
+
+        if container=="singularity":
+            bash_script = ""
+            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            bash_script +="singularity exec "+ \
+            " -B "+address+":"+address+ \
+            " -B "+self.config.protein_db+":"+self.config.protein_db+ \
+            " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+            f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
+                address + " " + \
+                self.config.protein_db + " " + \
+                alignment_file+ " tmpfiles\n\n"
+        
+        return alignment_file, bash_script
+
+
+
+
+
+
+        
+        
     @staticmethod
     def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
         """
@@ -1717,32 +1778,33 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    # config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
-    # feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
-    # taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
-    # rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
-    # amplicon2genome_top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
-    # vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
-    # amplicon2genome_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    # genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
-    # genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    # genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
-    # feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
-    # cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
-    # genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
-    # amplicon2genome_similarity=0.9
-    # )
-    # metag=Metagenomics(config_1)
+    config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
+    feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
+    taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
+    rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
+    top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
+    vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
+    genomes_base_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
+    genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
+    feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
+    cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
+    genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
+    vsearch_similarity=0.9
+    )
+    metag=Metagenomics(config_1)
+    genome_info=metag.extract_genome_info(save=False)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
-    db_class=Database(config=configs.Database())
-    metag_studies=db_class.get_metagenomics_studies()
-    metag_class=Metagenomics(configs.Metagenomics())
-    counter=0
-    for ind,study in enumerate(metag_studies):
-        metag_studies[ind]["Type"]=metag_class.get_sample_metadata_from_accession(study["SRA_accession"],save=False)["library_strategy"]
-        print(f"Study {ind} of {len(metag_studies)}")
-        counter+=1
-    pd.DataFrame(metag_studies).to_csv(os.path.join(Main_Dir,"metadata_added.csv"),index=False)
+    # db_class=Database(config=configs.Database())
+    # metag_studies=db_class.get_metagenomics_studies()
+    # metag_class=Metagenomics(configs.Metagenomics())
+    # counter=0
+    # for ind,study in enumerate(metag_studies):
+    #     metag_studies[ind]["Type"]=metag_class.get_sample_metadata_from_accession(study["SRA_accession"],save=False)["library_strategy"]
+    #     print(f"Study {ind} of {len(metag_studies)}")
+    #     counter+=1
+    # pd.DataFrame(metag_studies).to_csv(os.path.join(Main_Dir,"metadata_added.csv"),index=False)
 
 
 

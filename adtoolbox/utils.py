@@ -2,7 +2,7 @@ import configs
 import subprocess
 import pathlib
 import os
-
+from typing import Iterable
 def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.
@@ -39,8 +39,6 @@ def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
         subprocess.run([f"sbatch {str(slurmfile.relative_to(workingdir))}"],cwd=workingdir,shell=True)        
     return slurm_script
 
-
-    
 def fasta_to_dict(fasta:str)->dict:
     """
     This function converts a fasta file to a dictionary
@@ -75,4 +73,40 @@ def dict_to_fasta(dictionary:dict,fasta:str)->None:
         for label,seq in dictionary.items():
             f.write(f">{label}\n{seq}\n")
 
+def run_batch(
+    series:Iterable,
+    number_of_batches:int,
+    function:callable,
+    ):
+    pass
 
+# def file_finder(base_dir:str,pattern:str,save:bool=True)->dict[str:Iterable[str]]:
+#     """
+#     This function finds files in subdirectories of a base directory, and generates a dictionary
+#     with subdirectory names as keys and file addresses as values.
+    
+#     """
+#     base_dir=pathlib.Path(base_dir)
+#     files_dict={}
+#     for sub_dir in base_dir.iterdir():
+#         if sub_dir.is_dir():
+#             files_dict[sub_dir.name]=list(sub_dir.rglob(pattern))
+def extract_zipped_file(zipped_file:str,container:str="None")->str:
+    """
+    This function extracts a zipped file to a directory
+    Args:
+        zipped_file: the address of the zipped file as a string
+        container: The container to run the script in. If None, the script is run locally    
+    Returns:
+        None
+    """
+    if container == "None":
+        script=f"gzip -d {zipped_file}"
+    
+    elif container =="singularity":
+        script=f"singularity exec -B {zipped_file}:{zipped_file} {configs.singularity_container} gzip -d {zipped_file}"
+        
+    elif container =="docker":
+        script=f"docker run -v {zipped_file}:{zipped_file} {configs.docker_container} gzip -d {zipped_file}"
+        
+    return script
