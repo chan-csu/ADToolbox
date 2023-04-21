@@ -1292,7 +1292,10 @@ class Metagenomics:
                 json.dump(rel_abunds,f)
         return rel_abunds
 
-    def calculate_microbial_portions(self,microbe_reaction_map:dict,save:bool=True)-> dict:
+    def calculate_microbial_portions(self,
+                                     rel_abund_genome:dict,
+                                     genome_alignment_output:dict,
+                                     microbe_reaction_map:dict)-> dict:
         
         """This method calculates COD fraction of each microbial term in a model
         
@@ -1348,49 +1351,31 @@ class Metagenomics:
         reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
         reaction_db.set_index("EC_Numbers",inplace=True)
         model_species=list(set(microbe_reaction_map.values()))
-        
-        with open(self.config.genome_relative_abundances,'r') as f:
-            relative_abundances=json.load(f)
-
-        with open(self.config.genome_alignment_output_json,'r') as f:    
-            genome_info=json.load(f)
-        
-        for sample in relative_abundances.keys():
-
-            cod_portion=Additive_Dict([(i,0) for i in model_species])
-
-            for genome_id in relative_abundances[sample].keys():
-                temp_tsv = pd.read_table(
-                            genome_info[genome_id], sep='\t',header=None)
-                filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
-                            temp_tsv.iloc[:, -2] < self.config.e_value)
-                temp_tsv = temp_tsv[filter]
-                unique_ecs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
-                cleaned_reaction_list=[]
-                [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
-                pathway_counts=Counter(cleaned_reaction_list)
-                pathway_counts.__delitem__("")
-                SUM=sum([pathway_counts[key] for key in pathway_counts])
-                for i in pathway_counts:
-                    pathway_counts[i]=pathway_counts[i]/SUM
-                microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
-                cod_portion=cod_portion+Additive_Dict(microbial_species)*relative_abundances[sample][genome_id]
-                SUM=sum([cod_portion[key] for key in cod_portion])
-                if SUM==0:
-                    for i in cod_portion:
-                        
-                        cod_portion[i]=0
-                else:
-                    for i in cod_portion:
-                        cod_portion[i]=cod_portion[i]/SUM
-                
-            
-            cod[sample]=cod_portion
-        if save:
-            with open(self.config.cod_output_json,'w') as f:
-                json.dump(cod,f)
-        
-
+        cod_portion=Additive_Dict([(i,0) for i in model_species])
+        for genome_id in rel_abund_genome:
+            temp_tsv = pd.read_table(
+                        genome_alignment_output[genome_id], sep='\t',header=None)
+            filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
+                        temp_tsv.iloc[:, -2] < self.config.e_value)
+            temp_tsv = temp_tsv[filter]
+            unique_ecs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
+            cleaned_reaction_list=[]
+            [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
+            pathway_counts=Counter(cleaned_reaction_list)
+            pathway_counts.__delitem__("")
+            SUM=sum([pathway_counts[key] for key in pathway_counts])
+            for i in pathway_counts:
+                pathway_counts[i]=pathway_counts[i]/SUM
+            microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
+            cod_portion=cod_portion+Additive_Dict(microbial_species)*rel_abund_genome[genome_id]
+            SUM=sum([cod_portion[key] for key in cod_portion])
+            if SUM==0:
+                for i in cod_portion:
+                    
+                    cod_portion[i]=0
+            else:
+                for i in cod_portion:
+                    cod_portion[i]=cod_portion[i]/SUM
         return cod
     
     def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str,dict]:

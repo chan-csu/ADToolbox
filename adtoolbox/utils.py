@@ -108,6 +108,7 @@ def generate_batch_script(
     """
     This is a general function that generates an iterable of bash scripts for running a function
     that creates a bash script on an iterable of inputs.
+    
     """
     batch_size = len(list(zip(*input_series)))//number_of_batches+1
     batches=[]
@@ -137,13 +138,13 @@ def generate_batch_script(
 
     
 if __name__ == "__main__":
-    accessions=["AAA"+str(i) for i in range(100)]
-    names=["BBB"+str(i) for i in range(100)]
-    answers=generate_batch_script(
-        generator_function=core.Metagenomics(configs.Metagenomics()).align_genome_to_protein_db,
-        number_of_batches=5,
-        input_series=[accessions,names],
-        input_var=["address",'name'],
-        container="singularity",
-        save=os.path.join("/Users/parsaghadermarzi","Desktop","test_bash_generator",))
-    
+    # accessions=["AAA"+str(i) for i in range(100)]
+    # names=["BBB"+str(i) for i in range(100)]
+    # answers=generate_batch_script(
+    #     generator_function=core.Metagenomics(configs.Metagenomics()).align_genome_to_protein_db,
+    #     number_of_batches=5,
+    #     input_series=[accessions,names],
+    #     input_var=["address",'name'],
+    #     container="singularity",
+    #     save=os.path.join("/Users/parsaghadermarzi","Desktop","test_bash_generator",))
+    pass
