@@ -922,7 +922,7 @@ class Metagenomics:
     """
     def __init__(self,config:configs.Metagenomics):
         self.config=config
-    
+            
     def find_top_taxa(
         self,
         sample_name:str,
@@ -930,15 +930,20 @@ class Metagenomics:
         mode:str='top_k',
     )->dict:
         """
-        This function takes three inputs from qiime:
+        This function needs three inputs from qiime:
         1. feature table: This is the abundance of each feature in each sample (TSV).
         2. taxonomy table: This is the taxonomy of each feature (TSV). 
         3. rep seqs: This is the representative sequence of each feature (fasta).
         It then finds the top k features or features that form specific percentile of the community of the sample.
         
-        Requires:
-
-        Satisfies:
+        Required Configs:
+        
+            config.feature_table_dir: The path to the feature table tsv file.
+            ---------
+            config.taxonomy_table_dir: The path to the taxonomy table tsv file.
+            ---------
+            config.rep_seq_fasta: The path to the representative sequence fasta file.
+            ---------
         
         Args:
             sample_name (str): The name of the sample.
@@ -982,10 +987,26 @@ class Metagenomics:
         as container options. Otherwise you can use None and run it with the assumption that VSEARCH is installed.
         If you only want the script and not to run it, set run to False.
 
-        Requires:
-
-        Satisfies:
-
+        Required Configs:
+        
+            config.top_repseq_dir: The path to fasta file including the repseqs to be aligned.
+            ---------
+            config.gtdb_dir_fasta: The path to the gtdb fasta database.
+            ---------   
+            config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of this function will be saved
+                There are two outputs:
+                1. matches.blast: This is the tabularized blast output of the alignment.
+                2. Alignments: This is the raw alignment file.
+            ---------
+            config.vsearch_similarity: The similarity threshold for the alignment to be used by VSEARCH.
+            ---------
+            config.vsearch_threads: The number of threads to be used by VSEARCH.
+            ---------
+            config.adtoolbox_docker: The name of the docker image to be used by ADToolbox (Only if using Docker as container).
+            ---------
+            config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
+            ---------
+        
         Args:
             container (str, optional): The container to use. Defaults to "None".
         
@@ -1353,8 +1374,13 @@ class Metagenomics:
         model_species=list(set(microbe_reaction_map.values()))
         cod_portion=Additive_Dict([(i,0) for i in model_species])
         for genome_id in rel_abund_genome:
-            temp_tsv = pd.read_table(
+            try:
+                temp_tsv = pd.read_table(
                         genome_alignment_output[genome_id], sep='\t',header=None)
+            except:
+                warn(f"The alignment file for genome {genome_id} can not be found. Please check for possible errors")
+                continue
+            
             filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
                         temp_tsv.iloc[:, -2] < self.config.e_value)
             temp_tsv = temp_tsv[filter]
@@ -1449,52 +1475,7 @@ class Metagenomics:
         
         return prefetch_script,fasterq_dump_script,sample_metadata
     
-    def get_sample_metadata_from_accession(self,accession:str,save:bool=True)->dict:
-        """This function returns a dictionary that contains the sample metadata from the SRA database.
-        The function uses the bio command line tool to get the sample metadata. The function also saves the sample metadata if save=True.
-        if the download somehow fails, the function will return a dictionary with default values like -1 and "Unknown".
-        
-        Requires:
-            <R>project_accession</R>
-            <R>Configs.Metagenomics</R>
-            
-        Satisfies:
-            <S>sample_metadata</S>
-        
-        Args:
-            accession (str): The accession number of the SRA project or run
-            save (bool): If True, the sample metadata will be saved in the SRA work directory
-            
-        Returns:
-            sample_metadata (dict): A dictionary that contains the sample metadata
-        """
-        
-        metadata={}
-        if os.name=="nt":
-            res=subprocess.run(["bio","search",accession,"--all"],shell=True,capture_output=True)
-        else:
-            res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
-        try:
-            res=json.loads(res.stdout.decode("utf-8"))[0]
-            metadata["host"]=res.setdefault("host","Unknown")
-            metadata["library_strategy"]=res["library_strategy"].lower() if res["library_strategy"] else "Unknown"
-            metadata["library_layout"]=res.setdefault("library_layout","Unknown").lower()
-            metadata["base_count"]=float(res.setdefault("base_count",-1))
-            metadata["read_count"]=float(res.setdefault("read_count",-1))
-            avg_read_len=int(metadata["base_count"]/metadata["read_count"])
-            metadata["read_length"]=avg_read_len if metadata["library_layout"]=="single" else avg_read_len/2
-        except Exception:
-            metadata["host"]="Unknown"
-            metadata["library_strategy"]="Unknown"
-            metadata["library_layout"]="Unknown"
-            metadata["base_count"]=-1
-            metadata["read_count"]=-1
-            metadata["read_length"]=-1
 
-        if save:
-            with open(pathlib.Path(self.config.sra_work_dir(accession)).joinpath(f"sample_metadata_{accession}.json"),"w") as f:
-                json.dump(metadata,f)
-        return metadata
 
     
     def run_qiime2_from_sra(self,accession:str,include_metadata:bool=True,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
@@ -1632,7 +1613,8 @@ if __name__ == "__main__":
     vsearch_similarity=0.9
     )
     metag=Metagenomics(config_1)
-    genome_info=metag.extract_genome_info(save=False)
+    metag.find_top_taxa("mdsjas",10)
+    # genome_info=metag.extract_genome_info(save=False)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
     # db_class=Database(config=configs.Database())
     # metag_studies=db_class.get_metagenomics_studies()

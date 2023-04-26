@@ -10,9 +10,10 @@ ADToolbox is developed in Chan Lab at Colorado State University. The main goal o
 Developed by:
 
 Parsa Ghadermazi: parsa.ghadermazi@colostate.edu
+
 Ethan Rimelman: rimelman@colostate.edu
+
 Siu Hung Joshua Chan (PI): joshua.chan@colostate.edu 
 
-GitHub Repository: xxxx
 
 

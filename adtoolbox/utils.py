@@ -1,8 +1,8 @@
 import configs
 import subprocess
 import pathlib
+import json
 import os
-import core
 from typing import Iterable, Any,Union
 def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     """
@@ -135,7 +135,55 @@ def generate_batch_script(
             
     return tuple(scripts)
     
-
+def get_sample_metadata_from_accession(accession:str,save:Union[None,str]=None)->dict:
+    """This function returns a dictionary that contains the sample metadata from the SRA database.
+    The function uses the bio command line tool to get the sample metadata. The function also saves the sample metadata if save=True.
+    if the download somehow fails, the function will return a dictionary with default values like -1 and "Unknown".
+    
+    Requires:
+        <R>project_accession</R>
+        <R>Configs.Metagenomics</R>
+        
+    Satisfies:
+        <S>sample_metadata</S>
+    
+    Args:
+        accession (str): The accession number of the SRA project or run
+        save (bool): If True, the sample metadata will be saved in the SRA work directory
+        
+    Returns:
+        sample_metadata (dict): A dictionary that contains the sample metadata
+    """
+    
+    metadata={}
+    if os.name=="nt":
+        res=subprocess.run(["bio","search",accession,"--all"],shell=True,capture_output=True)
+    else:
+        res=subprocess.run([f"""bio search {accession} --all"""],shell=True,capture_output=True)
+    try:
+        res=json.loads(res.stdout.decode("utf-8"))[0]
+        metadata["host"]=res.setdefault("host","Unknown")
+        metadata["library_strategy"]=res["library_strategy"].lower() if res["library_strategy"] else "Unknown"
+        metadata["library_layout"]=res.setdefault("library_layout","Unknown").lower()
+        metadata["base_count"]=float(res.setdefault("base_count",-1))
+        metadata["read_count"]=float(res.setdefault("read_count",-1))
+        avg_read_len=int(metadata["base_count"]/metadata["read_count"])
+        metadata["read_length"]=avg_read_len if metadata["library_layout"]=="single" else avg_read_len/2
+        metadata["sample_accession"]=accession
+        metadata["study_accession"]=res["study_accession"]
+    except:
+        metadata["host"]="Unknown"
+        metadata["library_strategy"]="Unknown"
+        metadata["library_layout"]="Unknown"
+        metadata["base_count"]=-1
+        metadata["read_count"]=-1
+        metadata["read_length"]=-1
+        metadata["sample_accession"]=accession
+        metadata["study_accession"]="Unknown"
+    if save:
+        with open(save,"w") as f:
+            json.dump(metadata,f)
+    return metadata
     
 if __name__ == "__main__":
     # accessions=["AAA"+str(i) for i in range(100)]

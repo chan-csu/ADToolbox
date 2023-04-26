@@ -268,20 +268,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#6-report-module" class="md-nav__link">
-    6. Report Module
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-utility-module" class="md-nav__link">
-    7. Utility Module
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -401,20 +387,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#6-report-module" class="md-nav__link">
-    6. Report Module
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-utility-module" class="md-nav__link">
-    7. Utility Module
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -437,16 +409,16 @@
 
 
 <h1 id="adtoolbox-commandline-interface">ADToolbox Commandline Interface</h1>
-<p>Here we go over using the commandline interface, CLI, of ADToolbox.
-First, we need to initialize the CLI:</p>
+<hr />
 <h2 id="initialization">Initialization</h2>
-<p>After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:</p>
+<p>First, we need to initialize the CLI:
+After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:</p>
 <pre><code>ADToolbox
 
 </code></pre>
 <p>You should see the following if you are running this for the first time:</p>
 <pre><code>No Base Directory Found: 
-Where do you want to store your ADToolBox Data?:
+Where do you want to store your ADToolbox Data?:
 
 </code></pre>
 <p>Type the <strong>absolute path</strong> directory of interest. Don't worry if you mess this part up. You can change this later as well. you can type '.' for now and change this later.</p>
@@ -454,6 +426,7 @@ Where do you want to store your ADToolBox Data?:
 <pre><code>ADToolbox --help
 
 </code></pre>
+<hr />
 <h2 id="adtoolbox-modules">ADToolbox Modules</h2>
 <p>This toolbox is comprised of different modules:</p>
 <ol>
@@ -472,18 +445,22 @@ Where do you want to store your ADToolBox Data?:
 <li>
 <p>Documentations Module</p>
 </li>
-<li>
-<p>Report Module</p>
-</li>
-<li>
-<p>Utility Module</p>
-</li>
 </ol>
 <hr />
 <h3 id="1-configs-module">1. Configs Module</h3>
-<p>After installation, you have to download all the required files to run ADToolbox properly. To do this, first go to the Configs module by:</p>
-<pre><code>
-ADToolbox Configs --help
+<p>After installation, the base working directory must be specified:</p>
+<pre><code>ADToolbox Configs --help
+
+────────────────────────────────── ADToolBox───────────────────────────────────
+
+usage: ADToolBox Configs [-h] [-s SET_BASE_DIR] [-g] [--get-base-dir]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SET_BASE_DIR, --set-base-dir SET_BASE_DIR
+                        Set the base directory for ADToolBox to work with
+  -g, --get-base-dir    Get the current base directory for ADToolBox
+
 
 </code></pre>
 <p>This will give you a list of all functionalities that are related to the configurations of the toolbox. Here we go one by one in the correct order:</p>
@@ -491,63 +468,11 @@ ADToolbox Configs --help
 <li>set-base-dir:  The first configuration command will allow you to set the base directory for ADToolbox to work. This could be an existing folder somewhere in your files or a directory that you are willing to create. If the directory does not already exit, it will be automatically created after this command. For example if I want to set the base directory to be ADToolbox directory on my desktop the command would be, in MacOS, something like this:</li>
 </ul>
 <pre><code>
-ADToolbox Configs set-base-dir -d ~/Desktop/ADToolbox
+ADToolbox Configs --set-base-dir ~/Desktop/ADToolbox
 
 </code></pre>
-<p>Note that you <strong><em>must</em></strong> include -d after <code>set-base-dir</code>.</p>
 <p>Anything that you will do from now on, will be saved in this directory.</p>
-<ul>
-<li>build-folder-structure: Now you need to build the folder structure that is understandable by ADToolbox. You will do that by:</li>
-</ul>
-<pre><code>
-ADToolbox Configs build-folder-structure
-
-</code></pre>
-<ul>
-<li>download-all-databases: The next step is to download all the necessary database files for ADToolbox to work properly. You will achieve this by: </li>
-</ul>
-<pre><code>ADToolbox Configs download-all-databases
-
-</code></pre>
-<ul>
-<li>download-escher-files: If you want to access the esher map functionalities of ADToolbox you need to download the required files by:</li>
-</ul>
-<pre><code>
-ADToolbox Configs download-escher-files
-
-</code></pre>
-<p>An overal view of the Configs module of ADToolbox can be obtained by:</p>
-<pre><code>
-ADToolbox Configs --help
-
-────────────────────────────────── ADToolBox───────────────────────────────────
-usage: ADToolBox Configs [-h]
-                         {set-base-dir,build-folder-structure,download-all-datab
-ases,download-escher-files}
-                         ...
-
-positional arguments:
-  {set-base-dir,build-folder-structure,download-all-databases,download-escher-fi
-les}
-                        Available Configs Commands:
-    set-base-dir        Determine the address of the base directory for
-                        ADToolBox to work with
-    build-folder-structure
-                        Builds the folder structure for ADToolBox to work
-                        properly
-    download-all-databases
-                        Downloads all the databases for ADToolBox to work
-                        properly, and puts them in the right directory in
-                        Databases
-    download-escher-files
-                        Downloads all files required for running the escher
-                        map functionality of ADToolBox
-
-options:
-  -h, --help            show this help message and exit
-
-
-</code></pre>
+<hr />
 <h3 id="2-database-module">2. Database Module</h3>
 <p>Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:</p>
 <pre><code>ADToolbox Database --help
@@ -565,8 +490,6 @@ positional arguments:
 nload-protein-db,download-amplicon-to-genome-dbs}
                         Database Modules:
     initialize-feed-db  Initialize the Feed DB
-    extend-feed-db      Extend the Feed Database using a CSV file
-    show-feed-db        Display the Current Feed Database
     download-reaction-db
                         Downloads the reaction database in CSV
                         format
@@ -583,7 +506,13 @@ nload-protein-db,download-amplicon-to-genome-dbs}
                         from reaction database.
     download-amplicon-to-genome-dbs
                         downloads amplicon to genome databases
-
+    download-all-databases
+                        downloads all databases that are required by ADToolbox at once
+    show-tables         Show the list of all studies in Kbase
+    add-metagenomics-study
+                        Add a metagenomics study to the Kbase
+    add-experimental-data-study
+                        Add a study with experimental data to the Kbase
 options:
   -h, --help            show this help message and exit
 </code></pre>
@@ -595,91 +524,42 @@ options:
 ADToolbox Database initialize-feed-db
 
 </code></pre>
-<ul>
-<li>extend-feed-db: you can add to your current feed database from a csv file with this command. The CSV file <strong>must</strong> follow this column configuration:</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>TS</th>
-<th>TSS</th>
-<th>Lipids</th>
-<th>Proteins</th>
-<th>Carbohydrates</th>
-<th>PI</th>
-<th>SI</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>You can add your CSV file by:</p>
+<p><em>NOTE</em>: Skip the following download commands if you have run <code>ADToolbox Configs download-all-databases</code></p>
 <pre><code>
-ADToolbox Database extend-feed-db -d [PATH TO YOUR CSV FILE]
+- download-reaction-db: As the name implies, this will download the ADToolbox reaction database. This is required for many important modules of the toolbox
 
 </code></pre>
-<ul>
-<li>show-feed-db: You can pretty print your current feed table by</li>
-</ul>
+<p>ADToolbox Database download-reaction-db</p>
 <pre><code>
-ADToolbox Database show-feed-db
+- download-feed-db: Downloads the default feed database in JSON format
 
 </code></pre>
-<p>This command will print a pretty table of your current feed database, which is the JSON file you initialized earlier and extended with a CSV file. This is made possible because of the great Rich library.</p>
-<p><em>NOTE</em>: Skipp the following download commands if you ran <code>ADToolbox Configs download-all-databases</code>
-- download-reaction-db: As the name implies, this will download the ADToolbox reaction database. This is required for many important modules of the toolbox</p>
-<pre><code>ADToolbox Database download-reaction-db
-
-</code></pre>
-<ul>
-<li>download-feed-db: Downloads the default feed database in JSON format</li>
-</ul>
+<p>ADToolbox Database download-feed-db</p>
 <pre><code>
-ADToolbox Database download-feed-db
+- download-protein-db: Downloads the protein database in fasta format; You can alternatively build it from reaction database if you have downloaded it; Check below.
 
 </code></pre>
-<ul>
-<li>download-protein-db: Downloads the protein database in fasta format; You can alternatively build it from reaction database if you have downloaded it; Check below.</li>
-</ul>
+<p>ADToolbox Database download-protein-db</p>
 <pre><code>
-ADToolbox Database download-protein-db
+- build-protein-db: Generates the protein database for ADToolbox from the reaction database:
 
 </code></pre>
-<ul>
-<li>build-protein-db: Generates the protein database for ADToolbox from the reaction database:</li>
-</ul>
+<p>ADToolbox Database build-protein-db</p>
 <pre><code>
-ADToolbox Database build-protein-db
+- download-amplicon-to-genome-dbs: If you need to use the 16s mapping to the protein database and ADM, you will need to download the required databases using this command:
+
 
 </code></pre>
-<ul>
-<li>download-amplicon-to-genome-dbs: If you need to use the 16s mapping to the protein database and ADM, you will need to download the required databases using this command:</li>
-</ul>
+<p>ADToolbox Database download-amplicon-to-genome-dbs</p>
 <pre><code>
-ADToolbox Database download-amplicon-to-genome-dbs
+- download-seed-reaction-db: This will download the SEED reaction database in JSON format.
 
 </code></pre>
-<ul>
-<li>download-seed-reaction-db: This will download the SEED reaction database in JSON format.</li>
-</ul>
-<pre><code>ADToolbox Database download-seed-reaction-db
-
-</code></pre>
+<p>ADToolbox Database download-seed-reaction-db</p>
+<pre><code></code></pre>
+<hr />
 <h3 id="3-metagenomics-module">3. Metagenomics Module</h3>
-<p>Metagenomics module of ADToolbox is designed to add metagenomics data into considewration when designing and AD process.</p>
+<p>Metagenomics module of ADToolbox is designed to input metagenomics data into consideration when designing an AD process.</p>
 <p>You can observe all the functionalities by:</p>
 <pre><code>
 ADToolbox Metagenomics --help   
@@ -937,7 +817,6 @@ positional arguments:
                         Available ADM Commands:
     original-adm1       Original ADM1:
     modified-adm        Modified ADM:
-    show-escher-map     makes an escher map for modified ADM
 
 options:
   -h, --help            show this help message and exit
@@ -1045,10 +924,6 @@ options:
 <pre><code>ADToolbox Documentations --show 
 
 </code></pre>
-<hr />
-<h3 id="6-report-module">6. Report Module</h3>
-<hr />
-<h3 id="7-utility-module">7. Utility Module</h3>
 
 
 
