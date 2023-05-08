@@ -419,6 +419,7 @@ class Model:
 
         @app.callback(Output(component_id="Escher_", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'))
         def escher_wrapper(drop_down_escher):
+            print("drop_down_escher")
             if drop_down_escher=="Show Map":
                 Labels={}
                 for i in range(0,self.sim_time,int(self.sim_time/20)):
@@ -429,6 +430,7 @@ class Model:
         @app.callback(Output(component_id="Escher", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'),
         Input(component_id="Escher_Slider", component_property='value'))        
         def draw_escher(drop_down_escher,escher_slider):
+            print("draw_escher")
             rxn_data={}
             self.ode_system(0,sol.y[:,int(sol.y.shape[1]/30*escher_slider)],self)
             fluxes=self.info["Fluxes"]
@@ -443,7 +445,6 @@ class Model:
             ,height='1000px',
         width='100%')
              ]
-
         @app.callback(Output(component_id="Annotation_Graph", component_property='figure'), Input(component_id='Drop_Down', component_property='value'))
         def update_graph_fig(input_value):
             reactions = self.reactions
@@ -499,11 +500,10 @@ class Model:
         @app.callback(Output(component_id='Concentrations_Line_Plot', component_property='figure'),
                     Input(component_id='base_parameters', component_property='data'),
                     Input(component_id='model_parameters', component_property='data'),
-                    Input(component_id='Initial_Conditions', component_property='data'),
+                    Input(component_id='initial_conditions', component_property='data'),
                     Input(component_id='inlet_conditions', component_property='data'))
         def update_graph_fig(base_parameters: dict, model_parameters:dict, initial_conditions: dict, inlet_conditions: dict,prevent_initial_call=True)->plotly.graph_objects.Figure:
-            """A functions that imports base_parameters, model_parameters, Initial_Conditions, inlet_conditions into the plot.
-            """
+            print("flag")
             if len(self.control_state.keys()):
                 for i in self.control_state.keys():
                     self.control_state[i]=initial_conditions[0][i]
@@ -580,11 +580,6 @@ def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dic
     """This function builds the stoichiometric matrix for the original ADM Model.
     No testing is done.
     """
-    if type(base_parameters)!= dict and type(model_parameters)!= dict:
-        raise TypeError("base_parameters and model_parameters need to be dictionary")
-    if type(reactons)!= list and type(species)!= list:
-        raise TypeError("reactions and species must be list")
-
 
     S = np.zeros((len(species), len(reactons)))
     S[0, [1, 3, 4]] = [1, (1-model_parameters["f_fa_li"]), - 1]
@@ -1418,21 +1413,48 @@ if __name__ == "__main__":
    #    (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
 
     # adm1.Dash_App(Sol)
-    with open("/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization/Tuned_Params.json", 'r') as f:
+    # with open("/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization/Tuned_Params.json", 'r') as f:
+    #     mp=json.load(f)
+    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_base_parameters.json', 'r') as f:
+    #     BP=json.load(f)
+    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Initial_Conditions.json', 'r') as f:
+    #     IC=json.load(f)
+    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_inlet_conditions.json', 'r') as f:
+    #     InC=json.load(f)
+    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_reactions.json', 'r') as f:
+    #     r=json.load(f)
+    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_species.json', 'r') as f:
+    #     s=json.load(f)
+    
+    # mod_adm1 = Model(mp, BP, IC, InC, DEFAULT_FEED,r,
+    #                  s, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state={"S_H_ion":0},name="Modified_ADM1", switch="DAE")
+    
+    # Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
+    # mod_adm1.dash_app(Sol_mod_adm1)
+    db_conf=configs.Database()
+    with open(db_conf.adm1_model_parameters, 'r') as f:
         mp=json.load(f)
-    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_base_parameters.json', 'r') as f:
-        BP=json.load(f)
-    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Initial_Conditions.json', 'r') as f:
-        IC=json.load(f)
-    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_inlet_conditions.json', 'r') as f:
-        InC=json.load(f)
-    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_reactions.json', 'r') as f:
+    with open(db_conf.adm1_base_parameters, 'r') as f:
+        bp=json.load(f)
+    with open(db_conf.adm1_initial_conditions, 'r') as f:
+        ic=json.load(f)
+    with open(db_conf.adm1_inlet_conditions, 'r') as f:
+        inc=json.load(f)
+    with open(db_conf.adm1_reactions, 'r') as f:
         r=json.load(f)
-    with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_species.json', 'r') as f:
+    with open(db_conf.adm1_species, 'r') as f:
         s=json.load(f)
+    model=Model(
+        model_parameters=mp,
+        base_parameters=bp,
+        initial_conditions=ic,
+        inlet_conditions=inc,
+        feed=DEFAULT_FEED,
+        reactions=r,
+        species=s,
+        ode_system=adm1_ode_sys,
+        build_stoichiometric_matrix=build_adm1_stoiciometric_matrix,
+        
+    )
+    model.solve_model(model.initial_conditions[:, 0], np.linspace(0, 30, 10000))
     
-    mod_adm1 = Model(mp, BP, IC, InC, DEFAULT_FEED,r,
-                     s, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state={"S_H_ion":0},name="Modified_ADM1", switch="DAE")
-    
-    Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
-    mod_adm1.dash_app(Sol_mod_adm1)

@@ -504,6 +504,33 @@ class Database:
         
         return protein_seqs
 
+    def add_uniprot_to_protein_db(self,uniprot_id:str,ec:str):
+        Base_URL = "https://rest.uniprot.org/uniprotkb/"
+        session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        with open(self.config.protein_db,mode="a") as f:
+            try:
+                file = session.get(
+                    f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.fasta", timeout=10)
+            except requests.exceptions.ConnectionError:
+                print("Could not fetch the sequence! Trying again ...")
+                time.sleep(10)
+                file = session.get(
+                    Base_URL+uniprot_id+".fasta", timeout=10)
+                if file.ok:
+                    print(
+                        f"Retry was successful: {uniprot_id} was fetched successfully!")
+                else:
+                    print(
+                        f"Retry was unsuccessful: {uniprot_id} ignored!")
+                    # I can add this uniprot id to a log file
+            if file.ok:
+                f.write(f'>{uniprot_id}|{ec}\n')
+                f.write(''.join(file.text.split('\n')[1:-1]))
+                f.write('\n')
+            
 
     @staticmethod
     def ec_from_csv(csv_file:str, Sep=',')->list:
