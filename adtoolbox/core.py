@@ -373,6 +373,7 @@ class Database:
 
         with open(self.config.protein_db, 'w') as f:
             pass
+    
 
     
     def filter_seed_from_ec(self, ec_list,

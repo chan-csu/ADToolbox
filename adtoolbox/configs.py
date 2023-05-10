@@ -20,6 +20,14 @@ ADTOOLBOX_CONTAINERS={
 	'singularity_x86':"docker://parsaghadermazi/adtoolbox:x86",
 	'singularity_arm64':"docker://parsaghadermazi/adtoolbox:arm64"}
 
+class Config:
+    def __init__(self,
+                adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
+				adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],):
+        self.adtoolbox_singularity = adtoolbox_singularity
+        self.adtoolbox_docker = adtoolbox_docker
+        
+    
 class Alignment:
     """
     A class for aligner configurations
@@ -36,7 +44,6 @@ class Reaction_Toolkit:
     def __init__(self, 
         compound_db=os.path.join(Main_Dir, "Database", 'Local_compounds.json'),
         reaction_db=os.path.join(Main_Dir, "Database", 'Local_reactions.json')):
-        
         self.compound_db = compound_db
         self.reaction_db = reaction_db
 
@@ -53,7 +60,7 @@ class Studies:
         self.base_dir = base_dir
         self.urls = urls
 
-class Database:
+class Database(Config):
 	"A class for database configurations"
 	
 	def __init__(self,
@@ -97,7 +104,7 @@ class Database:
 		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
 		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza"
 		):
-
+		super().__init__()
 		self.compound_db = compound_db
 		self.reaction_db = reaction_db
 		self.local_compound_db = local_compound_db
