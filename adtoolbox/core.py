@@ -30,7 +30,14 @@ from __init__ import Main_Dir
 from typing import Union
 from dataclasses import dataclass
 import dataclasses
-from utils import wrap_for_slurm,fasta_to_dict,extract_zipped_file
+from utils import (wrap_for_slurm,
+                   fasta_to_dict,
+                   extract_zipped_file,
+                   needs_repair,
+                   create_mmseqs_database,
+                   index_mmseqs_db,
+                   mmseqs_search,
+                   mmseqs_result_db_to_tsv) 
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
@@ -759,6 +766,42 @@ class Database:
         feed_db=feed_db.append(dataclasses.asdict(feed), ignore_index=True)
         feed_db.to_csv(self.config.feed_db, index=False,sep='\t')
         rich.print("[green]Feedstock added to the database!")
+    
+    def build_mmseqs_database(self,save:bool,run:bool,container:str="None")->str:
+        """Builds an mmseqs database from the ADToolbox's fasta protein database.
+        Args:
+            save (bool): If True, the script will be saved to the current directory.
+            run (bool): If True, the script will be run.
+            container (str, optional): The container to run the script in. Defaults to "None".
+        Returns:
+            str: The script to build the mmseqs database.
+        """
+        script=create_mmseqs_database(self.config.protein_db,
+                                      self.config.protein_db_mmseqs,
+                                      container=container,
+                                      save=None,
+                                      run=False,
+                                      config=configs.Config())
+        if container=="None":
+            pass
+        
+        elif container=="singularity":
+            script=f"singularity exec --bind {self.config.protein_db}:{self.config.protein_db},{self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_singularity} {script}"
+        
+        elif container=="docker":
+            script=f"docker run -v {self.config.protein_db}:{self.config.protein_db} -v {self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_docker} {script}"
+        
+        else:
+            print("Container must be one of the following: None, singularity, docker")
+            return
+        
+        if save:
+            with open(str(pathlib.Path(save).parent/"mmseqs_db.sh"),"w") as f:
+                f.write(script)
+        if run:
+            subprocess.run(script,shell=True)
+        
+        return script
 
 
     def download_adm_parameters(self)->None:
@@ -1093,6 +1136,8 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         return bash_script
     
+    
+    
     def get_genomes_from_gtdb_alignment(self,save:bool=True)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
         using the GTDB-Tk. if you want to save the information as a json file set save to True.
@@ -1250,28 +1295,64 @@ class Metagenomics:
         
         return  bash_script,alignment_file
 
-    @staticmethod
-    def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
-        """
-        This function takes a csv file directory. The CSV file must include three columns:
-        1- genome_id: Identifier for the genome, preferrably; NCBI ID
-        2- NCBI_Name: NCBI taxonomy name for the genome: Does not need to be in a specific format
-        3- Genome_Dir: Absolute path to the fasta files: NOT .gz
+    def align_short_reads_to_protein_db(self,query_seq:str,alignment_file_name:str,container:str="None",run:bool=True,save:bool=True)->tuple[str,str]:
+        """This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
+        mmseqs wrappers in utils are used to perform this task. The result of this task is an alignment table.
+        
+        Requires:
 
+        Satisfies:
+        
+        Args:
+            query_seq (str): The address of the query sequence.
+            alignment_file_name (str): The name of the alignment file.
+            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
+            run (bool, optional): Whether to run the alignment. Defaults to True.
+            save (bool, optional): Whether to save the alignment scripts. Defaults to True.
+
+        Returns:
+            str: The bash script that is used to align the genomes or to be used to align the genomes.
+            str: The address of the alignment file.
         """
-        genomes_json={}
-        genomes_table=pd.read_table(input_dir,delimiter=",")
-        genomes_table.set_index("genome_id",inplace=True)
-        for[gi] in genomes_table.index:
-            genomes_json[gi]={}
-            genomes_json[gi]["NCBI_Name"]= genomes_table.loc[gi,"NCBI_Name"]
-            genomes_json[gi]["Genome_Dir"]= genomes_table.loc[gi,"Genome_Dir"]
-        with open(output_dir,"w") as fp:
-            json.dump(genomes_json,fp)
-        return
+        if not pathlib.Path(self.config.protein_db_mmseqs).exists():
+            raise FileNotFoundError("""The protein database of the ADToolbox for mmseqs is not found. Please build it first
+                                    using Database.build_mmseqs_database method.""")
+        path_query=pathlib.Path(query_seq)
+        script = ""
+        script += create_mmseqs_database(query_seq,str(path_query.parent/path_query.name.split(".")[0]),container=container,save=None,run=False)+"\n"
+        script += mmseqs_search(
+            query_db=str(path_query.parent/path_query.name.split(".")[0]),
+            target_db=self.config.protein_db_mmseqs,
+            results_db=path_query.parent/alignment_file_name,
+            run=False,
+            save=None,
+            container=container,
+        )+"\n"
+        script += mmseqs_result_db_to_tsv(
+            query_db=str(path_query.parent/path_query.name.split(".")[0]),
+            target_db=self.config.protein_db_mmseqs,
+            results_db=path_query.parent/alignment_file_name,
+            tsv_file=path_query.parent/(alignment_file_name+".tsv"),
+            container=container,
+            save=None,
+            run=False,)+"\n"
+        
+        if save:
+            with open(path_query.parent/"alignment_script.sh","w") as f:
+                f.write(script)
+        if run:
+            subprocess.run(script,shell=True)
+        
+        return script,path_query.parent/(alignment_file_name+".tsv")
+    
+        
+        
+
+        
+
     
 
-
+    @needs_repair
     def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
         rt = Reaction_Toolkit(reaction_db=self.config.seed_rxn_db)
         with open(self.config.genome_alignment_output_json) as f:
@@ -1641,7 +1722,7 @@ if __name__ == "__main__":
     vsearch_similarity=0.9
     )
     metag=Metagenomics(config_1)
-    metag.find_top_taxa("mdsjas",10)
+    # metag.find_top_taxa("mdsjas",10)
     # genome_info=metag.extract_genome_info(save=False)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
     # db_class=Database(config=configs.Database())

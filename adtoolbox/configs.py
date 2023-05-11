@@ -23,10 +23,12 @@ ADTOOLBOX_CONTAINERS={
 class Config:
     def __init__(self,
                 adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
-				adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],):
+				adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
+    			protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta')):
         self.adtoolbox_singularity = adtoolbox_singularity
         self.adtoolbox_docker = adtoolbox_docker
-        
+        self.protein_db = protein_db
+        self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("Protein_DB_mmseqs")
     
 class Alignment:
     """
@@ -60,7 +62,7 @@ class Studies:
         self.base_dir = base_dir
         self.urls = urls
 
-class Database(Config):
+class Database:
 	"A class for database configurations"
 	
 	def __init__(self,
@@ -75,7 +77,6 @@ class Database(Config):
 		base_dir=os.path.join(Main_Dir,"Database"),
 		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
 		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
-		protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
 		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
 		studies=Studies(),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
@@ -98,13 +99,15 @@ class Database(Config):
 		),
 		adm_parameters_base_dir:str=os.path.join(Main_Dir, "Database","ADM_Parameters"),
 		seed_rxn_url:str ="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
-		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/protein_db.fasta",
+		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta",
 		adtoolbox_rxn_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
 		feed_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
 		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
-		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza"
+		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
+  		adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
+		adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
+    	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta')
 		):
-		super().__init__()
 		self.compound_db = compound_db
 		self.reaction_db = reaction_db
 		self.local_compound_db = local_compound_db
@@ -112,7 +115,6 @@ class Database(Config):
 		self.base_dir = base_dir
 		self.csv_reaction_db = csv_reaction_db
 		self.feed_db = feed_db
-		self.protein_db = protein_db
 		self.studies = studies
 		self.seed_rxn_url = seed_rxn_url
 		self.protein_db_url = protein_db_url
@@ -136,6 +138,13 @@ class Database(Config):
 		self.inlet_conditions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Inlet_Conditions.json")
 		self.reactions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Reactions.json")
 		self.species = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Species.json")
+		self.protein_db=protein_db
+		self.adtoolbox_singularity=adtoolbox_singularity
+		self.adtoolbox_docker=adtoolbox_docker
+		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
+
+  
+  
 
 
 
@@ -193,6 +202,7 @@ class Metagenomics:
 		self.rep_seq_fasta = rep_seq_fasta
 		self.taxonomy_table_dir = taxonomy_table_dir
 		self.protein_db=Database().protein_db
+		self.protein_db_mmseqs=Database().protein_db_mmseqs
 		self.seed_rxn_db=Seed_RXN_DB
 		self.genome_alignment_output = genome_alignment_output
 		self.genome_alignment_output_json=genome_alignment_output_json

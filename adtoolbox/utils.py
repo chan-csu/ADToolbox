@@ -2,8 +2,10 @@ import configs
 import subprocess
 import pathlib
 import json
+import pandas as pd
 import os
 from typing import Iterable, Any,Union
+from warnings import warn
 def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.
@@ -192,7 +194,7 @@ def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:
     
     bashscript = f"mmseqs createdb {fasta_db} {mmseqs_db}"
     db_name_path=pathlib.Path(mmseqs_db)
-    if container != "None":
+    if container == "None":
         pass
     
     elif container == "singularity":
@@ -245,7 +247,7 @@ def mmseqs_search(
     save:Union[str,None]=None,
     run:bool=True,
     config=configs.Config
-)->str:
+                        )->str:
     """This function searches a query database against a target database using mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
@@ -271,6 +273,57 @@ def mmseqs_search(
     
     return bashscript
 
+
+def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config)->str:
+    """This function converts the results of mmseqs search to a tsv file.
+    Specifically, this function can be used for the protein database and is highly recomended for
+    shotgun metagenomics samples."""
+    
+    bashscript = f"mmseqs convertalis {query_db} {target_db} {results_db} {tsv_file}"
+    
+    if container == "None":
+        pass
+    
+    elif container == "singularity":
+        bashscript = f"singularity exec --bind {query_db}:{query_db},{target_db}:{target_db},{results_db}:{results_db} {config.adtoolbox_singularity} {bashscript}"
+    
+    elif container == "docker":
+        bashscript = f"docker run -v {query_db}:{query_db} -v {target_db}:{target_db} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
+    
+    else:
+        raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
+    if save:
+        with open(save,'w') as f:
+            f.write(bashscript)
+    if run:
+        subprocess.run(bashscript,shell=True)
+    
+    return bashscript
+
+def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
+    """
+    This function takes a csv file directory. The CSV file must include three columns:
+    1- genome_id: Identifier for the genome, preferrably; NCBI ID
+    2- NCBI_Name: NCBI taxonomy name for the genome: Does not need to be in a specific format
+    3- Genome_Dir: Absolute path to the fasta files: NOT .gz
+    """
+    genomes_json={}
+    genomes_table=pd.read_table(input_dir,delimiter=",")
+    genomes_table.set_index("genome_id",inplace=True)
+    for[gi] in genomes_table.index:
+        genomes_json[gi]={}
+        genomes_json[gi]["NCBI_Name"]= genomes_table.loc[gi,"NCBI_Name"]
+        genomes_json[gi]["Genome_Dir"]= genomes_table.loc[gi,"Genome_Dir"]
+    with open(output_dir,"w") as fp:
+        json.dump(genomes_json,fp)
+    return
+
+def needs_repair(func):
+    def to_be_repaired(*args,**kwargs):
+        warn("This function is not optimized yet or have issues in running. Please use it with caution.")
+        return func(*args,**kwargs)
+    return to_be_repaired
+        
 if __name__ == "__main__":
     # accessions=["AAA"+str(i) for i in range(100)]
     # names=["BBB"+str(i) for i in range(100)]
