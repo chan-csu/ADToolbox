@@ -1344,11 +1344,7 @@ class Metagenomics:
             subprocess.run(script,shell=True)
         
         return script,path_query.parent/(alignment_file_name+".tsv")
-    
-        
-        
-
-        
+ 
 
     
 
@@ -1390,6 +1386,39 @@ class Metagenomics:
             json.dump(json_adm_output, f)
 
         return json_adm_output
+    
+    def calculate_cod_portions_from_alignment_file(self,
+                                                   alignment_file:str,
+                                                   microbe_reaction_map:dict)->dict:
+        alignment_table = pd.read_table(alignment_file,sep='\t')
+        alignment_table = alignment_table[(alignment_table['e-value']<self.config.e_value)&(alignment_table['bit-score']>self.config.bit_score)]
+        cod={}
+        reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
+        reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
+        reaction_db.set_index("EC_Numbers",inplace=True)
+        model_species=list(set(microbe_reaction_map.values()))
+        cod_portion=Additive_Dict([(i,0) for i in model_species])
+        unique_ecs=list(set([i[1] for i in alignment_table[1].str.split("|")]))
+        cleaned_reaction_list=[]
+        [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
+        pathway_counts=Counter(cleaned_reaction_list)
+        pathway_counts.__delitem__("")
+        SUM=sum([pathway_counts[key] for key in pathway_counts])
+        for i in pathway_counts:
+            pathway_counts[i]=pathway_counts[i]/SUM
+        microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
+        cod_portion=cod_portion+Additive_Dict(microbial_species)*rel_abund_genome[genome_id]
+        SUM=sum([cod_portion[key] for key in cod_portion])
+        if SUM==0:
+            for i in cod_portion:
+                
+                cod_portion[i]=0
+        else:
+            for i in cod_portion:
+                cod_portion[i]=cod_portion[i]/SUM
+        return cod
+
+        
     
     def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
         
