@@ -1390,9 +1390,7 @@ class Metagenomics:
             json.dump(json_adm_output, f)
 
         return json_adm_output
-        # So far it has gotten really complicated, after making sure it works, instead of adding ec numbers I'll add [SEED,STR] so
-        # that it can be used for downstream analysis
-    ### NEED TO ADDRESS THIS
+    
     def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
         
         """

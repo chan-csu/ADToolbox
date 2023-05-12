@@ -187,11 +187,12 @@ def get_sample_metadata_from_accession(accession:str,save:Union[None,str]=None)-
             json.dump(metadata,f)
     return metadata
 
-def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config)->str:
+def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config())->str:
     """This function converts any database in fasta format for mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
-    
+    fasta_db=os.path.abspath(fasta_db)
+    mmseqs_db=os.path.abspath(mmseqs_db)
     bashscript = f"mmseqs createdb {fasta_db} {mmseqs_db}"
     db_name_path=pathlib.Path(mmseqs_db)
     if container == "None":
@@ -217,14 +218,14 @@ def index_mmseqs_db(mmseqs_db:str,container:str="None",save:Union[str,None]=None
     """This function indexes any database in fasta format for mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
-    
+    mmseqs_db=os.path.abspath(mmseqs_db)
     bashscript = f"mmseqs createindex {mmseqs_db} {mmseqs_db}"
     db_name_path=pathlib.Path(mmseqs_db)
     if container != "None":
         pass
     
     elif container == "singularity":
-        bashscript = f"singularity exec --bind {mmseqs_db}:{mmseqs_db},{db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_singularity} {bashscript}"
+        bashscript = f"singularity exec --bind {str(pathlib.Path(mmseqs_db).parent)}:{str(pathlib.Path(mmseqs_db).parent)},{db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {mmseqs_db}:{mmseqs_db} -v {db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_docker} {bashscript}"
@@ -246,21 +247,23 @@ def mmseqs_search(
     container:str="None",
     save:Union[str,None]=None,
     run:bool=True,
-    config=configs.Config
+    config=configs.Config()
                         )->str:
     """This function searches a query database against a target database using mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
-    
+    query_db=os.path.abspath(query_db)
+    target_db=os.path.abspath(target_db)
+    results_db=os.path.abspath(results_db)
     bashscript = f"mmseqs search {query_db} {target_db} {results_db} tmp"
     if container == "None":
         pass 
     
     elif container == "singularity":
-        bashscript = f"singularity exec --bind {query_db}:{query_db},{target_db}:{target_db},{results_db}:{results_db} {config.adtoolbox_singularity} {bashscript}"
+        bashscript = f"singularity exec --bind {query_db}:{query_db},{str(pathlib.Path(target_db).parent)}:{str(pathlib.Path(target_db).parent)},{results_db}:{results_db} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
-        bashscript = f"docker run -v {query_db}:{query_db} -v {target_db}:{target_db} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
+        bashscript = f"docker run -v {query_db}:{query_db} -v {str(pathlib.Path(target_db).parent)}:{str(pathlib.Path(target_db).parent)} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
 
     else:
         raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
@@ -274,11 +277,14 @@ def mmseqs_search(
     return bashscript
 
 
-def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config)->str:
+def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config())->str:
     """This function converts the results of mmseqs search to a tsv file.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
-    
+    query_db=os.path.abspath(query_db)
+    target_db=os.path.abspath(target_db)
+    results_db=os.path.abspath(results_db)
+    tsv_file=os.path.abspath(tsv_file)
     bashscript = f"mmseqs convertalis {query_db} {target_db} {results_db} {tsv_file}"
     
     if container == "None":
@@ -288,7 +294,7 @@ def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:s
         bashscript = f"singularity exec --bind {query_db}:{query_db},{target_db}:{target_db},{results_db}:{results_db} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
-        bashscript = f"docker run -v {query_db}:{query_db} -v {target_db}:{target_db} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
+        bashscript = f"docker run -v {query_db}:{query_db} -v {str(pathlib.Path(target_db).parent)}:{str(pathlib.Path(target_db).parent)} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
     
     else:
         raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
