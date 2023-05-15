@@ -36,7 +36,7 @@ class Alignment:
 
     """
 
-    def __init__(self, aligner_name="mmseqs2", e_value=10**-5, bit_score=40):
+    def __init__(self, aligner_name="mmseqs2", e_value=10**-7, bit_score=45):
         self.aligner_name = aligner_name
         self.e_value = e_value
         self.bit_score = bit_score
@@ -106,7 +106,26 @@ class Database:
 		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
   		adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
 		adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
-    	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta')
+    	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
+        adm_mapping={
+                            "Hydrolysis carbohydrates":"X_ch",
+                            "Hydrolysis proteins":"X_pr",
+                            "Hydrolysis lipids":"X_li",
+                            "Uptake of sugars":"X_su",
+                            "Uptake of amino acids":"X_aa",
+                            "Uptake of LCFA":"X_fa",
+                            "Uptake of acetate_et":"X_ac_et",
+                            "Uptake of acetate_lac":"X_ac_lac",
+                            "Uptake of propionate_et":"X_chain_et",
+                            "Uptake of propionate_lac":"X_chain_lac",
+                            "Uptake of butyrate_et":"X_chain_et",
+                            "Uptake of butyrate_lac":"X_chain_lac",
+                            "Uptake of valerate":"X_VFA_deg",
+                            "Uptake of caproate":"X_VFA_deg",
+                            "Methanogenessis from acetate and h2":"X_Me_ac",
+                            "Methanogenessis from CO2 and h2":"X_Me_CO2",
+                            "Uptake of ethanol":"X_et",
+                            "Uptake of lactate":"X_lac",}
 		):
 		self.compound_db = compound_db
 		self.reaction_db = reaction_db
@@ -142,6 +161,7 @@ class Database:
 		self.adtoolbox_singularity=adtoolbox_singularity
 		self.adtoolbox_docker=adtoolbox_docker
 		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
+		self.adm_mapping=adm_mapping
 
   
   

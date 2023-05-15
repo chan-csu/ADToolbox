@@ -285,7 +285,7 @@ def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:s
     target_db=os.path.abspath(target_db)
     results_db=os.path.abspath(results_db)
     tsv_file=os.path.abspath(tsv_file)
-    bashscript = f"mmseqs convertalis {query_db} {target_db} {results_db} {tsv_file}"
+    bashscript = f"mmseqs convertalis {query_db} {target_db} {results_db} {tsv_file} --format-mode 4"
     
     if container == "None":
         pass

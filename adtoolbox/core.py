@@ -41,25 +41,6 @@ from utils import (wrap_for_slurm,
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
-class Additive_Dict(dict):
-    """ A simple dictionary with additive properties. The only difference with 
-    normal dictionary is that "+" operator works with the objects of this class.
-    when the values are the same between two dictionaries, their values gets added,
-    if not, nothing happens!
-    
-    """
-    def __add__(self,b):
-        out=self.copy()
-        for key in b.keys():
-            if key in self.keys():
-                out[key]+=b[key]
-        return Additive_Dict(out)
-    
-    def __mul__(self,a):
-        out=self.copy()
-        for key in out.keys():
-            out[key]=out[key]*a
-        return Additive_Dict(out)
 
 class Pipeline:
     """A class for running a chain of commands in series with parallelism."""
@@ -1389,34 +1370,25 @@ class Metagenomics:
     
     def calculate_cod_portions_from_alignment_file(self,
                                                    alignment_file:str,
-                                                   microbe_reaction_map:dict)->dict:
+                                                   microbe_reaction_map:dict=configs.Database().adm_mapping)->dict:
         alignment_table = pd.read_table(alignment_file,sep='\t')
-        alignment_table = alignment_table[(alignment_table['e-value']<self.config.e_value)&(alignment_table['bit-score']>self.config.bit_score)]
-        cod={}
+        alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)].drop_duplicates("query",keep="first")
+        alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
+        ec_counts=alignment_table["target"].value_counts().to_dict()
         reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
         reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
         reaction_db.set_index("EC_Numbers",inplace=True)
-        model_species=list(set(microbe_reaction_map.values()))
-        cod_portion=Additive_Dict([(i,0) for i in model_species])
-        unique_ecs=list(set([i[1] for i in alignment_table[1].str.split("|")]))
-        cleaned_reaction_list=[]
-        [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
-        pathway_counts=Counter(cleaned_reaction_list)
-        pathway_counts.__delitem__("")
-        SUM=sum([pathway_counts[key] for key in pathway_counts])
-        for i in pathway_counts:
-            pathway_counts[i]=pathway_counts[i]/SUM
-        microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
-        cod_portion=cod_portion+Additive_Dict(microbial_species)*rel_abund_genome[genome_id]
-        SUM=sum([cod_portion[key] for key in cod_portion])
-        if SUM==0:
-            for i in cod_portion:
-                
-                cod_portion[i]=0
-        else:
-            for i in cod_portion:
-                cod_portion[i]=cod_portion[i]/SUM
-        return cod
+        ec_to_adm=dict(zip(reaction_db.index,reaction_db["Modified_ADM_Reactions"]))
+        cods={i:0 for i in microbe_reaction_map.keys()}
+        for ec  in ec_counts.keys():
+            for adm_rxn in ec_to_adm[ec].split("|"):
+                cods[adm_rxn]+=ec_counts[ec]
+        cods={microbe_reaction_map[k]:v/sum(cods.values()) for k,v in cods.items()}
+        return cods
+        
+            
+        
+
 
         
     
@@ -1749,6 +1721,7 @@ if __name__ == "__main__":
     vsearch_similarity=0.9
     )
     metag=Metagenomics(config_1)
+    metag.calculate_cod_portions_from_alignment_file("/Users/parsaghadermarzi/Desktop/test_shortreads/713.tsv")
     # metag.find_top_taxa("mdsjas",10)
     # genome_info=metag.extract_genome_info(save=False)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
