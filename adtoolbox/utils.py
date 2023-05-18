@@ -195,11 +195,14 @@ def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:
     mmseqs_db=os.path.abspath(mmseqs_db)
     bashscript = f"mmseqs createdb {fasta_db} {mmseqs_db}"
     db_name_path=pathlib.Path(mmseqs_db)
+    fasta_name_path=pathlib.Path(fasta_db)
     if container == "None":
         pass
     
     elif container == "singularity":
-        bashscript = f"singularity exec --bind {fasta_db}:{fasta_db},{str(db_name_path.parent)}:{str(db_name_path.parent)} {config.adtoolbox_singularity} {bashscript}"
+        path_mount=",".join(list(set([str(db_name_path.parent),str(fasta_name_path.parent)])))
+            
+        bashscript = f"singularity exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {fasta_db}:{fasta_db} -v {db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_docker} {bashscript}"
