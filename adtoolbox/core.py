@@ -2,6 +2,7 @@ from distutils.log import warn
 import pdb
 import subprocess
 import os
+from collections import UserDict
 import random
 from matplotlib import streamplot
 import pandas as pd
@@ -40,7 +41,15 @@ from utils import (wrap_for_slurm,
                    mmseqs_result_db_to_tsv) 
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
-
+class AdditiveDict(UserDict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    def __add__(self, other:dict):
+        if isinstance(other,dict): 
+            return AdditiveDict({i: self[i] + other.get(i,0) for i in self.keys()})
+        else:
+            raise TypeError("The other object is not a dict")
+            
 
 class Pipeline:
     """A class for running a chain of commands in series with parallelism."""
@@ -1371,6 +1380,18 @@ class Metagenomics:
     def calculate_cod_portions_from_alignment_file(self,
                                                    alignment_file:str,
                                                    microbe_reaction_map:dict=configs.Database().adm_mapping)->dict:
+        
+        """
+        This function calculates the portion of cod for degraders in an mmseqs alignment file.
+        
+        Args:
+            alignment_file (str): The address of the alignment file.
+            microbe_reaction_map (dict, optional): The dictionary that maps microbial agents to reactions in ADM. Defaults to configs.Database().adm_mapping.
+        
+        Returns:
+            dict: A dictionary that maps microbial agents to their portion of cod(sum to one).
+    
+        """
         alignment_table = pd.read_table(alignment_file,sep='\t')
         alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)].drop_duplicates("query",keep="first")
         alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
@@ -1385,11 +1406,6 @@ class Metagenomics:
                 cods[adm_rxn]+=ec_counts[ec]
         cods={microbe_reaction_map[k]:v/sum(cods.values()) for k,v in cods.items()}
         return cods
-        
-            
-        
-
-
         
     
     def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
@@ -1420,7 +1436,8 @@ class Metagenomics:
             with open(self.config.genome_relative_abundances,'w') as f:
                 json.dump(rel_abunds,f)
         return rel_abunds
-
+    
+    @needs_repair
     def calculate_microbial_portions(self,
                                      rel_abund_genome:dict,
                                      genome_alignment_output:dict,
@@ -1480,7 +1497,7 @@ class Metagenomics:
         reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
         reaction_db.set_index("EC_Numbers",inplace=True)
         model_species=list(set(microbe_reaction_map.values()))
-        cod_portion=Additive_Dict([(i,0) for i in model_species])
+        cod_portion=AdditiveDict([(i,0) for i in model_species])
         for genome_id in rel_abund_genome:
             try:
                 temp_tsv = pd.read_table(
@@ -1501,7 +1518,7 @@ class Metagenomics:
             for i in pathway_counts:
                 pathway_counts[i]=pathway_counts[i]/SUM
             microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
-            cod_portion=cod_portion+Additive_Dict(microbial_species)*rel_abund_genome[genome_id]
+            cod_portion=cod_portion+AdditiveDict(microbial_species)*rel_abund_genome[genome_id]
             SUM=sum([cod_portion[key] for key in cod_portion])
             if SUM==0:
                 for i in cod_portion:
@@ -1511,7 +1528,7 @@ class Metagenomics:
                 for i in cod_portion:
                     cod_portion[i]=cod_portion[i]/SUM
         return cod
-    
+    @needs_repair
     def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str,dict]:
         """ 
         This method downloads the fastq files from the SRA database using the accession number of the project or run.
