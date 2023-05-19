@@ -300,7 +300,13 @@ def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:s
         pass
     
     elif container == "singularity":
-        bashscript = f"singularity exec --bind {query_db}:{query_db},{target_db}:{target_db},{results_db}:{results_db} {config.adtoolbox_singularity} {bashscript}"
+        query_db=str(pathlib.Path(query_db).parent)
+        target_db=str(pathlib.Path(target_db).parent)
+        results_db=str(pathlib.Path(results_db).parent)
+        tsv_file=str(pathlib.Path(tsv_file).parent)
+        path_mount=list(set([query_db,target_db,results_db,tsv_file]))
+        path_mount=",".join([f"{i}:{i}" for i in path_mount])
+        bashscript = f"singularity exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {query_db}:{query_db} -v {str(pathlib.Path(target_db).parent)}:{str(pathlib.Path(target_db).parent)} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
