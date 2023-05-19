@@ -200,7 +200,8 @@ def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:
         pass
     
     elif container == "singularity":
-        path_mount=",".join(list(set([str(db_name_path.parent),str(fasta_name_path.parent)])))
+        path_mount=list(set([str(db_name_path.parent),str(fasta_name_path.parent)]))
+        ",".join([f"{i}:{i}" for i in path_mount])
             
         bashscript = f"singularity exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
     
