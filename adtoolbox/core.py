@@ -14,7 +14,7 @@ import requests
 import time
 import warnings
 from requests.adapters import HTTPAdapter
-from sympy import Li
+import utils
 import configs
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
@@ -1404,6 +1404,7 @@ class Metagenomics:
         for ec  in ec_counts.keys():
             for adm_rxn in ec_to_adm[ec].split("|"):
                 cods[adm_rxn]+=ec_counts[ec]
+                
         cods={microbe_reaction_map[k]:v/sum(cods.values()) for k,v in cods.items()}
         return cods
         
@@ -1581,7 +1582,7 @@ class Metagenomics:
         if not project_path.exists():
             project_path.mkdir(parents=True)
         
-        sample_metadata=self.get_sample_metadata_from_accession(accession)
+        sample_metadata=utils.get_sample_metadata_from_accession(accession)
 
         if save:
             
