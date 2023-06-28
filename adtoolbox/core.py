@@ -979,10 +979,24 @@ class Database:
 class Metagenomics:
 
     """
-    This is the main class for Metagenomics functionality of ADToolbox.
+    This is the main class for Metagenomics functionality of ADToolbox. This class contains all the methods required for metagenomics analysis 
+    that ADToolbox offers.
     """
-    def __init__(self,config:configs.Metagenomics):
-        """In order to initialize this class, you need to provide a metagenomics configs object from the configs module : configs.Metagenomics.
+    def __init__(self,config:configs.Metagenomics)->None:
+        """In order to instntiate an object from this class, you need to provide a metagenomics configs object from the configs module : configs.Metagenomics.
+        Information for inputs and of each method is then obtained from the corresponding configs object. The following example shows how to instantiate an object from this class
+        using the default configs object:
+        
+        Examples:
+            >>> from adtoolbox import core, configs
+            >>> config=configs.Metagenomics() ### This uses default arguments. Refer to configs module for more information.
+            >>> metagenomics=core.Metagenomics(config)
+        
+        Args:
+            config (configs.Metagenomics): A metagenomics configs object from configs module.
+        
+        Returns:
+            None
         """
         self.config=config
             
@@ -991,7 +1005,7 @@ class Metagenomics:
         sample_name:str,
         treshold:Union[int,float],
         mode:str='top_k',
-    )->dict:
+        )->dict:
         """
         This function needs three inputs from qiime:
         1. feature table: This is the abundance of each feature in each sample (TSV).
@@ -1132,17 +1146,16 @@ class Metagenomics:
     
     def get_genomes_from_gtdb_alignment(self,save:bool=True)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
-        using the GTDB-Tk. if you want to save the information as a json file set save to True.
+        using the GTDB-Tk. In the outputted dictionary, the keys are feature ids and the values are the representative genomes.
+        if you want to save the information as a json file set save to True.
 
-        Requires:
-
-        Satisfies:
-
-        Args:
-            save (bool, optional): Whether to save the feature:genome_id mapping as a json file. Defaults to True.
+        Required Configs:
+            config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of the align_to_gtdb function are saved.
+            ---------
+            config.feature_to_taxa: The path to the json file where the json file including feature ids and the representative genomes will be saved.
         
-        Returns:
-            dict: A dictionary containing
+        Args:
+            save (bool, optional): Whether to save the json file or not. Defaults to True.
         """
         matches = os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
         aligned=pd.read_table(matches,header=None,delimiter='\t')
@@ -1160,7 +1173,10 @@ class Metagenomics:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         If you want to save the json file that is holding the information for each genome, set save to True.
         Note that this function uses rsync to download the genomes. Also this function does not come with a run option.
-    
+        
+        Example:
+            >>>
+        
 
         Requires:
 
@@ -1193,7 +1209,7 @@ class Metagenomics:
         if container=="singularity":
             bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
         
-        return bash_script,
+        return bash_script
     
     def extract_genome_info(self,save:bool=True)->dict[str,str]:
         """This function extracts the genome information from the genomes base directory. If you want to save the genome information as a json file, set save to True.
