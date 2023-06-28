@@ -758,7 +758,7 @@ class Database:
         rich.print("[green]Feedstock added to the database!")
     
     def build_mmseqs_database(self,save:bool,run:bool,container:str="None")->str:
-        """Builds an mmseqs database from the ADToolbox's fasta protein database.
+        """Builds an indexed mmseqs database from the ADToolbox's fasta protein database.
         Args:
             save (bool): If True, the script will be saved to the current directory.
             run (bool): If True, the script will be run.
@@ -772,21 +772,21 @@ class Database:
                                       save=None,
                                       run=False,
                                       config=configs.Config())
-        if container=="None":
-            pass
+        # if container=="None":
+        #     pass
         
-        elif container=="singularity":
-            script=f"singularity exec --bind {self.config.protein_db}:{self.config.protein_db},{self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_singularity} {script}"
+        # elif container=="singularity":
+        #     script=f"singularity exec --bind {self.config.protein_db}:{self.config.protein_db},{self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_singularity} {script}"
         
-        elif container=="docker":
-            script=f"docker run -v {self.config.protein_db}:{self.config.protein_db} -v {self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_docker} {script}"
+        # elif container=="docker":
+        #     script=f"docker run -v {self.config.protein_db}:{self.config.protein_db} -v {self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_docker} {script}"
         
-        else:
-            print("Container must be one of the following: None, singularity, docker")
-            return
+        # else:
+        #     print("Container must be one of the following: None, singularity, docker")
+        #     return
         
         if save:
-            with open(str(pathlib.Path(save).parent/"mmseqs_db.sh"),"w") as f:
+            with open(pathlib.Path(save),"w") as f:
                 f.write(script)
         if run:
             subprocess.run(script,shell=True)
@@ -979,9 +979,11 @@ class Database:
 class Metagenomics:
 
     """
-    This is the main class for Metagenomics functionality of ADToolbox. You instantiate this class with a config.Metagenomics object.
+    This is the main class for Metagenomics functionality of ADToolbox.
     """
     def __init__(self,config:configs.Metagenomics):
+        """In order to initialize this class, you need to provide a metagenomics configs object from the configs module : configs.Metagenomics.
+        """
         self.config=config
             
     def find_top_taxa(
