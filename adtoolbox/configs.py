@@ -209,6 +209,9 @@ class Metagenomics:
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
 			cod_output_json=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","cod_output.json"),
+			adm_mapping=Database().adm_mapping,
+   			adm_cod_from_ec=os.path.join(Main_Dir,"Outputs","adm_From_ec.json"),
+			ec_counts_from_alignment=os.path.join(Main_Dir,"Outputs","ec_counts_from_alignment.json"),
 
              ):
 		self.k = amplicon2genome_k
@@ -247,6 +250,9 @@ class Metagenomics:
 		self.adtoolbox_docker=adtoolbox_docker
 		self.rsync_download_dir=rsync_download_dir
 		self.genomes_base_dir=genomes_base_dir
+		self.adm_mapping=adm_mapping
+		self.adm_cod_from_ec=adm_cod_from_ec
+		self.ec_counts_from_alignment=ec_counts_from_alignment
 
 
 

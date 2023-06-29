@@ -1070,8 +1070,7 @@ class Metagenomics:
             ---------
             config.gtdb_dir_fasta: The path to the gtdb fasta database.
             ---------   
-            config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of this function will be saved
-                There are two outputs:
+            config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of this function will be savedThere are two outputs:
                 1. matches.blast: This is the tabularized blast output of the alignment.
                 2. Alignments: This is the raw alignment file.
             ---------
@@ -1172,16 +1171,15 @@ class Metagenomics:
     def download_genome(self,identifier:str,container:str="None")-> str:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         If you want to save the json file that is holding the information for each genome, set save to True.
-        Note that this function uses rsync to download the genomes. Also this function does not come with a run option.
-        
-        Example:
-            >>>
-        
+        Note that this function uses rsync to download the genomes. 
 
-        Requires:
-
-        Satisfies:
-
+        Required Configs:
+            config.genomes_base_dir: The path to the base directory where the genomes will be saved.
+            ---------
+            config.adtoolbox_docker: The name of the docker image to be used by ADToolbox (Only if using Docker as container).
+            ---------
+            config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
+            ---------
         Args:
             identifier list[str]: The list of identifiers for the genomes. It can be either refseq or genbank.
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
@@ -1213,11 +1211,10 @@ class Metagenomics:
     
     def extract_genome_info(self,save:bool=True)->dict[str,str]:
         """This function extracts the genome information from the genomes base directory. If you want to save the genome information as a json file, set save to True.
-
-        Requires:
-
-        Satisfies:
-
+        
+        Required Configs:
+            config.genomes_base_dir: The path to the base directory where the genomes are saved.
+            ---------
         Args:
             genome_info (dict[str,str]): A dictionary containing the genome information.
             save (bool, optional): Whether to save the genome information as a json file. Defaults to True.
@@ -1255,9 +1252,14 @@ class Metagenomics:
         you need to have the container installed on your system. You may select from "None", "docker", "singularity".
 
         Requires:
-
-        Satisfies:
-
+            config.genome_alignment_output: The path to the directory where the alignment results will be saved.
+            ---------
+            config.protein_db: The path to the ADToolbox protein database in fasta.
+            ---------
+            config.adtoolbox_docker: The name of the docker image to be used by ADToolbox (Only if using Docker as container).
+            ---------
+            config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
+            ---------
         Args:
             address (str): The address of the genome fasta file. The file must be in fasta format.
             run (bool, optional): Whether to run the alignment. Defaults to True.
@@ -1307,10 +1309,10 @@ class Metagenomics:
         """This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
         mmseqs wrappers in utils are used to perform this task. The result of this task is an alignment table.
         
-        Requires:
-
-        Satisfies:
+        Required Configs:
         
+            protein_db_mmseqs (str): The address of the existing/to be created protein database of the ADToolbox for mmseqs.
+            --------
         Args:
             query_seq (str): The address of the query sequence.
             alignment_file_name (str): The name of the alignment file.
@@ -1352,10 +1354,67 @@ class Metagenomics:
             subprocess.run(script,shell=True)
         
         return script,path_query.parent/(alignment_file_name+".tsv")
- 
-
     
+    def extract_ec_from_alignment(self,alignment_file:str,save:bool=True)->dict:
+        """
+        This function extracts the number of times an EC number is found in the alignment file when aligned to ADToolbox protein database.
+        
+        Required Configs:
+            config.e_value: The e-value threshold for the filtering the alignment table.
+            ---------
+            config.bit_score: The bit score threshold for the filtering the alignment table.
+            ---------
+            config.ec_counts_from_alignment: The address of the json file that the results will be saved in.
+            ---------
+        Args:
+            alignment_file (str): The address of the alignment file.
+            save (bool, optional): Whether to save the results. Defaults to True.
+        
+        Returns:
+            dict: A dictionary of EC numbers and their counts.
 
+        """
+        alignment_table = pd.read_table(alignment_file,sep='\t')
+        alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)].drop_duplicates("query",keep="first")
+        alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
+        ec_counts=alignment_table["target"].value_counts().to_dict()
+        
+        if save:
+            with open(self.config.ec_counts_from_alignment,"w") as f:
+                json.dump(ec_counts,f)
+        return ec_counts
+    
+    def get_cod_from_ec_counts(self,ec_counts:dict,save:bool=True)->dict:
+        """This function takes a json file that comtains ec counts and converts it to ADM microbial agents counts.
+        Required Configs:
+            config.adm_mapping : A dictionary that maps ADM reactions to ADM microbial agents.
+            ---------
+            config.csv_reaction_db : The address of the reaction database of ADToolbox.
+            ---------
+            config.adm_cod_from_ec  : The address of the json file that the results will be saved in.
+            ---------
+        Args:
+            save (bool, optional): Whether to save the output. Defaults to True.   
+            ec_counts (dict): A dictionary containing the counts for each ec number.  
+        Returns:
+            dict: A dictionary containing the ADM microbial agents counts.
+        """
+        reaction_db = pd.read_table(self.config.csv_reaction_db, sep=',').drop_duplicates("EC_Numbers")
+        reaction_db.set_index("EC_Numbers",inplace=True)
+        adm_reactions_agents = {k:0 for k in self.config.adm_mapping.keys()}
+        for ec in ec_counts.keys():
+            l=reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|")
+            for adm_rxn in l: 
+                adm_reactions_agents[adm_rxn]+=ec_counts[ec]
+        adm_microbial_agents={}
+        for k,v in self.config.adm_mapping.items():
+            adm_microbial_agents[v]=adm_reactions_agents[k]
+        if save:
+            with open(self.config.adm_cod_from_ec,"w") as f:
+                json.dump(adm_microbial_agents,f)
+        return adm_microbial_agents
+        
+        
     @needs_repair
     def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
         rt = Reaction_Toolkit(reaction_db=self.config.seed_rxn_db)
@@ -1741,23 +1800,23 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
-    feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
-    taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
-    rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
-    top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
-    vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
-    genomes_base_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
-    genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
-    feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
-    cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
-    genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
-    vsearch_similarity=0.9
-    )
-    metag=Metagenomics(config_1)
-    metag.calculate_cod_portions_from_alignment_file("/Users/parsaghadermarzi/Desktop/test_shortreads/713.tsv")
+    # config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
+    # feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
+    # taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
+    # rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
+    # top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
+    # vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
+    # genomes_base_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    # genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
+    # genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
+    # genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
+    # feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
+    # cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
+    # genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
+    # vsearch_similarity=0.9
+    # )
+    # metag=Metagenomics(config_1)
+    # metag.calculate_cod_portions_from_alignment_file("/Users/parsaghadermarzi/Desktop/test_shortreads/713.tsv")
     # metag.find_top_taxa("mdsjas",10)
     # genome_info=metag.extract_genome_info(save=False)
     # print(metag.get_sample_metadata_from_accession("ERR3861428"))
@@ -1770,6 +1829,19 @@ if __name__ == "__main__":
     #     print(f"Study {ind} of {len(metag_studies)}")
     #     counter+=1
     # pd.DataFrame(metag_studies).to_csv(os.path.join(Main_Dir,"metadata_added.csv"),index=False)
+    metag_config=configs.Metagenomics(
+        adm_cod_from_ec="/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/adm_cod_from_ec.json",
+    )
+    metag=Metagenomics(metag_config)
+    with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/ec_counts_sra_wgs_cow_goad.json") as f:
+        ec_counts=json.load(f)
+    cods={}
+    for sample in ec_counts:
+        cods[sample]=metag.get_cod_from_ec_counts(ec_counts[sample],save=False)
+    with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/cods_sra_wgs_cow_goat.json","w") as f:
+        json.dump(cods,f)
+        
+
 
 
 
