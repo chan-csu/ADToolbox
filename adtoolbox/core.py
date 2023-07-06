@@ -1681,21 +1681,13 @@ class Metagenomics:
 
 
     
-    def run_qiime2_from_sra(self,accession:str,include_metadata:bool=True,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
+    def run_qiime2_from_sra(self,query_seq:str,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
         """
-        Requires:
-            <R>project_accession</R>
-            <R>Configs.Metagenomics</R>
-            <R>sra_project_dir</R>
-            <R>.fastq_files</R>
-        Satisfies:
-            <S>qiime2_work_dir</S>
-            <S>qiime2_bash_str</S>
-            <S>manifest.csv</S>
-            <if>save=True</if><S>qiime2_bash_file</S>
-            <if>run=True</if><S>qiime2_outputs</S>
+        Required Configs:
+        
+
         Args:
-            accession (str): The accession number of the SRA project or run
+            query_seq (str): directory where the fastq files are located
             save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
             run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
             container (str, optional): If you want to run the qiime2 commands in a container, specify the container name here. Defaults to 'None'.
@@ -1708,30 +1700,23 @@ class Metagenomics:
             add singularity support
 
         """
-        qiime2_work_dir=pathlib.Path(self.config.qiime2_work_dir(accession))
-        if not qiime2_work_dir.exists():
-            qiime2_work_dir.mkdir(parents=True)
         
-        sra_project_dir=pathlib.Path(self.config.sra_work_dir(accession))
-        seqs=sra_project_dir.joinpath("seqs")
+        
+        seqs=pathlib.Path(query_seq)
         manifest_single={'sample-id':[],'absolute-filepath':[]}
-        manifest_paired={'sample-id':[],'forward-absolute-filepath':[],'reverse-absolute-filepath':[]}
-        
-        for i in seqs.iterdir():
-            if i.is_dir():
-                
-                if len(list(i.glob("*.fastq"))) == 2:
-                    r1=list(i.glob("*_1.fastq"))[0]
-                    r2=list(i.glob("*_2.fastq"))[0]
-                    manifest_paired['sample-id'].append(i.name)
-                    manifest_paired['forward-absolute-filepath'].append(str(r1))
-                    manifest_paired['reverse-absolute-filepath'].append(str(r2))
-                    paired_end=True
-                elif len(list(i.glob("*.fastq"))) == 1:
-                    r1=list(i.glob("*.fastq"))[0]
-                    manifest_single['sample-id'].append(i.name)
-                    manifest_single['absolute-filepath'].append(str(r1))
-                    paired_end=False
+        manifest_paired={'sample-id':[],'forward-absolute-filepath':[],'reverse-absolute-filepath':[]}  
+        if len(list(seqs.glob("*.fastq"))) == 2:
+            r1=list(seqs.glob("*_1.fastq"))[0]
+            r2=list(seqs.glob("*_2.fastq"))[0]
+            manifest_paired['sample-id'].append(seqs.name)
+            manifest_paired['forward-absolute-filepath'].append(str(r1))
+            manifest_paired['reverse-absolute-filepath'].append(str(r2))
+            paired_end=True
+        elif len(list(seqs.glob("*.fastq"))) == 1:
+            r1=list(seqs.glob("*.fastq"))[0]
+            manifest_single['sample-id'].append(seqs.name)
+            manifest_single['absolute-filepath'].append(str(r1))
+            paired_end=False
                     
         manifest=pd.DataFrame(manifest_single) if not paired_end else pd.DataFrame(manifest_paired)
   
@@ -1742,11 +1727,11 @@ class Metagenomics:
             with open(self.config.qiime2_single_end_bash_str,"r") as f:
                 qiime2_bash_str=f.read()
 
-        manifest_dir=sra_project_dir.joinpath("manifest.tsv")
+        manifest_dir=seqs.joinpath("manifest.tsv")
 
         if container=="None":
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(self.config.qiime_classifier_db))
         
         elif container=="docker":
@@ -1754,10 +1739,10 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {sra_project_dir}:/data/ -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
+                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {seqs}:/data/ -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs.name))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",os.path.join(str(Path(self.config.qiime_classifier_db).parent.name),str(Path(self.config.qiime_classifier_db).name)))
             if not paired_end:
                 manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
@@ -1771,10 +1756,10 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"singularity exec --bind  {str(qiime2_work_dir/seqs/accession)}:{str(qiime2_work_dir/seqs/accession)},$PWD:$PWD,{str(Path(self.config.qiime_classifier_db))}:{str(Path(self.config.qiime_classifier_db))},$SINGULARITY_TMPDIR:/tmp  {self.config.qiime2_singularity_image} " +line
+                    qiime2_bash_str[idx]=f"singularity exec --bind  {str(seqs)}:{str(seqs)},$PWD:$PWD,{str(Path(self.config.qiime_classifier_db))}:{str(Path(self.config.qiime_classifier_db))},$SINGULARITY_TMPDIR:/tmp  {self.config.qiime2_singularity_image} " +line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(qiime2_work_dir.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs.name))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(Path(self.config.qiime_classifier_db)))
 
             # if not paired_end:
@@ -1788,11 +1773,11 @@ class Metagenomics:
         
         
         if save:
-            pd.DataFrame(manifest).to_csv(sra_project_dir.joinpath("manifest.tsv"),sep='\t',index=False)
-            with open(qiime2_work_dir.joinpath("qiime2.sh"),"w") as f:
+            pd.DataFrame(manifest).to_csv(seqs.joinpath("manifest.tsv"),sep='\t',index=False)
+            with open(seqs.joinpath("qiime2.sh"),"w") as f:
                 f.write(qiime2_bash_str)
         if run:
-            subprocess.run(["bash",str(qiime2_work_dir.joinpath("qiime2.sh"))],cwd=str(qiime2_work_dir))
+            subprocess.run(["bash",str(seqs.joinpath("qiime2.sh"))],cwd=str(seqs))
         
         return qiime2_bash_str,manifest
     
