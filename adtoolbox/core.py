@@ -972,6 +972,7 @@ class Database:
         self.download_feed_database()
         self.download_studies_database()
         self.download_amplicon_to_genome_db()
+        self.download_qiime_classifier_db()
         
 
      
