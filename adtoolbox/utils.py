@@ -259,7 +259,7 @@ def mmseqs_search(
     query_db=os.path.abspath(query_db)
     target_db=os.path.abspath(target_db)
     results_db=os.path.abspath(results_db)
-    bashscript = f"mmseqs search {query_db} {target_db} {results_db} tmp"
+    bashscript = f"mmseqs search {query_db} {target_db} {results_db} {str(pathlib.Path(results_db).parent)}/tmp"
     if container == "None":
         pass 
     
