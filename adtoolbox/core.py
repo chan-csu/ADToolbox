@@ -1759,8 +1759,8 @@ class Metagenomics:
                 if line.startswith("qiime") or line.startswith("biom"):
                     qiime2_bash_str[idx]=f"singularity exec --bind  {str(seqs)}:{str(seqs)},$PWD:$PWD,{str(Path(self.config.qiime_classifier_db))}:{str(Path(self.config.qiime_classifier_db))},$SINGULARITY_TMPDIR:/tmp  {self.config.qiime2_singularity_image} " +line
             qiime2_bash_str="\n".join(qiime2_bash_str)
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(Path(self.config.qiime_classifier_db)))
 
             # if not paired_end:
