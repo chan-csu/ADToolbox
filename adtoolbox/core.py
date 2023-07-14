@@ -1237,7 +1237,7 @@ class Metagenomics:
             with open(self.config.genomes_json_info, 'w') as f:
                 json.dump(genome_info, f)
                 
-        return genome_info
+        return genome_info,
      
     def align_genome_to_protein_db(
             self,
@@ -1815,18 +1815,22 @@ if __name__ == "__main__":
     #     print(f"Study {ind} of {len(metag_studies)}")
     #     counter+=1
     # pd.DataFrame(metag_studies).to_csv(os.path.join(Main_Dir,"metadata_added.csv"),index=False)
-    metag_config=configs.Metagenomics(
-        adm_cod_from_ec="/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/adm_cod_from_ec.json",
-    )
-    metag=Metagenomics(metag_config)
-    with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/ec_counts_sra_wgs_cow_goad.json") as f:
-        ec_counts=json.load(f)
-    cods={}
-    for sample in ec_counts:
-        cods[sample]=metag.get_cod_from_ec_counts(ec_counts[sample],save=False)
-    with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/cods_sra_wgs_cow_goat.json","w") as f:
-        json.dump(cods,f)
-        
+    # metag_config=configs.Metagenomics(
+    #     adm_cod_from_ec="/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/adm_cod_from_ec.json",
+    # )
+    # metag=Metagenomics(metag_config)
+    # with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/ec_counts_sra_wgs_cow_goad.json") as f:
+    #     ec_counts=json.load(f)
+    # cods={}
+    # for sample in ec_counts:
+    #     cods[sample]=metag.get_cod_from_ec_counts(ec_counts[sample],save=False)
+    # with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/cods_sra_wgs_cow_goat.json","w") as f:
+    #     json.dump(cods,f)
+    from utils import generate_batch_script
+    def f(x,y,container):
+        return f"echo {x} {y} {container}",
+    print(generate_batch_script(number_of_batches=2,generator_function=f,input_series=[(1,2,1,2,3,4,5),(1,2,3,4,5,3,4)],input_var=["x","y"],container="docker"))
+    
 
 
 
