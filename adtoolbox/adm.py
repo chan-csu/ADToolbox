@@ -111,7 +111,7 @@ class Model:
         # if save_model:
         #     cobra.io.save_json_model(model, self.Name+'.json')
 
-    def solve_model(self, y0: np.ndarray, t_eval: np.ndarray, method="LSODA", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
+    def solve_model(self, t_eval: np.ndarray, method="LSODA", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
         """
         Function to solve the model. 
         Examples:
@@ -148,6 +148,7 @@ class Model:
             scipy.integrate._ivp.ivp.OdeResult: Returns the results of the simulation being run and gives optimized paramters.
         """
         self.info={"Fluxes":[]}
+        y0=self.initial_conditions[:, 0]
         try:
             c = scipy.integrate.solve_ivp(
                 self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self])
@@ -1456,5 +1457,5 @@ if __name__ == "__main__":
         build_stoichiometric_matrix=build_adm1_stoiciometric_matrix,
         
     )
-    model.solve_model(model.initial_conditions[:, 0], np.linspace(0, 30, 10000))
+    model.solve_model(np.linspace(0, 30, 10000))
     

@@ -1278,7 +1278,7 @@ class Metagenomics:
             bash_script += "mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
-                alignment_file+ " tmp\n\n"
+                alignment_file+ ' tmp --format-mode 4 '+"\n\n"
         
         if container=="docker":
             bash_script = ""
@@ -1290,7 +1290,7 @@ class Metagenomics:
             f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
-                alignment_file+ " tmpfiles\n\n"
+                alignment_file+' tmpfiles --format-mode 4 '+"\n\n"
 
         if container=="singularity":
             bash_script = ""
@@ -1302,7 +1302,7 @@ class Metagenomics:
             f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
-                alignment_file+ " tmpfiles\n\n"
+                alignment_file+' tmpfiles --format-mode 4 '+"\n\n"
         
         return  bash_script,alignment_file
 
