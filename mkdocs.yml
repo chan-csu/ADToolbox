@@ -12,6 +12,7 @@ nav:
   - Commandline Interface: CLI.md
   - API: API.md
   - Parameter Tuning: Parameter_Tuning.md
+  - Metagenomics Pipelines: Metagenomics_Pipeline.md
 
 plugins:
   - mkdocstrings
