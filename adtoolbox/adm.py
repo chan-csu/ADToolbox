@@ -515,8 +515,7 @@ class Model:
             [initial_conditions[0][i] for i in self.species])[:, np.newaxis]
             self.inlet_conditions = np.array(
             [inlet_conditions[0][i+"_in"] for i in self.species])[:, np.newaxis]
-            update_sol = self.solve_model(
-                         self.initial_conditions[:, 0], np.linspace(0, self.sim_time, 10000))
+            update_sol = self.solve_model(np.linspace(0, self.sim_time, 10000))
 
             sol=update_sol
             solution = {
