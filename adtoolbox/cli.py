@@ -1,7 +1,7 @@
 import argparse
 from re import M
 import configs
-
+import metagenomics_report
 import core
 from __init__ import __version__
 from __init__ import Main_Dir
@@ -34,6 +34,7 @@ def main():
     parser.add_argument("-v", "--version", action="version",help="Prints the version of ADToolBox") 
     parser.version = f"[green]ADToolBox v{__version__}"
     subparsers = parser.add_subparsers(dest="ADToolbox_Module", help='ADToolbox Modules:')
+
     ### Database Module -------------------------------------------------------------
     subparser_database = subparsers.add_parser('Database', help='This module provides a command line interface to build or download the databases that ADToolbox requires')
     db_subp=subparser_database.add_subparsers(dest="database_module", help='Database commands:')
@@ -67,6 +68,13 @@ def main():
     ### Metagenomics Module ###
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help="This module provides the import metagenomics functionalities of ADToolbox in the command line")
     metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='[yellow] Available Metagenomics Commands:')
+    
+    
+    metag_subp_1=metag_subp.add_parser('Metagenomics_Report', help='This module provides a command line interface to the metagenomics report web interface')
+    metag_subp_1.add_argument("-j","--json-file",help="Address to the JSON file that contains the metagenomics report",required=True)
+    metag_subp_1.add_argument("-m","--mds",help="Uses MDS plot if true else uses TSNE",action="store_true")
+    metag_subp_1.add_argument("-t","--threed",help="whether to use 3D plot instead of 2d",action="store_true")
+    metag_subp_1.add_argument("-n","--not-normalize",help="Do not normalize the data",action="store_true")
     
     metag_subp_2=metag_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
     metag_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=meta_config_defult.qiime_outputs_dir)
@@ -174,7 +182,7 @@ def main():
 
 
     #### Metagenomics Module #####
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_Subparser=="amplicon-to-genome":
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="amplicon-to-genome":
         meta_config_defult.feature_table_dir=args.feature_table_dir
         meta_config_defult.qiime_outputs_dir=args.qiime_outputs_dir
         meta_config_defult.rep_seq_fasta=args.rep_Seq_dir
@@ -186,7 +194,7 @@ def main():
         # core.Metagenomics(meta_config_defult).amplicon2genome()
         ### UNDER CONSTRUCTION ###
 
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="map-genomes-to-adm":
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="map-genomes-to-adm":
         meta_config_defult.genome_alignment_output_json=args.input_file
         model_reactions=args.model
         meta_config_defult.genome_adm_map_json=args.output_dir
@@ -206,8 +214,12 @@ def main():
             core.Metagenomics(Meta_Config).Align_Genomes()
 
     
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="make-json-from-genomes":
-        core.Metagenomics.make_json_from_genomes(args.input_file,args.output_file)
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args:
+        print(args)
+        ncomp=3 if args.threed else 2
+        method="MDS" if args.mds else "TSNE"
+        normalize=False if args.not_normalize else True
+        metagenomics_report.main(args.json_file,method=method,normalize=normalize,n_components=ncomp)
 
 
 

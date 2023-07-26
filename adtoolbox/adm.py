@@ -1432,17 +1432,17 @@ if __name__ == "__main__":
     # Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
     # mod_adm1.dash_app(Sol_mod_adm1)
     db_conf=configs.Database()
-    with open(db_conf.adm1_model_parameters, 'r') as f:
+    with open(db_conf.model_parameters, 'r') as f:
         mp=json.load(f)
-    with open(db_conf.adm1_base_parameters, 'r') as f:
+    with open(db_conf.base_parameters, 'r') as f:
         bp=json.load(f)
-    with open(db_conf.adm1_initial_conditions, 'r') as f:
+    with open(db_conf.initial_conditions, 'r') as f:
         ic=json.load(f)
-    with open(db_conf.adm1_inlet_conditions, 'r') as f:
+    with open(db_conf.inlet_conditions, 'r') as f:
         inc=json.load(f)
-    with open(db_conf.adm1_reactions, 'r') as f:
+    with open(db_conf.reactions, 'r') as f:
         r=json.load(f)
-    with open(db_conf.adm1_species, 'r') as f:
+    with open(db_conf.species, 'r') as f:
         s=json.load(f)
     model=Model(
         model_parameters=mp,
@@ -1452,9 +1452,10 @@ if __name__ == "__main__":
         feed=DEFAULT_FEED,
         reactions=r,
         species=s,
-        ode_system=adm1_ode_sys,
-        build_stoichiometric_matrix=build_adm1_stoiciometric_matrix,
+        ode_system=modified_adm_ode_sys,
+        build_stoichiometric_matrix=build_modified_adm_stoichiometric_matrix,
         
     )
-    model.solve_model(np.linspace(0, 30, 10000))
+    sol=model.solve_model(np.linspace(0, 30, 10000))
+    model.dash_app(sol)
     
