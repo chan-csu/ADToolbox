@@ -1237,7 +1237,7 @@ class Metagenomics:
             with open(self.config.genomes_json_info, 'w') as f:
                 json.dump(genome_info, f)
                 
-        return genome_info,
+        return genome_info
      
     def align_genome_to_protein_db(
             self,

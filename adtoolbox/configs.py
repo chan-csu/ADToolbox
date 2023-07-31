@@ -292,6 +292,7 @@ class Utils:
 	slurm_executer:str='',
 	slurm_wall_time:str='24:00:00',
 	slurm_job_name:str='ADToolbox',
+	slurm_outlog:str='ADToolbox.log',
     slurm_cpus:str="12",
 	slurm_memory:str="100G",
 	slurm_save_dir:str=os.getcwd(),
@@ -304,7 +305,7 @@ class Utils:
 		self.slurm_executer = slurm_executer
 		self.slurm_wall_time = slurm_wall_time
 		self.slurm_job_name = slurm_job_name
-		self.slurm_outlog=self.slurm_job_name
+		self.slurm_outlog=slurm_outlog
 		self.slurm_cpus = slurm_cpus
 		self.slurm_save_dir = slurm_save_dir
 		self.slurm_memory = slurm_memory
