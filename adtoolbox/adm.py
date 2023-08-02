@@ -110,6 +110,25 @@ class Model:
 
         # if save_model:
         #     cobra.io.save_json_model(model, self.Name+'.json')
+    def update_parameters(self, model_parameters: dict|None=None ,
+                                base_parameters: dict|None=None,
+                                initial_conditions: dict|None=None,
+                                inlet_conditions: dict|None=None)->None:
+        """Function to update parameters in the model
+        """
+        if model_parameters is not None:
+            self.model_parameters = model_parameters
+        if base_parameters is not None:
+            self.base_parameters = base_parameters
+        if initial_conditions is not None:
+            for k,v in initial_conditions.items():
+                self.initial_conditions[self.species[k]]=v
+        if inlet_conditions is not None:
+            for k,v in inlet_conditions.items():
+                self.inlet_conditions[self.species[k]]=v
+            
+
+        
 
     def solve_model(self, t_eval: np.ndarray, method="LSODA", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
         """
