@@ -1,4 +1,5 @@
-import openbox
+from openbox import Optimizer
+from openbox import space as sp
 import adm
 import numpy as np
 from dataclasses import dataclass
@@ -67,7 +68,15 @@ class Tuner:
         self.fitness_mode = fitness_mode
         self.var_type = var_type
         self.kwargs = kwargs
-        
+    
+    def _get_space(self)->sp.Space:
+        """
+        This function creates the search space for openbox.
+        :return: The search space.
+        """
+        space = sp.Space()
+        space.add_variable([space.add_variable(sp.RealVariable(name, low, high)) for name, (low, high) in self.tunables.items()])
+        return space
         
     def fitness(self, parameters: dict)->float:
         """
@@ -95,9 +104,13 @@ class Tuner:
         kwargs: Additional arguments to pass to openbox.
         :return: The best configuration.
         """
-        self.kwargs.update(kwargs)
-        optimizer = openbox.optimizer.PSO(self.fitness, **self.kwargs)
-        optimizer.run()
-        return optimizer.get_incumbent()
+        opt=Optimizer(
+                self.fitness,
+                self._get_space(),
+                **self.kwargs,
+
+                )
+        history=opt.run()
+        return history
         
         
