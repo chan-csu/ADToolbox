@@ -1,57 +1,20 @@
 from openbox import Optimizer
+import core
 from openbox import space as sp
 import adm
 import numpy as np
 from dataclasses import dataclass
 import json
 
-@dataclass
-class Experiment:
-    name:str
-    initial_conditions: dict
-    time: list[float]
-    variables: list[int]
-    data: list[list[float]]
-    reference: str = None
-    
-    def __post_init__(self):
-        self.data=np.array(self.data)
-        self.validate()
-    
-    def validate(self):
-        assert len(self.time)==self.data.shape[0], "Number of time points must match number of rows in data."
-        assert len(self.variables)==self.data.shape[1] , "Number of variables must match number of columns in data."
-        assert self.time[0]==0, "Time must start at 0."
-    
-    def to_dict(self):
-        return {"name":self.name,
-                "initial_conditions":self.initial_conditions,
-                "time":self.time,
-                "variables":self.variables,
-                "data":self.data.tolist(),
-                "reference":self.reference}
-    
-    def write_experiment(self, path:str):
-        with open(path, "w") as f:
-            json.dump(self.to_dict(), f)
-    
-    @classmethod
-    def load_experiment(cls, path:str):
-        with open(path, "r") as f:
-            data=json.load(f)
-        return cls(**data)
+
         
-        
-    
-    
-    
 class Tuner:
     """
     This class is a wrapper around openbox to optimize a model.
     """
     def __init__(self,
                  base_model: adm.Model,
-                 train_data: list[Experiment],
+                 train_data: list[core.Experiment],
                  tuneables:dict,
                  fitness_mode:str="equalized",
                  var_type:str="model_parameters",

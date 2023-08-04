@@ -1,5 +1,47 @@
 from adtoolbox import __version__
-
+from adtoolbox import core,configs,optimize,adm
+import numpy as np
+import json
+from pytest import fixture
 
 def test_version():
     assert __version__ == '0.1.0'
+    
+###FIXTURES###
+
+@fixture
+def experimental_data():
+    with open(configs.Database().initial_conditions) as file:
+        initial_conditions=json.load(file)
+    study=core.Experiment(
+        "test_study",
+        initial_conditions=initial_conditions,
+        time=[0,1,2,3,4,5],
+        variables=[10,12],
+        data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
+        reference="test_reference"
+    )
+    return study
+
+
+    
+###--optimize module--###
+def test_build_optimizer_object(experimental_data):
+    tuner=optimize.Tuner(
+        base_model=adm.Model(initial_conditions=configs.Database().initial_conditions,
+                             base_parameters=configs.Database().base_parameters,
+                            inlet_conditions=configs.Database().inlet_conditions,
+                            feed=adm.DEFAULT_FEED,
+                            reactions=configs.Database().reactions,
+                            species=configs.Database().species,
+                            ode_system=adm.build_modified_adm_stoichiometric_matrix,
+                            build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
+                            name="test_model"),
+
+                        
+                    train_data=[experimental_data],
+                    tuneables={"Y_Me_h2":(0,1),
+                              "Y_Me_h2":(0,1) },
+                    fitness_mode="equalized",
+                    var_type="model_parameters"
+             )
