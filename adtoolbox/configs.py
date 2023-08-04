@@ -175,7 +175,7 @@ class Metagenomics:
 	A class for Amplicon2Genome Configs
 	"""
 	### Here we have some class variables that are used in the class
-	gtdb_dir="bac120_ssu_reps_*.fna"
+	gtdb_dir="ssu_all_*.fna"
 	def __init__(self, 
             amplicon2genome_k=10,
             vsearch_similarity=0.97,
@@ -241,7 +241,10 @@ class Metagenomics:
 		self.qiime2_paired_end_bash_str=qiime2_paired_end_bash_str
 		self.qiime2_single_end_bash_str=qiime2_single_end_bash_str 
 		self.qiime_classifier_db=qiime_classifier_db
-		self.gtdb_dir_fasta=str(list(pathlib.Path(self.amplicon2genome_db).rglob(Metagenomics.gtdb_dir))[0])
+		if list(pathlib.Path(self.amplicon2genome_db).rglob(Metagenomics.gtdb_dir)):
+			self.gtdb_dir_fasta=str(list(pathlib.Path(self.amplicon2genome_db).rglob(Metagenomics.gtdb_dir))[0])
+		else:
+			self.gtdb_dir_fasta=None
 		self.vsearch_script_dir=vsearch_script_dir
 		self.genome_alignment_script=genome_alignment_script	
 		self.genome_relative_abundances=genome_relative_abundances

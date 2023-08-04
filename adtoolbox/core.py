@@ -491,14 +491,15 @@ class Database:
                 except Exception:
                     print('Something went wrong!')
                 text = file.text
-                for line in text.split('\n'):
-                    if line.startswith('>'):
-                        uniprot=line.split('|')[1]
-                        f.write(f'>{uniprot}|{ec}\n')
-                        
-                    else:
-                        f.write(f'{line}\n')
-                        protein_seqs[uniprot]=line
+                if text:
+                    for line in text.split('\n'):
+                        if line.startswith('>'):
+                            uniprot=line.split('|')[1]
+                            f.write(f'>{uniprot}|{ec}\n')
+
+                        else:
+                            f.write(f'{line}\n')
+                            protein_seqs[uniprot]=line
         
         return protein_seqs
 
@@ -901,7 +902,7 @@ class Database:
                'FILE_DESCRIPTIONS': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/FILE_DESCRIPTIONS',
                'metadata_field_desc': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/metadata_field_desc.tsv',
                'bac120_metadata': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/bac120_metadata.tar.gz',
-               'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all_r214.tar.gz'
+               'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all.tar.gz'
                }
         if progress:
             for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:

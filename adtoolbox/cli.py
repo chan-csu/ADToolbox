@@ -26,7 +26,6 @@ def main():
     console.rule("[bold red]ADToolBox")
     
     db_class=core.Database(config=configs.Database())
-    meta_config_defult=configs.Metagenomics()
 
     parser = AParser(prog="ADToolBox",
         description="ADToolBox, a toolbox for anaerobic digestion modeling",
@@ -66,6 +65,7 @@ def main():
     
     
     ### Metagenomics Module ###
+    meta_config_defult=configs.Metagenomics()
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help="This module provides the import metagenomics functionalities of ADToolbox in the command line")
     metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='[yellow] Available Metagenomics Commands:')
     

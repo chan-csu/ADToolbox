@@ -75,7 +75,7 @@ samples file should be formatted like this:
 #     plot_bgcolor='rgba(255,255,255,0.1)'
 # )
 _compounds=["S_bu","S_ac","S_lac","S_et"]
-species=pd.read_json(configs.Database().species)[0].to_list()
+
 
 
 
@@ -126,7 +126,7 @@ def main(json_file:str,method:str="MDS",normalize:bool=True,n_components:int=2):
 
     fig_cod_portions=px.box(df_copy_,x="compound",y="concentration",color="group",)
     fig_cod_portions.update_layout(font=dict(size=19,))
-
+    
 
 
     #### Modeling Panel ####
@@ -249,7 +249,7 @@ def main(json_file:str,method:str="MDS",normalize:bool=True,n_components:int=2):
                                                     dbc.Row([
                                                     dbc.Col([
                                                     html.H2("Select Species to Show",style={"width":"300px","font-size":"25px","padding-bottom":"5px","align-items":"center",},),
-                                                    dcc.Checklist(species, id="species",
+                                                    dcc.Checklist(sp, id="species",
                                                                   value=_compounds,
                                                                   style={"font-size":"22px",
                                                                          "padding-left":"5px",
