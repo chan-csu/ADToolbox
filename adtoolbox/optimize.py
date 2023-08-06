@@ -53,8 +53,8 @@ class Tuner:
                 self._model= self.base_model.copy()
                 self._model.update_parameters(**{self.var_type:parameters})
                 self._model.update_parameters(initial_conditions=experiment.initial_conditions)
-                solution=self._model.solve_model(np.array(experiment.time))[:,experiment.variables]
-                res+=np.sum(np.square(solution-experiment.data))
+                solution=self._model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
+                res+=np.sum(np.square(solution.T-experiment.data))
             
             return res
         else:
@@ -70,7 +70,7 @@ class Tuner:
         opt=Optimizer(
                 self.fitness,
                 self._get_space(),
-                **self.kwargs,
+                **kwargs,
 
                 )
         history=opt.run()
@@ -116,16 +116,16 @@ if __name__ == "__main__":
                             feed=adm.DEFAULT_FEED,
                             reactions=reactions,
                             species=species,
-                            ode_system=adm.build_modified_adm_stoichiometric_matrix,
+                            ode_system=adm.modified_adm_ode_sys,
                             build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
                             name="test_model"),
 
                         
                     train_data=[study],
                     tuneables={"Y_Me_h2":(0,1),
-                              "Y_Me_h2":(0,1) },
+                              "Y_Me_ac":(0,1) },
                     fitness_mode="equalized",
                     var_type="model_parameters"
              )
-    hist=tuner.optimize()
-    print(hist)
+    hist=tuner.optimize(max_runs=2)
+    assert len(hist.successful_perfs)==2

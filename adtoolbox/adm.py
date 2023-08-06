@@ -88,6 +88,7 @@ class Model:
         self.switch = switch
         self.name = name
         self.metagenome_report = metagenome_report
+        self.build_stoichiometric_matrix = build_stoichiometric_matrix
         self.S = build_stoichiometric_matrix(
             base_parameters, model_parameters, reactions, species,self.feed)
         self.ode_system = ode_system
@@ -597,7 +598,20 @@ class Model:
         
     def copy(self):
         """Returns a copy of the model"""
-        return copy.deepcopy(self)
+        return type(self)(model_parameters=self.model_parameters.copy(),
+                          base_parameters=self.base_parameters.copy(),
+                          initial_conditions=self._ic.copy(),
+                          inlet_conditions=self._inc.copy(),
+                          feed=self.feed,
+                          reactions=self.reactions,
+                          species=self.species,
+                          ode_system=self.ode_system,
+                          build_stoichiometric_matrix=self.build_stoichiometric_matrix,
+                          control_state=self.control_state,
+                          metagenome_report=self.metagenome_report,
+                          name=self.name,
+                          switch=self.switch,
+                          simulation_time=self.sim_time)
 
 
 def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list)-> np.ndarray:

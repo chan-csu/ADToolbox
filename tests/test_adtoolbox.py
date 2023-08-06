@@ -3,6 +3,7 @@ from adtoolbox import core,configs,optimize,adm
 import numpy as np
 import json
 from pytest import fixture
+import pytest
 
 def test_version():
     assert __version__ == '0.1.0'
@@ -26,6 +27,7 @@ def experimental_data():
 
     
 ###--optimize module--###
+@pytest.mark.long
 def test_build_optimizer_object(experimental_data):
     with open(configs.Database().initial_conditions) as file:
         initial_conditions=json.load(file)
@@ -55,15 +57,16 @@ def test_build_optimizer_object(experimental_data):
                             feed=adm.DEFAULT_FEED,
                             reactions=reactions,
                             species=species,
-                            ode_system=adm.build_modified_adm_stoichiometric_matrix,
+                            ode_system=adm.modified_adm_ode_sys,
                             build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
                             name="test_model"),
 
                         
                     train_data=[experimental_data],
                     tuneables={"Y_Me_h2":(0,1),
-                              "Y_Me_h2":(0,1) },
+                               "Y_Me_h2":(0,1),
+                               },
                     fitness_mode="equalized",
                     var_type="model_parameters"
              )
-    tuner.optimize()
+    hist=tuner.optimize(max_runs=1)
