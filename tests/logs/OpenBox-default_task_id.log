@@ -1,0 +1,598 @@
+[INFO] [2023-08-05 21:46:11,689] [Advisor] === [BO auto selection] === surrogate_type: gp. acq_type: ei. acq_optimizer_type: random_scipy.
+[WARNING] [2023-08-05 21:46:12,044] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,044] [OpenBox-default_task_id] Iteration 1, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,044] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,044] [OpenBox-default_task_id] Iteration 2, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,044] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Iteration 3, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,045] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Iteration 4, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,045] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Iteration 5, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,045] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Iteration 6, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,045] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,045] [OpenBox-default_task_id] Iteration 7, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 8, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 9, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,046] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 10, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 11, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 12, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 13, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 14, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,046] [OpenBox-default_task_id] Iteration 15, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,046] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 16, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 17, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 18, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 19, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 20, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 21, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 22, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 23, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,047] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,047] [OpenBox-default_task_id] Iteration 24, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,048] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 25, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,048] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 26, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,048] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 27, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,048] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 28, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,048] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 29, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,048] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 30, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,048] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 31, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,048] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 32, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,048] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,048] [OpenBox-default_task_id] Iteration 33, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,049] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 34, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,049] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 35, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,049] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 36, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,049] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 37, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,049] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 38, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,049] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 39, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,049] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,049] [OpenBox-default_task_id] Iteration 40, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,050] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 41, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,050] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 42, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,050] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 43, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,050] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 44, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,050] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 45, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,050] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 46, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,050] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,050] [OpenBox-default_task_id] Iteration 47, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,050] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 48, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 49, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 50, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 51, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 52, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 53, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,051] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 54, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,051] [OpenBox-default_task_id] Iteration 55, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,051] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 56, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 57, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 58, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 59, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 60, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 61, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Iteration 62, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,052] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,052] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 63, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 64, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 65, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 66, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 67, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 68, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 69, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,053] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,053] [OpenBox-default_task_id] Iteration 70, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 71, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 72, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 73, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 74, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 75, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 76, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,054] [OpenBox-default_task_id] Iteration 77, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,054] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 78, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,055] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 79, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,055] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 80, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,055] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 81, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,055] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 82, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,055] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 83, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,055] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,055] [OpenBox-default_task_id] Iteration 84, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Iteration 85, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Iteration 86, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Iteration 87, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Iteration 88, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Iteration 89, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,056] [OpenBox-default_task_id] Iteration 90, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,056] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 91, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,057] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 92, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,057] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 93, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,057] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 94, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,057] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 95, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,057] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 96, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,057] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,057] [OpenBox-default_task_id] Iteration 97, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,057] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Iteration 98, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,058] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Iteration 99, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,058] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Iteration 100, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,058] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Iteration 101, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,058] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Iteration 102, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,058] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Iteration 103, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,058] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,058] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Iteration 104, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,059] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Iteration 105, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,059] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Iteration 106, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,059] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Iteration 107, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,059] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Iteration 108, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,059] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Iteration 109, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,059] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,059] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 110, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,060] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 111, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,060] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 112, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,060] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 113, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,060] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 114, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,060] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 115, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,060] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,060] [OpenBox-default_task_id] Iteration 116, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,061] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Iteration 117, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,061] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Iteration 118, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,061] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Iteration 119, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,061] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Iteration 120, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,061] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Iteration 121, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,061] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,061] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Iteration 122, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,062] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Iteration 123, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,062] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Iteration 124, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,062] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Iteration 125, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,062] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Iteration 126, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,062] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,062] [OpenBox-default_task_id] Iteration 127, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,062] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Iteration 128, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,063] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Iteration 129, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,063] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Iteration 130, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,063] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Iteration 131, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,063] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Iteration 132, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,063] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,063] [OpenBox-default_task_id] Iteration 133, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,063] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Iteration 134, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,064] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Iteration 135, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,064] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Iteration 136, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,064] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Iteration 137, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,064] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Iteration 138, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,064] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,064] [OpenBox-default_task_id] Iteration 139, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,064] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Iteration 140, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,065] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Iteration 141, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,065] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Iteration 142, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,065] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Iteration 143, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,065] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Iteration 144, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,065] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,065] [OpenBox-default_task_id] Iteration 145, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,066] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Iteration 146, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,066] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Iteration 147, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,066] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Iteration 148, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,066] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Iteration 149, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,066] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,066] [OpenBox-default_task_id] Iteration 150, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,067] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Iteration 151, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,067] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Iteration 152, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,067] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Iteration 153, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,067] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Iteration 154, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,067] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,067] [OpenBox-default_task_id] Iteration 155, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,067] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Iteration 156, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,068] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Iteration 157, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,068] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Iteration 158, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,068] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Iteration 159, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,068] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,068] [OpenBox-default_task_id] Iteration 160, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,068] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Iteration 161, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,069] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Iteration 162, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,069] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Iteration 163, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,069] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Iteration 164, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,069] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Iteration 165, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,069] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,069] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Iteration 166, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,070] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Iteration 167, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,070] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Iteration 168, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,070] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Iteration 169, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,070] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Iteration 170, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,070] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,070] [OpenBox-default_task_id] Iteration 171, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,071] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Iteration 172, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,071] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Iteration 173, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,071] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Iteration 174, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,071] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Iteration 175, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,071] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,071] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Iteration 176, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,072] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Iteration 177, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,072] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Iteration 178, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,072] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Iteration 179, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,072] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Iteration 180, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,072] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,072] [OpenBox-default_task_id] Iteration 181, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,073] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Iteration 182, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,073] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Iteration 183, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,073] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Iteration 184, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,073] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,073] [OpenBox-default_task_id] Iteration 185, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,073] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Iteration 186, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,074] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Iteration 187, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,074] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Iteration 188, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,074] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Iteration 189, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,074] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,074] [OpenBox-default_task_id] Iteration 190, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,074] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Iteration 191, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,075] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Iteration 192, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,075] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Iteration 193, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,075] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Iteration 194, objective value: [2147483647].
+[INFO] [2023-08-05 21:46:12,075] [Advisor] Sample random config. rand_prob=0.100000.
+[WARNING] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,075] [OpenBox-default_task_id] Iteration 195, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,075] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Iteration 196, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,076] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Iteration 197, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,076] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Iteration 198, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,076] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Iteration 199, objective value: [2147483647].
+[WARNING] [2023-08-05 21:46:12,076] [Advisor] No enough successful initial trials! Sample random configuration.
+[WARNING] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Exception when calling objective function: 'Model' object has no attribute 'copy'
+[INFO] [2023-08-05 21:46:12,076] [OpenBox-default_task_id] Iteration 200, objective value: [2147483647].

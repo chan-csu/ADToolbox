@@ -1,5 +1,5 @@
 from openbox import Optimizer
-import core
+import core,configs
 from openbox import space as sp
 import adm
 import numpy as np
@@ -38,7 +38,7 @@ class Tuner:
         :return: The search space.
         """
         space = sp.Space()
-        space.add_variable([space.add_variable(sp.RealVariable(name, low, high)) for name, (low, high) in self.tunables.items()])
+        space.add_variables([sp.Real(name, low, high) for name, (low, high) in self.tunables.items()])
         return space
         
     def fitness(self, parameters: dict)->float:
@@ -76,4 +76,56 @@ class Tuner:
         history=opt.run()
         return history
         
-        
+
+if __name__ == "__main__":
+    with open(configs.Database().initial_conditions) as file:
+        initial_conditions=json.load(file)
+    study=core.Experiment(
+        "test_study",
+        initial_conditions=initial_conditions,
+        time=[0,1,2,3,4,5],
+        variables=[10,12],
+        data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
+        reference="test_reference"
+    )
+    with open(configs.Database().initial_conditions) as file:
+        initial_conditions=json.load(file)
+    
+    with open(configs.Database().base_parameters) as file:
+        base_parameters=json.load(file)
+    
+    with open(configs.Database().model_parameters) as file:
+        model_parameters=json.load(file)
+    
+    with open(configs.Database().inlet_conditions) as file:
+        inlet_conditions=json.load(file)
+    
+    with open(configs.Database().reactions) as file:
+        reactions=json.load(file)
+    
+    with open(configs.Database().species) as file:
+        species=json.load(file)
+    
+    
+
+    tuner=Tuner(
+        base_model=adm.Model(initial_conditions=initial_conditions,
+                             base_parameters=base_parameters,
+                             model_parameters=model_parameters,
+                            inlet_conditions=inlet_conditions,
+                            feed=adm.DEFAULT_FEED,
+                            reactions=reactions,
+                            species=species,
+                            ode_system=adm.build_modified_adm_stoichiometric_matrix,
+                            build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
+                            name="test_model"),
+
+                        
+                    train_data=[study],
+                    tuneables={"Y_Me_h2":(0,1),
+                              "Y_Me_h2":(0,1) },
+                    fitness_mode="equalized",
+                    var_type="model_parameters"
+             )
+    hist=tuner.optimize()
+    print(hist)

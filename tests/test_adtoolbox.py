@@ -27,13 +27,34 @@ def experimental_data():
     
 ###--optimize module--###
 def test_build_optimizer_object(experimental_data):
+    with open(configs.Database().initial_conditions) as file:
+        initial_conditions=json.load(file)
+    
+    with open(configs.Database().base_parameters) as file:
+        base_parameters=json.load(file)
+    
+    with open(configs.Database().model_parameters) as file:
+        model_parameters=json.load(file)
+    
+    with open(configs.Database().inlet_conditions) as file:
+        inlet_conditions=json.load(file)
+    
+    with open(configs.Database().reactions) as file:
+        reactions=json.load(file)
+    
+    with open(configs.Database().species) as file:
+        species=json.load(file)
+    
+    
+
     tuner=optimize.Tuner(
-        base_model=adm.Model(initial_conditions=configs.Database().initial_conditions,
-                             base_parameters=configs.Database().base_parameters,
-                            inlet_conditions=configs.Database().inlet_conditions,
+        base_model=adm.Model(initial_conditions=initial_conditions,
+                             base_parameters=base_parameters,
+                             model_parameters=model_parameters,
+                            inlet_conditions=inlet_conditions,
                             feed=adm.DEFAULT_FEED,
-                            reactions=configs.Database().reactions,
-                            species=configs.Database().species,
+                            reactions=reactions,
+                            species=species,
                             ode_system=adm.build_modified_adm_stoichiometric_matrix,
                             build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
                             name="test_model"),
@@ -45,3 +66,4 @@ def test_build_optimizer_object(experimental_data):
                     fitness_mode="equalized",
                     var_type="model_parameters"
              )
+    tuner.optimize()

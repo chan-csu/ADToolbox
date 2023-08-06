@@ -1,4 +1,5 @@
 from typing import Callable
+import copy
 import plotly
 import numpy as np
 import scipy.optimize
@@ -117,15 +118,15 @@ class Model:
         """Function to update parameters in the model
         """
         if model_parameters is not None:
-            self.model_parameters = model_parameters
+            self.model_parameters.update(model_parameters)
         if base_parameters is not None:
-            self.base_parameters = base_parameters
+            self.base_parameters.update(base_parameters)
         if initial_conditions is not None:
             for k,v in initial_conditions.items():
-                self.initial_conditions[self.species[k]]=v
+                self.initial_conditions[self.species.index(k)]=v
         if inlet_conditions is not None:
             for k,v in inlet_conditions.items():
-                self.inlet_conditions[self.species[k]]=v
+                self.inlet_conditions[self.species.index(k)]=v
             
 
         
@@ -593,6 +594,10 @@ class Model:
         df = pd.DataFrame(sol.y, columns=sol.t, index=self.species)
         df.to_csv(os.path.join(address,self.name+"_Report.csv"), header=True,
                   index=True)
+        
+    def copy(self):
+        """Returns a copy of the model"""
+        return copy.deepcopy(self)
 
 
 def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list)-> np.ndarray:
