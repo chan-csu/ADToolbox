@@ -374,28 +374,163 @@ class SeedDB:
         db=pd.read_json(self.compound_db)
         return Metabolite(data=db[db["id"]==seed_id].to_dict(orient="records")[0])
 
+    def get_seed_rxn_from_ec(self, ec_number:str)->list:
+        """
+        This method is used to get the seed reaction identifiers for a given EC number.
 
+        Args:
+            ec_number (str): The EC number.
+        
+        Returns:
+            list: A list of seed reaction identifiers.
+        
+        Examples:
+            >>> seed_db=SeedDB()
+            >>> seed_rxn_list=seed_db.get_seed_rxn_from_ec("1.1.1.1")
+            >>> assert len(seed_rxn_list)>0
+        
+        """
+        db=pd.read_json(self.reaction_db)
+        db=db[db["ec_numbers"].apply(lambda x: ec_number in x if x else False)]
+        db.drop_duplicates("id",inplace=True,keep="first")
+        return db.to_dict(orient="records")
+            
 
 class Database:
 
     '''
-    This class will handle all of the functions required for providing the database for ADToolbox.
+    This class is designed to supply any data requirement for ADToolbox. All functionalisties for saving, loading, and querying data are implemented here.
+    ADToolbox in general contains the following databases:
+    
+    - The seed reaction database
+    
+    - The seed compound database
+    
+    - ADToolbox's Feed database
+    
+    - ADToolbox's Metagenomics studies database
+    
+    - ADToolbox's Experimental data database
+    
+    - ADToolbox's Protein database
+    
+    - ADToolbox's Reaction database
+    
+    - GTDB-tk database for bacterial and archaeal 16s rRNA sequences
+    
+    - ADM and modified ADM model parameters
+    
+    This class is instantiated with a configs.Database object. This object contains the paths to all the databases that ADToolbox uses.
+    Please refer to the documentation of each method for more information on the required configurations.
+    
+    Args:
+        config (configs.Database, optional): A configs.Database object. Defaults to configs.Database().
+    
+    Examples:
+        >>> db=Database(config=configs.Database())
+        >>> assert type(db)==Database and type(db.config)==configs.Database
+
     '''
-
-
-    def __init__(self, config:configs.Database=configs.Database()):
-
+    def __init__(self, config:configs.Database=configs.Database())->None:
         self.config = config
 
 
-    def _initialize_protein_database(self):
+    def initialize_protein_database(self)->None:
         """This function intializes ADToolbox's protein database by creating an empty fasta file.
-        Be careful, this will overwrite any existing file with the same name."""
+        Be careful, this will overwrite any existing file with the same name.
+        Logically, this needs method needs config.protein_db to be defined.
+        
+        Required Configs:
+            - config.protein_db
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False # This is just to make sure that the following lines create the file
+            >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta"))) # point to a test non-existing file
+            >>> db._initialize_protein_database() # initialize the protein database
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True # check if the file is created
+            >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta")) # remove the file to clean up
+        """
 
         with open(self.config.protein_db, 'w') as f:
             pass
     
+    def initialize_reaction_database(self)->None:
+        r"""This function intializes ADToolbox's reaction database by creating an empty tsv file.
+        Be careful, this will overwrite any existing file with the same name.
+        
+        Required Configs:
+            - config.reaction_db
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(reaction_db=os.path.join(Main_Dir,"reaction_test_db.tsv")))
+            >>> db._initialize_reaction_database()
+            >>> assert pd.read_table(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").shape[0]==0
+            >>> assert set(pd.read_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").columns)==set(["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","Modified_ADM_Reactions","Pathways"])
+            >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.tsv"))
+        
+        """
+        pd.DataFrame(columns=["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","Modified_ADM_Reactions","Pathways"]).to_csv(self.config.reaction_db,index=False,sep="\t")
+        
+    def initialize_feed_database(self)->None:
+        r"""This function intializes ADToolbox's Feed database by creating an empty tsv file.
+        Be careful, this will overwrite any existing file with the same name.
+        
+        Required Configs:
+            - config.feed_db
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
+            >>> db._initialize_feed_database()
+            >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter='\t').shape[0]==0
+            >>> assert set(pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter='\t').columns)==set(["Name","Carbohydrates","Lipids","Proteins","TSS","SI","XI","Reference"])
+            >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
+        
+        """
+        pd.DataFrame(columns=["Name","Carbohydrates","Lipids","Proteins","TSS","SI","XI","Reference"]).to_csv(self.config.feed_db,index=False,sep="\t")
+    
+    def initialize_metagenomics_studies_database(self)->None:
+        r"""This function intializes ADToolbox's Metagenomics studies database by creating an empty tsv file.
+        Be careful, this will overwrite any existing file with the same name.
+        
+        Required Configs:
+            - config.metagenomics_studies_db
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> db._initialize_metagenomics_studies_database()
+            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]==0
+            >>> assert set(pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").columns)==set(["Name","Study Type","Microbiome","Sample Accession","Comments","Study Accession"])
+            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+        
+        """
+        pd.DataFrame(columns=["Name","Study Type","Microbiome","Sample Accession","Comments","Study Accession"]).to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
+        
+    def initialize_experimental_data_database(self)->None:
+        """This function intializes ADToolbox's experimental data database by creating an empty json file.
+        Be careful, this will overwrite any existing file with the same name.
 
+        Required Configs:
+            - config.experimental_data_db
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experimental_data_test_db.json"))==False
+            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experimental_data_test_db.json")))
+            >>> db._initialize_experimental_data_database()
+            >>> assert pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).shape[0]==0
+            >>> assert set(pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).columns)==set(["Name","Initial Conditions","Time","Variables","Data","Reference"])
+            >>> os.remove(os.path.join(Main_Dir,"experimental_data_test_db.json"))
+        
+        """
+        pd.DataFrame(columns=["Name","Initial Conditions","Time","Variables","Data","Reference"]).to_json(self.config.experimental_data_db)
+        
     
     def filter_seed_from_ec(self, ec_list,
                             reaction_db=configs.Database().reaction_db,
@@ -1812,7 +1947,9 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    pass
+    db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
+    db._initialize_feed_database()
+    assert pd.read_csv(os.path.join(Main_Dir,"feed_test_db.tsv")).shape[0]==0
 
     
     

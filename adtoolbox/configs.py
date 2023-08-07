@@ -49,18 +49,6 @@ class SeedDB:
         self.compound_db = compound_db
         self.reaction_db = reaction_db
 
-class Studies:
-    def __init__(self,
-                 base_dir=os.path.join(Main_Dir,"Database","Studies"),
-                 metagenomics_studies=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
-                 experimental_data_references=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.tsv"),
-                urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv',
-                        'exmpermental_data_references':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.tsv'
-                        }):
-        self.metagenomics_studies = metagenomics_studies
-        self.experimental_data_references = experimental_data_references
-        self.base_dir = base_dir
-        self.urls = urls
 
 class Database:
 	"A class for database configurations"
@@ -78,7 +66,6 @@ class Database:
 		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
 		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
 		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
-		studies=Studies(),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
                   "http://www.cazy.org/Polysaccharide-Lyases.html",
                   "http://www.cazy.org/Carbohydrate-Esterases.html"
@@ -126,7 +113,13 @@ class Database:
                             "Methanogenessis from acetate and h2":"X_Me_ac",
                             "Methanogenessis from CO2 and h2":"X_Me_CO2",
                             "Uptake of ethanol":"X_et",
-                            "Uptake of lactate":"X_lac",}
+                            "Uptake of lactate":"X_lac",},
+        metagenomics_studies_db=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
+        experimental_data_db=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json"),
+		studies_urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv',
+					  'exmpermental_data_db':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.json'},
+
+
 		):
 		self.compound_db = compound_db
 		self.reaction_db = reaction_db
@@ -135,7 +128,6 @@ class Database:
 		self.base_dir = base_dir
 		self.csv_reaction_db = csv_reaction_db
 		self.feed_db = feed_db
-		self.studies = studies
 		self.seed_rxn_url = seed_rxn_url
 		self.seed_compound_url = seed_compound_url
 		self.protein_db_url = protein_db_url
@@ -164,6 +156,9 @@ class Database:
 		self.adtoolbox_docker=adtoolbox_docker
 		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
 		self.adm_mapping=adm_mapping
+		self.metagenomics_studies_db=metagenomics_studies_db
+		self.experimental_data_db=experimental_data_db
+		self.studies_urls=studies_urls
 
   
   

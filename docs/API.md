@@ -50,6 +50,10 @@ This module includes the following classes:
 
 ::: adtoolbox.core.Metabolite
 
+### 6.SeedDB
+
+::: adtoolbox.core.SeedDB
+
 ### 6. Database
 
 Here is a schematic of the Database Module
