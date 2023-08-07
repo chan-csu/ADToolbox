@@ -32,14 +32,11 @@ from adtoolbox import core
 ```
 This module includes the following classes:
 
+### 1. Experiment
+::: adtoolbox.core.Experiment
 
-### 1. Pipeline
-
-::: adtoolbox.core.Pipeline
-
-### 2. Sequence_Toolkit 
-
-::: adtoolbox.core.Sequence_Toolkit
+### 2. Feed
+::: adtoolbox.core.Feed
 
 ### 3. Reaction_Toolkit
 

@@ -1,18 +1,15 @@
 from distutils.log import warn
-import pdb
 import subprocess
 import os
 from collections import UserDict
 import random
 from matplotlib import streamplot
 import pandas as pd
-import pdb
 import json
 import numpy as np
 import re
 import requests
 import time
-import warnings
 from requests.adapters import HTTPAdapter
 import utils
 import configs
@@ -50,15 +47,34 @@ class AdditiveDict(UserDict):
         else:
             raise TypeError("The other object is not a dict")
             
-
 @dataclass
 class Experiment:
+    """
+    This class creates an interface for the experimental data to be used in different places in ADToolbox.
+    First you should give each experiment a name. Time must be a list of time points in days, and there must be a time 0 point assinged to each experiment.
+    variables must be a list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
+    data must be a list of lists. Each list in the list must be a list of concentrations for each species at each time point.
+    IMPORTANT: The order of the species in the data list must match the order of the species in the variables list.
+    reference is an optional argument that can be used to provide a reference for the experimental data. If using the database module 
+    to query for Experiment objects you can query by name or reference or model_type. So, having a descriptive reference can be useful for querying as well.
+    default model name is "modified-adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
+    
+    Examples:
+        >>> from adtoolbox import configs
+        >>> import json
+        >>> with open(configs.Database().species,"r") as f:
+        ...     species=json.load(f)
+        >>> S_su_index=species.index("S_su")
+        >>> S_aa_index=species.index("S_aa")
+        >>> exp=Experiment(name="Test",time=[0,1,2],variables=[S_su_index,S_aa_index],data=[[1,2,3],[4,5,6]],reference="Test reference")
+
+    """
     name:str
-    initial_conditions: dict
     time: list[float]
     variables: list[int]
     data: list[list[float]]
-    reference: str = None
+    reference: str = ""
+    model_name: str = "modified-adm"
     
     def __post_init__(self):
         self.data=np.array(self.data).T
@@ -68,6 +84,7 @@ class Experiment:
         assert len(self.time)==self.data.shape[0], "Number of time points must match number of rows in data."
         assert len(self.variables)==self.data.shape[1] , "Number of variables must match number of columns in data."
         assert self.time[0]==0, "Time must start at 0."
+        return "successful"
     
     def to_dict(self):
         return {"name":self.name,
@@ -86,120 +103,38 @@ class Experiment:
         with open(path, "r") as f:
             data=json.load(f)
         return cls(**data)
-
-class Pipeline:
-    """A class for running a chain of commands in series with parallelism."""
-    def __init__(self,commands:list[tuple],executer:str,**kwargs):
-        self.commands=commands
-        self.executer=executer
-        self.kbase_config=kwargs.get("kbase_config",configs.Kbase())
-        self.database_config=kwargs.get("database_config",configs.Database())
-        self.reaction_toolkit_config=kwargs.get("reaction_toolkit_config",configs.Reaction_Toolkit())
-        self.metagenomics_config=kwargs.get("metagenomics_config",configs.Metagenomics())
-        self.alignment_config=kwargs.get("alignment_config",configs.Alignment())
-        self.original_adm_config=kwargs.get("original_adm_config",configs.Original_ADM1())
-        self.modified_adm_config=kwargs.get("modified_adm_config",configs.Modified_ADM())
-        
     
-    def validate(self,verbose:bool=True):
-        """Validates the pipeline commands. Runs the following checks:
-        1. Input to the first command is correct."""
     
-        satisfied=["Configs.Metagenomics",
-                    "Configs.Database",
-                    "Configs.Reaction_Toolkit",
-                    "Configs.Kbase",
-                    "Configs.Alignment",
-                    ]
-        requirements=[]
-        failure={
-            com.__name__ :[] for com in self.commands
-         }
-        success=[]
-        for command in self.commands:
-            satisfied.extend(Pipeline.extract_reqs_sats(command)[1])
-            requirements=Pipeline.extract_reqs_sats(command)[0]
-            for req in requirements:
-                if req not in satisfied:
-                    failure[command.__name__].append(req)
-            if len(failure[command.__name__])==0:
-                success.append(command)
-        if verbose:
-            rich.print("[bold green]The following commands are valid:[/bold green]")
-            for com in success:
-                failure.__delitem__(com.__name__)
-                print(com.__name__)
-            rich.print("[bold red]The following commands are invalid:[/bold red]")
-            for com in failure.keys():
-                print(f"{com} : {failure[com]}")
-
-
-        return success,failure
-
-            
-        
-
-
-
-
-
-
-    def run(self):
-        pass
-
-    @staticmethod
-    def extract_reqs_sats(command):
-        """Extracts the requirements and satisfactions from a command using the tags in the docstrings"""
-        
-        if "Requires:" in command.__doc__ and "Satisfies:" in command.__doc__:
-            reqs=re.findall("<R>.+</R>",command.__doc__)
-            for ind,i in enumerate(reqs):
-                reqs[ind]=i.replace("<R>","").replace("</R>","")
-            sats=re.findall("<S>.+</S>",command.__doc__)
-            for ind,i in enumerate(sats):
-                sats[ind]=i.replace("<S>","").replace("</S>","")
-        else:
-            raise Exception(f"The command docstring for {command.__name__} is not properly formatted. Please use the following tags: <R> and <S> for requirements and satisfactions respectively.")
-
-        return reqs,sats
 @dataclass
 class Feed:
 
     """
-
-    This class maps real feed data to ADM Feed parameters.
-    Later I move some these to a markdown file.
-
-    The definitions are based in the following link:
-
-    https://extension.okstate.edu/fact-sheets/solids-content-of-wastewater-and-manure.html
-
-    Totall_COD <=> the total COD of the feed that is fed to the reactor
-    Carbohydrates <=> the fraction of carbohydrates in the feed out of 100
-    Lipids <=> the fraction of lipids in the feed out of 100
-    Proteins <=> the fraction of proteins in the feed out of 100
-    TSS <=> the total soluble solids in the feed out of 100 (100 being all the solids or TS)
-    'The portion of TS that remains after heating at 550
-    C for 1 hour is called Total Fixed Solids (TFS);
-    the portion lost during heating is Total Volatile Solids (TVS).'
-    TS = TDS + TSS
-    TS = TFS + TVS
-    SI <=> the fraction of soluble inorganics in the feed out of 100
-    XI <=> the fraction of insoluble inorganics in the feed out of 100
-    Sometimes the fixed solids content,TFS, is called the Ash Content.
-    One assumption is that feed is a mix of total solids and water. This way total cod = total solids in COD.
-
+    The Feed class is used to store the feed information, and later use it in the modified ADM model.
+    all the entered numbers must in percentages. Carbohudrates, lipids, and proteins and si must sum up to 100, 
+    and they form the total dissolved solids. Carbohydrates, lipids, proteins, and xi must sum up to 100, and they form the total suspended solids.
+    
+    IMPORTANT: It is assumed that lipid, proteins and carbohydrates have the same fraction in soluble and insoluble fractions.
+    
+    Examples:
+        >>> feed=Feed(name="Test",carbohydrates=20,lipids=20,proteins=20,si=20,xi=20,tss=70)
+        >>> assert feed.ch_tss==feed.lip_tss==feed.prot_tss==feed.xi_tss==0.25
+    
     """
     # total_cod:float Transfer to base parameters
-    carbohydrates:float
-    lipids:float
-    proteins:float
-    tss:float
-    si:float
-    xi:float
-    reference:str=''
+    name:str            # A unique name for the feed
+    carbohydrates:float # percentage of carbohydrates in the feed
+    lipids:float        # percentage of lipids in the feed
+    proteins:float      # percentage of proteins in the feed
+    tss:float           # percentage of total COD in the form of suspended solids
+    si:float            # percentage of percentage of soluble inorganics in the TDS
+    xi:float            # percentage of percentage of insoluble inorganics in the TSS
+    reference:str=''    # A reference for the feed data
 
     def __post_init__(self):
+        if self.carbohydrates+self.lipids+self.proteins>100:
+            raise ValueError("The sum of the percentages must less than 100")
+        if self.carbohydrates+self.lipids+self.proteins+self.si<1:
+            warn("The sum of lipids, carbohydrates, proteins are suspiciously low! Make sure youhave input the numbers in percentages!")
         tss_sum=self.carbohydrates/100+self.lipids/100+self.proteins/100+self.xi/100
         self.ch_tss=self.carbohydrates/100/tss_sum
         self.lip_tss=self.lipids/100/tss_sum
@@ -210,41 +145,26 @@ class Feed:
         self.lip_tds=self.lipids/100/tds_sum
         self.prot_tds=self.proteins/100/tds_sum
         self.si_tds=self.si/100/tds_sum
+    
+    def to_dict(self):
+        return {"name":self.name,
+                "carbohydrates":self.carbohydrates,
+                "lipids":self.lipids,
+                "proteins":self.proteins,
+                "tss":self.tss,
+                "si":self.si,
+                "xi":self.xi,
+                "reference":self.reference}
+    
+    def write_feed(self, path:str):
+        with open(path, "w") as f:
+            json.dump(self.to_dict(), f)
+    
 
+@dataclass
+class MetagenomicsStudy:
+    pass
 
-class Sequence_Toolkit:
-
-    aa_list = ['A', 'M', 'N', 'V', 'W', 'L', 'H', 'S', 'G', 'F',
-               'K', 'Q', 'E', 'S', 'P', 'I', 'C', 'Y', 'R', 'N', 'D', 'T']
-    n_list = ['A', 'C', 'G', 'T']
-
-    def __init__(self, type_: str='Protein', length: int=100):
-        self.type = type_
-        self.length = length
-
-    def seq_generator(self)-> None:
-
-        if self.type == 'Protein':
-            return ''.join([random.choice(self.aa_list) for i in range(self.length)])
-
-        elif self.type == 'DNA':
-            return ''.join([random.choice(self.n_list) for i in range(self.length)])
-
-        else:
-            print('Type not recognized')
-
-    def mutate_random(self, seq, number_of_mutations=10):
-        if self.type == 'Protein':
-            for i in range(number_of_mutations):
-                seq = list(seq)
-                seq[random.randint(0, len(seq))] = random.choice(self.aa_list)
-            return ''.join(seq)
-
-        elif self.type == 'DNA':
-            for i in range(number_of_mutations):
-                seq = list(seq)
-                seq[random.randint(0, len(seq))] = random.choice(self.n_list)
-            return ''.join(seq)
 
 
 class Reaction_Toolkit:

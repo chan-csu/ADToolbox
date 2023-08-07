@@ -1,4 +1,5 @@
 import configs
+import random
 import subprocess
 import pathlib
 import json
@@ -6,6 +7,48 @@ import pandas as pd
 import os
 from typing import Iterable, Any,Union
 from warnings import warn
+
+class Sequence_Toolkit:
+
+    aa_list = ['A', 'M', 'N', 'V', 'W', 'L', 'H', 'S', 'G', 'F',
+               'K', 'Q', 'E', 'S', 'P', 'I', 'C', 'Y', 'R', 'N', 'D', 'T']
+    n_list = ['A', 'C', 'G', 'T']
+
+    def __init__(self, type_: str='Protein', length: int=100):
+        self.type = type_
+        self.length = length
+
+    def seq_generator(self)-> None:
+
+        if self.type == 'Protein':
+            return ''.join([random.choice(self.aa_list) for i in range(self.length)])
+
+        elif self.type == 'DNA':
+            return ''.join([random.choice(self.n_list) for i in range(self.length)])
+
+        else:
+            print('Type not recognized')
+
+    def mutate_random(self, seq, number_of_mutations=10):
+        if self.type == 'Protein':
+            for i in range(number_of_mutations):
+                seq = list(seq)
+                seq[random.randint(0, len(seq))] = random.choice(self.aa_list)
+            return ''.join(seq)
+
+        elif self.type == 'DNA':
+            for i in range(number_of_mutations):
+                seq = list(seq)
+                seq[random.randint(0, len(seq))] = random.choice(self.n_list)
+            return ''.join(seq)
+
+
+
+
+
+
+
+
 def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     """
     This is a function that wraps a bash script in a slurm script.

@@ -26,6 +26,8 @@ class Tuner:
         kwargs: Additional arguments to pass to openbox.
         """
         self.base_model = base_model
+        if set(tuneables.keys())-set(base_model.__getattribute__(var_type).keys()):
+            raise ValueError("Tuneable parameters not in model parameters.")
         self.tunables = tuneables
         self.train_data = train_data
         self.fitness_mode = fitness_mode
@@ -38,7 +40,7 @@ class Tuner:
         :return: The search space.
         """
         space = sp.Space()
-        space.add_variables([sp.Real(name, low, high) for name, (low, high) in self.tunables.items()])
+        space.add_variables([sp.Real(name, low, high,default_value=(high+low)/2) for name, (low, high) in self.tunables.items()])
         return space
         
     def fitness(self, parameters: dict)->float:
@@ -50,9 +52,10 @@ class Tuner:
         if self.fitness_mode == "equalized":
             res=0
             for experiment in self.train_data:
+                ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
                 self._model= self.base_model.copy()
                 self._model.update_parameters(**{self.var_type:parameters})
-                self._model.update_parameters(initial_conditions=experiment.initial_conditions)
+                self._model.update_parameters(initial_conditions=ic)
                 solution=self._model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
                 res+=np.sum(np.square(solution.T-experiment.data))
             
@@ -82,7 +85,6 @@ if __name__ == "__main__":
         initial_conditions=json.load(file)
     study=core.Experiment(
         "test_study",
-        initial_conditions=initial_conditions,
         time=[0,1,2,3,4,5],
         variables=[10,12],
         data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
@@ -105,8 +107,6 @@ if __name__ == "__main__":
     
     with open(configs.Database().species) as file:
         species=json.load(file)
-    
-    
 
     tuner=Tuner(
         base_model=adm.Model(initial_conditions=initial_conditions,
@@ -119,13 +119,11 @@ if __name__ == "__main__":
                             ode_system=adm.modified_adm_ode_sys,
                             build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
                             name="test_model"),
-
                         
                     train_data=[study],
-                    tuneables={"Y_Me_h2":(0,1),
-                              "Y_Me_ac":(0,1) },
+                    tuneables={"Y_Me_h2":(0,1),},
                     fitness_mode="equalized",
                     var_type="model_parameters"
              )
     hist=tuner.optimize(max_runs=2)
-    assert len(hist.successful_perfs)==2
+   

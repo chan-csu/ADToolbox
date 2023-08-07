@@ -12,11 +12,8 @@ def test_version():
 
 @fixture
 def experimental_data():
-    with open(configs.Database().initial_conditions) as file:
-        initial_conditions=json.load(file)
     study=core.Experiment(
         "test_study",
-        initial_conditions=initial_conditions,
         time=[0,1,2,3,4,5],
         variables=[10,12],
         data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
@@ -69,4 +66,5 @@ def test_build_optimizer_object(experimental_data):
                     fitness_mode="equalized",
                     var_type="model_parameters"
              )
-    hist=tuner.optimize(max_runs=1)
+    hist=tuner.optimize(max_runs=2)
+    assert len(hist.successful_perfs)==2
