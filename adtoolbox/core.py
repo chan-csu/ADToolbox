@@ -59,6 +59,14 @@ class Experiment:
     to query for Experiment objects you can query by name or reference or model_type. So, having a descriptive reference can be useful for querying as well.
     default model name is "modified-adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
     
+    Args:
+        name (str): A unique name for the experiment.
+        time (list): A list of time points in days.
+        variables (list): A list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
+        data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
+        reference (str, optional): A reference for the experimental data. Defaults to ''.
+        model_name (str, optional): The name of the model that the experimental data is for. Defaults to "modified-adm".
+    
     Examples:
         >>> from adtoolbox import configs
         >>> import json
@@ -67,7 +75,7 @@ class Experiment:
         >>> S_su_index=species.index("S_su")
         >>> S_aa_index=species.index("S_aa")
         >>> exp=Experiment(name="Test",time=[0,1,2],variables=[S_su_index,S_aa_index],data=[[1,2,3],[4,5,6]],reference="Test reference")
-
+        
     """
     name:str
     time: list[float]
@@ -94,15 +102,7 @@ class Experiment:
                 "data":self.data.tolist(),
                 "reference":self.reference}
     
-    def write_experiment(self, path:str):
-        with open(path, "w") as f:
-            json.dump(self.to_dict(), f)
-    
-    @classmethod
-    def load_experiment(cls, path:str):
-        with open(path, "r") as f:
-            data=json.load(f)
-        return cls(**data)
+
     
     
 @dataclass
@@ -115,10 +115,20 @@ class Feed:
     
     IMPORTANT: It is assumed that lipid, proteins and carbohydrates have the same fraction in soluble and insoluble fractions.
     
+    Args:
+        name (str): A unique name for the feed.
+        carbohydrates (float): percentage of carbohydrates in the feed.
+        lipids (float): percentage of lipids in the feed.
+        proteins (float): percentage of proteins in the feed.
+        tss (float): percentage of total COD in the form of suspended solids.
+        si (float): percentage of percentage of soluble inorganics in the TDS.
+        xi (float): percentage of percentage of insoluble inorganics in the TSS.
+        reference (str, optional): A reference for the feed data. Defaults to ''.    
+    
     Examples:
         >>> feed=Feed(name="Test",carbohydrates=20,lipids=20,proteins=20,si=20,xi=20,tss=70)
         >>> assert feed.ch_tss==feed.lip_tss==feed.prot_tss==feed.xi_tss==0.25
-    
+        
     """
     # total_cod:float Transfer to base parameters
     name:str            # A unique name for the feed
@@ -146,7 +156,7 @@ class Feed:
         self.prot_tds=self.proteins/100/tds_sum
         self.si_tds=self.si/100/tds_sum
     
-    def to_dict(self):
+    def to_dict(self)->dict:
         return {"name":self.name,
                 "carbohydrates":self.carbohydrates,
                 "lipids":self.lipids,
@@ -155,62 +165,54 @@ class Feed:
                 "si":self.si,
                 "xi":self.xi,
                 "reference":self.reference}
-    
-    def write_feed(self, path:str):
-        with open(path, "w") as f:
-            json.dump(self.to_dict(), f)
+
     
 
 @dataclass
 class MetagenomicsStudy:
-    pass
-
-
-
-class Reaction_Toolkit:
+    """
+    This class is used to communicate between the metagenomics studies database and the ADM model.
+    
+    Args:
+        name (str): The name of the metagenomics study. Its okay if it is not unique.
+        study_type (str): The type of the metagenomics study. It can be "amplicon" or "WGS".
+        microbiome (str): The microbiome that the metagenomics study is about.
+        sample_accession (str): The SRA sample accession number of the metagenomics study. This must be unique.
+        comments (str): Any comments that you want to add to the metagenomics study.
+        study_accession (str): The SRA study accession number of the metagenomics study.   
+    
+    Examples:
+        >>> study=MetagenomicsStudy(name="Test",study_type="WGS",microbiome="test_microbiome",sample_accession="test_accession",comments="test_comments",study_accession="test_study_accession")
+        >>> assert study.name=="Test"
 
     """
-    A Class for converting ec numbers to reaction objects or extracting any information from the seed database
-
-    """
-
-    def __init__(self, compound_db:str =configs.Reaction_Toolkit().compound_db, reaction_db=configs.Reaction_Toolkit().reaction_db) -> None:
-        self.reaction_db = reaction_db
-        self.compound_db = compound_db
-
-    def instantiate_rxns(self, ec_number, mode='Single_Match'):
-        f = open(self.reaction_db)
-        data = json.load(f)
-        if mode == 'Single_Match':
-            for i in data:
-                if i['ec_numbers']:
-                    if ec_number in i['ec_numbers']:
-                        return Reaction(i)
-
-        elif mode == 'Multiple_Match':
-            matched_rxns = [
-                Reaction(rxn) for rxn in data if rxn['ec_numbers'] == [ec_number]]
-            return matched_rxns
-
-        else:
-            print('Mode not recognized!')
-
-    def instantiate_metabs(self, seed_id):
-        f = open(self.compound_db)
-        data = json.load(f)
-        # Maybe contain is better than == below\\To be completed
-        matched_compounds = [Metabolite(met)
-                            for met in data if met['id'] == seed_id]
-        return matched_compounds[0]
-
-
-
+    name:str
+    study_type:str
+    microbiome:str
+    sample_accession:str
+    comments:str
+    study_accession:str
+    
+    def to_dict(self)->dict:
+        return {"name":self.name,
+                "study_type":self.study_type,
+                "microbiome":self.microbiome,
+                "sample_accession":self.sample_accession,
+                "comments":self.comments,
+                "study_accession":self.study_accession}
 
 class Reaction:
     """
-    This class is used to store and process the reaction information.
+    This class provides a simple interface between information about biochemical reactions and multiple functionalities of ADToolbox.
     In order to instantiate a reaction object, you need to pass a dictionary of the reaction information.
     This dictionary must include 'name','stoichiometry' keys. This follows the format of the seed database.
+    stoichiometry must be formatted like seed database. The seed database format is as follows:
+    stoichiometry: '-1:cpd00079:0:0:\"D-glucose-6-phosphate\";1:cpd00072:0:0:\"D-fructose-6-phosphate\"'
+
+    Args:
+        data (dict): A dictionary containing the reaction information. This follows the format of the seed database.
+
+
     Examples:
         >>> A={"name":'D-glucose-6-phosphate aldose-ketose-isomerase',"stoichiometry":'-1:cpd00079:0:0:\"D-glucose-6-phosphate\";1:cpd00072:0:0:\"D-fructose-6-phosphate\"'}
         >>> a=Reaction(A)
@@ -218,42 +220,46 @@ class Reaction:
         D-glucose-6-phosphate aldose-ketose-isomerase
 
     """
-    def __init__(self, dict):
-        self.dict = dict
+    def __init__(self, data:dict)->None:
+        self.data = data
 
-    def __str__(self):
-        return self.dict['name']
+    def __str__(self)->str:
+        return self.data['name']
 
     @property
-    def stoichiometry(self):
+    def stoichiometry(self)->dict:
         """
         Returns the stoichiometry of the reaction by the seed id of the compounds as key and the
         stoichiometric coefficient as value.
         Examples:
             >>> A={"name":'D-glucose-6-phosphate aldose-ketose-isomerase',"stoichiometry":'-1:cpd00079:0:0:\"D-glucose-6-phosphate\";1:cpd00072:0:0:\"D-fructose-6-phosphate\"'}
             >>> a=Reaction(A)
-            >>> a.Stoichiometry=={'cpd00079': -1, 'cpd00072': 1}
+            >>> a.stoichiometry=={'cpd00079': -1, 'cpd00072': 1}
             True
         
         Args:
             self (Reaction): An instance of the Reaction.
 
         Returns:
-            dict: The stoichiometry of the reaction by the seed id of the compounds as key and the
-        stoichiometric coefficient as value.
+            dict: The stoichiometry of the reaction 
         """
-
-        S = {}
-        for compound in self.dict['stoichiometry'].split(';'):
-            S[compound.split(':')[1]] = float(compound.split(':')[0])
-        return S
+        return {compound.split(':')[1]:float(compound.split(':')[0]) for compound in self.data['stoichiometry'].split(';') }
 
 
 class Metabolite:
     """
-    Any metabolite with seed id can be an instance of this class.
-    In order to instantiate a Metabolite object, you first define a dictionary in seed database format.
-    This dictionary must have  "name", "mass", and "formula" keys, but it is okay if it has other keys.
+    This class provides a simple interface between information about metabolites and multiple functionalities of ADToolbox.
+    In order to instantiate a metabolite object, you need to pass a dictionary of the metabolite information.
+    This dictionary must include 'name','mass','formula' keys. This follows the format of the seed database.
+    formula must be formatted like seed database. The seed database format is as follows:
+    formula: 'C6H12O6'
+    Possibly the main advantage of instantiating a metabolite object is that it provides a COD attribute that can be used to convert
+    the concentration of the metabolite from g/l to gCOD/l. This is useful for comparing the experimental data with the model outputs.
+
+    Args:
+        data (dict): A dictionary containing the metabolite information. This follows the format of the seed database.
+
+
     Examples:
         >>> A={"name":"methane","mass":16,"formula":"CH4"}
         >>> a=Metabolite(A)
@@ -262,15 +268,12 @@ class Metabolite:
 
     """
 
-    def __init__(self, dict):
-        self.dict = dict
+    def __init__(self, data):
+        self.data = data
         self.cod = self.cod_calc()
 
     def __str__(self) -> str:
-        return self.dict['name']
-    
-    def __repr__(self) -> str:
-        return self.dict['name']
+        return self.data['name']
 
     def cod_calc(self)->float:
         """
@@ -279,7 +282,7 @@ class Metabolite:
         Examples:
             >>> A={"name":"methane","mass":16,"formula":"CH4"}
             >>> a=Metabolite(A)
-            >>> a.COD
+            >>> a.cod
             4.0
 
         Args:
@@ -287,26 +290,91 @@ class Metabolite:
 
         Returns:
             float: COD conversion from g/l to gCOD/l
-        
 
         """
-        if self.dict['formula'] and self.dict['mass']:
+        if self.data['formula'] and self.data['mass']:
             contents = {}
             atoms = ["H", "C", "O"]
-            mw = self.dict['mass']
+            mw = self.data['mass']
             for atom in atoms:
-                if re.search(atom+'\d*', self.dict['formula']):
-                    if len(re.search(atom+'\d*', self.dict['formula']).group()[1:]) == 0:
+                if re.search(atom+'\d*', self.data['formula']):
+                    if len(re.search(atom+'\d*', self.data['formula']).group()[1:]) == 0:
                         contents[atom] = 1
                     else:
                         contents[atom] = int(
-                            re.search(atom+'\d*', self.dict['formula']).group()[1:])
+                            re.search(atom+'\d*', self.data['formula']).group()[1:])
                 else:
                     contents[atom] = 0
             return 1/mw*(contents['H']+4*contents['C']-2*contents['O'])/4*32
 
         else:
             return 'None'
+
+
+class SeedDB:
+
+    """
+    This class is designed to interact with seed database. The main advantage of using this class is that it can be used to instantiate
+    a reaction and metabolite object, and it provides extra functionalities that rely on information in the seed database. For example, 
+    If there is a chemical formula assigned to a metabolite in the seed database, then the informattion about the COD of that metabolite
+    can be computed using the chemical formula. 
+    
+    Args:
+        compound_db (str, optional): The path to the seed compound database. Defaults to configs.SeedDB().compound_db.
+        reaction_db (str, optional): The path to the seed reaction database. Defaults to configs.SeedDB().reaction_db.
+    
+    Examples:
+        >>> seed_db=SeedDB()
+        >>> assert seed_db.compound_db==configs.SeedDB().compound_db
+        >>> assert seed_db.reaction_db==configs.SeedDB().reaction_db
+
+    """
+
+    def __init__(self, compound_db:str =configs.SeedDB().compound_db,
+                       reaction_db=configs.SeedDB().reaction_db) -> None:
+        
+        self.reaction_db = reaction_db
+        self.compound_db = compound_db
+
+    def instantiate_rxns(self, seed_id:str)->Reaction:
+        """
+        This method is used to instantiate reaction objects from the seed database.
+        in order to instantiate a reaction object, you need to pass the seed identifier for that reaction.
+        
+        Args:
+            seed_id (str): The seed identifier for the reaction.
+    
+        Returns:
+            Reaction: An instance of the Reaction class.
+        
+        Examples:
+            >>> seed_db=SeedDB()
+            >>> rxn=seed_db.instantiate_rxns("rxn00558")
+            >>> assert rxn.data["name"]=="D-glucose-6-phosphate aldose-ketose-isomerase"
+        """
+        db=pd.read_json(self.reaction_db)
+        return Reaction(data=db[db["id"]==seed_id].to_dict(orient="records")[0])
+
+    def instantiate_metabs(self, seed_id:str)->Metabolite:
+        """
+        This method is used to instantiate metabolite objects from the seed database.
+        In order to instantiate a metabolite object, you need to pass the seed identifier for that metabolite.
+
+        Args:
+            seed_id (str): The seed identifier for the metabolite.
+        
+        Returns:
+            Metabolite: An instance of the Metabolite class. 
+        
+        Examples:
+            >>> seed_db=SeedDB()
+            >>> metab=seed_db.instantiate_metabs("cpd01024")
+            >>> assert metab.cod==4.0
+        """
+        db=pd.read_json(self.compound_db)
+        return Metabolite(data=db[db["id"]==seed_id].to_dict(orient="records")[0])
+
+
 
 class Database:
 
@@ -772,6 +840,10 @@ class Database:
         with open(self.config.reaction_db, 'wb') as f:
             f.write(r.content)
         rich.print(f"[green]Reaction database downloaded to {self.config.reaction_db}")
+        r=requests.get(self.config.seed_compound_url,allow_redirects=True,stream=True)
+        with open(self.config.compound_db, 'wb') as f:
+            f.write(r.content)
+        rich.print(f"[green]Compound database downloaded to {self.config.compound_db}")
 
     def download_protein_database(self) -> None:
         r = requests.get(self.config.protein_db_url, allow_redirects=True)
@@ -1375,7 +1447,7 @@ class Metagenomics:
         
     @needs_repair
     def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
-        rt = Reaction_Toolkit(reaction_db=self.config.seed_rxn_db)
+        rt = SeedDB(reaction_db=self.config.seed_rxn_db)
         with open(self.config.genome_alignment_output_json) as f:
             json_report = json.load(f)
         reaction_db = pd.read_table(self.config.csv_reaction_db, sep=',')
@@ -1652,10 +1724,7 @@ class Metagenomics:
         Returns:
             qiime2_bash_str (str): The bash script that will be used to run qiime2 in python string format
             manifest (dict): The manifest file that will be used to run qiime2 in python dictionary format
-        
-        TODO:
-            add the ability to submit slurm jobs to cluster
-            add singularity support
+    
 
         """
         
@@ -1743,50 +1812,9 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    # config_1=configs.Metagenomics(qiime_outputs_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2",
-    # feature_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature-table.tsv",
-    # taxonomy_table_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/taxonomy.tsv",
-    # rep_seq_fasta="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/dna-sequences.fasta",
-    # top_repseq_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/top10_repseqs.fasta",
-    # vsearch_script_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/vsearch.sh",
-    # genomes_base_dir="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    # genomes_json_info="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/genomes.json",
-    # genome_alignment_output="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/",
-    # genome_alignment_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/alignment_info.json",
-    # feature_to_taxa="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/feature_to_genome.json",
-    # cod_output_json="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/cod_output.json",
-    # genome_relative_abundances="/Users/parsaghadermarzi/Desktop/ADToolbox/Metagenomics_Analysis/SRA/ERR3861428/qiime2/relative_abundances.json",
-    # vsearch_similarity=0.9
-    # )
-    # metag=Metagenomics(config_1)
-    # metag.calculate_cod_portions_from_alignment_file("/Users/parsaghadermarzi/Desktop/test_shortreads/713.tsv")
-    # metag.find_top_taxa("mdsjas",10)
-    # genome_info=metag.extract_genome_info(save=False)
-    # print(metag.get_sample_metadata_from_accession("ERR3861428"))
-    # db_class=Database(config=configs.Database())
-    # metag_studies=db_class.get_metagenomics_studies()
-    # metag_class=Metagenomics(configs.Metagenomics())
-    # counter=0
-    # for ind,study in enumerate(metag_studies):
-    #     metag_studies[ind]["Type"]=metag_class.get_sample_metadata_from_accession(study["SRA_accession"],save=False)["library_strategy"]
-    #     print(f"Study {ind} of {len(metag_studies)}")
-    #     counter+=1
-    # pd.DataFrame(metag_studies).to_csv(os.path.join(Main_Dir,"metadata_added.csv"),index=False)
-    # metag_config=configs.Metagenomics(
-    #     adm_cod_from_ec="/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/adm_cod_from_ec.json",
-    # )
-    # metag=Metagenomics(metag_config)
-    # with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/ec_counts_sra_wgs_cow_goad.json") as f:
-    #     ec_counts=json.load(f)
-    # cods={}
-    # for sample in ec_counts:
-    #     cods[sample]=metag.get_cod_from_ec_counts(ec_counts[sample],save=False)
-    # with open("/Users/parsaghadermarzi/Desktop/sra_wgs_cow_goat/cods_sra_wgs_cow_goat.json","w") as f:
-    #     json.dump(cods,f)
-    from utils import generate_batch_script
-    def f(x,y,container):
-        return f"echo {x} {y} {container}",
-    print(generate_batch_script(number_of_batches=2,generator_function=f,input_series=[(1,2,1,2,3,4,5),(1,2,3,4,5,3,4)],input_var=["x","y"],container="docker"))
+    pass
+
+    
     
 
 

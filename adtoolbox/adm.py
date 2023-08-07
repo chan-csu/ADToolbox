@@ -12,7 +12,7 @@ from dash import Dash, html, dcc
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output,dash_table
 from core import Database as Database
-from core import Reaction_Toolkit as Reaction_Toolkit
+from core import SeedDB as SeedDB
 from core import Feed
 from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import pandas as pd
@@ -35,13 +35,14 @@ import pdb
 
 # ----------
 
-DEFAULT_FEED=Feed( carbohydrates=10,
+DEFAULT_FEED=Feed(name="Default Feed",
+                  carbohydrates=10,
                     proteins=20, 
                     lipids=20, 
                     si=30,
                     xi=50,
                     tss=80)
-RT = Reaction_Toolkit(reaction_db=configs.Reaction_Toolkit().reaction_db)
+RT = SeedDB(reaction_db=configs.SeedDB().reaction_db)
 
 class _Fake_Sol:
     def __init__(self, y,t):

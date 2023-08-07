@@ -38,9 +38,9 @@ This module includes the following classes:
 ### 2. Feed
 ::: adtoolbox.core.Feed
 
-### 3. Reaction_Toolkit
+### 3. MetegenomicsStudy
 
-::: adtoolbox.core.Reaction_Toolkit
+::: adtoolbox.core.MetagenomicsStudy
 
 ### 4. Reaction
 

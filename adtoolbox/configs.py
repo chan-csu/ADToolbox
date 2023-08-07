@@ -41,11 +41,11 @@ class Alignment:
         self.e_value = e_value
         self.bit_score = bit_score
     
-class Reaction_Toolkit:
+class SeedDB:
 
     def __init__(self, 
-        compound_db=os.path.join(Main_Dir, "Database", 'Local_compounds.json'),
-        reaction_db=os.path.join(Main_Dir, "Database", 'Local_reactions.json')):
+        compound_db=os.path.join(Main_Dir, "Database", 'compounds.json'),
+        reaction_db=os.path.join(Main_Dir, "Database", 'reactions.json')):
         self.compound_db = compound_db
         self.reaction_db = reaction_db
 
@@ -99,6 +99,7 @@ class Database:
 		),
 		adm_parameters_base_dir:str=os.path.join(Main_Dir, "Database","ADM_Parameters"),
 		seed_rxn_url:str ="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
+		seed_compound_url:str ="https://github.com/ModelSEED/ModelSEEDDatabase/raw/master/Biochemistry/compounds.json",
 		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta",
 		adtoolbox_rxn_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
 		feed_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
@@ -136,6 +137,7 @@ class Database:
 		self.feed_db = feed_db
 		self.studies = studies
 		self.seed_rxn_url = seed_rxn_url
+		self.seed_compound_url = seed_compound_url
 		self.protein_db_url = protein_db_url
 		self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url
 		self.feed_db_url = feed_db_url
