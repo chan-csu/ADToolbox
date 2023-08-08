@@ -97,7 +97,7 @@ class Experiment:
         return {"name":self.name,
                 "time":self.time,
                 "variables":self.variables,
-                "data":self.data.tolist(),
+                "data":self.data.T.tolist(),
                 "reference":self.reference}
     
 
@@ -533,11 +533,12 @@ class Database:
             >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experimental_data_test_db.json")))
             >>> db.initialize_experimental_data_db()
             >>> assert pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).shape[0]==0
-            >>> assert set(pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).columns)==set(["name","initial_conditions","time","variables","data","reference"])
+            >>> with open(os.path.join(Main_Dir,"experimental_data_test_db.json"),"r") as f:
+            ...     assert json.load(f)==[]
             >>> os.remove(os.path.join(Main_Dir,"experimental_data_test_db.json"))
         
         """
-        pd.DataFrame(columns=["name","initial_conditions","time","variables","data","reference"]).to_json(self.config.experimental_data_db)
+        pd.DataFrame(columns=["name","initial_conditions","time","variables","data","reference"]).to_json(self.config.experimental_data_db,orient="records")
         
     
     def filter_seed_from_ec(self, 
@@ -817,15 +818,16 @@ class Database:
         feed_db=pd.concat([feed_db,pd.DataFrame([feed.to_dict()])],ignore_index=True,axis=0)
         feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
     
-    def remove_feed_from_feed_db(self,feed_name:str)->None:
+    def remove_feed_from_feed_db(self,field_name:str,query:str)->None:
         r"""
-        This function removes a feed from the feed database. It takes the feed name and removes the corresponding feed from the feed database.
+        This function removes studyes that contain the query in the given column, field name, from the feed database.
 
         Required Configs:
             - config.feed_db
-
+        
         Args:
-            feed_name (str): The name of the feed.
+            field_name (str): The name of the column to query.
+            query (str): The query string.
         
         Examples:
             >>> import os
@@ -835,19 +837,54 @@ class Database:
             >>> db.add_feed_to_feed_db(feed)
             >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
             >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]>0
-            >>> db.remove_feed_from_feed_db("test_feed")
+            >>> db.remove_feed_from_feed_db("name","test_feed")
             >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]==0
             >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
         
         """
         if not os.path.exists(self.config.feed_db):
-            self.initialize_feed_db()
+            raise FileNotFoundError("Feed database does not exist!")
+        
         feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
-        feed_db=feed_db[feed_db["name"]!=feed_name]
+        feed_db=feed_db[feed_db[field_name].str.contains(query)==False]
         feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
+        
+    def get_feed_from_feed_db(self,field_name:str,query:str)->list[Feed]:
+        r"""
+        This function returns a feed from the feed database. It takes the query string and the column name to query and returns the feed that contains the query string in the given column.
+
+        Required Configs:
+            - config.feed_db
+        
+        Args:
+            field_name (str): The name of the column to query.
+            query (str): The query string.
+        
+        Returns:
+            Feed: An instance of the Feed class.
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
+            >>> feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+            >>> db.add_feed_to_feed_db(feed)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
+            >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> feed=db.get_feed_from_feed_db("name","test_feed")
+            >>> assert feed[0].name=="test_feed"
+            >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
+        
+        """
+        if not os.path.exists(self.config.feed_db):
+            raise FileNotFoundError("Feed database does not exist!")
+        
+        feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
+        feed_db=feed_db[feed_db[field_name].str.contains(query)]
+        return [Feed(**feed.to_dict()) for _,feed in feed_db.iterrows()]
     
     def add_metagenomics_study_to_metagenomics_studies_db(self,metagenomics_study:MetagenomicsStudy)->None:
-        """
+        r"""
         This function adds a metagenomics study to the metagenomics studies database. It takes a metagenomics study and adds it to the metagenomics studies database.
         
         Required Configs:
@@ -872,8 +909,164 @@ class Database:
         metagenomics_studies_db=pd.concat([metagenomics_studies_db,pd.DataFrame([metagenomics_study.to_dict()])],ignore_index=True,axis=0)
         metagenomics_studies_db.to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
     
+    def remove_metagenomics_study_from_metagenomics_studies_db(self,field_name:str,query:str)->None:
+        r"""
+        This function removes studies that contain the query in the given column, field name, from the metagenomics studies database.
+
+        Required Configs:
+            - config.metagenomics_studies_db
+
+        Args:
+            field_name (str): The name of the column to query.
+            query (str): The query string.
+
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
+            >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==True
+            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> db.remove_metagenomics_study_from_metagenomics_studies_db("name","test_study")
+            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]==0
+            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+        """
+        if not os.path.exists(self.config.metagenomics_studies_db):
+            raise FileNotFoundError("Metagenomics studies database does not exist!")
+
+        metagenomics_studies_db=pd.read_table(self.config.metagenomics_studies_db,delimiter="\t")
+        metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)==False]
+        metagenomics_studies_db.to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
     
+    def get_metagenomics_study_from_metagenomics_studies_db(self,field_name:str,query:str)->list[MetagenomicsStudy]:
+        r"""
+        This function returns a metagenomics study from the metagenomics studies database. It takes the query string and the column name to query and returns the metagenomics study that contains the query string in the given column.
+
+        Required Configs:
+            - config.metagenomics_studies_db
+        
+        Args:
+            field_name (str): The name of the column to query.
+            query (str): The query string.
+        
+        Returns:
+            MetagenomicsStudy: An instance of the MetagenomicsStudy class.
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
+            >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==True
+            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> metagenomics_study=db.get_metagenomics_study_from_metagenomics_studies_db("name","test_study")
+            >>> assert metagenomics_study[0].name=="test_study"
+            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+        """
+        if not os.path.exists(self.config.metagenomics_studies_db):
+            raise FileNotFoundError("Metagenomics studies database does not exist!")
+
+        metagenomics_studies_db=pd.read_table(self.config.metagenomics_studies_db,delimiter="\t")
+        metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)]
+        return [MetagenomicsStudy(**metagenomics_study.to_dict()) for _,metagenomics_study in metagenomics_studies_db.iterrows()]
     
+    def add_experiment_to_experiments_db(self,experiment:Experiment)->None:
+        r"""
+        This function adds an experiment to the experiments database. It takes an experiment and adds it to the experiments database.
+        
+        Required Configs:
+            - config.experimental_data_db
+        
+        Args:
+            experiment (Experiment): An instance of the Experiment class.
+        
+        Examples:
+            >>> import os,json
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experiments_test_db.json")))
+            >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
+            >>> db.add_experiment_to_experiments_db(experiment)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"experiments_test_db.json"))>0
+            >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
+        """
+        if not os.path.exists(self.config.experimental_data_db):
+            self.initialize_experimental_data_db()
+        
+        with open(self.config.experimental_data_db,"r") as f:
+            experiments_db=json.load(f)
+        experiments_db.append(experiment.to_dict())
+        with open(self.config.experimental_data_db,"w") as f:
+            json.dump(experiments_db,f)
+        
+    def remove_experiment_from_experiments_db(self,field_name:str,query:str)->None:
+        r"""
+        This function removes experiments that contain the query in the given column, field name, from the experiments database.
+
+        Required Configs:
+            - config.experimental_data_db
+
+        Args:
+            field_name (str): The name of the column to query.
+            query (str): The query string.
+
+        Examples:
+            >>> import os,json
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experiments_test_db.json")))
+            >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
+            >>> db.add_experiment_to_experiments_db(experiment)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"experiments_test_db.json"))>0
+            >>> db.remove_experiment_from_experiments_db("name","test_study")
+            >>> assert pd.read_json(os.path.join(Main_Dir,"experiments_test_db.json")).shape[0]==0
+            >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
+        """
+        if not os.path.exists(self.config.experimental_data_db):
+            raise FileNotFoundError("Experimental data database does not exist!")
+
+        with open(self.config.experimental_data_db,"r") as f:
+            experiments_db=json.load(f)
+        experiments_db=[experiment for experiment in experiments_db if query not in experiment[field_name]]
+        with open(self.config.experimental_data_db,"w") as f:
+            json.dump(experiments_db,f)
+
+    def get_experiment_from_experiments_db(self,field_name:str,query:str)->list[Experiment]:
+        r"""
+        This function returns an experiment from the experiments database. It takes the query string and the column name to query and returns the experiment that contains the query string in the given column.
+
+        Required Configs:
+            - config.experimental_data_db
+        
+        Args:
+            field_name (str): The name of the column to query.
+            query (str): The query string.
+        
+        Returns:
+            Experiment: An instance of the Experiment class.
+        
+        Examples:
+            >>> import os,json
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experiments_test_db.json")))
+            >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
+            >>> db.add_experiment_to_experiments_db(experiment)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"experiments_test_db.json"))>0
+            >>> experiment=db.get_experiment_from_experiments_db("name","test_study")
+            >>> assert experiment[0].name=="test_study"
+            >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
+        """
+        if not os.path.exists(self.config.experimental_data_db):
+            raise FileNotFoundError("Experimental data database does not exist!")
+
+        with open(self.config.experimental_data_db,"r") as f:
+            experiments_db=json.load(f)
+        experiments_db=[experiment for experiment in experiments_db if query in experiment[field_name]]
+        return [Experiment(**experiment) for experiment in experiments_db]
+        
     def build_mmseqs_database(self,save:bool,run:bool,container:str="None")->str:
         """Builds an indexed mmseqs database from the ADToolbox's fasta protein database.
         Args:
@@ -1904,14 +2097,7 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    import os
-    assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
-    db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
-    feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
-    db.add_feed_to_feed_db(feed)
-    assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
-    assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]>0
-    os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
+    pass
 
     
     
