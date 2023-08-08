@@ -1164,33 +1164,6 @@ class Database:
         
         rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
             
-
-
-    def get_metagenomics_studies(self) -> list:
-        """
-        This function will return accession numbers in all metagenomics studies on the kbase.
-        Requires:
-            <R>Configs.Database</R>
-        Satisfies:
-            <S>project_accession</S>
-        """
-        metagenomics_studies=pd.read_table(self.config.studies.metagenomics_studies,delimiter="\t")
-        return metagenomics_studies.to_dict(orient="records")
-
-    
-    def get_experimental_data_studies(self)->list:
-        """
-        This function will retrieve the studies as a list of dictionaries.
-
-        Returns:
-            list: A list of dictionaries containing the studies.
-
-        """
-        experimental_studies=pd.read_table(self.config.studies.experimental_data_references,delimiter="\t")
-        return experimental_studies.to_dict(orient="list")
-        
-         
-
     def download_studies_database(self)->None:
         """
         This function will download the kbase database from the remote repository.

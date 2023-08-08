@@ -1,0 +1,1137 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../Parameter_Tuning/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.9">
+    
+    
+      
+        <title>Metagenomics Pipelines - ADToolbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.0d440cfe.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pipeline-for-understanding-adtoolbox" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ADToolbox" class="md-header__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ADToolbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Metagenomics Pipelines
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ADToolbox" class="md-nav__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    ADToolbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome to ADToolbox
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Installation/" class="md-nav__link">
+        Installation
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        Commandline Interface
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        API
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Parameter_Tuning/" class="md-nav__link">
+        Parameter Tuning
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Metagenomics Pipelines
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Metagenomics Pipelines
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-for-16s-data" class="md-nav__link">
+    Pipeline for 16s Data
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline for 16s Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-either-16s-data-from-the-sra-database-or-16s-data-collected-from-individual-experimental-samples-the-first-step-is-downloading-the-sequence-data-having-the-data-in-a-csv-format-presents-the-data-in-a-way-that-is-easily-interpreted-and-readable" class="md-nav__link">
+    Using either 16s data from the sra database or 16s data collected from individual experimental samples, the first step is downloading the sequence data. Having the data in a csv format presents the data in a way that is easily interpreted and readable.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-the-example-16s-data-the-datatable-named-elk_bison_cattle_datatablecsv-is-downloaded-and-the-resulting-sequences-are-dumped-into-a-folder-sra_16s_elk_bison_cattle-where-the-data-will-be-stored-because-the-data-set-included-different-assay-types-and-only-amplicon-is-wanted-line-7-in-the-code-was-added-to-only-use-the-amplicon-samples-in-the-analysis" class="md-nav__link">
+    For the example 16s data, the datatable named elk_bison_cattle_datatable.csv is downloaded and the resulting sequences are dumped into a folder (sra_16s_elk_bison_cattle) where the data will be stored. Because the data set included different assay types and only AMPLICON is wanted, line 7 in the code was added to only use the AMPLICON samples in the analysis.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to-align-the-16s-data-to-adtoolboxs-protein-database-qiime-is-used-to-analysis-the-sequences-and-singularity-is-required" class="md-nav__link">
+    To align the 16s data to ADToolbox's protein database, qiime is used to analysis the sequences and singularity is required.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once-the-sequences-are-aligned-to-the-protein-database-the-top-representative-sequences-will-be-aligned-to-the-16s-data-using-a-gtdb-dictionary-where-the-key-is-the-16s-sequence-and-the-value-is-the-representative-value-identifier" class="md-nav__link">
+    Once the sequences are aligned to the protein database, the top representative sequences will be aligned to the 16s data using a gtdb dictionary where the key is the 16s sequence and the value is the representative value identifier.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once-aligned-to-gtdb-the-genomes-are-then-extracted-from-the-alignment-so-be-used-downstream-using-genome-ids-the-genomes-can-now-be-downloaded-then-the-genomes-can-be-aligned-to-the-protein-database" class="md-nav__link">
+    Once aligned to gtdb, the genomes are then extracted from the alignment so be used downstream. Using genome ids the genomes can now be downloaded, then the genomes can be aligned to the protein database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-taxonomy-of-the-genomes-can-now-be-scaled-and-analyzed-to-represent-the-data-using-qimmeii-outputs-feature_tabletsv-and-taxonomytsv-the-abundance-and-representative-genomes-will-be-merged-into-one-table" class="md-nav__link">
+    The taxonomy of the genomes can now be scaled and analyzed to represent the data. Using QimmeII outputs feature_table.tsv and taxonomy.tsv, the abundance and representative genomes will be merged into one table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-merged-table-the-cod-chemical-oxygen-demand-concentrations-can-be-extracted-using-the-ec-numbers" class="md-nav__link">
+    Using the merged table the COD (Chemical Oxygen Demand) concentrations can be extracted using the EC numbers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normalized-the-cods-to-better-represent-the-data" class="md-nav__link">
+    Normalized the COD's to better represent the data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analyze-the-cods-to-see-if-the-clustering-between-hosts-is-preserved" class="md-nav__link">
+    Analyze the COD's to see if the clustering between hosts is preserved
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-for-shotgun-data" class="md-nav__link">
+    Pipeline for ShotGun Data
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline for ShotGun Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-shotgun-sequence-data-downloading-the-data-looks-the-same-as-it-was-for-16s-sequence-data-for-this" class="md-nav__link">
+    For shotgun sequence data, downloading the data looks the same as it was for 16s sequence data. For this
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-shotgun-sequences-are-downloaded-they-will-need-to-be-merged-before-they-can-be-aligned-to-the-genome-database-using-the-line-of-code-below-in-the-terminal-will-accomplish-this" class="md-nav__link">
+    If shotgun sequences are downloaded, they will need to be merged before they can be aligned to the genome database. Using the line of code below in the terminal will accomplish this.
+  </a>
+  
+    <nav class="md-nav" aria-label="If shotgun sequences are downloaded, they will need to be merged before they can be aligned to the genome database. Using the line of code below in the terminal will accomplish this.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-i-in-do-echo-icd-icd-seqscd-i-cat-fastq-i_mergedfastq-cd-done" class="md-nav__link">
+    for i in ; do echo $i;cd $i;cd seqs;cd $i; cat .fastq &gt; $i_Merged.fastq ;cd ../../../ ;done
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-now-that-we-have-the-downloaded-sequences-the-two-files-can-be-merged-within-a-python-script-as-shown-below-and-after-the-short-reads-will-be-aligned-to-the-protein-database-in-adtoolbox" class="md-nav__link">
+    Or now that we have the downloaded sequences, the two files can be merged within a python script as shown below and after, the short reads will be aligned to the protein database in ADToolbox
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once-the-sequences-are-aligned-the-ec-numbers-can-be-extracted" class="md-nav__link">
+    Once the sequences are aligned, the EC numbers can be extracted
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-ec-number-information-the-data-can-now-be-plotted-and-scaled-to-determine-the-best-way-to-interpret-and-display-the-data" class="md-nav__link">
+    Using the EC number information, the data can now be plotted and scaled to determine the best way to interpret and display the data
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the EC number information, the data can now be plotted and scaled to determine the best way to interpret and display the data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tsne-t-distributed-stochastic-neighbor-embedding-is-one-scaling-technique-that-can-be-used-this-technique-reduces-the-dimentionality-of-the-data-and-finds-similarity-between-points-in-low-dimensions" class="md-nav__link">
+    TSNE (t Distributed Stochastic Neighbor Embedding) is one scaling technique that can be used. This technique reduces the dimentionality of the data and finds similarity between points in low dimensions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mds-metric-dimensional-scaling-is-another-scaling-technique-that-finds-similarityb-between-distances-between-points" class="md-nav__link">
+    MDS (Metric Dimensional Scaling) is another scaling technique that finds similarityb between distances between points
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-ec-numbers-the-cod-chemical-oxygen-demand-can-be-extracted-which-describes-the-concentrations" class="md-nav__link">
+    Using the EC numbers the, COD (Chemical Oxygen Demand) can be extracted which describes the concentrations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-for-16s-data" class="md-nav__link">
+    Pipeline for 16s Data
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline for 16s Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-either-16s-data-from-the-sra-database-or-16s-data-collected-from-individual-experimental-samples-the-first-step-is-downloading-the-sequence-data-having-the-data-in-a-csv-format-presents-the-data-in-a-way-that-is-easily-interpreted-and-readable" class="md-nav__link">
+    Using either 16s data from the sra database or 16s data collected from individual experimental samples, the first step is downloading the sequence data. Having the data in a csv format presents the data in a way that is easily interpreted and readable.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-the-example-16s-data-the-datatable-named-elk_bison_cattle_datatablecsv-is-downloaded-and-the-resulting-sequences-are-dumped-into-a-folder-sra_16s_elk_bison_cattle-where-the-data-will-be-stored-because-the-data-set-included-different-assay-types-and-only-amplicon-is-wanted-line-7-in-the-code-was-added-to-only-use-the-amplicon-samples-in-the-analysis" class="md-nav__link">
+    For the example 16s data, the datatable named elk_bison_cattle_datatable.csv is downloaded and the resulting sequences are dumped into a folder (sra_16s_elk_bison_cattle) where the data will be stored. Because the data set included different assay types and only AMPLICON is wanted, line 7 in the code was added to only use the AMPLICON samples in the analysis.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to-align-the-16s-data-to-adtoolboxs-protein-database-qiime-is-used-to-analysis-the-sequences-and-singularity-is-required" class="md-nav__link">
+    To align the 16s data to ADToolbox's protein database, qiime is used to analysis the sequences and singularity is required.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once-the-sequences-are-aligned-to-the-protein-database-the-top-representative-sequences-will-be-aligned-to-the-16s-data-using-a-gtdb-dictionary-where-the-key-is-the-16s-sequence-and-the-value-is-the-representative-value-identifier" class="md-nav__link">
+    Once the sequences are aligned to the protein database, the top representative sequences will be aligned to the 16s data using a gtdb dictionary where the key is the 16s sequence and the value is the representative value identifier.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once-aligned-to-gtdb-the-genomes-are-then-extracted-from-the-alignment-so-be-used-downstream-using-genome-ids-the-genomes-can-now-be-downloaded-then-the-genomes-can-be-aligned-to-the-protein-database" class="md-nav__link">
+    Once aligned to gtdb, the genomes are then extracted from the alignment so be used downstream. Using genome ids the genomes can now be downloaded, then the genomes can be aligned to the protein database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-taxonomy-of-the-genomes-can-now-be-scaled-and-analyzed-to-represent-the-data-using-qimmeii-outputs-feature_tabletsv-and-taxonomytsv-the-abundance-and-representative-genomes-will-be-merged-into-one-table" class="md-nav__link">
+    The taxonomy of the genomes can now be scaled and analyzed to represent the data. Using QimmeII outputs feature_table.tsv and taxonomy.tsv, the abundance and representative genomes will be merged into one table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-merged-table-the-cod-chemical-oxygen-demand-concentrations-can-be-extracted-using-the-ec-numbers" class="md-nav__link">
+    Using the merged table the COD (Chemical Oxygen Demand) concentrations can be extracted using the EC numbers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normalized-the-cods-to-better-represent-the-data" class="md-nav__link">
+    Normalized the COD's to better represent the data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analyze-the-cods-to-see-if-the-clustering-between-hosts-is-preserved" class="md-nav__link">
+    Analyze the COD's to see if the clustering between hosts is preserved
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-for-shotgun-data" class="md-nav__link">
+    Pipeline for ShotGun Data
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline for ShotGun Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-shotgun-sequence-data-downloading-the-data-looks-the-same-as-it-was-for-16s-sequence-data-for-this" class="md-nav__link">
+    For shotgun sequence data, downloading the data looks the same as it was for 16s sequence data. For this
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-shotgun-sequences-are-downloaded-they-will-need-to-be-merged-before-they-can-be-aligned-to-the-genome-database-using-the-line-of-code-below-in-the-terminal-will-accomplish-this" class="md-nav__link">
+    If shotgun sequences are downloaded, they will need to be merged before they can be aligned to the genome database. Using the line of code below in the terminal will accomplish this.
+  </a>
+  
+    <nav class="md-nav" aria-label="If shotgun sequences are downloaded, they will need to be merged before they can be aligned to the genome database. Using the line of code below in the terminal will accomplish this.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-i-in-do-echo-icd-icd-seqscd-i-cat-fastq-i_mergedfastq-cd-done" class="md-nav__link">
+    for i in ; do echo $i;cd $i;cd seqs;cd $i; cat .fastq &gt; $i_Merged.fastq ;cd ../../../ ;done
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-now-that-we-have-the-downloaded-sequences-the-two-files-can-be-merged-within-a-python-script-as-shown-below-and-after-the-short-reads-will-be-aligned-to-the-protein-database-in-adtoolbox" class="md-nav__link">
+    Or now that we have the downloaded sequences, the two files can be merged within a python script as shown below and after, the short reads will be aligned to the protein database in ADToolbox
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#once-the-sequences-are-aligned-the-ec-numbers-can-be-extracted" class="md-nav__link">
+    Once the sequences are aligned, the EC numbers can be extracted
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-ec-number-information-the-data-can-now-be-plotted-and-scaled-to-determine-the-best-way-to-interpret-and-display-the-data" class="md-nav__link">
+    Using the EC number information, the data can now be plotted and scaled to determine the best way to interpret and display the data
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the EC number information, the data can now be plotted and scaled to determine the best way to interpret and display the data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tsne-t-distributed-stochastic-neighbor-embedding-is-one-scaling-technique-that-can-be-used-this-technique-reduces-the-dimentionality-of-the-data-and-finds-similarity-between-points-in-low-dimensions" class="md-nav__link">
+    TSNE (t Distributed Stochastic Neighbor Embedding) is one scaling technique that can be used. This technique reduces the dimentionality of the data and finds similarity between points in low dimensions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mds-metric-dimensional-scaling-is-another-scaling-technique-that-finds-similarityb-between-distances-between-points" class="md-nav__link">
+    MDS (Metric Dimensional Scaling) is another scaling technique that finds similarityb between distances between points
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-ec-numbers-the-cod-chemical-oxygen-demand-can-be-extracted-which-describes-the-concentrations" class="md-nav__link">
+    Using the EC numbers the, COD (Chemical Oxygen Demand) can be extracted which describes the concentrations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="pipeline-for-understanding-adtoolbox">Pipeline for Understanding ADToolbox</h1>
+<p><img alt="Metagenomics Pipeline" src="../mg_pipeline.jpg" /></p>
+<p>The pipeline for analyzing DNA sequences can be broken down into computational steps that makes the process easy to follow. Two different sequence data sets, 16s and shotgun can both be implemented into ADToolbox for sequence analysis. An example of each will be demonstrated below.</p>
+<ul>
+<li>
+<p>the first step downloads sequence data from either a SRA sequence database or sequences collected from experimental data</p>
+</li>
+<li>
+<p>the sequence data will then be processed: QiimeII for 16s data and Shotgun for shotgun data</p>
+</li>
+<li>
+<p>After finding the top representative data within the data sets, the sequences will be aligned to the genome database in ADToolbox.</p>
+</li>
+<li>
+<p>Once aligned the EC count and relative abundance of each enzyme in the sequences will then be analyzed using scaling techniques and quality checks to hopefully find clustering in the data.</p>
+</li>
+</ul>
+<p>The example data sets analyzed below for 16s and shotgun data are linked from the SRA database.</p>
+<ul>
+<li>
+<p>16s data: https://www.ncbi.nlm.nih.gov/bioproject/PRJNA803452/</p>
+</li>
+<li>
+<p>shotgun data: https://www.ncbi.nlm.nih.gov/bioproject/PRJNA657455/</p>
+</li>
+</ul>
+<h2 id="pipeline-for-16s-data">Pipeline for 16s Data</h2>
+<h4 id="using-either-16s-data-from-the-sra-database-or-16s-data-collected-from-individual-experimental-samples-the-first-step-is-downloading-the-sequence-data-having-the-data-in-a-csv-format-presents-the-data-in-a-way-that-is-easily-interpreted-and-readable">Using either 16s data from the sra database or 16s data collected from individual experimental samples, the first step is downloading the sequence data. Having the data in a csv format presents the data in a way that is easily interpreted and readable.</h4>
+<h4 id="for-the-example-16s-data-the-datatable-named-elk_bison_cattle_datatablecsv-is-downloaded-and-the-resulting-sequences-are-dumped-into-a-folder-sra_16s_elk_bison_cattle-where-the-data-will-be-stored-because-the-data-set-included-different-assay-types-and-only-amplicon-is-wanted-line-7-in-the-code-was-added-to-only-use-the-amplicon-samples-in-the-analysis">For the example 16s data, the datatable named elk_bison_cattle_datatable.csv is downloaded and the resulting sequences are dumped into a folder (sra_16s_elk_bison_cattle) where the data will be stored. Because the data set included different assay types and only AMPLICON is wanted, line 7 in the code was added to only use the AMPLICON samples in the analysis.</h4>
+<pre><code class="language-python"># Download Sequences from SRA Database
+import os
+import pandas as pd
+from adtoolbox import core,configs
+
+#metadata.loc[metadata[&quot;Biological_Replicate&quot;].str.contains(&quot;Cattle&quot;)] # (optional: if only cattle wanted to be studied etc.)
+metadata=pd.read_table(&quot;metadata_16s/elk_bison_cattle_datatable.csv&quot;,delimiter=&quot;,&quot;) # reads the csv data table from the metadata_16s folder
+metadata=metadata.loc[metadata[&quot;Assay Type&quot;]==&quot;AMPLICON&quot;] # modifies the data so only AMPLICON assay type is downloaded
+accessions=metadata[&quot;Run&quot;].to_list() # creates the accession list
+metag_conf=configs.Metagenomics(sra=os.path.join(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;)) # creates a file where the sequences will be dumped
+metag_class=core.Metagenomics(metag_conf)
+os.system(f&quot;export PATH=$PATH:/scratch/alpine/$USER/sratoolkit.3.0.5-ubuntu64/bin/&quot;) # path
+for acc in accessions:
+    metag_class.seqs_from_sra(accession=acc)
+</code></pre>
+<h4 id="to-align-the-16s-data-to-adtoolboxs-protein-database-qiime-is-used-to-analysis-the-sequences-and-singularity-is-required">To align the 16s data to ADToolbox's protein database, qiime is used to analysis the sequences and singularity is required.</h4>
+<pre><code class="language-python"># Align sequences with ADToolbox protein database using Qiime
+import os
+import pathlib
+from adtoolbox import core,configs,utils
+import pandas as pd
+
+# system path config
+os.system(&quot;export SINGULARITY_CACHEDIR=/scratch/alpine/$USER/.singularity/cache&quot;) # cache directory for singularity
+os.system(&quot;export SINGULARITY_TMPDIR=/scratch/alpine/$USER/.singularity/tmp&quot;) # temporary directory for singularity
+os.system(&quot;export APPTAINER_TMPDIR=/scratch/alpine/$USER/.singularity/tmp&quot;)
+os.system(&quot;export APPTAINER_CACHEDIR=/scratch/alpine/$USER/.singularity/cache&quot;)
+db=core.Database(config=configs.Database())
+#db.download_qiime_classifier_db() # downloads the qiime classifier if not already installed (only needs to download once)
+metadata=pd.read_table(&quot;metadata_16s/elk_bison_cattle_datatable.csv&quot;,delimiter=&quot;,&quot;)
+metadata=metadata.loc[metadata[&quot;Assay Type&quot;]==&quot;AMPLICON&quot;] # specifies that only amplicon will be used
+accessions=metadata[&quot;Run&quot;].to_list()
+metag_class=core.Metagenomics(configs.Metagenomics())
+for acc in accessions:
+    seqs_path=pathlib.Path(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;,acc,&quot;seqs&quot;,acc) #pathlib object pointing to the base directory for each sample
+    utils.wrap_for_slurm(metag_class.run_qiime2_from_sra(
+    query_seq=os.path.join(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;,acc,&quot;seqs&quot;,acc),
+    container=&quot;singularity&quot;,
+    run=False,
+    save=True
+    )[0],
+    run=True,
+    save=True,
+    config=configs.Utils(
+        slurm_executer=&quot;amilan&quot;,
+        slurm_memory=&quot;120G&quot;,
+        slurm_job_name=f&quot;{acc}_16s_ADToolbox&quot;,
+        slurm_wall_time=&quot;5:00:00&quot;,
+        slurm_save_dir=os.path.join(core.Main_Dir,acc+&quot;.sbatch&quot;),                            
+    ))
+</code></pre>
+<h4 id="once-the-sequences-are-aligned-to-the-protein-database-the-top-representative-sequences-will-be-aligned-to-the-16s-data-using-a-gtdb-dictionary-where-the-key-is-the-16s-sequence-and-the-value-is-the-representative-value-identifier">Once the sequences are aligned to the protein database, the top representative sequences will be aligned to the 16s data using a gtdb dictionary where the key is the 16s sequence and the value is the representative value identifier.</h4>
+<pre><code class="language-python"># Get top representative sequences and align to gtdb using VSEARCH
+import os
+import pathlib
+from adtoolbox import core,configs,utils
+
+base=pathlib.Path(os.path.join(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;)) # base directory
+for i in base.iterdir():
+    mg_config=configs.Metagenomics(top_repseq_dir=str(i/&quot;seqs&quot;/i.name/&quot;dna-sequences.fasta&quot;),
+                                   align_to_gtdb_outputs_dir=str(i/&quot;seqs&quot;/i.name),
+                                   vsearch_similarity=0.9)
+    mg=core.Metagenomics(mg_config)
+    command=mg.align_to_gtdb(container=&quot;singularity&quot;).replace(&quot;r207&quot;,&quot;r214&quot;) #
+    os.system(command)
+</code></pre>
+<h4 id="once-aligned-to-gtdb-the-genomes-are-then-extracted-from-the-alignment-so-be-used-downstream-using-genome-ids-the-genomes-can-now-be-downloaded-then-the-genomes-can-be-aligned-to-the-protein-database">Once aligned to gtdb, the genomes are then extracted from the alignment so be used downstream. Using genome ids the genomes can now be downloaded, then the genomes can be aligned to the protein database</h4>
+<pre><code class="language-python"># Extract genomes from the gtdb alignment
+import os
+import pathlib
+from adtoolbox import core,configs,utils
+from adtoolbox.utils import generate_batch_script,wrap_for_slurm
+
+base=pathlib.Path(os.path.join(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;))
+alignment_to_gtdb={}
+for i in base.iterdir():
+    mg_config=configs.Metagenomics(top_repseq_dir=str(i/&quot;seqs&quot;/i.name/&quot;dna-sequences.fasta&quot;),
+                                   align_to_gtdb_outputs_dir=str(i/&quot;seqs&quot;/i.name))
+    mg=core.Metagenomics(mg_config)
+    command=mg.align_to_gtdb(container=&quot;singularity&quot;)
+    #os.system(command)
+    alignment_to_gtdb[i.name]=mg.get_genomes_from_gtdb_alignment(save=False)
+
+# From the genome ids, download the genomes
+genome_ids=set()
+for sample in alignment_to_gtdb:
+    genome_ids.update(tuple(alignment_to_gtdb[sample].values()))
+mg_config=configs.Metagenomics(genomes_base_dir=os.path.join(core.Main_Dir,&quot;genomes&quot;))
+mg=core.Metagenomics(mg_config)
+genome_address=mg.extract_genome_info(save=False)
+for gid in genome_ids:
+    os.system(mg.download_genome(gid))
+
+# Generate a batch script for running the genome alignment 
+mg.config.genomes_json_info=os.path.join(core.Main_Dir,&quot;genome_address.json&quot;)
+genome_address=mg.extract_genome_info(save=False)
+mg=core.Metagenomics(configs.Metagenomics(genome_alignment_output=os.path.join(core.Main_Dir,&quot;genomes&quot;),genomes_base_dir=os.path.join(core.Main_Dir,&quot;genomes&quot;)))
+ins=[[i[0] for i in genome_address.items()],[i[1] for i in genome_address.items()]]
+for ind,command in enumerate(generate_batch_script(mg.align_genome_to_protein_db,20,ins,[&quot;name&quot;,&quot;address&quot;],container=&quot;singularity&quot;)):
+    wrap_for_slurm(command=command,run=True,
+                    save=True,
+                    config=configs.Utils(
+            slurm_save_dir=os.path.join(core.Main_Dir,&quot;genomes&quot;,&quot;scripts&quot;,&quot;batch_&quot;+str(ind)+&quot;.batch&quot;),
+            slurm_executer=&quot;amilan&quot;,
+            slurm_memory=&quot;20G&quot;,
+            slurm_job_name=f&quot;align_genomes_{ind}&quot;,
+            slurm_wall_time=&quot;2:00:00&quot;,
+    )
+    )
+</code></pre>
+<h4 id="the-taxonomy-of-the-genomes-can-now-be-scaled-and-analyzed-to-represent-the-data-using-qimmeii-outputs-feature_tabletsv-and-taxonomytsv-the-abundance-and-representative-genomes-will-be-merged-into-one-table">The taxonomy of the genomes can now be scaled and analyzed to represent the data. Using QimmeII outputs feature_table.tsv and taxonomy.tsv, the abundance and representative genomes will be merged into one table</h4>
+<pre><code class="language-python"># Scaling the data 
+import pathlib
+import pandas as pd
+from adtoolbox import core,configs
+from sklearn.manifold import TSNE,MDS
+from plotly import express as px
+
+# Combine taxonomy.tsv and feature-table.tsv tables 
+def mergem_all(features:list[pd.DataFrame],taxonomies:list[pd.DataFrame])-&gt;pd.DataFrame:
+    features_combined=pd.concat(features).fillna(0)
+    taxonomies_combined=pd.concat(taxonomies).fillna(0)
+    taxonomies_combined[&quot;assigned_taxon&quot;]=taxonomies_combined.apply(lambda x:x[&quot;Taxon&quot;] if x[&quot;Confidence&quot;]&gt;0.95 else x[&quot;Feature ID&quot;],axis=1)
+    feature_id_mapping=dict(zip(taxonomies_combined[&quot;Feature ID&quot;],taxonomies_combined[&quot;assigned_taxon&quot;]))
+    features_combined[&quot;#OTU ID&quot;]=features_combined[&quot;#OTU ID&quot;].apply(lambda x:feature_id_mapping[x])
+    features_combined=features_combined.groupby([&quot;#OTU ID&quot;]).sum()
+    features_combined=features_combined.div(features_combined.sum())
+    return features_combined
+
+def load_and_format(feature_address:str,taxonomy_address:str)-&gt;tuple[pd.DataFrame]:
+    feature_table=pd.read_table(feature_address,skiprows=1)
+    taxonomy_table=pd.read_table(taxonomy_address)
+    return feature_table,taxonomy_table
+
+samples_base_dir=pathlib.Path(&quot;sra_16s_elk_bison_cattle&quot;)
+features=[]
+taxonomies=[]
+for sample in samples_base_dir.iterdir():
+    formatted=load_and_format(str(sample/&quot;seqs&quot;/sample.name/&quot;feature-table.tsv&quot;),str(sample/&quot;seqs&quot;/sample.name/&quot;taxonomy.tsv&quot;))
+    features.append(formatted[0])
+    taxonomies.append(formatted[1])
+mergem_all(features,taxonomies).to_csv(&quot;merged_taxonomy.csv&quot;)
+
+# Read in the merged_taxonomy.csv table and scale
+wd=pathlib.Path(&quot;.&quot;) # current working directory
+norm_temp=pd.read_csv(wd/&quot;merged_taxonomy.csv&quot;).T.fillna(0)
+metadata=pd.read_csv(wd/&quot;metadata_16s/elk_bison_cattle_datatable.csv&quot;,index_col=0) # reads in the csv data table
+metadata[&quot;Biological_Replicate&quot;]=metadata[&quot;Biological_Replicate&quot;].apply(lambda x:x[:-2])
+host_map=dict(zip(metadata[&quot;Biological_Replicate&quot;].index,metadata[&quot;Biological_Replicate&quot;].to_list()))
+mat=norm_temp.to_numpy()
+
+# Creates 3D TSNE and MDS plots
+tsne=TSNE(n_components=3,perplexity=10,n_iter=20000,random_state=0) # scaling technique (t distributed stochastic neighbor embedding)
+mds=MDS(n_components=3,random_state=0,max_iter=20000,metric=False) # scaling technique (metric dimensional scaling)
+threed_tsne=tsne.fit_transform(mat)
+threed_mds=mds.fit_transform(mat)
+
+metadata=pd.read_csv(&quot;./metadata_16s/elk_bison_cattle_datatable.csv&quot;,index_col=0) # reads in the csv data table
+metadata[&quot;Biological_Replicate&quot;]=metadata[&quot;Biological_Replicate&quot;].apply(lambda x:x[:-2])
+host_map=dict(zip(metadata[&quot;Biological_Replicate&quot;].index,metadata[&quot;Biological_Replicate&quot;].to_list()))
+
+threed_tsne_df=pd.DataFrame(threed_tsne,index=norm_temp.index,columns=[&quot;x&quot;,&quot;y&quot;,&quot;z&quot;])
+threed_mds_df=pd.DataFrame(threed_mds,index=norm_temp.index,columns=[&quot;x&quot;,&quot;y&quot;,&quot;z&quot;])
+threed_tsne_df[&quot;host&quot;]=threed_tsne_df.index.map(host_map)
+threed_mds_df[&quot;host&quot;]=threed_mds_df.index.map(host_map)
+threed_tsne_df=threed_tsne_df[threed_tsne_df[&quot;host&quot;].str.contains(&quot;feces&quot;)]
+threed_mds_df=threed_mds_df[threed_mds_df[&quot;host&quot;].str.contains(&quot;feces&quot;)]
+
+px.scatter_3d(threed_tsne_df,x=&quot;x&quot;,y=&quot;y&quot;,z=&quot;z&quot;,color=&quot;host&quot;,hover_name=threed_tsne_df.index) # creates a 3D plot of the EC data for each of the different hosts using TSNE
+px.scatter_3d(threed_mds_df,x=&quot;x&quot;,y=&quot;y&quot;,z=&quot;z&quot;,color=&quot;host&quot;,hover_name=threed_mds_df.index) # creates a 3D plot of the EC data for each of the different hosts using MDS
+
+# Creates a 2D MDS plot
+mds_2d=MDS(n_components=2,random_state=0,n_init=10,max_iter=20000,metric=True)
+twod_mds=mds_2d.fit_transform(mat)
+twod_mds_df=pd.DataFrame(twod_mds,index=norm_temp.index,columns=[&quot;x&quot;,&quot;y&quot;])
+twod_mds_df[&quot;host&quot;]=twod_mds_df.index.map(host_map)
+twod_mds_df=twod_mds_df[twod_mds_df[&quot;host&quot;].str.contains(&quot;feces&quot;)]
+
+px.scatter(twod_mds_df,x=&quot;x&quot;,y=&quot;y&quot;,color=&quot;host&quot;,hover_name=twod_mds_df.index) # creates a 2D plot of the EC data for each of the different hosts using MDS
+</code></pre>
+<h4 id="using-the-merged-table-the-cod-chemical-oxygen-demand-concentrations-can-be-extracted-using-the-ec-numbers">Using the merged table the COD (Chemical Oxygen Demand) concentrations can be extracted using the EC numbers</h4>
+<pre><code class="language-python"># Get the COD concentrations from the EC numbers
+import os
+import pathlib
+import pandas as pd
+from adtoolbox import core,configs
+import json
+
+samples=pathlib.Path(os.path.join(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;))
+genomes=pathlib.Path(os.path.join(core.Main_Dir,&quot;genomes&quot;))
+genome_cod={}
+alf=list(genomes.rglob(&quot;Alignment_Results_mmseq_*.tsv&quot;))
+mg=core.Metagenomics(configs.Metagenomics())
+for i in alf:
+    alignment_address=i
+    ecs=mg.extract_ec_from_alignment(alignment_address,save=False)
+    cods=mg.get_cod_from_ec_counts(ecs,save=False)
+    genome_cod.update({i.name.rstrip(&quot;.tsv&quot;):cods})
+    print(i,flush=True)
+
+with open(&quot;cod_from_ec_16s.json&quot;,&quot;w&quot;) as f: 
+    json.dump(genome_cod,f)
+</code></pre>
+<h4 id="normalized-the-cods-to-better-represent-the-data">Normalized the COD's to better represent the data</h4>
+<pre><code class="language-python"># Read in the COD from EC json file and normalize, save normalized COD in json file
+import os
+import pathlib
+import pandas as pd
+from adtoolbox import core,configs
+import json
+
+samples=pathlib.Path(os.path.join(core.Main_Dir,&quot;sra_16s_elk_bison_cattle&quot;))
+genomes=pathlib.Path(os.path.join(core.Main_Dir,&quot;genomes&quot;))
+genome_cod={}
+alf=list(genomes.rglob(&quot;Alignment_Results_mmseq_*.tsv&quot;))
+with open(&quot;cod_from_ec_16s.json&quot;,&quot;r&quot;) as f:
+    cod=json.load(f)
+
+normalized_cods={}
+for i in samples.iterdir():
+    sample_basedir=i/&quot;seqs&quot;/i.name
+    feature_table=pd.read_table(sample_basedir/&quot;feature-table.tsv&quot;,delimiter=&quot;\t&quot;,skiprows=1)
+    matches_table=pd.read_table(sample_basedir/&quot;matches.blast&quot;,delimiter=&quot;\t&quot;)
+    genome_map=dict(zip(matches_table[&quot;query&quot;],matches_table[&quot;target&quot;]))
+    feature_table[&quot;#OTU ID&quot;]=feature_table[&quot;#OTU ID&quot;].apply(lambda x:genome_map.get(x,x))
+    total_sum=feature_table.iloc[:,1].sum()
+    feature_table[i.name]=feature_table[i.name]/total_sum
+    assigned=feature_table[feature_table[&quot;#OTU ID&quot;].str.contains(&quot;_&quot;)]
+    jhkhkh=[]
+    for genome_ in zip(assigned[&quot;#OTU ID&quot;].apply(lambda x:&quot;&quot;.join(x.split(&quot;_&quot;)[1:])),assigned[i.name]):
+        if (&quot;Alignment_Results_mmseq_&quot;+genome_[0]) not in cod.keys():
+            cod[&quot;Alignment_Results_mmseq_&quot;+genome_[0]]={'X_ch':0,'X_pr':0,'X_li':0,'X_su':0,'X_aa':0,'X_fa':0,'X_ac_et':0,'X_ac_lac':0,'X_chain_et':0,'X_chain_lac':0,'X_VFA_deg':0,'X_Me_ac':0,'X_Me_CO2':0,'X_et':0,'X_lac':0,}
+        jhkhkh.append({i:cod[&quot;Alignment_Results_mmseq_&quot;+genome_[0]][i]*genome_[1] for i in cod[&quot;Alignment_Results_mmseq_&quot;+genome_[0]]})
+    total_sample_cod=pd.DataFrame(jhkhkh).sum()
+    total_sample_cod=total_sample_cod.div(total_sample_cod.sum())
+    normalized_cods[i.name]=total_sample_cod.to_dict()
+
+with open(&quot;normalized_cod_16s.json&quot;,&quot;w&quot;) as f: 
+    json.dump(normalized_cods,f)
+
+</code></pre>
+<h4 id="analyze-the-cods-to-see-if-the-clustering-between-hosts-is-preserved">Analyze the COD's to see if the clustering between hosts is preserved</h4>
+<pre><code class="language-python"># Read in the normalized COD json file and plot
+import pathlib
+import pandas as pd
+from adtoolbox import core,configs
+from sklearn.manifold import TSNE,MDS
+from plotly import express as px
+
+wd=pathlib.Path(&quot;.&quot;) # current working directory
+norm_cod=pd.read_json(wd/&quot;normalized_cod_16s.json&quot;).T.fillna(0)
+metadata=pd.read_csv(wd/&quot;metadata_16s/elk_bison_cattle_datatable.csv&quot;,index_col=0) # reads in the csv data table
+metadata[&quot;Biological_Replicate&quot;]=metadata[&quot;Biological_Replicate&quot;].apply(lambda x:x[:-2])
+host_map=dict(zip(metadata[&quot;Biological_Replicate&quot;].index,metadata[&quot;Biological_Replicate&quot;].to_list()))
+mat=norm_cod.to_numpy()
+
+# Creates 3D TSNE and MDS plots
+tsne=TSNE(n_components=3,perplexity=10,n_iter=10000,random_state=0) # scaling technique (t distributed stochastic neighbor embedding)
+mds=MDS(n_components=3,random_state=0,max_iter=10000,metric=True) # scaling technique (metric dimensional scaling)
+threed_tsne=tsne.fit_transform(mat)
+threed_mds=mds.fit_transform(mat)
+threed_tsne_df=pd.DataFrame(threed_tsne,index=norm_cod.index,columns=[&quot;x&quot;,&quot;y&quot;,&quot;z&quot;])
+threed_mds_df=pd.DataFrame(threed_mds,index=norm_cod.index,columns=[&quot;x&quot;,&quot;y&quot;,&quot;z&quot;])
+threed_tsne_df[&quot;host&quot;]=threed_tsne_df.index.map(host_map)
+threed_mds_df[&quot;host&quot;]=threed_mds_df.index.map(host_map)
+threed_tsne_df=threed_tsne_df[threed_tsne_df[&quot;host&quot;].str.contains(&quot;feces&quot;)]
+threed_mds_df=threed_mds_df[threed_mds_df[&quot;host&quot;].str.contains(&quot;feces&quot;)]
+
+px.scatter_3d(threed_tsne_df,x=&quot;x&quot;,y=&quot;y&quot;,z=&quot;z&quot;,color=&quot;host&quot;,hover_name=threed_tsne_df.index)
+px.scatter_3d(threed_mds_df,x=&quot;x&quot;,y=&quot;y&quot;,z=&quot;z&quot;,color=&quot;host&quot;,hover_name=threed_mds_df.index)
+
+# Creates a 2D MDS plot
+mds_2d=MDS(n_components=2,random_state=0,n_init=10,max_iter=10000,metric=True)
+twod_mds=mds_2d.fit_transform(mat)
+twod_mds_df=pd.DataFrame(twod_mds,index=norm_cod.index,columns=[&quot;x&quot;,&quot;y&quot;])
+twod_mds_df[&quot;host&quot;]=twod_mds_df.index.map(host_map)
+twod_mds_df=twod_mds_df[twod_mds_df[&quot;host&quot;].str.contains(&quot;feces&quot;)]
+
+px.scatter(twod_mds_df,x=&quot;x&quot;,y=&quot;y&quot;,color=&quot;host&quot;,hover_name=twod_mds_df.index)
+</code></pre>
+<h2 id="pipeline-for-shotgun-data">Pipeline for ShotGun Data</h2>
+<h4 id="for-shotgun-sequence-data-downloading-the-data-looks-the-same-as-it-was-for-16s-sequence-data-for-this">For shotgun sequence data, downloading the data looks the same as it was for 16s sequence data. For this</h4>
+<pre><code class="language-python"># Download Sequences from SRA Database
+import os
+import pandas as pd
+from adtoolbox import core,configs
+
+#metadata.loc[metadata[&quot;Biological_Replicate&quot;].str.contains(&quot;Cattle&quot;)]
+metadata=pd.read_table(&quot;metadata_wgs/shotgun_sample_datatable.csv&quot;,delimiter=&quot;,&quot;)
+tissue=&quot;rectum&quot;
+animals=(&quot;buffalo&quot;,&quot;deer&quot;,&quot;cattle&quot;)
+df=[]
+for anim in animals:
+    temp_table=metadata.loc[((metadata[&quot;Sample Name&quot;].str.lower()).str.contains(tissue))&amp;metadata[&quot;Sample Name&quot;].str.lower().str.contains(anim)]
+    df.extend(temp_table.to_dict(&quot;records&quot;))
+df=pd.DataFrame(df)
+accessions=df[&quot;Run&quot;].to_list()
+metag_conf=configs.Metagenomics(sra=os.path.join(core.Main_Dir,&quot;sra_wgs_buffalo_deer_cattle&quot;))
+metag_class=core.Metagenomics(metag_conf)
+os.system(f&quot;export PATH=$PATH:/scratch/alpine/$USER/sratoolkit.3.0.5-ubuntu64/bin/&quot;)
+for acc in accessions:
+    metag_class.seqs_from_sra(accession=acc)
+</code></pre>
+<h4 id="if-shotgun-sequences-are-downloaded-they-will-need-to-be-merged-before-they-can-be-aligned-to-the-genome-database-using-the-line-of-code-below-in-the-terminal-will-accomplish-this">If shotgun sequences are downloaded, they will need to be merged before they can be aligned to the genome database. Using the line of code below in the terminal will accomplish this.</h4>
+<h5 id="for-i-in-do-echo-icd-icd-seqscd-i-cat-fastq-i_mergedfastq-cd-done">for i in <em>; do echo $i;cd $i;cd seqs;cd $i; cat </em>.fastq &gt; $i_Merged.fastq ;cd ../../../ ;done</h5>
+<h4 id="or-now-that-we-have-the-downloaded-sequences-the-two-files-can-be-merged-within-a-python-script-as-shown-below-and-after-the-short-reads-will-be-aligned-to-the-protein-database-in-adtoolbox">Or now that we have the downloaded sequences, the two files can be merged within a python script as shown below and after, the short reads will be aligned to the protein database in ADToolbox</h4>
+<pre><code class="language-python"># Align sequences with ADToolbox protein database
+import os
+import pathlib
+from adtoolbox import core,configs,utils
+import pandas as pd
+import rich
+
+### system path config
+os.system(&quot;export SINGULARITY_CACHEDIR=/scratch/alpine/$USER/.singularity/cache&quot;) # cache directory for singularity
+os.system(&quot;export SINGULARITY_TMPDIR=/scratch/alpine/$USER/.singularity/tmp&quot;) # temporary directory for singularity
+os.system(&quot;export APPTAINER_TMPDIR=/scratch/alpine/$USER/.singularity/tmp&quot;)
+os.system(&quot;export APPTAINER_CACHEDIR=/scratch/alpine/$USER/.singularity/cache&quot;)
+metadata=pd.read_table(&quot;metadata_wgs/shotgun_sample_datatable.csv&quot;,delimiter=&quot;,&quot;)
+tissue=&quot;rectum&quot;
+animals=(&quot;buffalo&quot;,&quot;deer&quot;,&quot;cattle&quot;)
+df=[]
+for anim in animals:
+    temp_table=metadata.loc[((metadata[&quot;Sample Name&quot;].str.lower()).str.contains(tissue))&amp;metadata[&quot;Sample Name&quot;].str.lower().str.contains(anim)]
+    df.extend(temp_table.to_dict(&quot;records&quot;))
+df=pd.DataFrame(df)
+accessions=df[&quot;Run&quot;].to_list()
+# db_class=core.Database(configs.Database())
+# df=pd.DataFrame(db_class.get_metagenomics_studies())
+# accessions=df[df[&quot;Type&quot;]==&quot;WGS&quot;][&quot;Sample_accession&quot;].to_list()
+metag_class=core.Metagenomics(configs.Metagenomics())
+for acc in accessions:
+    seqs_path=pathlib.Path(core.Main_Dir,&quot;sra_wgs_buffalo_deer_cattle&quot;,acc,&quot;seqs&quot;,acc) #pathlib object pointing to the base directory for each sample
+    os.system(&quot;cat &quot;+f&quot;{seqs_path}&quot;+&quot;/*_{1,2}.fastq&quot;+&quot; &gt; &quot;+f&quot;{seqs_path}/{acc}_Merged.fastq&quot;) # merges the individual files
+    rich.print(f&quot;[bold green] finished merging {acc}!&quot;) # shows that the merging job is done
+    os.system(f&quot;rm {seqs_path}&quot;+&quot;/*_{1,2}.fastq&quot;) # deletes the individual files (optional)
+    rich.print(&quot;[bold yellow] deleted the individual files!&quot;) # shows that the individual files job is done (optional)
+    utils.wrap_for_slurm(metag_class.align_short_reads_to_protein_db(
+    os.path.join(core.Main_Dir,&quot;sra_wgs_buffalo_deer_cattle&quot;,acc,&quot;seqs&quot;,acc,f&quot;{acc}_Merged.fastq&quot;),
+    acc,
+    &quot;singularity&quot;,
+    run=False,
+    save=False
+    )[0],
+    run=True,
+    save=True,
+    config=configs.Utils(
+        slurm_executer=&quot;amilan&quot;,
+        slurm_memory=&quot;150G&quot;,
+        slurm_job_name=f&quot;Shotgun_ADToolbox_{acc}&quot;,
+        slurm_wall_time=&quot;12:00:00&quot;,
+        slurm_save_dir=os.path.join(core.Main_Dir,acc+&quot;.sbatch&quot;),                            
+    ))
+</code></pre>
+<h4 id="once-the-sequences-are-aligned-the-ec-numbers-can-be-extracted">Once the sequences are aligned, the EC numbers can be extracted</h4>
+<pre><code class="language-python">import pathlib
+import pandas as pd
+import adtoolbox.configs as cfg
+import json
+
+wd=pathlib.Path(&quot;.&quot;) # current working directory
+ecs={} # creates an open dict for the EC numbers and bit score
+for d in (wd/&quot;sra_wgs_buffalo_deer_cattle&quot;).iterdir():
+    if &quot;.batch&quot; in d.name: # because .batch along with the sequence files are present, we want to pass the .batch files in the analysis
+        continue
+    print(d,flush=True)
+    if &quot;SRR&quot; in d.name:
+        alignment_table = pd.read_table((d/&quot;seqs&quot;/d.name/(d.name+&quot;.tsv&quot;)),sep='\t') # directory where the aligned sequence data can be found
+        alignment_table = alignment_table[(alignment_table['evalue']&lt;cfg.Metagenomics().e_value)&amp;(alignment_table['bits']&gt;cfg.Metagenomics().bit_score)].drop_duplicates(&quot;query&quot;,keep=&quot;first&quot;)
+        alignment_table[&quot;target&quot;]=alignment_table[&quot;target&quot;].apply(lambda x:x.split(&quot;|&quot;)[1])
+        ec_counts=alignment_table[&quot;target&quot;].value_counts().to_dict()
+        ecs[d.name]=ec_counts
+
+with open(&quot;buffalo_deer_cattle_ec_data.json&quot;,&quot;w&quot;) as f: # writes a new files where the EC numbers will be dumped
+    json.dump(ecs,f)
+</code></pre>
+<h4 id="using-the-ec-number-information-the-data-can-now-be-plotted-and-scaled-to-determine-the-best-way-to-interpret-and-display-the-data">Using the EC number information, the data can now be plotted and scaled to determine the best way to interpret and display the data</h4>
+<h5 id="tsne-t-distributed-stochastic-neighbor-embedding-is-one-scaling-technique-that-can-be-used-this-technique-reduces-the-dimentionality-of-the-data-and-finds-similarity-between-points-in-low-dimensions">TSNE (t Distributed Stochastic Neighbor Embedding) is one scaling technique that can be used. This technique reduces the dimentionality of the data and finds similarity between points in low dimensions</h5>
+<h5 id="mds-metric-dimensional-scaling-is-another-scaling-technique-that-finds-similarityb-between-distances-between-points">MDS (Metric Dimensional Scaling) is another scaling technique that finds similarityb between distances between points</h5>
+<h4 id="using-the-ec-numbers-the-cod-chemical-oxygen-demand-can-be-extracted-which-describes-the-concentrations">Using the EC numbers the, COD (Chemical Oxygen Demand) can be extracted which describes the concentrations</h4>
+<pre><code class="language-python"># Scaling the data
+import pathlib
+import pandas as pd
+from adtoolbox import core,configs
+from sklearn.manifold import TSNE,MDS
+from plotly import express as px
+
+wd=pathlib.Path(&quot;.&quot;) # current working directory
+ECs=pd.read_json(wd/&quot;buffalo_deer_cattle_ec_data.json&quot;).T.fillna(0) # reads in ec number data from json file (can plot without scaling)
+mg=core.Metagenomics(configs.Metagenomics()) # import code from ADToolbox
+ecs={}
+for acc in pd.read_json(wd/&quot;buffalo_deer_cattle_ec_data.json&quot;).fillna(0).to_dict().keys(): # run these line if you want a COD plot but ignore if an EC number plot is wanted 
+    ecs[acc]=mg.get_cod_from_ec_counts(pd.read_json(wd/&quot;buffalo_deer_cattle_ec_data.json&quot;).fillna(0).to_dict()[acc],save=False)
+
+ECs=pd.DataFrame(ecs).T # displays ec number data in a dataframe that is easy to read
+metadata=pd.read_csv(wd/&quot;metadata_wgs/shotgun_sample_datatable.csv&quot;,index_col=0) # reads in the csv data table
+host_map=dict(zip(metadata[&quot;HOST&quot;].index,metadata[&quot;HOST&quot;].to_list())) # creates a dict of each sample and its host animal
+
+ECs=ECs.div(ECs.sum(axis=1),axis=0) # Normalize by row sum (total sum scaling)
+mat=ECs.to_numpy()
+
+# Creates 3D TSNE and MDS plots
+tsne=TSNE(n_components=3,perplexity=10,n_iter=5000,random_state=0) # scaling technique (t distributed stochastic neighbor embedding)
+mds=MDS(n_components=3,random_state=0,max_iter=5000) # scaling technique (metric dimensional scaling)
+threed_tsne=tsne.fit_transform(mat)
+threed_mds=mds.fit_transform(mat)
+threed_tsne_df=pd.DataFrame(threed_tsne,index=ECs.index,columns=[&quot;x&quot;,&quot;y&quot;,&quot;z&quot;])
+threed_mds_df=pd.DataFrame(threed_mds,index=ECs.index,columns=[&quot;x&quot;,&quot;y&quot;,&quot;z&quot;])
+threed_tsne_df[&quot;host&quot;]=threed_tsne_df.index.map(host_map)
+threed_mds_df[&quot;host&quot;]=threed_mds_df.index.map(host_map)
+
+px.scatter_3d(threed_tsne_df,x=&quot;x&quot;,y=&quot;y&quot;,z=&quot;z&quot;,color=&quot;host&quot;,hover_name=threed_tsne_df.index) # creates a 3D plot of the EC data for each of the different hosts using TSNE
+px.scatter_3d(threed_mds_df,x=&quot;x&quot;,y=&quot;y&quot;,z=&quot;z&quot;,color=&quot;host&quot;,hover_name=threed_mds_df.index) # creates a 3D plot of the EC data for each of the different hosts using MDS
+
+# Creates a 2D MDS plot
+mds_2d=MDS(n_components=2,random_state=0,n_init=10,max_iter=10000,metric=True) # can also plot in 2D
+twod_mds=mds_2d.fit_transform(mat)
+twod_mds_df=pd.DataFrame(twod_mds,index=ECs.index,columns=[&quot;x&quot;,&quot;y&quot;])
+twod_mds_df[&quot;host&quot;]=twod_mds_df.index.map(host_map)
+
+px.scatter(twod_mds_df,x=&quot;x&quot;,y=&quot;y&quot;,color=&quot;host&quot;,hover_name=twod_mds_df.index) # creates a 2D plot of the EC data for each of the different hosts using MDS
+</code></pre>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.db81ec45.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a00a7c5e.min.js"></script>
+      
+    
+  </body>
+</html>

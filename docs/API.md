@@ -54,7 +54,7 @@ This module includes the following classes:
 
 ::: adtoolbox.core.SeedDB
 
-### 6. Database
+### 7. Database
 
 Here is a schematic of the Database Module
 
@@ -62,7 +62,7 @@ Here is a schematic of the Database Module
 
 ::: adtoolbox.core.Database
 
-### 7. Metagenomics
+### 8. Metagenomics
 
 Here is a schematic view of core.Metagenomics API:
 
