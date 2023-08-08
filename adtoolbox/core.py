@@ -2,14 +2,12 @@ from distutils.log import warn
 import subprocess
 import os
 from collections import UserDict
-import random
-from matplotlib import streamplot
 import pandas as pd
+import time
 import json
 import numpy as np
 import re
 import requests
-import time
 from requests.adapters import HTTPAdapter
 import utils
 import configs
@@ -19,6 +17,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 from collections import Counter
+from collections import namedtuple
 import pathlib
 import tarfile
 import configs
@@ -96,7 +95,6 @@ class Experiment:
     
     def to_dict(self):
         return {"name":self.name,
-                "initial_conditions":self.initial_conditions,
                 "time":self.time,
                 "variables":self.variables,
                 "data":self.data.tolist(),
@@ -346,6 +344,9 @@ class SeedDB:
     
         Returns:
             Reaction: An instance of the Reaction class.
+            
+        Required Configs:
+            - config.reaction_db
         
         Examples:
             >>> seed_db=SeedDB()
@@ -366,6 +367,9 @@ class SeedDB:
         Returns:
             Metabolite: An instance of the Metabolite class. 
         
+        Required Configs:
+            - config.compound_db
+        
         Examples:
             >>> seed_db=SeedDB()
             >>> metab=seed_db.instantiate_metabs("cpd01024")
@@ -383,6 +387,9 @@ class SeedDB:
         
         Returns:
             list: A list of seed reaction identifiers.
+        
+        Required Configs:
+            - config.reaction_db
         
         Examples:
             >>> seed_db=SeedDB()
@@ -435,19 +442,20 @@ class Database:
         self.config = config
 
 
-    def initialize_protein_database(self)->None:
+    def initialize_protein_db(self)->None:
         """This function intializes ADToolbox's protein database by creating an empty fasta file.
         Be careful, this will overwrite any existing file with the same name.
         Logically, this needs method needs config.protein_db to be defined.
         
         Required Configs:
             - config.protein_db
+            --------
         
         Examples:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False # This is just to make sure that the following lines create the file
             >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta"))) # point to a test non-existing file
-            >>> db._initialize_protein_database() # initialize the protein database
+            >>> db.initialize_protein_db() # initialize the protein database
             >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True # check if the file is created
             >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta")) # remove the file to clean up
         """
@@ -455,7 +463,7 @@ class Database:
         with open(self.config.protein_db, 'w') as f:
             pass
     
-    def initialize_reaction_database(self)->None:
+    def initialize_reaction_db(self)->None:
         r"""This function intializes ADToolbox's reaction database by creating an empty tsv file.
         Be careful, this will overwrite any existing file with the same name.
         
@@ -466,15 +474,15 @@ class Database:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.tsv"))==False
             >>> db=Database(config=configs.Database(reaction_db=os.path.join(Main_Dir,"reaction_test_db.tsv")))
-            >>> db._initialize_reaction_database()
+            >>> db.initialize_reaction_db()
             >>> assert pd.read_table(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").shape[0]==0
-            >>> assert set(pd.read_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").columns)==set(["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","Modified_ADM_Reactions","Pathways"])
+            >>> assert set(pd.read_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").columns)==set(["ec_numbers","seed_ids","reaction_names","adm1_reaction","modified_adm_reactions","pathways"])
             >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.tsv"))
         
         """
-        pd.DataFrame(columns=["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","Modified_ADM_Reactions","Pathways"]).to_csv(self.config.reaction_db,index=False,sep="\t")
+        pd.DataFrame(columns=["ec_numbers","seed_ids","reaction_names","adm1_reaction","modified_adm_reactions","pathways"]).to_csv(self.config.reaction_db,index=False,sep="\t")
         
-    def initialize_feed_database(self)->None:
+    def initialize_feed_db(self)->None:
         r"""This function intializes ADToolbox's Feed database by creating an empty tsv file.
         Be careful, this will overwrite any existing file with the same name.
         
@@ -485,15 +493,15 @@ class Database:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
             >>> db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
-            >>> db._initialize_feed_database()
+            >>> db.initialize_feed_db()
             >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter='\t').shape[0]==0
-            >>> assert set(pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter='\t').columns)==set(["Name","Carbohydrates","Lipids","Proteins","TSS","SI","XI","Reference"])
+            >>> assert set(pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter='\t').columns)==set(["name","carbohydrates","lipids","proteins","tss","si","xi","reference"])
             >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
         
         """
-        pd.DataFrame(columns=["Name","Carbohydrates","Lipids","Proteins","TSS","SI","XI","Reference"]).to_csv(self.config.feed_db,index=False,sep="\t")
+        pd.DataFrame(columns=["name","carbohydrates","lipids","proteins","tss","si","xi","reference"]).to_csv(self.config.feed_db,index=False,sep="\t")
     
-    def initialize_metagenomics_studies_database(self)->None:
+    def initialize_metagenomics_studies_db(self)->None:
         r"""This function intializes ADToolbox's Metagenomics studies database by creating an empty tsv file.
         Be careful, this will overwrite any existing file with the same name.
         
@@ -504,15 +512,15 @@ class Database:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
             >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
-            >>> db._initialize_metagenomics_studies_database()
+            >>> db.initialize_metagenomics_studies_db()
             >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]==0
-            >>> assert set(pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").columns)==set(["Name","Study Type","Microbiome","Sample Accession","Comments","Study Accession"])
+            >>> assert set(pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").columns)==set(["name","study_type","microbiome","sample_accession","comments","study_accession"])
             >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
         
         """
-        pd.DataFrame(columns=["Name","Study Type","Microbiome","Sample Accession","Comments","Study Accession"]).to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
+        pd.DataFrame(columns=["name","study_type","microbiome","sample_accession","comments","study_accession"]).to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
         
-    def initialize_experimental_data_database(self)->None:
+    def initialize_experimental_data_db(self)->None:
         """This function intializes ADToolbox's experimental data database by creating an empty json file.
         Be careful, this will overwrite any existing file with the same name.
 
@@ -523,399 +531,348 @@ class Database:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"experimental_data_test_db.json"))==False
             >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experimental_data_test_db.json")))
-            >>> db._initialize_experimental_data_database()
+            >>> db.initialize_experimental_data_db()
             >>> assert pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).shape[0]==0
-            >>> assert set(pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).columns)==set(["Name","Initial Conditions","Time","Variables","Data","Reference"])
+            >>> assert set(pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).columns)==set(["name","initial_conditions","time","variables","data","reference"])
             >>> os.remove(os.path.join(Main_Dir,"experimental_data_test_db.json"))
         
         """
-        pd.DataFrame(columns=["Name","Initial Conditions","Time","Variables","Data","Reference"]).to_json(self.config.experimental_data_db)
+        pd.DataFrame(columns=["name","initial_conditions","time","variables","data","reference"]).to_json(self.config.experimental_data_db)
         
     
-    def filter_seed_from_ec(self, ec_list,
-                            reaction_db=configs.Database().reaction_db,
-                            compound_db=configs.Database().compound_db,
-                            local_reaction_db=configs.Database().local_reaction_db,
-                            local_compound_db=configs.Database().local_compound_db,
-                            save:bool=True) -> tuple:
+    def filter_seed_from_ec(self, 
+                            ec_list:list[str],
+                            save:bool=False) -> tuple:
         """
-
-        This function takes a list of ec numbers Generates a mini-seed JSON files. This is supposed to
-        make the code a lot faster, but makes no difference in terms of outputs, and won't probably need
-        frequent updates.
+        This function takes a list of EC numbers and filters the seed database to find the seed reactions that have the EC numbers in their EC number list.
+        This will help to trim the large seed database to a smaller one that only contains the reactions that are relevant to the AD process.
 
         Args:
-            ec_list (list): The list of EC numbers that you want the mini seed database to include.
-            reaction_db (str, optional): The path to the main model seed reaction database. Defaults to configs.Database().reaction_db.
-            compound_db (str, optional): The path to the main model seed compound database. Defaults to configs.Database().compound_db.
-            local_reaction_db (str, optional): Path to where you want the mini seed reaction database to be saved. Defaults to configs.Database().local_reaction_db.
-            local_compound_db (str, optional): Path to where you want the mini seed compound database to be saved. Defaults to configs.Database().local_compound_db.
+            ec_list (list[str]): A list of EC numbers.
+            save (bool, optional): Whether to save the filtered seed database or not. Defaults to False.
         
         Returns:
-            tuple: A tuple containing the mini seed reaction database and the mini seed compound database.
-
-        """
-        ## TODO: Make this function more efficient by using pandas an search using .str.contains. This would be way faster
-        with open(reaction_db, 'r') as f:
-            main_reaction_db = json.load(f)
-        with open(compound_db, 'r') as f:
-            main_compound_db = json.load(f)
-
-        cached_compounds = []
-        local_rxn_db = []
-        local_comp_db = []
-        for ec in track(ec_list,description="Extracting the relevant reactions:"):
-            for ind, rxn in enumerate(main_reaction_db):
-                if  ec in rxn.setdefault('ec_numbers', []):
-                    local_rxn_db.append(rxn)
-                    for Mets in rxn["compound_ids"].split(";"):
-                        if Mets not in cached_compounds:
-                            cached_compounds.append(Mets)
-
-        cached_compounds = list(set(cached_compounds))
-
-        for compound in track(cached_compounds,description="Extracting the relevant compounds:"):
-            for ind, Comp in enumerate(main_compound_db):
-                if compound == Comp["id"]:
-                    local_comp_db.append(Comp)
-
-
-        if save:
-            with open(local_reaction_db, 'w') as f:
-                json.dump(local_rxn_db, f)
-            with open(local_compound_db, 'w') as f:
-                json.dump(local_comp_db, f)
-
-        return local_rxn_db, local_comp_db
-
-
-
-    # def add_protein_from_uniprot(self, uniprot_ecs):
-
-    #     pdb.set_trace()
-    #     with open(self.config.protein_db, 'a') as f:
-    #         for items in track(uniprot_ecs,description="[yellow] --> Fetching the protein sequences from Uniprot: "):
-    #             try:
-    #                 file = Database.session.get(
-    #                     f"https://rest.uniprot.org/uniprotkb/{items[0]}.fasta", timeout=10)
-    #             except requests.exceptions.ConnectionError:
-    #                 print("Could not fetch the sequence! Trying again ...")
-    #                 time.sleep(10)
-    #                 file = Database.session.get(
-    #                     Base_URL+items[0]+".fasta", timeout=10)
-    #                 if file.ok:
-    #                     print(
-    #                         f"Retry was successful: {items[0]} was fetched successfully!")
-    #                 else:
-    #                     print(
-    #                         f"Retry was unsuccessful: {items[0]} ignored!")
-    #                     # I can add this uniprot id to a log file
-    #                 continue
-    #             if file.ok:
-    #                 f.write(f'>{items[0]}|{items[1]}\n')
-    #                 f.write(''.join(file.text.split('\n')[1:-1]))
-    #                 f.write('\n')
-    
-    def protein_db_from_ec(self, ec_list:list,mode:str="a") -> dict:
-        """This function takes a list of EC numbers and fetches the protein sequences mapped to those EC numbers from Uniprot.
-        The protein sequences are then written to the protein database file.
+            tuple: A tuple containing the filtered seed reaction database and the seed compound database, respectively.
         
-        Args:
-            ec_list (list): A list of EC numbers.
-            mode (str, optional): The mode in which the protein database file is opened. Defaults to "a".
+        Required Configs:
+        
+            - config.reaction_db
+            --------
+            - config.compound_db
+            --------
+            - config.local_reaction_db
+            --------
+            - config.local_compound_db
+            --------
             
-        Returns: 
-            dict: A dictionary containing the protein sequences mapped to the EC numbers."""
-        session = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.5)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
+            
+        Examples:
+            >>> db=Database()
+            >>> seed_rxn_db,seed_compound_db=db.filter_seed_from_ec(["1.1.1.1","1.1.1.2"])
+            >>> assert len(seed_rxn_db)>0 and len(seed_compound_db)>0
+            >>> assert pd.read_json(configs.Database().reaction_db).shape[0]>pd.DataFrame(seed_rxn_db).shape[0]
+        """
+        seed_rxn_db=pd.read_json(self.config.reaction_db)
+        seed_compound_db=pd.read_json(self.config.compound_db)
+        seed_rxn_db=seed_rxn_db[seed_rxn_db["ec_numbers"].apply(lambda x: any(ec in x for ec in ec_list) if x else False)]
+        seed_compound_db=seed_compound_db[seed_compound_db["id"].apply(lambda x: True if x in seed_rxn_db["stoichiometry"].sum() else False)]
+        if save:
+            seed_rxn_db.to_json(self.config.local_reaction_db)
+            seed_compound_db.to_json(self.config.local_compound_db)
+        return seed_rxn_db.to_dict(orient="record"),seed_compound_db.to_dict(orient="record")
         
-        protein_seqs={}
+            
+
+    def get_protein_seqs_from_uniprot(self, uniprot_id:str) -> str:
+        """
+        This function takes a uniprot id and fetches the protein sequence from Uniprot.
+
+        Args:
+            uniprot_id (str): The uniprot id of the protein.
         
-        with open(self.config.protein_db, mode) as f:
-            for ec in track(ec_list,description="Writing the protein database:"):
-                try:
-                    file = session.get(
-                        f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=1000)
-
-                except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
-
-                    print("Request Error! Trying again ...")
-                    time.sleep(30)
-                    file = session.get(
-                        f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=1000)
-                # This alsp does a sanity check
-
-                except Exception:
-                    print('Something went wrong!')
-                text = file.text
-                if text:
-                    for line in text.split('\n'):
-                        if line.startswith('>'):
-                            uniprot=line.split('|')[1]
-                            f.write(f'>{uniprot}|{ec}\n')
-
-                        else:
-                            f.write(f'{line}\n')
-                            protein_seqs[uniprot]=line
+            
+        Returns:
+            str: The protein sequence.
         
-        return protein_seqs
-
-    def add_uniprot_to_protein_db(self,uniprot_id:str,ec:str):
+        Examples:
+            >>> db=Database()
+            >>> seq=db.get_protein_seqs_from_uniprot("P0A9P0")
+            >>> assert type(seq)==str and len(seq)>0
+        """
         Base_URL = "https://rest.uniprot.org/uniprotkb/"
         session = requests.Session()
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
-        with open(self.config.protein_db,mode="a") as f:
-            try:
-                file = session.get(
-                    f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.fasta", timeout=10)
-            except requests.exceptions.ConnectionError:
-                print("Could not fetch the sequence! Trying again ...")
-                time.sleep(10)
-                file = session.get(
-                    Base_URL+uniprot_id+".fasta", timeout=10)
-                if file.ok:
-                    print(
-                        f"Retry was successful: {uniprot_id} was fetched successfully!")
-                else:
-                    print(
-                        f"Retry was unsuccessful: {uniprot_id} ignored!")
-                    # I can add this uniprot id to a log file
-            if file.ok:
-                f.write(f'>{uniprot_id}|{ec}\n')
-                f.write(''.join(file.text.split('\n')[1:-1]))
-                f.write('\n')
-            
-
-    @staticmethod
-    def ec_from_csv(csv_file:str, Sep=',')->list:
-
-        """This function reads a csv file and returns a list of ec numbers. The csv file should have a column named "EC_Numbers" and the delimiter 
-        that is used in in your file should be defined as an argument.
-        
-        Args:
-            csv_file (str): The path to the csv file.
-            Sep (str, optional): The delimiter used in the csv file. Defaults to ','.
-        
-        Returns:
-            list: A cleaned list of ec numbers."""
-        
-
         try:
+            file = session.get(
+                f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.fasta", timeout=10)
+        except:
+            print("Could not fetch the sequence! Trying again ...")
+            while True:
+                time.sleep(5)
+                file = session.get(Base_URL+uniprot_id+".fasta", timeout=10)
+                if file.ok:
+                    break
+           
+        return ''.join(file.text.split('\n')[1:-1])
+   
+    def proteins_from_ec(self,ec_number:str) -> dict:
+        """
+        This function returns a dictionary of protein sequences for a given EC number.
+        The keys are the uniprot ids and ec number compatible with ADToolbox protein database
+        and the values are the protein sequences. Since ADToolbox deals with microbial process,
+        only bacterial and archaeal proteins are considered.
 
-            ec_list = pd.read_table(csv_file, sep=Sep,dtype="str")
-            ec_list.dropna(axis=0)
-            ec_list.drop_duplicates(subset="EC_Numbers", inplace=True)
-
-            output_ec_list = list(ec_list["EC_Numbers"])
-            assert len(
-                output_ec_list) > 0, "The ec list is empty; Check the file"
-
-        except FileNotFoundError:
-
-            print("CSV file not found")
-
-        except (pd.errors.ParserError, KeyError):
-
-            print(
-                "CSV file not in the correct format; Check the delimiter and column names!")
-
-        except AssertionError as error:
-
-            print(error)
-
-
-        return output_ec_list
-
-
-    
-
-    def cazy_ec(self):
-        '''
-        Scraps the ec numbers from links of the Cazy website.
-
+        Args:
+            ec_number (str): The EC number.
+        
         Returns:
-            list: A list of ec numbers.
+            dict: A dictionary of protein sequences.
+            
+        Examples:
+            >>> db=Database()
+            >>> protein_seqs=db.proteins_from_ec("1.1.1.1")
+            >>> assert len(protein_seqs)>0
+            >>> assert list(protein_seqs.keys())[0].split("|")[1]=="1.1.1.1"
+        """
+        session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        protein_seqs={}
+        try:
+            file = session.get(
+                f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec_number}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=30)
+        except requests.exceptions.HTTPError or requests.exceptions.ConnectionError:
+            print("Request Error! Trying again ...")
+            time.sleep(30)
+            file = session.get(
+                f"https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28%28ec%3A{ec_number}%29%20AND%20%28reviewed%3Atrue%29%20NOT%20%28taxonomy_id%3A2759%29%29", timeout=30)
+        # This alsp does a sanity chec
+        except Exception:
+            print('Something went wrong!')
+        text = file.text
+        if text:
+            text=text.split('>')
+            text.remove("")
+            for seq in text:
+                protein_seqs.update([(seq.split("\n")[0].split("|")[1]+"|"+ec_number, "".join(seq.split("\n")[1:]))])
+                
+        
+        return protein_seqs
 
-        '''
+
+    def build_protein_db_from_reactions_db(self):
+        r"""
+        This function builds the protein database from the reaction database.
+        It takes the reaction database and finds the protein sequences for each EC number in the reaction database.
+        Then it saves the protein sequences in a fasta file.
+
+        Required Configs:
+            - config.reaction_db
+            --------
+            - config.protein_db
+            --------
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False
+            >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta"),reaction_db=os.path.join(Main_Dir,"reaction_test_db.tsv")))
+            >>> reaction_db=pd.DataFrame(columns=["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","Modified_ADM_Reactions","Pathways"])
+            >>> reaction_db.loc[0,"EC_Numbers"]="1.1.1.1"
+            >>> reaction_db.to_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),index=False,sep="\t")
+            >>> db.build_protein_db_from_reactions_db()
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True
+            >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.tsv"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"protein_test_db.fasta"))>0
+            >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
+            >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.tsv"))
+        """
+        rxn_db=pd.read_table(self.config.reaction_db,delimiter="\t")
+        ec_numbers=rxn_db["EC_Numbers"]
+        ec_numbers=list(set(ec_numbers))
+        protein_seqs={}
+        for ec in ec_numbers:
+            protein_seqs.update(self.proteins_from_ec(ec))
+        with open(self.config.protein_db,"w") as f:
+            for key,value in protein_seqs.items():
+                f.write(">"+key+"\n")
+                f.write(value+"\n")
+
+    def cazy_ec(self)->list:
+        """
+        This method returns a list of EC numbers that are extracted from the Cazy website.
+        This method is useful for adding more carbohydrate metabolism reactions to the reaction database.
+        
+        Returns:
+            list: A list of EC numbers for carbohydrate metabolism found on CAZy database.
+        
+        Examples:
+            >>> db=Database()
+            >>> ec_list=db.cazy_ec()
+            >>> assert len(ec_list)>0
+        """
 
         ec_list = []
-        for link in Database.config.cazy_links:
-
+        for link in self.config.cazy_links:
             page = requests.get(link)
             soup = BeautifulSoup(page.content, "html.parser")
             results = soup.find("div", class_="cadre_principal").find_all(
                 "th", class_="thec")
             for ec_number in results:
                 if '-' not in ec_number.text.strip() and '.' in ec_number.text.strip():
-
                     ec_list.append(ec_number.text.strip())
-
-        print("ec numbers extracted from Cazy website!")
+                    
         return ec_list
+          
+    def add_protein_to_protein_db(self, protein_id:str, ec_number:str)->None:
+        """
+        This funciton adds a protein sequence to the protein database. It takes a uniprot id and an EC number it is assigned to 
+        and adds the corresponding protein sequence to the protein database.
+        
+        Required Configs:
+            - config.protein_db
 
+        Args:
+            protein_id (str): The uniprot id of the protein.
+            ec_number (str): The EC number of the protein.
     
-    def seed_from_ec(self,ec_Number:str, mode:str='single_match')->list:
-        """ Given EC number, this function returns the corresponding Seed IDs from the SEED reaction database.
-        
-        Args:
-            ec_Number (str): The EC number.
-            mode (str, optional): The mode in which the function should run. Defaults to 'single_match'. You can choose between 'single_match' and 'Multiple_Match'.
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False
+            >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta")))
+            >>> db.add_protein_to_protein_db("P0A9P0","1.2.3.4")
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"protein_test_db.fasta"))>0
+            >>> import utils
+            >>> assert len(utils.fasta_to_dict(os.path.join(Main_Dir,"protein_test_db.fasta")))>0
+            >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
+        """
+        if not os.path.exists(self.config.protein_db):
+            self.initialize_protein_db()
+        with open(self.config.protein_db,"a") as f:
+            f.write(">"+protein_id+"|"+ec_number+"\n")
+            f.write(self.get_protein_seqs_from_uniprot(protein_id)+"\n")
             
-        Returns:
-            list: A list of Seed IDs."""
-
-        ##TODO This function can use pandas to speed up the process
-
-        with open(self.config.reaction_db,'r') as f: 
-
-            data = json.load(f)
-
-        if mode == 'single_match':
-
-            for i in data:
-
-                if i['ec_numbers']:
-
-                    if ec_Number in i['ec_numbers']:
-
-                        return [i["id"]]
-
-        elif mode == 'Multiple_Match':
-
-            matched_rxn = list(set(list([
-
-                rxn["id"] for rxn in data if rxn['ec_numbers'] == [ec_Number]])))
-
-            return matched_rxn
-
-        else:
-            print('Mode not recognized!')
-
-    def instantiate_rxn_from_seed(self,seed_id_list:list)->list:
+    def add_proteins_from_ecnumbers_to_protein_db(self, ec_numbers:list)->None:
         """
-        Function that idenifies reaction seed ID's and instantiates them in the Reaction class.
-        Examples:
-            >>> seed_id_List = ['rxn00002','rxn00003','rxn00005']
-            >>> dbconfigs = configs.Database()
-            >>> rxnlist = Database(dbconfigs).Instantiate_Rxn_From_Seed(seed_id_List)
-            >>> assert type(rxnlist[0])==Reaction
-
-        Args:
-            seed_id_List (list): A list of relevant seed ID entries [rxn#####]
-
-        Returns:
-            rxn_list: A list including reaction instances in the database class for each seed ID in input list.
-
-        """
-        ## TODO: This function can be sped up by using pandas
-
-        rxn_list = []
-        with open(self.config.reaction_db) as f:
-
-            data = json.load(f)
-
-            for seed_id in seed_id_list:
-
-                for i in data:
-
-                    if i['id']:
-
-                        if seed_id in i['id']:
-
-                            rxn_list.append(Reaction(i))
-                            break
-
-        return rxn_list
-
-    def metadata_from_ec(self,ec_list:list)->pd.DataFrame:
-        """
-        This function returns a pandas dataframe containing relevant pathway and reactions for
-        each ec number input.
-        Examples:
-            >>> ec_list = ['1.1.1.1','1.1.1.2'] 
-            >>> metadata= Database().Metadata_From_ec(ec_list) # doctest: +ELLIPSIS 
-            Finding ...
-            >>> assert type(metadata)==pd.DataFrame
-            >>> assert set(metadata['ec_Numbers'].to_list())==set(ec_list)
-            >>> assert set(["ec_Numbers", "seed_ids","Reaction_Names", "Pathways"])==set(metadata.columns)
-            >>> assert metadata.shape==(len(ec_list),4)
-
-        Args:
-            ec_list (list): A list of relevant ec numbers.
-
-        Returns:
-            pd.DataFrame: A pandas dataframe including reaction metadata or pathways for each ec number in list.
-
-        """
-        full_table = {"ec_Numbers": [], "seed_ids": [],
-                      "Reaction_Names": [], "Pathways": []}
-        rich.print("Finding ec Metadata ...\n")
-        for ec in track(ec_list, description= "Collecting Metadata for ec numbers"):
-            seed_id = self.seed_from_ec(ec, Mode='Multiple_Match')
-            full_table['ec_Numbers'].append(ec)
-            full_table['seed_ids'].append(seed_id)
-            Temp_rxns = Database().instantiate_rxn_from_seed(seed_id)
-            Temp_rxn_Names = list([reaction.dict["name"]
-                                   for reaction in Temp_rxns])
-            Temp_rxn_Path = list([reaction.dict["pathways"]
-                                  for reaction in Temp_rxns])
-            full_table["Pathways"].append(Temp_rxn_Path)
-            full_table["Reaction_Names"].append(Temp_rxn_Names)
-
-        full_table = pd.DataFrame(full_table)
-
-        return full_table
-
-    def init_feedstock_database(self)-> None:
-        """Initializes the feedstock database as an empty table.
-        """
-        feed_dict = {
-                        'carbohydrates':[],
-                        'lipids':[],
-                        'proteins':[],
-                        'tss':[],
-                        'si':[],
-                        'xi':[],
-                        'reference':[]
-                    }
-        feed_df = pd.DataFrame(feed_dict)
-        if os.path.exists(self.config.feed_db):
-            answer=input("Feedstock database already exists. Do you want to overwrite it? (y/n)").lower()
-            if answer!='y':
-                rich.print("[red]Feedstock database not initialized!")
-                return
-            else:
-                feed_df.to_csv(self.config.feed_db, index=False,sep='\t')
-                rich.print("[green]Feedstock database initialized!")
-        else:
-            feed_df.to_csv(self.config.feed_db, index=False,sep='\t') 
-            rich.print("[green]Feed stock database initialized!")            
-
-
-    def add_feedstock_to_database(self, feed:Feed)->None:
+        This function adds protein sequences to the protein database from a list of EC numbers.
+        It takes a list of EC numbers and finds the protein sequences for each EC number in the list.
+        Then it saves the protein sequences in a fasta file.
         
-        '''
-        Adds a feedstock to the feedstock database. feed must be an instance of the Feed class.
+        Required Configs:
+            - config.protein_db
+        
+        Args:
+            ec_numbers (list): A list of EC numbers.
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False
+            >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta")))
+            >>> db.add_proteins_from_ecnumbers_to_protein_db(["1.1.1.1","1.1.1.2"])
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True
+            >>> import utils
+            >>> assert len(utils.fasta_to_dict(os.path.join(Main_Dir,"protein_test_db.fasta")))>0
+            >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
+        """
+        if not os.path.exists(self.config.protein_db):
+            self.initialize_protein_db()
+        
+        protein_seqs={}
+        for ec in ec_numbers:
+            protein_seqs.update(self.proteins_from_ec(ec))
+        
+        with open(self.config.protein_db,"a") as f:
+            for key,value in protein_seqs.items():
+                f.write(">"+key+"\n")
+                f.write(value+"\n")
+        
+    def add_feed_to_feed_db(self,feed:Feed)->None:
+        r"""
+        This function adds a feed to the feed database. It takes the feed name and the feed composition and adds them to the feed database.
+
+        Required Configs:
+            - config.feed_db
 
         Args:
             feed (Feed): An instance of the Feed class.
         
-        Returns:
-            None
-
-        '''
-        if not isinstance(feed,Feed):
-            print("Feed must be an instance of the Feed class!")
-            return
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
+            >>> feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+            >>> db.add_feed_to_feed_db(feed)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
+            >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
         
-        feed_db=pd.read_table(self.config.feed_db, sep='\t')
-        feed_db=feed_db.append(dataclasses.asdict(feed), ignore_index=True)
-        feed_db.to_csv(self.config.feed_db, index=False,sep='\t')
-        rich.print("[green]Feedstock added to the database!")
+        """
+        if not os.path.exists(self.config.feed_db):
+            self.initialize_feed_db()
+        feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
+        feed_db=pd.concat([feed_db,pd.DataFrame([feed.to_dict()])],ignore_index=True,axis=0)
+        feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
+    
+    def remove_feed_from_feed_db(self,feed_name:str)->None:
+        r"""
+        This function removes a feed from the feed database. It takes the feed name and removes the corresponding feed from the feed database.
+
+        Required Configs:
+            - config.feed_db
+
+        Args:
+            feed_name (str): The name of the feed.
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
+            >>> feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+            >>> db.add_feed_to_feed_db(feed)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
+            >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> db.remove_feed_from_feed_db("test_feed")
+            >>> assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]==0
+            >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
+        
+        """
+        if not os.path.exists(self.config.feed_db):
+            self.initialize_feed_db()
+        feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
+        feed_db=feed_db[feed_db["name"]!=feed_name]
+        feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
+    
+    def add_metagenomics_study_to_metagenomics_studies_db(self,metagenomics_study:MetagenomicsStudy)->None:
+        """
+        This function adds a metagenomics study to the metagenomics studies database. It takes a metagenomics study and adds it to the metagenomics studies database.
+        
+        Required Configs:
+            - config.metagenomics_studies_db
+        
+        Args:
+            metagenomics_study (MetagenomicsStudy): An instance of the MetagenomicsStudy class.
+
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
+            >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==True
+            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+        """
+        if not os.path.exists(self.config.metagenomics_studies_db):
+            self.initialize_metagenomics_studies_db()
+        metagenomics_studies_db=pd.read_table(self.config.metagenomics_studies_db,delimiter="\t")
+        metagenomics_studies_db=pd.concat([metagenomics_studies_db,pd.DataFrame([metagenomics_study.to_dict()])],ignore_index=True,axis=0)
+        metagenomics_studies_db.to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
+    
+    
     
     def build_mmseqs_database(self,save:bool,run:bool,container:str="None")->str:
         """Builds an indexed mmseqs database from the ADToolbox's fasta protein database.
@@ -1947,9 +1904,14 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
+    import os
+    assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
     db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
-    db._initialize_feed_database()
-    assert pd.read_csv(os.path.join(Main_Dir,"feed_test_db.tsv")).shape[0]==0
+    feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+    db.add_feed_to_feed_db(feed)
+    assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
+    assert pd.read_table(os.path.join(Main_Dir,"feed_test_db.tsv"),delimiter="\t").shape[0]>0
+    os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
 
     
     

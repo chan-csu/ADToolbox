@@ -67,9 +67,9 @@ class Database:
 		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
 		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
 		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
-                  "http://www.cazy.org/Polysaccharide-Lyases.html",
-                  "http://www.cazy.org/Carbohydrate-Esterases.html"
-                  ],
+                  		"http://www.cazy.org/Polysaccharide-Lyases.html",
+                  		"http://www.cazy.org/Carbohydrate-Esterases.html"
+                  		],
 		adm_parameters_urls:dict=dict(
 		adm1_model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json",
         adm1_base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json",
