@@ -70,6 +70,13 @@ class Database:
                   		"http://www.cazy.org/Polysaccharide-Lyases.html",
                   		"http://www.cazy.org/Carbohydrate-Esterases.html"
                   		],
+		amplicon_to_genome_urls={'Version': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/VERSION',
+               'MD5SUM': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/MD5SUM',
+               'FILE_DESCRIPTIONS': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/FILE_DESCRIPTIONS',
+               'metadata_field_desc': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/metadata_field_desc.tsv',
+               'bac120_metadata': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/bac120_metadata.tar.gz',
+               'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all.tar.gz'
+               },
 		adm_parameters_urls:dict=dict(
 		adm1_model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json",
         adm1_base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json",
@@ -159,6 +166,7 @@ class Database:
 		self.metagenomics_studies_db=metagenomics_studies_db
 		self.experimental_data_db=experimental_data_db
 		self.studies_urls=studies_urls
+		self.amplicon_to_genome_urls=amplicon_to_genome_urls
 
   
   

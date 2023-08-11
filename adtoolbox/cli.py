@@ -11,7 +11,7 @@ import adm
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
-import tables
+# import tables
 import json
 import os
 import pdb
@@ -176,8 +176,8 @@ def main():
         elif args.database_module=="download-all-databases":
             db_class.download_all_databases()
         
-        elif args.database_module=="show-tables":
-            tables.dash_app(configs=configs.Database())
+        # elif args.database_module=="show-tables":
+        #     tables.dash_app(configs=configs.Database())
         
 
 

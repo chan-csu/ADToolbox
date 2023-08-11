@@ -143,16 +143,17 @@ class Feed:
             raise ValueError("The sum of the percentages must less than 100")
         if self.carbohydrates+self.lipids+self.proteins+self.si<1:
             warn("The sum of lipids, carbohydrates, proteins are suspiciously low! Make sure youhave input the numbers in percentages!")
-        tss_sum=self.carbohydrates/100+self.lipids/100+self.proteins/100+self.xi/100
-        self.ch_tss=self.carbohydrates/100/tss_sum
-        self.lip_tss=self.lipids/100/tss_sum
-        self.prot_tss=self.proteins/100/tss_sum
-        self.xi_tss=self.xi/100/tss_sum
-        tds_sum=self.carbohydrates/100+self.lipids/100+self.proteins/100+self.si/100
-        self.ch_tds=self.carbohydrates/100/tds_sum
-        self.lip_tds=self.lipids/100/tds_sum
-        self.prot_tds=self.proteins/100/tds_sum
-        self.si_tds=self.si/100/tds_sum
+        li_ch_pr=self.carbohydrates+self.lipids+self.proteins
+        without_xi=100-self.xi
+        self.ch_tss=self.carbohydrates/li_ch_pr*without_xi/100
+        self.lip_tss=self.lipids/li_ch_pr*without_xi/100
+        self.prot_tss=self.proteins/li_ch_pr*without_xi/100
+        self.xi_tss=self.xi/100
+        without_si=100-self.si
+        self.ch_tds=self.carbohydrates/li_ch_pr*without_si/100
+        self.lip_tds=self.lipids/li_ch_pr*without_si/100
+        self.prot_tds=self.proteins/li_ch_pr*without_si/100
+        self.si_tds=self.si/100
     
     def to_dict(self)->dict:
         return {"name":self.name,
@@ -1067,87 +1068,204 @@ class Database:
         experiments_db=[experiment for experiment in experiments_db if query in experiment[field_name]]
         return [Experiment(**experiment) for experiment in experiments_db]
         
-    def build_mmseqs_database(self,save:bool,run:bool,container:str="None")->str:
+    def build_mmseqs_database(self,container:str="None")->str:
         """Builds an indexed mmseqs database from the ADToolbox's fasta protein database.
+        
+        Required Configs:
+            - config.protein_db
+            - config.adtoolbox_singularity
+            - config.adtoolbox_docker
+            
         Args:
-            save (bool): If True, the script will be saved to the current directory.
-            run (bool): If True, the script will be run.
-            container (str, optional): The container to run the script in. Defaults to "None".
+            container (str, optional): The container to run the script with. Defaults to "None".
         Returns:
             str: The script to build the mmseqs database.
+            
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False
+            >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta")))
+            >>> db.add_protein_to_protein_db("P0A9P0","x,x,x,x")
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"protein_test_db.fasta"))>0
+            >>> script=db.build_mmseqs_database()
+            >>> assert script=="mmseqs createdb "+str(os.path.join(Main_Dir,"protein_test_db.fasta"))+" "+str(db.config.protein_db_mmseqs)
+            >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
+        
         """
         script=create_mmseqs_database(self.config.protein_db,
                                       self.config.protein_db_mmseqs,
                                       container=container,
-                                      save=None,
                                       run=False,
-                                      config=configs.Config())
-        # if container=="None":
-        #     pass
+                                      config=self.config)
         
-        # elif container=="singularity":
-        #     script=f"singularity exec --bind {self.config.protein_db}:{self.config.protein_db},{self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_singularity} {script}"
+        if container=="None":
+            pass
         
-        # elif container=="docker":
-        #     script=f"docker run -v {self.config.protein_db}:{self.config.protein_db} -v {self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_docker} {script}"
+        elif container=="singularity":
+            script=f"singularity exec --bind {self.config.protein_db}:{self.config.protein_db},{self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_singularity} {script}"
         
-        # else:
-        #     print("Container must be one of the following: None, singularity, docker")
-        #     return
+        elif container=="docker":
+            script=f"docker run -v {self.config.protein_db}:{self.config.protein_db} -v {self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_docker} {script}"
         
-        if save:
-            with open(pathlib.Path(save),"w") as f:
-                f.write(script)
-        if run:
-            subprocess.run(script,shell=True)
-        
+        else:
+            raise ValueError("Container should be either None, singularity or docker!")
+    
         return script
 
 
-    def download_adm_parameters(self)->None:
-        '''
+    def download_adm_parameters(self,verbose:bool=True)->None:
+        """
         Downloads the parameters needed for running ADM models in ADToolbox.
         
-        '''
+        Required Configs:
+            - config.adm_parameters_base_dir
+            - config.adm_parameters_urls
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"adm_parameters_test"))==False
+            >>> db=Database(config=configs.Database(adm_parameters_base_dir=os.path.join(Main_Dir,"adm_parameters_test")))
+            >>> db.download_adm_parameters(verbose=False) 
+            >>> assert os.path.exists(os.path.join(Main_Dir,"adm_parameters_test"))==True
+            >>> assert len(os.listdir(os.path.join(Main_Dir,"adm_parameters_test")))==12
+            >>> os.system("rm -r "+os.path.join(Main_Dir,"adm_parameters_test"))
+            0
+        
+        Args:
+        
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+        
+        
+        """
         if not os.path.exists(self.config.adm_parameters_base_dir):
-            os.makedirs(self.config.adm_parameters_base_dir)
+                os.makedirs(self.config.adm_parameters_base_dir)
+        if verbose:
+            for url in track(self.config.adm_parameters_urls.values(),description="Downloading ADM parameters"):
+                r = requests.get(url, allow_redirects=True)
+                with open(os.path.join(self.config.adm_parameters_base_dir,url.split("/")[-1]), 'wb') as f:
+                    f.write(r.content)
+            rich.print(f"[green]ADM parameters were downloaded to {self.config.adm_parameters_base_dir}")
         
-        for url in track(self.config.adm_parameters_urls.values(),description="Downloading ADM parameters"):
-            r = requests.get(url, allow_redirects=True)
-            with open(os.path.join(self.config.adm_parameters_base_dir,url.split("/")[-1]), 'wb') as f:
-                f.write(r.content)
-        rich.print(f"[green]ADM parameters were downloaded to {self.config.adm_parameters_base_dir}")
- 
+        else:
+            for url in self.config.adm_parameters_urls.values():
+                r = requests.get(url, allow_redirects=True)
+                with open(os.path.join(self.config.adm_parameters_base_dir,url.split("/")[-1]), 'wb') as f:
+                    f.write(r.content)
         
-    def download_seed_databases(self) -> None :
-        "Download the modelseed rection database"
+    def download_seed_databases(self,verbose:bool=True) -> None :
+        """This function will download the seed databases, both compound and reaction databases.
+
+        Required Configs:
+            - config.seed_rxn_url
+            - config.seed_compound_url
+            - config.reaction_db
+            - config.compound_db
+
+        Args:
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"seed_rxn.json"))==False
+            >>> assert os.path.exists(os.path.join(Main_Dir,"seed_compound.json"))==False
+            >>> db=Database(config=configs.Database(reaction_db=os.path.join(Main_Dir,"seed_rxn.json"),compound_db=os.path.join(Main_Dir,"seed_compound.json")))
+            >>> db.download_seed_databases(verbose=False)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"seed_rxn.json"))==True
+            >>> assert os.path.exists(os.path.join(Main_Dir,"seed_compound.json"))==True
+            >>> os.remove(os.path.join(Main_Dir,"seed_rxn.json"))
+            >>> os.remove(os.path.join(Main_Dir,"seed_compound.json"))
+        """
         r = requests.get(self.config.seed_rxn_url, allow_redirects=True,stream=True)
         with open(self.config.reaction_db, 'wb') as f:
             f.write(r.content)
-        rich.print(f"[green]Reaction database downloaded to {self.config.reaction_db}")
+        if verbose:
+            rich.print(f"[green]Reaction database downloaded to {self.config.reaction_db}")
         r=requests.get(self.config.seed_compound_url,allow_redirects=True,stream=True)
         with open(self.config.compound_db, 'wb') as f:
             f.write(r.content)
-        rich.print(f"[green]Compound database downloaded to {self.config.compound_db}")
+        if verbose:
+            rich.print(f"[green]Compound database downloaded to {self.config.compound_db}")
 
-    def download_protein_database(self) -> None:
+    def download_protein_database(self, verbose:bool=True) -> None:
+        """
+        Downloads the prebuilt protein database from the remote repository.
+        
+        Required Configs:
+            - config.protein_db_url
+            - config.protein_db
+        
+        Args:
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+            
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False
+            >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta")))
+            >>> db.download_protein_database(verbose=False)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"protein_test_db.fasta"))>0
+            >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
+        """
         r = requests.get(self.config.protein_db_url, allow_redirects=True)
         with open(self.config.protein_db, 'wb') as f:
             f.write(r.content)
-        rich.print(f"[green]Protein database downloaded to {self.config.protein_db}")
+        if verbose:
+            rich.print(f"[green]Protein database downloaded to {self.config.protein_db}")
         
-    def download_reaction_database(self)->None:
+    def download_reaction_database(self,verbose:bool=True)->None:
+        """
+        This function will download the reaction database from the remote repository.
+        
+        Required Configs:
+            - config.adtoolbox_rxn_db_url
+            - config.csv_reaction_db
+        
+        Args:
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.csv"))==False
+            >>> db=Database(config=configs.Database(csv_reaction_db=os.path.join(Main_Dir,"reaction_test_db.csv")))
+            >>> db.download_reaction_database(verbose=False)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.csv"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"reaction_test_db.csv"))>0
+            >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.csv"))
+        """
+    
         r = requests.get(self.config.adtoolbox_rxn_db_url, allow_redirects=True)
         with open(self.config.csv_reaction_db, 'wb') as f:
             f.write(r.content)
-        rich.print(f"[green]Reaction database downloaded to {self.config.csv_reaction_db}")
+        if verbose:
+            rich.print(f"[green]Reaction database downloaded to {self.config.csv_reaction_db}")
 
     
-    def download_feed_database(self)-> None:
+    def download_feed_database(self,verbose:bool=True)-> None:
+        """
+        This function will download the feed database from the remote repository.
+
+        Required Configs:
+            - config.feed_db_url
+            - config.feed_db
+        
+        Args:
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(feed_db=os.path.join(Main_Dir,"feed_test_db.tsv")))
+            >>> db.download_feed_database(verbose=False)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"feed_test_db.tsv"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"feed_test_db.tsv"))>0
+            >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
+        """
         r = requests.get(self.config.feed_db_url, allow_redirects=True)
         with open(self.config.feed_db, 'wb') as f:
             f.write(r.content)
-        rich.print(f"[green]Feed database downloaded to {self.config.feed_db}")
+        if verbose:
+            rich.print(f"[green]Feed database downloaded to {self.config.feed_db}")
     
     def download_qiime_classifier_db(self)->None:
         r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True,stream=True)
@@ -1164,9 +1282,21 @@ class Database:
         
         rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
             
-    def download_studies_database(self)->None:
+    def download_studies_database(self,verbode:bool=True)->None:
         """
-        This function will download the kbase database from the remote repository.
+        This function will download the required files for studies functionality.
+
+        Args:
+            verbode (bool, optional): Whether to print the progress or not. Defaults to True.
+        
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"studies_test_db.tsv"))==False
+            >>> db=Database(config=configs.Database(studies_db=os.path.join(Main_Dir,"studies_test_db.tsv")))
+            >>> db.download_studies_database(verbose=False)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"studies_test_db.tsv"))==True
+            >>> assert os.path.getsize(os.path.join(Main_Dir,"studies_test_db.tsv"))>0
+            >>> os.remove(os.path.join(Main_Dir,"studies_test_db.tsv"))
         """
         for i in self.config.studies.urls:
             r = requests.get(self.config.studies.urls[i], allow_redirects=True)
@@ -1174,25 +1304,37 @@ class Database:
                 os.makedirs(self.config.studies.base_dir,exist_ok=True)
             with open(os.path.join(self.config.studies.base_dir,self.config.studies.urls[i].split("/")[-1]), 'wb') as f:
                 f.write(r.content)
-            rich.print(f"[bold green]Downloaded {self.config.studies.urls[i]}[/bold green]")
+            if verbode:
+                rich.print(f"[bold green]Downloaded {self.config.studies.urls[i]}[/bold green]")
     
-    def download_amplicon_to_genome_db(self,progress=True):
+    def download_amplicon_to_genome_db(self,verbose:bool=True):
         """
-        This function will automatically download the required files for Amplicon to Genome functionality.
+        This function will automatically download the GTDB-tk database for genome assignment.
+        
+        Required Configs:
+            - config.amplicon_to_genome_db
+            - config.amplicon_to_genome_urls
+        
+        Args:
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+
+        Examples:
+            >>> import os
+            >>> assert os.path.exists(os.path.join(Main_Dir,"amplicon_to_genome_test_db"))==False
+            >>> db=Database(config=configs.Database(amplicon_to_genome_db=os.path.join(Main_Dir,"amplicon_to_genome_test_db")))
+            >>> db.download_amplicon_to_genome_db(verbose=False)
+            >>> assert os.path.exists(os.path.join(Main_Dir,"amplicon_to_genome_test_db"))==True
+            >>> assert len(os.listdir(os.path.join(Main_Dir,"amplicon_to_genome_test_db")))>0
+            >>> os.system("rm -r "+os.path.join(Main_Dir,"amplicon_to_genome_test_db"))
+            0
         """
         if not os.path.exists(self.config.amplicon_to_genome_db):
             os.mkdir(self.config.amplicon_to_genome_db)
 
-        url = {'Version': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/VERSION',
-               'MD5SUM': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/MD5SUM',
-               'FILE_DESCRIPTIONS': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/FILE_DESCRIPTIONS',
-               'metadata_field_desc': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/metadata_field_desc.tsv',
-               'bac120_metadata': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/bac120_metadata.tar.gz',
-               'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all.tar.gz'
-               }
-        if progress:
+        url = self.config.amplicon_to_genome_urls
+        if verbose:
             for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
-                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                with requests.get(url[keys], allow_redirects=True, stream=True) as r:
                     total_size = int(r.headers.get('content-length', 0))
                     block_size = 1024
                     with Progress() as progress:
@@ -1201,7 +1343,7 @@ class Database:
                             for data in r.iter_content(block_size):
                                 progress.update(task1, advance=len(data))
                                 f.write(data)
-            with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=progress) as r:
+            with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=True) as r:
                 total_size = int(r.headers.get('content-length', 0))
                 block_size = 1024
                 with Progress() as progress:
@@ -1212,7 +1354,7 @@ class Database:
                             f.write(data)
 
             for keys in ['bac120_metadata', 'bac120_ssu']:
-                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                with requests.get(url[keys], allow_redirects=True, stream=True) as r:
                     total_size = int(r.headers.get('content-length', 0))
                     block_size = 1024
                     with Progress() as progress:
@@ -1228,41 +1370,68 @@ class Database:
                 os.remove(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]))
         else:
             for keys in ['Version', 'MD5SUM', 'FILE_DESCRIPTIONS']:
-                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                with requests.get(url[keys], allow_redirects=True, stream=False) as r:
                     with open(os.path.join(self.config.amplicon_to_genome_db, keys), 'wb') as f:
                         f.write(r.content)
-            with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=progress) as r:
+            with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=False) as r:
                 with open(os.path.join(self.config.amplicon_to_genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
                     f.write(r.content)
             for keys in ['bac120_metadata', 'bac120_ssu']:
-                with requests.get(url[keys], allow_redirects=True, stream=progress) as r:
+                with requests.get(url[keys], allow_redirects=True, stream=False) as r:
                     with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]), 'wb') as f:
                         f.write(r.content)
                 with tarfile.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1])) as f_in:
                     f_in.extractall(self.config.amplicon_to_genome_db)
-        
-        rich.print("[bold green]Downloaded all the required files for Amplicon to Genome functionality.[/bold green]")
+        if verbose:
+            rich.print("[bold green]Downloaded all the required files for Amplicon to Genome functionality.[/bold green]")
                     
                         
 
             
-    def download_all_databases(self)->None:
+    def download_all_databases(self,verbose:bool=True)->None:
         """
         This function will download all the required databases for all the functionalities of ADToolbox.
-        """
-        if not os.path.exists(self.config.base_dir):
-            os.makedirs(self.config.base_dir)
-        self.download_seed_databases()
-        self.download_adm_parameters()
-        self.download_protein_database()
-        self.download_reaction_database()
-        self.download_feed_database()
-        self.download_studies_database()
-        self.download_amplicon_to_genome_db()
-        self.download_qiime_classifier_db()
-        
+        NOTE: each method that this function calls is individually tested so it is skipped from testing!
 
-     
+        Args:
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
+
+        Required Configs:
+            - config.adm_parameters_base_dir
+            - config.adm_parameters_urls
+            - config.seed_rxn_url
+            - config.seed_compound_url
+            - config.reaction_db
+            - config.compound_db
+            - config.protein_db_url
+            - config.protein_db
+            - config.adtoolbox_rxn_db_url
+            - config.csv_reaction_db
+            - config.feed_db_url
+            - config.feed_db
+            - config.amplicon_to_genome_db
+            - config.amplicon_to_genome_urls
+            - config.qiime_classifier_db_url
+            - config.qiime_classifier_db
+            - config.studies_db
+            - config.studies_urls
+            
+        Examples:
+            >>> import os # doctest: +SKIP
+            >>> db=Database(config=configs.Database()) # doctest: +SKIP
+            >>> db.download_all_databases(verbose=False) # doctest: +SKIP
+
+        """
+
+        self.download_seed_databases(verbose=verbose)
+        self.download_adm_parameters(verbose=verbose)
+        self.download_protein_database(verbose=verbose)
+        self.download_reaction_database(verbose=verbose)
+        self.download_feed_database(verbose=verbose)
+        self.download_studies_database(verbose=verbose)
+        self.download_amplicon_to_genome_db(verbose=verbose)
+        self.download_qiime_classifier_db(verbose=verbose)
+        
 
 class Metagenomics:
 
