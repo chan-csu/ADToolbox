@@ -53,6 +53,7 @@ class Tuner:
             res=0
             for experiment in self.train_data:
                 ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
+                ic.update(experiment.initial_concentrations)
                 self._model= self.base_model.copy()
                 self._model.update_parameters(**{self.var_type:parameters})
                 self._model.update_parameters(initial_conditions=ic)

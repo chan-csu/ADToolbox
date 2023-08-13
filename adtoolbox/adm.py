@@ -42,7 +42,7 @@ DEFAULT_FEED=Feed(name="Default Feed",
                     si=30,
                     xi=50,
                     tss=80)
-RT = SeedDB(reaction_db=configs.SeedDB().reaction_db)
+RT = SeedDB(config=configs.SeedDB())
 
 class _Fake_Sol:
     def __init__(self, y,t):

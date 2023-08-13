@@ -54,6 +54,7 @@ class Experiment:
     variables must be a list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
     data must be a list of lists. Each list in the list must be a list of concentrations for each species at each time point.
     IMPORTANT: The order of the species in the data list must match the order of the species in the variables list.
+    if there are specific initial concentrations for the ADM species, they can be passed as a dictionary to the initial_concentrations argument.
     reference is an optional argument that can be used to provide a reference for the experimental data. If using the database module 
     to query for Experiment objects you can query by name or reference or model_type. So, having a descriptive reference can be useful for querying as well.
     default model name is "modified-adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
@@ -63,6 +64,7 @@ class Experiment:
         time (list): A list of time points in days.
         variables (list): A list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
         data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
+        initial_concentrations (dict, optional): A dictionary of initial concentrations for the ADM species. Defaults to {}.
         reference (str, optional): A reference for the experimental data. Defaults to ''.
         model_name (str, optional): The name of the model that the experimental data is for. Defaults to "modified-adm".
     
@@ -80,8 +82,10 @@ class Experiment:
     time: list[float]
     variables: list[int]
     data: list[list[float]]
+    initial_concentrations: dict[str,float] = dataclasses.field(default_factory=dict)
     reference: str = ""
     model_name: str = "modified-adm"
+    
     
     def __post_init__(self):
         self.data=np.array(self.data).T
@@ -98,7 +102,9 @@ class Experiment:
                 "time":self.time,
                 "variables":self.variables,
                 "data":self.data.T.tolist(),
-                "reference":self.reference}
+                "initial_concentrations":self.initial_concentrations,
+                "reference":self.reference,
+                "model_name":self.model_name}
     
 
     
@@ -274,9 +280,18 @@ class Metabolite:
     def __str__(self) -> str:
         return self.data['name']
 
-    def cod_calc(self)->float:
+    def cod_calc(self,add_h:float=0,add_c:float=0,add_o:float=0)->float:
         """
         Calculates the conversion rates for g/l -> gCOD/l
+        In some cases we would like to add extra atoms for COD calculations
+        For example, model seed biochemistry database only uses acetate instead of acetic acid.
+        The 1 hydrogen difference changes the COD conversion rate. For this reason we can add extra atoms to the formula
+        to calculate the COD conversion rate without changing anything else.
+        
+        Args:
+            add_h (float): The number of extra hydrogen atoms to add to the formula for COD calculation.
+            add_c (float): The number of extra carbon atoms to add to the formula for COD calculation.
+            add_o (float): The number of extra oxygen atoms to add to the formula for COD calculation.
 
         Examples:
             >>> A={"name":"methane","mass":16,"formula":"CH4"}
@@ -294,7 +309,7 @@ class Metabolite:
         if self.data['formula'] and self.data['mass']:
             contents = {}
             atoms = ["H", "C", "O"]
-            mw = self.data['mass']
+            mw = self.data['mass']+add_h*1+add_c*12+add_o*16
             for atom in atoms:
                 if re.search(atom+'\d*', self.data['formula']):
                     if len(re.search(atom+'\d*', self.data['formula']).group()[1:]) == 0:
@@ -304,6 +319,9 @@ class Metabolite:
                             re.search(atom+'\d*', self.data['formula']).group()[1:])
                 else:
                     contents[atom] = 0
+            contents['H']+=add_h
+            contents['C']+=add_c
+            contents['O']+=add_o
             return 1/mw*(contents['H']+4*contents['C']-2*contents['O'])/4*32
 
         else:
@@ -319,21 +337,19 @@ class SeedDB:
     can be computed using the chemical formula. 
     
     Args:
-        compound_db (str, optional): The path to the seed compound database. Defaults to configs.SeedDB().compound_db.
-        reaction_db (str, optional): The path to the seed reaction database. Defaults to configs.SeedDB().reaction_db.
+        config (configs.SeedDB): An instance of the SeedDB class in the configs module. This class contains the information about the seed database.
     
     Examples:
-        >>> seed_db=SeedDB()
+        >>> seed_db=SeedDB(configs.SeedDB())
         >>> assert seed_db.compound_db==configs.SeedDB().compound_db
         >>> assert seed_db.reaction_db==configs.SeedDB().reaction_db
 
     """
 
-    def __init__(self, compound_db:str =configs.SeedDB().compound_db,
-                       reaction_db=configs.SeedDB().reaction_db) -> None:
+    def __init__(self, config:configs.SeedDB) -> None:
         
-        self.reaction_db = reaction_db
-        self.compound_db = compound_db
+        self.reaction_db = config.reaction_db
+        self.compound_db = config.compound_db
 
     def instantiate_rxns(self, seed_id:str)->Reaction:
         """
@@ -815,6 +831,9 @@ class Database:
         """
         if not os.path.exists(self.config.feed_db):
             self.initialize_feed_db()
+            
+        if feed.name in pd.read_table(self.config.feed_db,delimiter="\t")["name"].values:
+            raise ValueError("Feed already exists in the database.")
         feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
         feed_db=pd.concat([feed_db,pd.DataFrame([feed.to_dict()])],ignore_index=True,axis=0)
         feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
@@ -845,6 +864,7 @@ class Database:
         """
         if not os.path.exists(self.config.feed_db):
             raise FileNotFoundError("Feed database does not exist!")
+        
         
         feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
         feed_db=feed_db[feed_db[field_name].str.contains(query)==False]
@@ -995,6 +1015,9 @@ class Database:
         """
         if not os.path.exists(self.config.experimental_data_db):
             self.initialize_experimental_data_db()
+        
+        if experiment.name in [experiment.name for experiment in self.get_experiment_from_experiments_db("name",experiment.name)]: 
+            raise ValueError("Experiment already exists in the database!")
         
         with open(self.config.experimental_data_db,"r") as f:
             experiments_db=json.load(f)
