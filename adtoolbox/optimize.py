@@ -9,6 +9,8 @@ from dataclasses import dataclass
 import json
 import plotly.graph_objects as go
 import plotly.express as px
+from multiprocessing import Semaphore,Process
+import torch
 
 
         
@@ -166,6 +168,146 @@ class GATuner:
         
         return opt
 
+class NNSurrogateTuner:
+    def __init__(self,
+             base_model: adm.Model,
+             train_data: list[core.Experiment],
+             tuneables:dict,
+             fitness_mode:str="equalized",
+             var_type:str="model_parameters",
+             n_process:int=4,
+             grad_steps:int=10,
+             n_steps:int=100,
+             initial_points:int=5
+             )->None:
+
+        self.base_model = base_model
+        if set(tuneables.keys())-set(base_model.__getattribute__(var_type).keys()):
+            raise ValueError("Tuneable parameters not in model parameters.")
+        self.tunables = tuneables
+        self.train_data = train_data
+        self.fitness_mode = fitness_mode
+        self.var_type = var_type
+        self.n_process=n_process
+        self._semaphore=Semaphore(n_process)
+        self.grad_steps=grad_steps
+        self.n_steps=n_steps
+        self.initial_points=initial_points
+        self._get_space()
+        self._generate_initial_population()
+        self._aquired={}
+        self._network=torch.nn.Sequential(
+            torch.nn.Linear(len(self.tunables), 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 1),   
+        )
+        
+    
+    def _get_space(self)->np.ndarray:
+        self._param_space=np.array(list(zip(*self.tunables.values()))).T
+        return self._param_space.copy()
+    
+    def _generate_initial_population(self):
+        self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
+
+    def _cost(self, parameters: dict)->float:
+        """
+        This function is called by openbox to evaluate a configuration.
+        :param config: The configuration to evaluate.
+        :return: The cost of the configuration.
+        """
+        if self.fitness_mode == "equalized":
+            with self._semaphore:
+                res=0
+                for experiment in self.train_data:
+                    ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
+                    ic.update(experiment.initial_concentrations)
+                    _model= self.base_model.copy()
+                    _model.update_parameters(**{self.var_type:parameters})
+                    _model.update_parameters(initial_conditions=ic)
+                    solution=_model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
+                    res+=np.sum(np.square(solution.T-experiment.data))
+
+                return res
+        else:
+            raise NotImplementedError("Fitness mode not implemented.")
+    
+
+        
+    def _suggest_parameters(self):
+        if len(self._aquired)==0:
+            raise ValueError("No sample is aquired yet.")
+        else:
+            input_data = torch.tensor(self._best_tensor, requires_grad=True,dtype=torch.float32)
+            self._optimizer_inputs = torch.optim.Adam([input_data], lr=0.001)
+            self._optimizer_model = torch.optim.Adam(self._network.parameters(), lr=0.001)
+            for step in range(self.grad_steps):
+                output = self._network(input_data)
+                loss = torch.mean(output)
+                loss.backward()
+                self._optimizer_inputs.step()
+                self._optimizer_inputs.zero_grad()
+                self._optimizer_inputs.zero_grad()
+        return input_data.detach().numpy()
+    
+    def _train_surrogate(self):
+        net_inputs=torch.tensor(self._aquired["parameters"],dtype=torch.float32)
+        net_labels=torch.tensor(self._aquired["cost"],dtype=torch.float32)
+        self._optimizer_model = torch.optim.Adam(self._network.parameters(), lr=0.001)
+        net_labels[net_labels>10000]=10000
+        for step in range(1000):
+            output=self._network(net_inputs)
+            loss=torch.mean(torch.square(output-net_labels))
+            loss.backward()
+            self._optimizer_model.step()
+            self._optimizer_model.zero_grad()
+        return loss.detach().numpy()
+
+        
+    def optimize(self, **kwargs)->dict:
+        costs=[]
+        for pop in self._popuplation:
+            costs.append(self._cost(dict(zip(self.tunables.keys(),pop))))
+        self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
+        self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+        self._best_cost=np.min(self._aquired["cost"])
+        for i in range(self.n_steps):
+            loss=self._train_surrogate()
+            print(f"Training Loss: {loss}")
+            new_params=self._suggest_parameters()
+            new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+            new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+            if abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3:
+                print("Local optima reached: Perturbing the best solution and continuing.")
+                new_params=self._best_tensor+np.random.uniform(low=-0.1,high=0.1,size=len(self.tunables))*self._best_tensor
+            new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+            new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+            ## make sure not in the local optima
+            new_cost=self._cost(dict(zip(self.tunables.keys(),new_params)))
+            self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
+            self._aquired["cost"].append(new_cost)
+            self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+            self._best_cost=np.min(self._aquired["cost"])
+            print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
+        self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"]}
+        return self.history
+
+            
+    
+
+            
+        
+
+    
+
 def validate_model(model:adm.Model,data:core.Experiment,plot:bool=False)->dict[str,pd.DataFrame]:
     """
     This function can be used to compare the model's predictions to the experimental data of interest.
@@ -201,50 +343,52 @@ def validate_model(model:adm.Model,data:core.Experiment,plot:bool=False)->dict[s
 
 
 
+    
 if __name__ == "__main__":
-    with open(configs.Database().initial_conditions) as file:
-        initial_conditions=json.load(file)
-    study=core.Experiment(
-        "test_study",
-        time=[0,1,2,3,4,5],
-        variables=[10,12],
-        data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
-        reference="test_reference"
-    )
-    with open(configs.Database().initial_conditions) as file:
-        initial_conditions=json.load(file)
+    pass
+    # with open(configs.Database().initial_conditions) as file:
+    #     initial_conditions=json.load(file)
+    # study=core.Experiment(
+    #     "test_study",
+    #     time=[0,1,2,3,4,5],
+    #     variables=[10,12],
+    #     data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
+    #     reference="test_reference"
+    # )
+    # with open(configs.Database().initial_conditions) as file:
+    #     initial_conditions=json.load(file)
     
-    with open(configs.Database().base_parameters) as file:
-        base_parameters=json.load(file)
+    # with open(configs.Database().base_parameters) as file:
+    #     base_parameters=json.load(file)
     
-    with open(configs.Database().model_parameters) as file:
-        model_parameters=json.load(file)
+    # with open(configs.Database().model_parameters) as file:
+    #     model_parameters=json.load(file)
     
-    with open(configs.Database().inlet_conditions) as file:
-        inlet_conditions=json.load(file)
+    # with open(configs.Database().inlet_conditions) as file:
+    #     inlet_conditions=json.load(file)
     
-    with open(configs.Database().reactions) as file:
-        reactions=json.load(file)
+    # with open(configs.Database().reactions) as file:
+    #     reactions=json.load(file)
     
-    with open(configs.Database().species) as file:
-        species=json.load(file)
+    # with open(configs.Database().species) as file:
+    #     species=json.load(file)
 
-    tuner=Tuner(
-        base_model=adm.Model(initial_conditions=initial_conditions,
-                             base_parameters=base_parameters,
-                             model_parameters=model_parameters,
-                            inlet_conditions=inlet_conditions,
-                            feed=adm.DEFAULT_FEED,
-                            reactions=reactions,
-                            species=species,
-                            ode_system=adm.modified_adm_ode_sys,
-                            build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
-                            name="test_model"),
+    # tuner=Tuner(
+    #     base_model=adm.Model(initial_conditions=initial_conditions,
+    #                          base_parameters=base_parameters,
+    #                          model_parameters=model_parameters,
+    #                         inlet_conditions=inlet_conditions,
+    #                         feed=adm.DEFAULT_FEED,
+    #                         reactions=reactions,
+    #                         species=species,
+    #                         ode_system=adm.modified_adm_ode_sys,
+    #                         build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
+    #                         name="test_model"),
                         
-                    train_data=[study],
-                    tuneables={"Y_Me_h2":(0,1),},
-                    fitness_mode="equalized",
-                    var_type="model_parameters"
-             )
-    hist=tuner.optimize(max_runs=2)
+    #                 train_data=[study],
+    #                 tuneables={"Y_Me_h2":(0,1),},
+    #                 fitness_mode="equalized",
+    #                 var_type="model_parameters"
+    #          )
+    # hist=tuner.optimize(max_runs=2)
    
