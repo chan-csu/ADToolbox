@@ -7,11 +7,15 @@ import pandas as pd
 import numpy as np
 from dataclasses import dataclass
 import json
+from typing import Iterable
 import plotly.graph_objects as go
 import plotly.express as px
-from multiprocessing import Semaphore,Process
 import torch
+import pickle
+import pathlib
+from collections import namedtuple
 
+Validation=namedtuple("Validation",("r_squared","rmse"))
 
         
 class BBTuner:
@@ -178,7 +182,10 @@ class NNSurrogateTuner:
              n_process:int=4,
              grad_steps:int=10,
              n_steps:int=100,
-             initial_points:int=5
+             initial_points:int=5,
+             save_every:int=10,
+             history_file_path:pathlib.Path=pathlib.Path("./history.pkl"),
+             exp_std:float=5
              )->None:
 
         self.base_model = base_model
@@ -189,7 +196,6 @@ class NNSurrogateTuner:
         self.fitness_mode = fitness_mode
         self.var_type = var_type
         self.n_process=n_process
-        self._semaphore=Semaphore(n_process)
         self.grad_steps=grad_steps
         self.n_steps=n_steps
         self.initial_points=initial_points
@@ -207,10 +213,23 @@ class NNSurrogateTuner:
             torch.nn.Tanh(),
             torch.nn.Linear(20, 20),
             torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
+            torch.nn.Linear(20, 20),
+            torch.nn.Tanh(),
             torch.nn.Linear(20, 1),   
         )
+        self.save_every=save_every
+        self.history_file_path=history_file_path
+        self.exp_std=exp_std
+        torch.set_num_threads(1)
         
-    
     def _get_space(self)->np.ndarray:
         self._param_space=np.array(list(zip(*self.tunables.values()))).T
         return self._param_space.copy()
@@ -225,18 +244,18 @@ class NNSurrogateTuner:
         :return: The cost of the configuration.
         """
         if self.fitness_mode == "equalized":
-            with self._semaphore:
-                res=0
-                for experiment in self.train_data:
-                    ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
-                    ic.update(experiment.initial_concentrations)
-                    _model= self.base_model.copy()
-                    _model.update_parameters(**{self.var_type:parameters})
-                    _model.update_parameters(initial_conditions=ic)
-                    solution=_model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
-                    res+=np.sum(np.square(solution.T-experiment.data))
 
-                return res
+            res=0
+            for experiment in self.train_data:
+                ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
+                ic.update(experiment.initial_concentrations)
+                _model= self.base_model.copy()
+                _model.update_parameters(**{self.var_type:parameters})
+                _model.update_parameters(initial_conditions=ic)
+                solution=_model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
+                res+=np.sum(np.square(solution.T-experiment.data))
+
+            return res
         else:
             raise NotImplementedError("Fitness mode not implemented.")
     
@@ -262,7 +281,7 @@ class NNSurrogateTuner:
         net_inputs=torch.tensor(self._aquired["parameters"],dtype=torch.float32)
         net_labels=torch.tensor(self._aquired["cost"],dtype=torch.float32)
         self._optimizer_model = torch.optim.Adam(self._network.parameters(), lr=0.001)
-        net_labels[net_labels>10000]=10000
+        net_labels[net_labels>10000]=1000
         for step in range(1000):
             output=self._network(net_inputs)
             loss=torch.mean(torch.square(output-net_labels))
@@ -287,7 +306,7 @@ class NNSurrogateTuner:
             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
             if abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3:
                 print("Local optima reached: Perturbing the best solution and continuing.")
-                new_params=self._best_tensor+np.random.uniform(low=-0.1,high=0.1,size=len(self.tunables))*self._best_tensor
+                new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
             new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
             ## make sure not in the local optima
@@ -297,7 +316,13 @@ class NNSurrogateTuner:
             self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
             self._best_cost=np.min(self._aquired["cost"])
             print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
-        self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"]}
+            if i%self.save_every==0:
+                self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"]}
+                with open(f"{str(self.history_file_path.absolute())}","wb") as file:
+                    pickle.dump(self.history,file)
+                
+                
+        
         return self.history
 
             
@@ -326,7 +351,7 @@ def validate_model(model:adm.Model,data:core.Experiment,plot:bool=False)->dict[s
     ic.update(data.initial_concentrations)
     model.update_parameters(initial_conditions=ic)
     solution=model.solve_model(np.array(data.time)).y[data.variables,:]
-    out={"model":pd.DataFrame(solution.T,index=data.time,columns=data.variables),
+    out={"model":pd.DataFrame(solution.T,index=np.array(data.time).tolist(),columns=data.variables),
             "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
     if plot:
         fig=go.Figure()
@@ -337,9 +362,28 @@ def validate_model(model:adm.Model,data:core.Experiment,plot:bool=False)->dict[s
                 color=pallet[idx])))
         fig.show()
         
-    return 
+    return  out
 
-
+def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validation:
+    """This function calculates RMSE and R-squared metrics on a set of experiment objects
+    #AIC
+    """
+    x=[]
+    y=[]
+    for study in data:
+        formatted_data=validate_model(model,study)
+        model_,data_=formatted_data["model"],formatted_data["data"]
+        for column in model_.columns:
+            x.append(model_[column])
+            y.append(data_[column])
+    x=np.array(x)
+    y=np.array(y)
+    return Validation(r_squared=1-(np.sum(np.square(y-x))/np.sum(np.square(y-np.mean(y)))),rmse=np.sqrt(np.sum(np.square(y-x))))
+    
+            
+            
+        
+        
 
 
 
