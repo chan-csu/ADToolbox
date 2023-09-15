@@ -1,5 +1,0 @@
-[INFO] [2023-08-07 10:53:56,139] [Advisor] === [BO auto selection] === surrogate_type: gp. acq_type: ei. acq_optimizer_type: random_scipy.
-[INFO] [2023-08-07 10:54:01,380] [OpenBox-default_task_id] Iteration 1, objective value: [162.89601330549655].
-[INFO] [2023-08-07 10:54:06,463] [OpenBox-default_task_id] Iteration 2, objective value: [162.89601330549655].
-[INFO] [2023-08-07 10:54:31,898] [Advisor] === [BO auto selection] === surrogate_type: gp. acq_type: ei. acq_optimizer_type: random_scipy.
-[INFO] [2023-08-16 14:41:27,704] [Advisor] === [BO auto selection] === surrogate_type: gp. acq_type: ei. acq_optimizer_type: random_scipy.

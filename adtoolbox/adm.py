@@ -137,7 +137,7 @@ class Model:
 
         
 
-    def solve_model(self, t_eval: np.ndarray, method="BDF", switch="DAF")->scipy.integrate._ivp.ivp.OdeResult:
+    def solve_model(self, t_eval: np.ndarray, method="BDF")->scipy.integrate._ivp.ivp.OdeResult:
         """
         Function to solve the model. 
         Examples:
@@ -1163,7 +1163,20 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     Returns:
         np.ndarray: The output is dCdt, the change of concentration with respect to time. 
     """
-
+    if model.switch == "DAE":
+        
+        c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
+    
+        c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
+    
+        c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
+    
+        c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
+    
+        c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
+        
+        c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]
+    c[model.species.index('S_H_ion')]=0.000001
     c[c<0]=0
     c[model.species.index('S_nh4_ion')] = c[model.species.index(
         'S_IN')] - c[model.species.index('S_nh3')]
@@ -1420,17 +1433,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
 
         dCdt[model.species.index('S_nh3')] = 0
     
-        c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
     
-        c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
-    
-        c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
-    
-        c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
-    
-        c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
-        
-        c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
 
     if model.control_state.keys():
         for state in model.control_state.keys():

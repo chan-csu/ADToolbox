@@ -1,6 +1,7 @@
 from openbox import Optimizer,ParallelOptimizer
 import core,configs
 from openbox import space as sp
+from adtoolbox.core import Experiment
 import pygad
 import adm
 import pandas as pd
@@ -247,8 +248,8 @@ class NNSurrogateTuner:
 
             res=0
             for experiment in self.train_data:
-                ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
-                ic.update(experiment.initial_concentrations)
+                ic=experiment.initial_concentrations.copy()
+                ic.update({self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
                 _model= self.base_model.copy()
                 _model.update_parameters(**{self.var_type:parameters})
                 _model.update_parameters(initial_conditions=ic)
@@ -333,7 +334,7 @@ class NNSurrogateTuner:
 
     
 
-def validate_model(model:adm.Model,data:core.Experiment,plot:bool=False)->dict[str,pd.DataFrame]:
+def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False)->dict[str,pd.DataFrame]:
     """
     This function can be used to compare the model's predictions to the experimental data of interest.
     
@@ -346,21 +347,75 @@ def validate_model(model:adm.Model,data:core.Experiment,plot:bool=False)->dict[s
         dict[str,pd.DataFrame]: A dictionary containing the model's predictions and the experimental data.
     
     """
+    
     pallet=px.colors.qualitative.Plotly
-    ic={model.species[k]:data.data[0,idx] for idx,k in enumerate(data.variables) }
-    ic.update(data.initial_concentrations)
-    model.update_parameters(initial_conditions=ic)
-    solution=model.solve_model(np.array(data.time)).y[data.variables,:]
-    out={"model":pd.DataFrame(solution.T,index=np.array(data.time).tolist(),columns=data.variables),
-            "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
-    if plot:
-        fig=go.Figure()
-        for idx,variable in enumerate(data.variables):
+    
+    if isinstance(data,Experiment):
+  
+        ic=data.initial_concentrations.copy()
+        ic.update({model.species[k]:data.data[0,idx] for idx,k in enumerate(data.variables) })
+        model.update_parameters(initial_conditions=ic)
+        solution=model.solve_model(np.array(data.time)).y[data.variables,:]
+        out={"model":pd.DataFrame(solution.T,index=np.array(data.time).tolist(),columns=data.variables),
+             "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
+        if plot:
+            fig=go.Figure()
+            for idx,variable in enumerate(data.variables):
+                fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=model.species[variable],mode="lines",line=dict(
+                    color=pallet[idx])))
+                fig.add_trace(go.Scatter(x=out["data"].index,y=out["data"][variable],name=model.species[variable]+" observed",mode="markers",marker=dict(
+                    color=pallet[idx])))
+            fig.show()
+    
+    elif isinstance(data,Iterable):
+        
+        if plot:
+            fig=go.Figure()
+        ic=pd.concat([pd.DataFrame(i.initial_concentrations,index=[0]) for  i in data ]).mean().to_dict()
+        ic.update({model.species[k]:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
+        model.update_parameters(initial_conditions=ic)
+        solution=model.solve_model(np.array(data[0].time)).y[data[0].variables,:]
+        out={"model":pd.DataFrame(solution.T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
+        for idx,variable in enumerate(data[0].variables):
             fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=model.species[variable],mode="lines",line=dict(
-                color=pallet[idx])))
-            fig.add_trace(go.Scatter(x=out["data"].index,y=out["data"][variable],name=model.species[variable]+" observed",mode="markers",marker=dict(
-                color=pallet[idx])))
+                    color=pallet[idx])))
+        df=[]
+        for data_ in data:
+            conc=pd.DataFrame(data_.data,columns=[model.species[i] for i in data_.variables],index=data_.time)
+            conc["time"]=conc.index
+            conc=conc.melt(id_vars=["time"])
+            df.append(conc)
+        df=pd.concat(df)
+        comps=df["variable"].unique()
+        times=df["time"].unique()
+
+        df_grouped=df.groupby(["time","variable"])
+        for idx,comp in enumerate(comps):
+            t=[]
+            y=[]
+            e=[]
+            for time in times:
+                t.append(time)
+                y.append(df_grouped.get_group((time,comp)).mean()["value"])
+                e.append(df_grouped.get_group((time,comp)).std()["value"]/np.sqrt(df_grouped.get_group((time,comp)).shape[0]))
+            fig.add_trace(go.Scatter(x=t,
+                                    y=y,
+                                    error_y=dict(
+                                    type='data', # value of error bar given in data coordinates
+                                    array=e,
+                                    color=pallet[idx],
+                                    visible=True),
+                                    mode="markers",
+                                    marker=dict(
+                                        color=pallet[idx]
+                                    ),
+                                    name=comp+" Observed"
+                                    ))
+            
+            
         fig.show()
+    else:
+        raise TypeError("Data argument should be either a core. Experiment object or an iterable of core.Experiment objects.")
         
     return  out
 
@@ -379,11 +434,10 @@ def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validat
     x=np.array(x)
     y=np.array(y)
     return Validation(r_squared=1-(np.sum(np.square(y-x))/np.sum(np.square(y-np.mean(y)))),rmse=np.sqrt(np.sum(np.square(y-x))))
-    
-            
+      
             
         
-        
+
 
 
 

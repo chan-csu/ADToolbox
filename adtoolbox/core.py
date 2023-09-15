@@ -1639,7 +1639,7 @@ class Metagenomics:
         matches = os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
         aligned=pd.read_table(matches,header=None,delimiter='\t')
         aligned.drop_duplicates(0,inplace=True)
-        aligned[1]=aligned[1].apply(lambda x: "".join(x.split('_')[1:]))
+        aligned[1]=aligned[1].apply(lambda x: ("".join(x.split('_')[1:])).split("~")[0])
         alignment_dict=dict(zip(aligned[0],aligned[1]))
         if save:
             with open(self.config.feature_to_taxa, 'w') as f:
