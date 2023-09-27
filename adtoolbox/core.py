@@ -19,11 +19,13 @@ from pathlib import Path
 from collections import Counter
 from collections import namedtuple
 import pathlib
+import asyncio
 import tarfile
 import configs
 from rich.progress import track,Progress
 import rich
 from __init__ import Main_Dir
+from typing import Iterable
 from typing import Union
 from dataclasses import dataclass
 import dataclasses
@@ -745,7 +747,7 @@ class Database:
                     
         return ec_list
           
-    def add_protein_to_protein_db(self, protein_id:str, ec_number:str)->None:
+    def add_protein_to_protein_db(self, protein_id:str, header_tail:str)->None:
         """
         This funciton adds a protein sequence to the protein database. It takes a uniprot id and an EC number it is assigned to 
         and adds the corresponding protein sequence to the protein database.
@@ -755,7 +757,9 @@ class Database:
 
         Args:
             protein_id (str): The uniprot id of the protein.
-            ec_number (str): The EC number of the protein.
+            header_tail (str): A text to append to the header of the entry in the database;
+            In ADToolbox it is better to use ec number for compatibility with downstream functions.
+        
     
         Examples:
             >>> import os
@@ -771,7 +775,7 @@ class Database:
         if not os.path.exists(self.config.protein_db):
             self.initialize_protein_db()
         with open(self.config.protein_db,"a") as f:
-            f.write(">"+protein_id+"|"+ec_number+"\n")
+            f.write(">"+protein_id+"|"+header_tail+"\n")
             f.write(self.get_protein_seqs_from_uniprot(protein_id)+"\n")
             
     def add_proteins_from_ecnumbers_to_protein_db(self, ec_numbers:list)->None:
@@ -1679,7 +1683,7 @@ class Metagenomics:
         genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
             
         if container=="None":
-            bash_script+=('\nrsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
+            bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
             
         if container=="docker":
             bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
@@ -1688,6 +1692,17 @@ class Metagenomics:
             bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
         
         return bash_script
+    
+    def async_genome_downloader(self,identifiers:Iterable[str],batch_size:float=10,container:str="None"):
+        sem=asyncio.Semaphore(batch_size)
+        asyncio.run(self._collect_coros(identifiers=identifiers,semaphore=sem,container=container))
+        
+    async def _collect_coros(self,identifiers:Iterable[str],semaphore:asyncio.Semaphore,container:str="None"):
+        await asyncio.gather(*[self._genome_dl_coro(identifier=i,semaphore=semaphore,container=container) for i in identifiers])
+        
+    async def _genome_dl_coro(self,identifier:str,semaphore:asyncio.Semaphore,container:str="None")->None:
+        async with semaphore:
+            await asyncio.create_subprocess_exec(*self.download_genome(identifier=identifier,container=container).split(" "))
     
     def extract_genome_info(self,save:bool=True)->dict[str,str]:
         """This function extracts the genome information from the genomes base directory. If you want to save the genome information as a json file, set save to True.

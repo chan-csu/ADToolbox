@@ -204,32 +204,25 @@ class NNSurrogateTuner:
         self._generate_initial_population()
         self._aquired={}
         self._network=torch.nn.Sequential(
-            torch.nn.Linear(len(self.tunables), 20),
+            torch.nn.Linear(len(self.tunables), 30),
             torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
+            torch.nn.Linear(30, 30),
             torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
+            torch.nn.Linear(30, 30),
             torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
+            torch.nn.Linear(30, 30),
             torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
+            torch.nn.Linear(30, 30),
             torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
+            torch.nn.Linear(30, 30),
             torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
-            torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
-            torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
-            torch.nn.Tanh(),
-            torch.nn.Linear(20, 20),
-            torch.nn.Tanh(),
-            torch.nn.Linear(20, 1),   
+            torch.nn.Linear(30, 1),   
         )
         self.save_every=save_every
         self.history_file_path=history_file_path
         self.exp_std=exp_std
         torch.set_num_threads(1)
+        self._initialized=False
         
     def _get_space(self)->np.ndarray:
         self._param_space=np.array(list(zip(*self.tunables.values()))).T
@@ -325,6 +318,11 @@ class NNSurrogateTuner:
                 
         
         return self.history
+    
+    def load_history_file(self,address:str)->None:
+        with open(address,"rb") as f:
+            self._aquired=pickle.load(f)
+        self._initialized=True
 
             
     

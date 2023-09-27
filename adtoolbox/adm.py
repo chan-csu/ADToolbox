@@ -178,7 +178,8 @@ class Model:
         try:
             c = scipy.integrate.solve_ivp(
                 self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self])
-        
+            if not c.success:
+                raise Exception
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
             c=_Fake_Sol(np.ones((y0.shape[0],t_eval.__len__()))*1e10,t_eval)
@@ -884,126 +885,94 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
 
     S[list(map(species.index, ["S_su", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_su"])),
       reactions.index('Uptake of sugars')] = [-1,
-                                              (1-model_parameters['Y_su']) *
-                                              model_parameters['f_pro_su'],
-                                              (1-model_parameters['Y_su']) *
-                                              model_parameters['f_et_su'],
-                                              (1-model_parameters['Y_su']) *
-                                              model_parameters['f_lac_su'],
-                                              (1-model_parameters['Y_su']) *
-                                              model_parameters['f_ac_su'],
+                                              (1-model_parameters['Y_su']) * model_parameters['f_pro_su'],
+                                              (1-model_parameters['Y_su']) * model_parameters['f_et_su'],
+                                              (1-model_parameters['Y_su']) * model_parameters['f_lac_su'],
+                                              (1-model_parameters['Y_su']) * model_parameters['f_ac_su'],
                                               -model_parameters['N_bac']*model_parameters['Y_su'],
                                               f_IC_su,
                                               model_parameters['Y_su']]
 
     f_IC_aa = -(-model_parameters['C_aa'] +
-                (1-model_parameters['Y_aa'])*model_parameters['f_pro_aa']*model_parameters['C_pro'] +
-                (1-model_parameters['Y_aa'])*model_parameters['f_et_aa']*model_parameters['C_et'] +
-                (1-model_parameters['Y_aa'])*model_parameters['f_lac_aa']*model_parameters['C_lac'] +
-                (1-model_parameters['Y_aa'])*model_parameters['f_ac_aa']*model_parameters['C_ac'] +
+                (1-model_parameters['Y_aa'])*model_parameters['f_pro_aa'] * model_parameters['C_pro'] +
+                (1-model_parameters['Y_aa'])*model_parameters['f_lac_aa'] * model_parameters['C_lac'] +
+                (1-model_parameters['Y_aa'])*model_parameters['f_ac_aa'] * model_parameters['C_ac'] +
+                (1-model_parameters['Y_aa'])*model_parameters['f_bu_aa'] * model_parameters['C_bu'] +
                 (1-model_parameters['Y_aa'])*model_parameters['C_bac'])
 
-    S[list(map(species.index, ["S_aa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_aa"])),
+    S[list(map(species.index, ["S_aa", "S_pro", "S_bu", "S_lac", "S_ac", "S_IN", "S_IC", "X_aa"])),
       reactions.index('Uptake of amino acids')] = [-1,
-                                                   (1-model_parameters['Y_aa']) *
-                                                   model_parameters['f_pro_aa'],
-                                                   (1-model_parameters['Y_aa']) *
-                                                   model_parameters['f_et_aa'],
-                                                   (1-model_parameters['Y_aa']) *
-                                                   model_parameters['f_lac_aa'],
-                                                   (1-model_parameters['Y_aa']) *
-                                                   model_parameters['f_ac_aa'],
-                                                   model_parameters['N_aa']-model_parameters['Y_aa'] *
-                                                   model_parameters['N_bac'],
+                                                   (1-model_parameters['Y_aa']) * model_parameters['f_pro_aa'],
+                                                   (1-model_parameters['Y_aa']) * model_parameters['f_bu_aa'],
+                                                   (1-model_parameters['Y_aa']) * model_parameters['f_lac_aa'],
+                                                   (1-model_parameters['Y_aa']) * model_parameters['f_ac_aa'],
+                                                   model_parameters['N_aa']- model_parameters['Y_aa'] * model_parameters['N_bac'],
                                                    f_IC_aa,
                                                    model_parameters['Y_aa']]
     f_IC_fa = -(-model_parameters['C_fa'] +
                 (1-model_parameters['Y_fa'])*model_parameters['f_pro_fa']*model_parameters['C_pro'] +
-                (1-model_parameters['Y_fa'])*model_parameters['f_et_fa']*model_parameters['C_et'] +
-                (1-model_parameters['Y_fa'])*model_parameters['f_lac_fa']*model_parameters['C_lac'] +
                 (1-model_parameters['Y_fa'])*model_parameters['f_ac_fa']*model_parameters['C_ac'] +
                 (1-model_parameters['Y_fa'])*model_parameters['C_bac'])
 
-    S[list(map(species.index, ["S_fa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_fa"])),
+    S[list(map(species.index, ["S_fa", "S_pro", "S_ac", "S_IN", "S_IC", "X_fa"])),
       reactions.index('Uptake of LCFA')] = [-1,
-                                            (1-model_parameters['Y_fa']) *
-                                            model_parameters['f_pro_fa'],
-                                            (1-model_parameters['Y_fa']) *
-                                            model_parameters['f_et_fa'],
-                                            (1-model_parameters['Y_fa']) *
-                                            model_parameters['f_lac_fa'],
-                                            (1-model_parameters['Y_fa']) *
-                                            model_parameters['f_ac_fa'],
-                                            -model_parameters['Y_fa'] *
-                                            model_parameters['N_bac'],
+                                            (1-model_parameters['Y_fa']) * model_parameters['f_pro_fa'],
+                                            (1-model_parameters['Y_fa']) * model_parameters['f_ac_fa'],
+                                            -model_parameters['Y_fa'] * model_parameters['N_bac'],
                                             f_IC_fa,
                                             model_parameters['Y_fa']]
+#HERE
+    f_IC_ac_et = -((-1-(1-model_parameters['Y_ac_et']) * model_parameters['f_et_ac'])*model_parameters['C_ac'] +
+                   (1-model_parameters['Y_ac_et'])* model_parameters['f_et_ac']*model_parameters['C_et'] +
+                   (1-model_parameters['Y_ac_et']) * model_parameters['f_bu_ac']*model_parameters['C_bu'] +
+                   (1-model_parameters['Y_ac_et'])* model_parameters['C_bac'])
 
-    f_IC_ac_et = -(-model_parameters['C_ac'] +
-                   (1-model_parameters['Y_ac_et'])*model_parameters['f_et_ac']*model_parameters['C_et'] +
-                   (1-model_parameters['Y_ac_et']) *
-                   model_parameters['f_bu_ac']*model_parameters['C_bu'] +
-                   (1-model_parameters['Y_ac_et'])*model_parameters['C_bac'])
-
-    f_IC_ac_lac = -(-model_parameters['C_ac'] +
-                    (1-model_parameters['Y_ac_lac'])*model_parameters['f_lac_ac']*model_parameters['C_lac'] +
-                    (1-model_parameters['Y_ac_lac']) *
-                    model_parameters['f_bu_ac']*model_parameters['C_bu'] +
-                    (1-model_parameters['Y_ac_lac'])*model_parameters['C_bac'])
+    f_IC_ac_lac = -((-1-(1-model_parameters['Y_ac_lac']) * model_parameters['f_lac_ac'])*model_parameters['C_ac'] +
+                    (1-model_parameters['Y_ac_lac'])* model_parameters['f_lac_ac']* model_parameters['C_lac'] +
+                    (1-model_parameters['Y_ac_lac'])* model_parameters['f_bu_ac']* model_parameters['C_bu'] +
+                    (1-model_parameters['Y_ac_lac'])* model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_ac", "S_et", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_et"])),
-      reactions.index('Uptake of acetate_et')] = [-1,
-                                                  (1-model_parameters['Y_ac_et']) *
-                                                  model_parameters['f_et_ac'],
-                                                  (1-model_parameters['Y_ac']) *
-                                                  model_parameters['f_bu_ac'],
-                                                  -model_parameters['Y_ac_et'] *
-                                                  model_parameters['N_bac'],
+      reactions.index('Uptake of acetate_et')] = [-1-(1-model_parameters['Y_ac_et']) * model_parameters['f_et_ac'],
+                                                  (1-model_parameters['Y_ac_et']) * model_parameters['f_et_ac'],
+                                                  (1-model_parameters['Y_ac']) * model_parameters['f_bu_ac'],
+                                                  -model_parameters['Y_ac_et'] * model_parameters['N_bac'],
                                                   f_IC_ac_et,
-                                                  (1-model_parameters['Y_ac_et']) *
-                                                  model_parameters['f_h2_ac'],
+                                                  (1-model_parameters['Y_ac_et']) * model_parameters['f_h2_ac'],
                                                   model_parameters['Y_ac_et']]
 
     S[list(map(species.index, ["S_ac", "S_lac", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_lac"])),
-        reactions.index('Uptake of acetate_lac')] = [-1,
-                                                     (1-model_parameters['Y_ac_lac']) *
-                                                     model_parameters['f_lac_ac'],
-                                                     (1-model_parameters['Y_ac_lac']) *
-                                                     model_parameters['f_bu_ac'],
-                                                     -model_parameters['Y_ac_lac'] *
-                                                     model_parameters['N_bac'], 
+        reactions.index('Uptake of acetate_lac')] = [-1-(1-model_parameters['Y_ac_lac']) * model_parameters['f_lac_ac'],
+                                                     (1-model_parameters['Y_ac_lac']) * model_parameters['f_lac_ac'],
+                                                     (1-model_parameters['Y_ac_lac']) * model_parameters['f_bu_ac'],
+                                                     -model_parameters['Y_ac_lac'] * model_parameters['N_bac'], 
                                                      f_IC_ac_lac,
-                                                     (1-model_parameters['Y_ac_lac']) *
-                                                     model_parameters['f_h2_ac'],
+                                                     (1-model_parameters['Y_ac_lac']) * model_parameters['f_h2_ac'],
                                                      model_parameters['Y_ac_lac']]
 
-    f_IC_pro_et = -(-model_parameters['C_pro'] +
+    f_IC_pro_et = -((-1-(1-model_parameters['Y_pro_et']) * model_parameters['f_et_pro'])*model_parameters['C_pro'] +
                     (1-model_parameters['Y_pro_et'])*model_parameters['f_et_pro']*model_parameters['C_et'] +
                     (1-model_parameters['Y_pro_et'])*model_parameters['f_va_pro']*model_parameters['C_va'] +
                     (1-model_parameters['Y_pro_et'])*model_parameters['C_bac'])
 
-    f_IC_pro_lac = -(-model_parameters['C_pro'] +
+    f_IC_pro_lac = -((-1-(1-model_parameters['Y_pro_lac']) * model_parameters['f_lac_pro'])*model_parameters['C_pro'] +
                      (1-model_parameters['Y_pro_lac'])*model_parameters['f_lac_pro']*model_parameters['C_lac'] +
                      (1-model_parameters['Y_pro_lac'])*model_parameters['f_va_pro']*model_parameters['C_va'] +
                      (1-model_parameters['Y_pro_lac'])*model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_pro", "S_et", "S_va","S_IC","S_IN","S_h2", "X_chain_et"])),
-      reactions.index('Uptake of propionate_et')] = [-1,
-                                                     (1-model_parameters['Y_pro_et']) *
-                                                     model_parameters['f_et_pro'],
-                                                     (1-model_parameters['Y_pro_et']) *
-                                                     model_parameters['f_va_pro'],
+      reactions.index('Uptake of propionate_et')] = [-1-(1-model_parameters['Y_pro_et']) * model_parameters['f_et_pro'],
+                                                     (1-model_parameters['Y_pro_et']) * model_parameters['f_et_pro'],
+                                                     (1-model_parameters['Y_pro_et']) * model_parameters['f_va_pro'],
                                                      f_IC_pro_et,
-                                                     -model_parameters['Y_pro_et'] *
-                                                     model_parameters['N_bac'],
-                                                     (1-model_parameters['Y_pro_et']) *
-                                                     model_parameters['f_h2_pro'],
+                                                     -model_parameters['Y_pro_et'] * model_parameters['N_bac'],
+                                                     (1-model_parameters['Y_pro_et']) * model_parameters['f_h2_pro'],
                                                      model_parameters['Y_chain_et_pro']]
 
     S[list(map(species.index, ["S_pro", "S_lac", "S_va", "S_IC", "S_IN", "S_h2", "X_chain_lac"])),
-        reactions.index('Uptake of propionate_lac')] = [-1,
-                        (1-model_parameters['Y_pro_lac']) * model_parameters['f_lac_pro'],
-                        (1-model_parameters['Y_pro_lac']) * model_parameters['f_va_pro'],
+        reactions.index('Uptake of propionate_lac')] = [-1-(1-model_parameters['Y_pro_lac']) * model_parameters['f_lac_pro'],
+                                                        (1-model_parameters['Y_pro_lac']) * model_parameters['f_lac_pro'],
+                                                        (1-model_parameters['Y_pro_lac']) * model_parameters['f_va_pro'],
                                                         f_IC_pro_lac,
                                                         -model_parameters['Y_pro_lac'] *
                                                         model_parameters['N_bac'],
@@ -1011,30 +980,27 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
                                                         model_parameters['f_h2_pro'],
                                                         model_parameters['Y_chain_lac_pro']]
 
-    f_IC_bu_et = -(-model_parameters['C_bu'] +
+    f_IC_bu_et = -((-1-(1-model_parameters['Y_bu_et']) * model_parameters['f_et_bu'])*model_parameters['C_bu'] +
                    (1-model_parameters['Y_bu_et'])*model_parameters['f_et_bu']*model_parameters['C_et'] +
                    (1-model_parameters['Y_bu_et'])*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
                    (1-model_parameters['Y_bu_et'])*model_parameters['C_bac'])
 
-    f_IC_bu_lac = -(-model_parameters['C_bu'] +
+    f_IC_bu_lac = -((-1-(1-model_parameters['Y_bu_lac']) * model_parameters['f_lac_bu'])*model_parameters['C_bu'] +
                     (1-model_parameters['Y_bu_lac'])*model_parameters['f_lac_bu']*model_parameters['C_lac'] +
                     (1-model_parameters['Y_bu_lac'])*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
                     (1-model_parameters['Y_bu_lac'])*model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_bu", "S_et", "S_cap", "S_IC", "S_IN", "S_h2", "X_chain_et"])),
-        reactions.index('Uptake of butyrate_et')] = [-1,
-                                                     (1-model_parameters['Y_bu_et']
-                                                      ) * model_parameters['f_et_bu'],
-                                                     (1-model_parameters['Y_bu_et']) *
-                                                     model_parameters['f_cap_bu'],
+        reactions.index('Uptake of butyrate_et')] = [-1-(1-model_parameters['Y_bu_et']) * model_parameters['f_et_bu'],
+                                                     (1-model_parameters['Y_bu_et']) * model_parameters['f_et_bu'],
+                                                     (1-model_parameters['Y_bu_et']) * model_parameters['f_cap_bu'],
                                                      f_IC_bu_et,
                                                      -model_parameters['Y_bu_et'] * model_parameters['N_bac'],
-                                                     (1-model_parameters['Y_bu_et']
-                                                      )*model_parameters['f_h2_bu'],
+                                                     (1-model_parameters['Y_bu_et'])*model_parameters['f_h2_bu'],
                                                      model_parameters['Y_bu_et']]
 
     S[list(map(species.index, ["S_bu", "S_lac", "S_cap", "S_IC", "S_IN", "S_h2", "X_chain_lac"])),
-        reactions.index('Uptake of butyrate_lac')] = [-1,
+        reactions.index('Uptake of butyrate_lac')] = [-1-(1-model_parameters['Y_bu_lac']) * model_parameters['f_lac_bu'],
                                                       (1-model_parameters['Y_bu_lac']) * model_parameters['f_lac_bu'],
                                                       (1-model_parameters['Y_bu_lac']) * model_parameters['f_cap_bu'],
                                                       f_IC_bu_lac,
@@ -1054,22 +1020,26 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
                                                    model_parameters['Y_cap']),
                                                   model_parameters['Y_cap']]
     
-    f_IC_Me_ach2 = 0
+    f_IC_Me_ach2 = -((1 - model_parameters['Y_h2_ac'])*model_parameters['f_ac_h2']*model_parameters['C_ac']+
+                     (1 -model_parameters['Y_Me_ac'])*model_parameters['C_ch4']+
+                     model_parameters['Y_Me_ac']*model_parameters['C_bac'])
+                     
+        
+    
     S[list(map(species.index, ["S_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC'])),
-        reactions.index('Methanogenessis from acetate and h2')] = [-1,
+        reactions.index('Methanogenessis from acetate and h2')] = [-1-(1 - model_parameters['Y_h2_ac'])*model_parameters['f_ac_h2'],
                     (1 - model_parameters['Y_h2_ac'])*model_parameters['f_ac_h2'],
-                    (1 -model_parameters['Y_Me_ac']),
-                    model_parameters['Y_Me_ac'],
+                    (1 -model_parameters['Y_h2_ac']),
+                    model_parameters['Y_h2_ac'],
                     f_IC_Me_ach2]
 
-    f_IC_Me_CO2h2 = -(model_parameters['Y_Me_CO2']*model_parameters['C_ch4'] +
-                      model_parameters['Y_Me_h2']*model_parameters['C_bac'])
+    f_IC_Me_CO2h2 = -(model_parameters['Y_h2_CO2']*model_parameters['C_ch4'] +
+                      model_parameters['Y_h2_CO2']*model_parameters['C_bac'])
     
     S[list(map(species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_IC'])),
         reactions.index('Methanogenessis from CO2 and h2')] = [-1,
-                                                               (1 -
-                                                                model_parameters['Y_h2_CO2']),
-                                                               (model_parameters['Y_Me_CO2']),
+                                                               (1 - model_parameters['Y_h2_CO2']),
+                                                               (model_parameters['Y_h2_CO2']),
                                                                f_IC_Me_CO2h2]
     
     f_IC_et_ox=-(-model_parameters['C_et'] +
@@ -1118,29 +1088,29 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
     S[list(map(species.index, ["X_Me_CO2", "TSS"])),
         reactions.index('Decay of X_Me_CO2')] = [-1, 1]
 
-    S[list(map(species.index, ["S_va_ion"])),
-        reactions.index('Acid Base Equilibrium (Va)')] = [-1]
+    S[list(map(species.index, ["S_va_ion","S_va"])),
+        reactions.index('Acid Base Equilibrium (Va)')] = [-1,1]
 
-    S[list(map(species.index, ["S_bu_ion"])),
-        reactions.index('Acid Base Equilibrium (Bu)')] = [-1]
+    S[list(map(species.index, ["S_bu_ion","S_bu"])),
+        reactions.index('Acid Base Equilibrium (Bu)')] = [-1,1]
 
-    S[list(map(species.index, ["S_pro_ion"])),
-        reactions.index('Acid Base Equilibrium (Pro)')] = [-1]
+    S[list(map(species.index, ["S_pro_ion","S_pro"])),
+        reactions.index('Acid Base Equilibrium (Pro)')] = [-1,1]
 
-    S[list(map(species.index, ["S_cap_ion"])),
-        reactions.index('Acid Base Equilibrium (Cap)')] = [-1]
+    S[list(map(species.index, ["S_cap_ion","S_cap"])),
+        reactions.index('Acid Base Equilibrium (Cap)')] = [-1,1]
 
-    S[list(map(species.index, ["S_lac_ion"])),
-        reactions.index('Acid Base Equilibrium (Lac)')] = [-1]
+    S[list(map(species.index, ["S_lac_ion","S_lac"])),
+        reactions.index('Acid Base Equilibrium (Lac)')] = [-1,1]
 
-    S[list(map(species.index, ["S_ac_ion"])),
-        reactions.index('Acid Base Equilibrium (Ac)')] = [-1]
+    S[list(map(species.index, ["S_ac_ion","S_ac"])),
+        reactions.index('Acid Base Equilibrium (Ac)')] = [-1,1]
 
-    # S[list(map(species.index, ["S_CO2", "S_hco3_ion"])),  # I don't think this is right، should look at the reaction in ADM1
-    #     reactions.index('Acid Base Equilibrium (CO2)')] = [-1, 1]
+    S[list(map(species.index, ["S_co2", "S_hco3_ion"])),  # I don't think this is right، should look at the reaction in ADM1
+        reactions.index('Acid Base Equilibrium (CO2)')] = [-1, 1]
 
-    # S[list(map(species.index, ["S_nh3", "S_nh4_ion"])),
-    #     reactions.index('Acid Base Equilibrium (IN)')] = [-1, 1]  # I don't think this is right، should look at the reaction in ADM1
+    S[list(map(species.index, ["S_nh3", "S_nh4_ion"])),
+        reactions.index('Acid Base Equilibrium (In)')] = [-1, 1]  # I don't think this is right، should look at the reaction in ADM1
 
     S[list(map(species.index, ["S_h2", "S_gas_h2"])),
         reactions.index('Gas Transfer H2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
@@ -1163,6 +1133,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     Returns:
         np.ndarray: The output is dCdt, the change of concentration with respect to time. 
     """
+    c[model.species.index('S_H_ion')]=0.00001
     if model.switch == "DAE":
         
         c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
@@ -1176,7 +1147,39 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
         
         c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]
-    c[model.species.index('S_H_ion')]=0.000001
+    else: 
+        v[model.reactions.index('Acid Base Equilibrium (Va)')] = model.model_parameters['k_A_B_va'] * \
+            (c[model.species.index('S_va_ion')] * (model.model_parameters['K_a_va'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_va'] * c[model.species.index('S_va')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (Bu)')] = model.model_parameters['k_A_B_bu'] * \
+            (c[model.species.index('S_bu_ion')] * (model.model_parameters['K_a_bu'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_bu'] * c[model.species.index('S_bu')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (Pro)')] = model.model_parameters['k_A_B_pro'] * \
+            (c[model.species.index('S_pro_ion')] * (model.model_parameters['K_a_pro'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_pro'] * c[model.species.index('S_pro')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (Cap)')] = model.model_parameters['k_A_B_cap'] * \
+            (c[model.species.index('S_cap_ion')] * (model.model_parameters['K_a_cap'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_cap'] * c[model.species.index('S_cap')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (Lac)')] = model.model_parameters['k_A_B_lac'] * \
+            (c[model.species.index('S_lac_ion')] * (model.model_parameters['K_a_lac'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_lac'] * c[model.species.index('S_lac')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (Ac)')] = model.model_parameters['k_A_B_ac'] * \
+            (c[model.species.index('S_ac_ion')] * (model.model_parameters['K_a_ac'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_ac'] * c[model.species.index('S_ac')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (CO2)')] = model.model_parameters['k_A_B_co2'] * \
+            (c[model.species.index('S_hco3_ion')] * (model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')])
+    
+        v[model.reactions.index('Acid Base Equilibrium (In)')] = model.model_parameters['k_A_B_IN'] * \
+            (c[model.species.index('S_nh3')] * (model.model_parameters['K_a_IN'] + c[model.species.index('S_H_ion')]) -
+             model.model_parameters['K_a_IN'] * c[model.species.index('S_IC')])
+    
     c[c<0]=0
     c[model.species.index('S_nh4_ion')] = c[model.species.index(
         'S_IN')] - c[model.species.index('S_nh3')]
@@ -1262,8 +1265,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Uptake of LCFA')] = model.model_parameters['k_m_fa']*c[model.species.index('S_fa')] / \
         (model.model_parameters['K_S_fa'] +
          c[model.species.index('S_fa')])*c[model.species.index('X_fa')]*I7
-    # if t>2:
-    #     print('here')
+
     v[model.reactions.index('Uptake of acetate_et')] = model.model_parameters['k_m_ac']*c[model.species.index('S_ac')]*c[model.species.index('S_et')] / \
         (model.model_parameters['K_S_ac']*c[model.species.index('S_ac')]+model.model_parameters['K_S_ac_et']*c[model.species.index('S_et')]+c[model.species.index('S_ac')]*c[model.species.index('S_et')]+10**-9
          )*c[model.species.index('X_ac_et')]*I11
@@ -1349,37 +1351,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index(
         'Decay of Xlac')] = model.model_parameters['k_dec_X_lac']*c[model.species.index('X_lac')]
 
-    v[model.reactions.index('Acid Base Equilibrium (Va)')] = model.model_parameters['k_A_B_va'] * \
-        (c[model.species.index('S_va_ion')] * (model.model_parameters['K_a_va'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_va'] * c[model.species.index('S_va')])
 
-    v[model.reactions.index('Acid Base Equilibrium (Bu)')] = model.model_parameters['k_A_B_bu'] * \
-        (c[model.species.index('S_bu_ion')] * (model.model_parameters['K_a_bu'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_bu'] * c[model.species.index('S_bu')])
-
-    v[model.reactions.index('Acid Base Equilibrium (Pro)')] = model.model_parameters['k_A_B_pro'] * \
-        (c[model.species.index('S_pro_ion')] * (model.model_parameters['K_a_pro'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_pro'] * c[model.species.index('S_pro')])
-
-    v[model.reactions.index('Acid Base Equilibrium (Cap)')] = model.model_parameters['k_A_B_cap'] * \
-        (c[model.species.index('S_cap_ion')] * (model.model_parameters['K_a_cap'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_cap'] * c[model.species.index('S_cap')])
-
-    v[model.reactions.index('Acid Base Equilibrium (Lac)')] = model.model_parameters['k_A_B_lac'] * \
-        (c[model.species.index('S_lac_ion')] * (model.model_parameters['K_a_lac'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_lac'] * c[model.species.index('S_lac')])
-
-    v[model.reactions.index('Acid Base Equilibrium (Ac)')] = model.model_parameters['k_A_B_ac'] * \
-        (c[model.species.index('S_ac_ion')] * (model.model_parameters['K_a_ac'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_ac'] * c[model.species.index('S_ac')])
-
-    v[model.reactions.index('Acid Base Equilibrium (CO2)')] = model.model_parameters['k_A_B_co2'] * \
-        (c[model.species.index('S_hco3_ion')] * (model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')])
-
-    v[model.reactions.index('Acid Base Equilibrium (In)')] = model.model_parameters['k_A_B_IN'] * \
-        (c[model.species.index('S_nh3')] * (model.model_parameters['K_a_IN'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_IN'] * c[model.species.index('S_IC')])
 
     p_gas_h2 = c[model.species.index('S_gas_h2')] * model.base_parameters["R"] * \
         model.base_parameters["T_op"] / 16
@@ -1444,34 +1416,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
 
 
 if __name__ == "__main__":
-   # Report = os.path.join(Main_Dir, "..", "Reports",
-                         # "ADM_From_Alignment_JSON_Output.json")
-   # with open(Report, 'r') as j:
-        #Report = json.load(j)
 
-   #adm1 = Model(model_parameters, base_parameters, Initial_Conditions,
-   #             inlet_conditions, reactions, species, ADM1_ODE_Sys, Build_ADM1_Stoiciometric_Matrix, Name="ADM1", Switch="DAE")
-   #Sol = adm1.Solve_Model(
-   #    (0, 20), adm1.Initial_Conditions[:, 0], np.linspace(0, 20, 100))
-
-    # adm1.Dash_App(Sol)
-    # with open("/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/ADToolBox/Optimization/Tuned_Params.json", 'r') as f:
-    #     mp=json.load(f)
-    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_base_parameters.json', 'r') as f:
-    #     BP=json.load(f)
-    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_Initial_Conditions.json', 'r') as f:
-    #     IC=json.load(f)
-    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_inlet_conditions.json', 'r') as f:
-    #     InC=json.load(f)
-    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_reactions.json', 'r') as f:
-    #     r=json.load(f)
-    # with open('/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Modified_ADM/Modified_ADM_species.json', 'r') as f:
-    #     s=json.load(f)
-    
-    # mod_adm1 = Model(mp, BP, IC, InC, DEFAULT_FEED,r,
-    #                  s, modified_adm_ode_sys, build_modified_adm_stoichiometric_matrix,control_state={"S_H_ion":0},name="Modified_ADM1", switch="DAE")
-    
-    # Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
     # mod_adm1.dash_app(Sol_mod_adm1)
     db_conf=configs.Database()
     with open(db_conf.model_parameters, 'r') as f:
