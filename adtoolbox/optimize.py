@@ -314,7 +314,9 @@ class NNSurrogateTuner:
                 self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"]}
                 with open(f"{str(self.history_file_path.absolute())}","wb") as file:
                     pickle.dump(self.history,file)
-                
+            if i>50:
+                self._aquired["parameters"]=self._aquired["parameters"][-20:,:]
+                self._aquired["cost"]=self._aquired["cost"][-20:]   
                 
         
         return self.history
@@ -332,7 +334,7 @@ class NNSurrogateTuner:
 
     
 
-def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False)->dict[str,pd.DataFrame]:
+def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False,show_extra_states:Iterable[str]|None=None)->dict[str,pd.DataFrame]:
     """
     This function can be used to compare the model's predictions to the experimental data of interest.
     
@@ -353,8 +355,8 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
         ic=data.initial_concentrations.copy()
         ic.update({model.species[k]:data.data[0,idx] for idx,k in enumerate(data.variables) })
         model.update_parameters(initial_conditions=ic)
-        solution=model.solve_model(np.array(data.time)).y[data.variables,:]
-        out={"model":pd.DataFrame(solution.T,index=np.array(data.time).tolist(),columns=data.variables),
+        solution=model.solve_model(np.array(data.time))
+        out={"model":pd.DataFrame(solution.y[data.variables,:].T,index=np.array(data.time).tolist(),columns=data.variables),
              "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
         if plot:
             fig=go.Figure()
@@ -363,6 +365,10 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
                     color=pallet[idx])))
                 fig.add_trace(go.Scatter(x=out["data"].index,y=out["data"][variable],name=model.species[variable]+" observed",mode="markers",marker=dict(
                     color=pallet[idx])))
+            if show_extra_states:
+                for idx,extra in enumerate(show_extra_states):
+                    fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=model.species[model.species.index(extra)],mode="lines",line=dict(
+                        color=pallet[idx+len(data.variables)])))
             fig.show()
     
     elif isinstance(data,Iterable):
@@ -372,8 +378,8 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
         ic=pd.concat([pd.DataFrame(i.initial_concentrations,index=[0]) for  i in data ]).mean().to_dict()
         ic.update({model.species[k]:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
         model.update_parameters(initial_conditions=ic)
-        solution=model.solve_model(np.array(data[0].time)).y[data[0].variables,:]
-        out={"model":pd.DataFrame(solution.T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
+        solution=model.solve_model(np.array(data[0].time))
+        out={"model":pd.DataFrame(solution.y[data[0].variables,:].T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
         for idx,variable in enumerate(data[0].variables):
             fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=model.species[variable],mode="lines",line=dict(
                     color=pallet[idx])))
@@ -410,7 +416,10 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
                                     name=comp+" Observed"
                                     ))
             
-            
+        if show_extra_states:
+            for idx,extra in enumerate(show_extra_states):
+                fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=model.species[model.species.index(extra)],mode="lines",line=dict(
+                    color=pallet[idx+len(data[0].variables)])))
         fig.show()
     else:
         raise TypeError("Data argument should be either a core. Experiment object or an iterable of core.Experiment objects.")
