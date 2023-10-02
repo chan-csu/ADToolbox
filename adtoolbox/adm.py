@@ -1005,20 +1005,23 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
                                                       (1-model_parameters['Y_bu_lac']) * model_parameters['f_cap_bu'],
                                                       f_IC_bu_lac,
                                                       -model_parameters['Y_bu_lac'] * model_parameters['N_bac'],
-                                                      (1-model_parameters['Y_bu_lac']
-                                                       )*model_parameters['f_h2_bu'],
+                                                      (1-model_parameters['Y_bu_lac'])*model_parameters['f_h2_bu'],
                                                       model_parameters['Y_bu_lac']]
 
-    S[list(map(species.index, ["S_va", "S_ac", "X_VFA_deg"])),
+    S[list(map(species.index, ["S_va", "S_pro", "X_VFA_deg"])),
         reactions.index('Uptake of valerate')] = [-1,
                                                   (1-model_parameters['Y_va']),
                                                   model_parameters['Y_va']]
 
     S[list(map(species.index, ["S_cap", "S_ac", "X_VFA_deg"])),
         reactions.index('Uptake of caproate')] = [-1,
-                                                  (1 -
-                                                   model_parameters['Y_cap']),
+                                                  (1 - model_parameters['Y_cap']),
                                                   model_parameters['Y_cap']]
+    
+    S[list(map(species.index, ["S_bu", "S_ac", "X_VFA_deg"])),
+        reactions.index('Uptake of butyrate')] = [-1,
+                                                  (1 - model_parameters['Y_bu']),
+                                                  model_parameters['Y_bu']]
     
     f_IC_Me_ach2 = -((1 - model_parameters['Y_h2_ac'])*model_parameters['f_ac_h2']*model_parameters['C_ac']+
                      (1 -model_parameters['Y_Me_ac'])*model_parameters['C_ch4']+
@@ -1289,14 +1292,15 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Uptake of butyrate_lac')] = model.model_parameters['k_m_bu']*c[model.species.index('S_bu')]*c[model.species.index('S_lac')] / \
         (model.model_parameters['K_S_bu']*c[model.species.index('S_bu')]+model.model_parameters['K_S_bu_lac']*c[model.species.index('S_lac')]+c[model.species.index('S_bu')]*c[model.species.index('S_lac')]+10**-9
          )*c[model.species.index('X_chain_lac')]*I14
-
+    
+    v[model.reactions.index('Uptake of butyrate')] = model.model_parameters['k_m_bu']*c[model.species.index('S_bu')]/ \
+        (model.model_parameters['K_S_bu']+c[model.species.index('S_bu')])*c[model.species.index('X_VFA_deg')]*I14
+    
     v[model.reactions.index('Uptake of valerate')] = model.model_parameters['k_m_va']*c[model.species.index('S_va')] / \
-        (model.model_parameters['K_S_va']+c[model.species.index('S_va')]
-         )*c[model.species.index('X_VFA_deg')]*I15
+        (model.model_parameters['K_S_va']+c[model.species.index('S_va')])*c[model.species.index('X_VFA_deg')]*I15
 
     v[model.reactions.index('Uptake of caproate')] = model.model_parameters['k_m_cap']*c[model.species.index('S_cap')] / \
-        (model.model_parameters['K_S_cap']+c[model.species.index('S_cap')]
-         )*c[model.species.index('X_VFA_deg')]*I13
+        (model.model_parameters['K_S_cap']+c[model.species.index('S_cap')])*c[model.species.index('X_VFA_deg')]*I13
 
     v[model.reactions.index('Methanogenessis from acetate and h2')] = model.model_parameters['k_m_h2_Me_ac']*c[model.species.index('S_h2')]*c[model.species.index('S_ac')] / \
         (model.model_parameters['K_S_h2_Me_ac']*c[model.species.index('S_h2')]+model.model_parameters['K_S_ac_Me']*c[model.species.index(
