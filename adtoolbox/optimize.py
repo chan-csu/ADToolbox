@@ -7,6 +7,7 @@ import adm
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass
+import plotly
 import json
 from typing import Iterable
 import plotly.graph_objects as go
@@ -287,9 +288,10 @@ class NNSurrogateTuner:
         
     def optimize(self, **kwargs)->dict:
         costs=[]
-        for pop in self._popuplation:
-            costs.append(self._cost(dict(zip(self.tunables.keys(),pop))))
-        self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
+        if not self._initialized:
+            for pop in self._popuplation:
+                costs.append(self._cost(dict(zip(self.tunables.keys(),pop))))
+            self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
         self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
         self._best_cost=np.min(self._aquired["cost"])
         for i in range(self.n_steps):
@@ -334,7 +336,7 @@ class NNSurrogateTuner:
 
     
 
-def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False,show_extra_states:Iterable[str]|None=None)->dict[str,pd.DataFrame]:
+def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False,show_extra_states:Iterable[str]|None=None)->tuple[dict[str,pd.DataFrame],plotly.graph_objs.Figure|None]:
     """
     This function can be used to compare the model's predictions to the experimental data of interest.
     
@@ -349,7 +351,7 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
     """
     
     pallet=px.colors.qualitative.Plotly
-    
+    fig=None
     if isinstance(data,Experiment):
   
         ic=data.initial_concentrations.copy()
@@ -424,7 +426,7 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
     else:
         raise TypeError("Data argument should be either a core. Experiment object or an iterable of core.Experiment objects.")
         
-    return  out
+    return  out,fig
 
 def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validation:
     """This function calculates RMSE and R-squared metrics on a set of experiment objects
@@ -433,7 +435,7 @@ def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validat
     x=[]
     y=[]
     for study in data:
-        formatted_data=validate_model(model,study)
+        formatted_data=validate_model(model,study)[0]
         model_,data_=formatted_data["model"],formatted_data["data"]
         for column in model_.columns:
             x.append(model_[column])

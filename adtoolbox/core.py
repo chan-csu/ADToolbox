@@ -1870,7 +1870,7 @@ class Metagenomics:
 
         """
         alignment_table = pd.read_table(alignment_file,sep='\t')
-        alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)].drop_duplicates("query",keep="first")
+        alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)]
         alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
         ec_counts=alignment_table["target"].value_counts().to_dict()
         
