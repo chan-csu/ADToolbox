@@ -278,6 +278,7 @@ class Metabolite:
     def __init__(self, data):
         self.data = data
         self.cod = self.cod_calc()
+        self.mw= self.data.get('mass',None)
 
     def __str__(self) -> str:
         return self.data['name']
@@ -324,10 +325,13 @@ class Metabolite:
             contents['H']+=add_h
             contents['C']+=add_c
             contents['O']+=add_o
-            return 1/mw*(contents['H']+4*contents['C']-2*contents['O'])/4*32
+            cod_conv=1/mw*(contents['H']+4*contents['C']-2*contents['O'])/4*32
+            return cod_conv
 
         else:
             return 'None'
+
+        
 
 
 class SeedDB:
