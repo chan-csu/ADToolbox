@@ -29,6 +29,7 @@ from typing import Iterable
 from typing import Union
 from dataclasses import dataclass
 import dataclasses
+from stats import scaler
 from utils import (wrap_for_slurm,
                    fasta_to_dict,
                    extract_zipped_file,
@@ -1912,7 +1913,19 @@ class Metagenomics:
             with open(self.config.adm_cod_from_ec,"w") as f:
                 json.dump(adm_microbial_agents,f)
         return adm_microbial_agents
+    
+    def calculate_group_abundances(self,elements_feature_abundances:dict[str,dict],rel_abund:dict[str,dict])->pd.DataFrame:
+        """
+        This method is defined to calculate the features for each sample given a
+        """
+        out={}
+        df=pd.DataFrame(elements_feature_abundances).T.fillna(0)
+        for sample,abunds in rel_abund.items():
+            out[sample]=scaler(pd.DataFrame(df.loc[abunds.keys(),:].multiply(list(abunds.values()),axis=0).sum(axis=0)).T).to_dict(orient="records")[0]
+        return pd.DataFrame.from_dict(out).T
+
         
+
         
     @needs_repair
     def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
@@ -1953,36 +1966,7 @@ class Metagenomics:
 
         return json_adm_output
     
-    def calculate_cod_portions_from_alignment_file(self,
-                                                   alignment_file:str,
-                                                   microbe_reaction_map:dict=configs.Database().adm_mapping)->dict:
-        
-        """
-        This function calculates the portion of cod for degraders in an mmseqs alignment file.
-        
-        Args:
-            alignment_file (str): The address of the alignment file.
-            microbe_reaction_map (dict, optional): The dictionary that maps microbial agents to reactions in ADM. Defaults to configs.Database().adm_mapping.
-        
-        Returns:
-            dict: A dictionary that maps microbial agents to their portion of cod(sum to one).
-    
-        """
-        alignment_table = pd.read_table(alignment_file,sep='\t')
-        alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)].drop_duplicates("query",keep="first")
-        alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
-        ec_counts=alignment_table["target"].value_counts().to_dict()
-        reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
-        reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
-        reaction_db.set_index("EC_Numbers",inplace=True)
-        ec_to_adm=dict(zip(reaction_db.index,reaction_db["Modified_ADM_Reactions"]))
-        cods={i:0 for i in microbe_reaction_map.keys()}
-        for ec  in ec_counts.keys():
-            for adm_rxn in ec_to_adm[ec].split("|"):
-                cods[adm_rxn]+=ec_counts[ec]
-                
-        cods={microbe_reaction_map[k]:v/sum(cods.values()) for k,v in cods.items()}
-        return cods
+
         
     
     def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
@@ -2281,7 +2265,17 @@ class Metagenomics:
         pass
 
 if __name__ == "__main__":
-    pass
+    genomes={
+    "genome1":{1:10,2:10,3:10},
+    "genome2":{1:30,2:40,4:50},
+    "genome3":{4:40,3:30}}
+    relabunds={
+    "sample1":{"genome1":0.1,"genome2":0.2,"genome3":0.3},
+    "sample2":{"genome1":0.9,"genome2":0.05,"genome3":0.05},
+    "sample3":{"genome1":0.98,"genome2":0.01,"genome3":0.01},
+    }
+    mg=Metagenomics(configs.Metagenomics())
+    mg.calculate_group_abundances(genomes,relabunds)
 
     
     

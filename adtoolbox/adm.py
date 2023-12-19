@@ -1895,7 +1895,7 @@ def customized_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
       ] = model.model_parameters['k_hyd_li']*c[model.species.index('X_li')]
 
     v[model.reactions.index('Su_to_et')] = model.model_parameters['k_m_su_et']*c[model.species.index('S_su')] / \
-        (model.model_parameters['K_S_su_et']+c[model.species.index('S_su')])*c[model.species.index('X_su')]/(c[model.species.index('X_su')]+model.model_parameters['K_S_X_su_et'])*I5
+        (model.model_parameters['K_S_su_et']+c[model.species.index('S_su')])*c[model.species.index('X_su')]*I5
     
     v[model.reactions.index('Su_to_lac')] = model.model_parameters['k_m_su_lac']*c[model.species.index('S_su')] / \
         (model.model_parameters['K_S_su_lac']+c[model.species.index('S_su')]
@@ -1903,7 +1903,7 @@ def customized_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
 
     v[model.reactions.index('Su_to_ac')] = model.model_parameters['k_m_su_ac']*c[model.species.index('S_su')] / \
         (model.model_parameters['K_S_su_ac']+c[model.species.index('S_su')]
-         )*c[model.species.index('X_su')]/(c[model.species.index('X_su')]+model.model_parameters['K_S_X_su_ac'])*I5
+         )*c[model.species.index('X_su')]*I5
     
     v[model.reactions.index('Su_to_pro')] = model.model_parameters['k_m_su_pro']*c[model.species.index('S_su')] / \
         (model.model_parameters['K_S_su_pro']+c[model.species.index('S_su')]

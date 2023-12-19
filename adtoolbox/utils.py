@@ -387,15 +387,7 @@ def needs_repair(func):
         warn("This function is not optimized yet or have issues in running. Please use it with caution.")
         return func(*args,**kwargs)
     return to_be_repaired
-        
-if __name__ == "__main__":
-    # accessions=["AAA"+str(i) for i in range(100)]
-    # names=["BBB"+str(i) for i in range(100)]
-    # answers=generate_batch_script(
-    #     generator_function=core.Metagenomics(configs.Metagenomics()).align_genome_to_protein_db,
-    #     number_of_batches=5,
-    #     input_series=[accessions,names],
-    #     input_var=["address",'name'],
-    #     container="singularity",
-    #     save=os.path.join("/Users/parsaghadermarzi","Desktop","test_bash_generator",))
+
+@needs_repair
+def merge_sequence_files()->None:
     pass
