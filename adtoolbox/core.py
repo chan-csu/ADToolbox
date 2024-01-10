@@ -1628,14 +1628,13 @@ class Metagenomics:
                         ' --threads '+str(self.config.vsearch_threads)+
                         ' --alnout '+ alignment_dir +
                         ' --top_hits_only'+'\n')
-        return bash_script
+        return bash_script,
     
     
     
-    def get_genomes_from_gtdb_alignment(self,save:bool=True)->dict:
+    def get_genomes_from_gtdb_alignment(self)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
         using the GTDB-Tk. In the outputted dictionary, the keys are feature ids and the values are the representative genomes.
-        if you want to save the information as a json file set save to True.
 
         Required Configs:
             config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of the align_to_gtdb function are saved.
@@ -1650,16 +1649,13 @@ class Metagenomics:
         aligned.drop_duplicates(0,inplace=True)
         aligned[1]=aligned[1].apply(lambda x: ("".join(x.split('_')[1:])).split("~")[0])
         alignment_dict=dict(zip(aligned[0],aligned[1]))
-        if save:
-            with open(self.config.feature_to_taxa, 'w') as f:
-                json.dump(alignment_dict, f)
+
         
         return alignment_dict
     
     
     def download_genome(self,identifier:str,container:str="None")-> str:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
-        If you want to save the json file that is holding the information for each genome, set save to True.
         Note that this function uses rsync to download the genomes. 
 
         Required Configs:
@@ -1696,7 +1692,7 @@ class Metagenomics:
         if container=="singularity":
             bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
         
-        return bash_script
+        return bash_script,
     
     def async_genome_downloader(self,identifiers:Iterable[str],batch_size:float=10,container:str="None"):
         sem=asyncio.Semaphore(batch_size)
@@ -1709,17 +1705,25 @@ class Metagenomics:
         async with semaphore:
             await asyncio.create_subprocess_exec(*self.download_genome(identifier=identifier,container=container).split(" "))
     
-    def extract_genome_info(self,save:bool=True)->dict[str,str]:
-        """This function extracts the genome information from the genomes base directory. If you want to save the genome information as a json file, set save to True.
+    def extract_genome_info(self,
+                            endpattern:str="genomic.fna.gz",
+                            filters:dict={
+                                          "INCLUDE":[],
+                                          "EXCLUDE":["cds","rna"],
+                                            })->dict[str,str]:
+        """This function extracts the genome information from the genomes base directory. The output
+        is a dictionary where the keys are the genome IDs and the values are the paths to the genome files.
         
         Required Configs:
             config.genomes_base_dir: The path to the base directory where the genomes are saved.
             ---------
         Args:
             genome_info (dict[str,str]): A dictionary containing the genome information.
-            save (bool, optional): Whether to save the genome information as a json file. Defaults to True.
-            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
-        
+            endpattern (str, optional): The end pattern of the genome files. Defaults to "genomic.fna.gz".
+            filters (dict, optional): The filters to be applied to the genome files. This filter must be a 
+            dictionary with two keys: INCLUDE and EXCLUDE. The values of these keys must be lists of strings.
+            Defaults to {"INCLUDE":[],"EXCLUDE":["cds","rna"]}. This defult is compatible with the genomes downloaded
+            from NCBI i.e. only change this if you are providing your own genomes with different file name conventions.
         Returns:
             dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
         """
@@ -1727,15 +1731,10 @@ class Metagenomics:
         genome_info = {}
         for genome_dir in base_dir.iterdir():
             if genome_dir.is_dir():
-                candids=list(genome_dir.rglob('*genomic.fna.gz'))
+                candids=list(genome_dir.rglob(f'*{endpattern}'))
                 for candid in candids:
-                    if "cds" not in candid.name and "rna" not in candid.name:
-                        genome_info[genome_dir.name]=str(candid.absolute())
-        
-        if save:
-            with open(self.config.genomes_json_info, 'w') as f:
-                json.dump(genome_info, f)
-                
+                    if all([i in candid.name for i in filters["INCLUDE"]]) and all([i not in candid.name for i in filters["EXCLUDE"]]):
+                        genome_info[genome_dir.name]=str(candid.absolute())           
         return genome_info
      
     def align_genome_to_protein_db(
@@ -1805,7 +1804,10 @@ class Metagenomics:
         
         return  bash_script,alignment_file
 
-    def align_short_reads_to_protein_db(self,query_seq:str,alignment_file_name:str,container:str="None",run:bool=True,save:bool=True)->tuple[str,str]:
+    def align_short_reads_to_protein_db(self,query_seq:str,
+                                        alignment_file_name:str,
+                                        container:str="None",
+                                        )->tuple[str,str]:
         """This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
         mmseqs wrappers in utils are used to perform this task. The result of this task is an alignment table.
         
@@ -1817,8 +1819,7 @@ class Metagenomics:
             query_seq (str): The address of the query sequence.
             alignment_file_name (str): The name of the alignment file.
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
-            run (bool, optional): Whether to run the alignment. Defaults to True.
-            save (bool, optional): Whether to save the alignment scripts. Defaults to True.
+
 
         Returns:
             str: The bash script that is used to align the genomes or to be used to align the genomes.
@@ -1846,13 +1847,6 @@ class Metagenomics:
             container=container,
             save=None,
             run=False,)+"\n"
-        
-        if save:
-            with open(path_query.parent/"alignment_script.sh","w") as f:
-                f.write(script)
-        if run:
-            subprocess.run(script,shell=True)
-        
         return script,path_query.parent/(alignment_file_name+".tsv")
     
     def extract_ec_from_alignment(self,alignment_file:str,save:bool=True)->dict:
@@ -1924,48 +1918,6 @@ class Metagenomics:
             out[sample]=scaler(pd.DataFrame(df.loc[abunds.keys(),:].multiply(list(abunds.values()),axis=0).sum(axis=0)).T).to_dict(orient="records")[0]
         return pd.DataFrame.from_dict(out).T
 
-        
-
-        
-    @needs_repair
-    def adm_from_alignment_json(self,adm_rxns,model="Modified_ADM_Reactions"):
-        rt = SeedDB(reaction_db=self.config.seed_rxn_db)
-        with open(self.config.genome_alignment_output_json) as f:
-            json_report = json.load(f)
-        reaction_db = pd.read_table(self.config.csv_reaction_db, sep=',')
-        json_adm_output = {}
-        for adm_reaction in track([Rxn for Rxn in adm_rxns],description="Finding Alignments to ADM reactions"):
-            json_adm_output[adm_reaction] = {}
-            for genome_id in json_report.keys():
-                if os.path.exists(json_report[genome_id]['Alignment_File']):
-                    json_adm_output[adm_reaction][json_report[genome_id]
-                                                  ['NCBI_Name']] = {}
-                    temp_tsv = pd.read_table(
-                        json_report[genome_id]['Alignment_File'], sep='\t')
-                    a_filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
-                        temp_tsv.iloc[:, -2] < self.config.e_value)
-                    temp_tsv = temp_tsv[a_filter]
-                    ecs = [item.split('|')[1] for item in temp_tsv.iloc[:, 1]]
-                    filter = (reaction_db['EC_Numbers'].isin(ecs)) & (reaction_db[model].str.contains(adm_reaction))
-                    filtered_rxns = reaction_db[filter]
-                    ecs = filtered_rxns['EC_Numbers'].tolist()
-
-                    ec_dict = {}
-                    for ec in ecs:
-                        ec_dict[ec] = []
-                        L = rt.instantiate_rxns(ec, "Multiple_Match")
-                        [ec_dict[ec].append(
-                            rxn.__str__()) for rxn in L if rxn.__str__() not in ec_dict[ec]]
-
-                    json_adm_output[adm_reaction][json_report[genome_id]
-                                                  ['NCBI_Name']] = ec_dict
-
-
-        with open(self.config.genome_adm_map_json, 'w') as f:
-            json.dump(json_adm_output, f)
-
-        return json_adm_output
-    
 
         
     
@@ -1998,97 +1950,7 @@ class Metagenomics:
                 json.dump(rel_abunds,f)
         return rel_abunds
     
-    @needs_repair
-    def calculate_microbial_portions(self,
-                                     rel_abund_genome:dict,
-                                     genome_alignment_output:dict,
-                                     microbe_reaction_map:dict)-> dict:
-        
-        """This method calculates COD fraction of each microbial term in a model
-        
-        Args:
 
-            microbe_reaction_map (dict): This dictionary must determine the association between
-            microbial species in the model and the reactions that these species are involved
-            in. In the case of Modified-ADM, this dictionary is the following:
-
-            microbe_reaction_map={
-                            "Hydrolysis carbohydrates":"X_ch",
-                            "Hydrolysis proteins":"X_pr",
-                            "Hydrolysis lipids":"X_li",
-                            "Uptake of sugars":"X_su",
-                            "Uptake of amino acids":"X_aa",
-                            "Uptake of LCFA":"X_fa",
-                            "Uptake of acetate_et":"X_ac_et",
-                            "Uptake of acetate_lac":"X_ac_lac",
-                            "Uptake of propionate_et":"X_chain_et",
-                            "Uptake of propionate_lac":"X_chain_lac",
-                            "Uptake of butyrate_et":"X_chain_et",
-                            "Uptake of butyrate_lac":"X_chain_lac",
-                            "Uptake of valerate":"X_VFA_deg",
-                            "Uptake of caproate":"X_VFA_deg",
-                            "Methanogenessis from acetate and h2":"X_Me_ac",
-                            "Methanogenessis from CO2 and h2":"X_Me_CO2",
-                            "Uptake of ethanol":"X_et",
-                            "Uptake of lactate":"X_lac",} 
-        
-            genome_info: This dictionary is the output of the align_genomes method. It holds
-            the information about the directory holding the result of aligning the genomes of
-            interest and other useful information
-
-            relative_abundances: This dictionary holds the relative abundace of each genome in the 
-            community. The keys of this dictionary are genome_id similar to the output of align_genomes.
-            NOTE: The relative abundances must be between 0,1
-            For example: 
-            relative_abundances={
-                "Genome_1":0.56,
-                "Genome_2":0.11,
-                "Genome_3":0.22,
-                "Genome_4":0.11
-            }
-
-        
-        Returns:
-            cod (dict): This dictionary includes the fraction of COD that belongs to each microbial species in the
-            model. 
-        """
-
-        cod={}
-        reaction_db=pd.read_table(self.config.csv_reaction_db,delimiter=",")
-        reaction_db.drop_duplicates(subset=['EC_Numbers'], keep='first',inplace=True)
-        reaction_db.set_index("EC_Numbers",inplace=True)
-        model_species=list(set(microbe_reaction_map.values()))
-        cod_portion=AdditiveDict([(i,0) for i in model_species])
-        for genome_id in rel_abund_genome:
-            try:
-                temp_tsv = pd.read_table(
-                        genome_alignment_output[genome_id], sep='\t',header=None)
-            except:
-                warn(f"The alignment file for genome {genome_id} can not be found. Please check for possible errors")
-                continue
-            
-            filter = (temp_tsv.iloc[:, -1] > self.config.bit_score) & (
-                        temp_tsv.iloc[:, -2] < self.config.e_value)
-            temp_tsv = temp_tsv[filter]
-            unique_ecs=list(set([i[1] for i in temp_tsv[1].str.split("|")]))
-            cleaned_reaction_list=[]
-            [cleaned_reaction_list.extend(map(lambda x:x.strip(" "),reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|"))) for ec in unique_ecs if ec in reaction_db.index]
-            pathway_counts=Counter(cleaned_reaction_list)
-            pathway_counts.__delitem__("")
-            SUM=sum([pathway_counts[key] for key in pathway_counts])
-            for i in pathway_counts:
-                pathway_counts[i]=pathway_counts[i]/SUM
-            microbial_species= dict([(microbe_reaction_map[key],pathway_counts[key]) for key in pathway_counts.keys() ])
-            cod_portion=cod_portion+AdditiveDict(microbial_species)*rel_abund_genome[genome_id]
-            SUM=sum([cod_portion[key] for key in cod_portion])
-            if SUM==0:
-                for i in cod_portion:
-                    
-                    cod_portion[i]=0
-            else:
-                for i in cod_portion:
-                    cod_portion[i]=cod_portion[i]/SUM
-        return cod
     @needs_repair
     def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str,dict]:
         """ 
