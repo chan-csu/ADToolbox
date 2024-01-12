@@ -1849,7 +1849,7 @@ class Metagenomics:
             run=False,)+"\n"
         return script,path_query.parent/(alignment_file_name+".tsv")
     
-    def extract_ec_from_alignment(self,alignment_file:str,save:bool=True)->dict:
+    def extract_ec_from_alignment(self,alignment_file:str)->dict[str,int]:
         """
         This function extracts the number of times an EC number is found in the alignment file when aligned to ADToolbox protein database.
         
@@ -1862,7 +1862,6 @@ class Metagenomics:
             ---------
         Args:
             alignment_file (str): The address of the alignment file.
-            save (bool, optional): Whether to save the results. Defaults to True.
         
         Returns:
             dict: A dictionary of EC numbers and their counts.
@@ -1872,13 +1871,9 @@ class Metagenomics:
         alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)]
         alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
         ec_counts=alignment_table["target"].value_counts().to_dict()
-        
-        if save:
-            with open(self.config.ec_counts_from_alignment,"w") as f:
-                json.dump(ec_counts,f)
         return ec_counts
     
-    def get_cod_from_ec_counts(self,ec_counts:dict,save:bool=True)->dict:
+    def get_cod_from_ec_counts(self,ec_counts:dict)->dict:
         """This function takes a json file that comtains ec counts and converts it to ADM microbial agents counts.
         Required Configs:
             config.adm_mapping : A dictionary that maps ADM reactions to ADM microbial agents.
@@ -1888,7 +1883,6 @@ class Metagenomics:
             config.adm_cod_from_ec  : The address of the json file that the results will be saved in.
             ---------
         Args:
-            save (bool, optional): Whether to save the output. Defaults to True.   
             ec_counts (dict): A dictionary containing the counts for each ec number.  
         Returns:
             dict: A dictionary containing the ADM microbial agents counts.
@@ -1903,52 +1897,56 @@ class Metagenomics:
         adm_microbial_agents={}
         for k,v in self.config.adm_mapping.items():
             adm_microbial_agents[v]=adm_reactions_agents[k]
-        if save:
-            with open(self.config.adm_cod_from_ec,"w") as f:
-                json.dump(adm_microbial_agents,f)
         return adm_microbial_agents
     
-    def calculate_group_abundances(self,elements_feature_abundances:dict[str,dict],rel_abund:dict[str,dict])->pd.DataFrame:
+    def calculate_group_abundances(self,elements_feature_abundances:dict[str,dict],rel_abund:dict[str,dict])->dict[str,dict[str,float]]:
         """
-        This method is defined to calculate the features for each sample given a
+        This method is defined to calculate the features for each sample given:
+        1) The relative abundances of the genomes in each sample:
+            - In this dictionary the keys are the sample names and the values are dictionaries where the keys are the genome names and the values are the relative abundances of the genomes in the sample.
+        2) The relative abundances of the elements in each genome.
+            - In this dictionary the keys are the genome names and the values are dictionaries where the keys are the element names and the values are the relative abundances of the elements in the genome.
+
+        Required Configs:
+            None
+        
+        Args:
+            elements_feature_abundances (dict[str,dict]): A dictionary containing the relative abundances of the elements in each genome.
+            rel_abund (dict[str,dict]): A dictionary containing the relative abundances of the genomes in each sample.
+        
+        Returns:
+            dict[str,dict[str,float]]: A dictionary containing the relative abundances of the elements in each sample.
         """
         out={}
         df=pd.DataFrame(elements_feature_abundances).T.fillna(0)
         for sample,abunds in rel_abund.items():
             out[sample]=scaler(pd.DataFrame(df.loc[abunds.keys(),:].multiply(list(abunds.values()),axis=0).sum(axis=0)).T).to_dict(orient="records")[0]
-        return pd.DataFrame.from_dict(out).T
-
-
-        
+        return out
     
-    def extract_relative_abundances(self,sample_names:Union[list[str],None]=None,save:bool=True)->dict:
+    def extract_relative_abundances(self,feature_table_dir:str,sample_names:Union[list[str],None]=None,top_k:int=-1)->dict:
         
         """
-        This function will extract relative abundances for top k taxa from top k taxa table
-        and feature table. It will return a dictionary with the top k taxa genomes as keys and the relative abundances as values
+        This method extracts the relative abundances of the features in each sample from the feature table. The feature table must follow the qiime2 feature-table format.
+        NOTE: The final feature abundances sum to 1 for each sample.
+        Required Configs:
+            None
+        Args:
+            feature_table_dir (str): The path to the feature table.
+            sample_names (Union[list[str],None], optional): The list of sample names. to be considered. If None, all the samples will be considered. Defaults to None.
+            top_k (int, optional): The number of top features to be used. If -1, all the features will be used. Defaults to -1.
 
+        Returns:
+            dict: A dictionary containing the relative abundances of the features in each sample.
         """
-        feature_table = pd.read_table(self.config.feature_table_dir,sep='\t',skiprows=1)
+        feature_table = pd.read_table(feature_table_dir,sep='\t',skiprows=1)
         if sample_names is None:
             sample_names = feature_table.columns[1:]
         relative_abundances={sample:[] for sample in sample_names}
-        with open(os.path.join(self.config.feature_to_taxa)) as f:
-            feature_genome_map = json.load(f)
-        features=list(feature_genome_map.keys())
-        genomes=[feature_genome_map[feature] for feature in features]
-        
+        if top_k == -1:
+            top_k = feature_table.shape[0]
         for sample in sample_names:
-            for feature in features:
-                relative_abundances[sample].append(feature_table.loc[feature_table['#OTU ID']==feature,sample].item())
-
-        abundances=pd.DataFrame(relative_abundances,index=genomes)
-        rel_abunds=abundances/abundances.sum(axis=0)
-        rel_abunds=rel_abunds.T.to_dict('index')
-
-        if save:
-            with open(self.config.genome_relative_abundances,'w') as f:
-                json.dump(rel_abunds,f)
-        return rel_abunds
+            relative_abundances[sample]=(feature_table.sort_values(sample,ascending=False).head(top_k)[sample]/(feature_table.sort_values(sample,ascending=False).head(top_k)[sample].sum())).to_dict()
+        return relative_abundances
     
 
     @needs_repair
