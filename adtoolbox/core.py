@@ -1949,90 +1949,76 @@ class Metagenomics:
         return relative_abundances
     
 
-    @needs_repair
-    def seqs_from_sra(self,accession:str,save:bool=True,run:bool=True,container:str="None")-> tuple[str,str,dict]:
+    def seqs_from_sra(self,accession:str,target_dir:str,container:str="None")-> tuple[str,dict]:
         """ 
         This method downloads the fastq files from the SRA database using the accession number of the project or run.
-        The method uses the fasterq-dump tool to download the fastq files. The method also creates two bash scripts
-        that can be used to download the fastq files. The first bash script is used to download the SRA files using the
-        prefetch tool. The second bash script is used to convert the SRA files to fastq files using the fasterq-dump tool.
-        depending on the prefered containerization tool, the bash scripts can be converted to singularity or docker containers commands.
-        In the case of docker or singularity you do not need to install the SRA tools on your machine. However, you need to have the
-        containerization tool installed on your machine.
-
-        Requires:
-            <R>project_accession</R>
-            <R>Configs.Metagenomics</R>
-        Satisfies:
-            <S>sra_project_dir</S>
-            <S>sra_seq_prefetch_bash_str</S>
-            <S>sra_seq_fasterq_dump_bash_str</S>
-            <S>manifest_dict</S>
-            <if> save=True</if><S>sra_seq_prefetch_bash_file</S>
-            <if> save=True</if><S>sra_seq_fasterq_dump_bash_file</S>
-            <if> run=True</if><S>.fastq_files</S>
-            
+        The method uses the fasterq-dump tool to download the fastq files. This method also extracts the sample metadata from the SRA database for future use.
+        #NOTE In order for this method to work without any container, you need to have the SRA toolkit installed on your system or
+        at least have prefetch and fasterq-dump installed on your system. For more information on how to install the SRA toolkit, please refer to the following link:
+        https://github.com/ncbi/sra-tools
+        Required Configs:
+            None
+        
         Args:
             accession (str): The accession number of the SRA project or run
-            save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
-            run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
+            target_dir (str): The directory where the fastq files will be downloaded
             container (str, optional): The containerization tool that will be used to run the bash scripts. Defaults to "None". Options are "None","docker","singularity"
         
         Returns:
             prefetch_script (str): The bash script that will be used to download the SRA files in python string format
-            fasterq_dump_script (str): The bash script that will be used to convert the SRA files to fastq files in python string format
             sample_metadata (dict): A dictionary that contains the sample metadata
     
         """   
         if container=="None":
-            prefetch_script=f"""#!/bin/bash
-            prefetch {accession} -O {os.path.join(self.config.sra_work_dir(accession),"seqs")}"""
+            prefetch_script=f"""#!/bin/bash\nprefetch {accession} -O {target_dir}"""
 
-            fasterq_dump_script=f"""#!/bin/bash
-            for i in $(ls ./seqs/) ; do
-            fasterq-dump --split-files seqs/$i/*.sra -O seqs/$i/
-            rm seqs/$i/*.sra
-            done
-            """
+            fasterq_dump_script=(f"for i in $(ls {target_dir});\n"
+                                 f"do fasterq-dump --split-files {target_dir}/$i -O {target_dir}/$i/\n"
+                                 f"rm {target_dir}/$i/*.sra\n"
+                                 "done")
+        
+
+            prefetch_script=prefetch_script+"\n"+fasterq_dump_script
+
         
         elif container=="docker":
             warn("Docker is not supported yet")
-
-        project_path=pathlib.Path(self.config.sra_work_dir(accession))
-        if not project_path.exists():
-            project_path.mkdir(parents=True)
-        
-        sample_metadata=utils.get_sample_metadata_from_accession(accession)
-
-        if save:
-            
-            with open(project_path.joinpath("prefetch.sh"),"w") as f:
-                f.write(prefetch_script)
-            
-            with open(project_path.joinpath("fasterq_dump.sh"),"w") as f:
-                f.write(fasterq_dump_script)
-                
-        
-        if run:
-            subprocess.run(["bash",str(project_path.joinpath("prefetch.sh"))],cwd=str(project_path))
-            subprocess.run(["bash",str(project_path.joinpath("fasterq_dump.sh"))],cwd=str(project_path))
-            
+       
+        sample_metadata=utils.get_sample_metadata_from_accession(accession)      
             
         
-        return prefetch_script,fasterq_dump_script,sample_metadata
-    
-
+        return prefetch_script,sample_metadata
 
     
-    def run_qiime2_from_sra(self,query_seq:str,save:bool=True,run:bool=True,container:str='None') -> tuple[str,str]:
+    
+    def run_qiime2_from_sra(self,
+                            read_1:str,
+                            read_2:str|None,
+                            sample_name:str|None=None,
+                            manifest_dir:str|None=None,
+                            workings_dir:str|None=None,
+                            save_manifest:bool=True,
+                            container:str='None') -> tuple[str,str]:
         """
+        This method uses the input fastq files to run qiime2. The method uses the qiime2 template scripts that are provided in pkg_data module.
+        The method also creates a manifest file for qiime2. The manifest file is created based on the input fastq files.
         Required Configs:
-        
-
+            config.qiime2_single_end_bash_str: The path to the qiime2 bash script for single end reads.
+            ---------
+            config.qiime2_paired_end_bash_str: The path to the qiime2 bash script for paired end reads.
+            ---------
+            config.qiime_classifier_db: The path to the qiime2 classifier database.
+            ---------
+            config.qiime2_docker_image: The name of the docker image to be used by ADToolbox (Only if using Docker as container).
+            ---------
+            config.qiime2_singularity_image: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
+            ---------
         Args:
-            query_seq (str): directory where the fastq files are located
-            save (bool, optional): If True, the  bash scripts will be saved in the SRA work directory. Defaults to True.
-            run (bool, optional): If True, the bash scripts will be executed. Defaults to True. You must have the SRA toolkit installed in your system.
+            read_1 (str): directory of the forward reads file
+            read_2 (str): directory of the reverse reads file. This is provided only if the reads are paired end. If this is not the case, 
+            sample_name (str, optional): The name of the sample. If None, the name of the sample will be the name of the directory where the fastq files are located. Defaults to None.
+            manifest_dir (str, optional): The directory where the manifest file will be saved. If None, the manifest file will be saved in the same directory as the fastq files. Defaults to None.
+            workings_dir (str, optional): The directory where the qiime2 outputs will be saved. If None, the outputs will be saved in the same directory as the fastq files. Defaults to None.
             container (str, optional): If you want to run the qiime2 commands in a container, specify the container name here. Defaults to 'None'.
         Returns:
             qiime2_bash_str (str): The bash script that will be used to run qiime2 in python string format
@@ -2041,21 +2027,29 @@ class Metagenomics:
 
         """
         
+        if sample_name is None:
+            sample_name=str(pathlib.Path(read_1).parent.name)
+        if manifest_dir is None:
+            manifest_dir=pathlib.Path(read_1).parent
+        else:
+            manifest_dir=pathlib.Path(manifest_dir)
+
+        if workings_dir is None:
+            workings_dir=pathlib.Path(read_1).parent
+        else:
+            workings_dir=pathlib.Path(workings_dir)
         
-        seqs=pathlib.Path(query_seq)
+    
         manifest_single={'sample-id':[],'absolute-filepath':[]}
         manifest_paired={'sample-id':[],'forward-absolute-filepath':[],'reverse-absolute-filepath':[]}  
-        if len(list(seqs.glob("*.fastq"))) == 2:
-            r1=list(seqs.glob("*_1.fastq"))[0]
-            r2=list(seqs.glob("*_2.fastq"))[0]
-            manifest_paired['sample-id'].append(seqs.name)
-            manifest_paired['forward-absolute-filepath'].append(str(r1))
-            manifest_paired['reverse-absolute-filepath'].append(str(r2))
+        if read_2 is not None:
+            manifest_paired['sample-id'].append(sample_name)
+            manifest_paired['forward-absolute-filepath'].append(read_1)
+            manifest_paired['reverse-absolute-filepath'].append(read_2)
             paired_end=True
-        elif len(list(seqs.glob("*.fastq"))) == 1:
-            r1=list(seqs.glob("*.fastq"))[0]
-            manifest_single['sample-id'].append(seqs.name)
-            manifest_single['absolute-filepath'].append(str(r1))
+        else:
+            manifest_single['sample-id'].append(sample_name)
+            manifest_single['absolute-filepath'].append(read_1)
             paired_end=False
                     
         manifest=pd.DataFrame(manifest_single) if not paired_end else pd.DataFrame(manifest_paired)
@@ -2067,11 +2061,9 @@ class Metagenomics:
             with open(self.config.qiime2_single_end_bash_str,"r") as f:
                 qiime2_bash_str=f.read()
 
-        manifest_dir=seqs.joinpath("manifest.tsv")
-
         if container=="None":
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(self.config.qiime_classifier_db))
         
         elif container=="docker":
@@ -2079,17 +2071,21 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {seqs}:/data/ -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
+                    if not paired_end:
+                        pec=""
+                    else:
+                        pec="-v "+read_2+":"+read_2+" "
+                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {str(manifest_dir)}:/data/ -v {read_1}:{read_1} {pec} -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs.name))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir.name))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",os.path.join(str(Path(self.config.qiime_classifier_db).parent.name),str(Path(self.config.qiime_classifier_db).name)))
             if not paired_end:
-                manifest['absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
+                manifest['absolute-filepath']=[x for x in manifest['absolute-filepath']]
             
             else:
-                manifest['forward-absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['forward-absolute-filepath']]
-                manifest['reverse-absolute-filepath']=[str(pathlib.Path("/data")/seqs.name/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['reverse-absolute-filepath']]
+                manifest['forward-absolute-filepath']=[x for x in manifest['forward-absolute-filepath']]
+                manifest['reverse-absolute-filepath']=[x for x in manifest['reverse-absolute-filepath']]
         
         elif container=="singularity":
             qiime2_bash_str=qiime2_bash_str.splitlines()
@@ -2102,27 +2098,14 @@ class Metagenomics:
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(Path(self.config.qiime_classifier_db)))
 
-            # if not paired_end:
-            #     manifest['absolute-filepath']=["/"+str(Path(seqs.name)/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['absolute-filepath']]
-            # else:
-            #     manifest['forward-absolute-filepath']=["/"+str(Path(seqs.name)/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['forward-absolute-filepath']]
-            #     manifest['reverse-absolute-filepath']=["/"+str(Path(seqs.name)/pathlib.Path(x).parent.name/pathlib.Path(x).name) for x in manifest['reverse-absolute-filepath']]
-
         else:
             raise ValueError("Container must be None, singularity or docker")
         
-        
-        if save:
-            pd.DataFrame(manifest).to_csv(seqs.joinpath("manifest.tsv"),sep='\t',index=False)
-            with open(seqs.joinpath("qiime2.sh"),"w") as f:
-                f.write(qiime2_bash_str)
-        if run:
-            subprocess.run(["bash",str(seqs.joinpath("qiime2.sh"))],cwd=str(seqs))
-        
+        if save_manifest:
+            manifest.to_csv(os.path.join(manifest_dir,"manifest.tsv"),sep="\t",index=False)
         return qiime2_bash_str,manifest
     
-    def extract_taxonomy_features(self):
-        pass
+
 
 if __name__ == "__main__":
     genomes={
