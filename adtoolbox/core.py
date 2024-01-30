@@ -40,14 +40,7 @@ from utils import (wrap_for_slurm,
                    mmseqs_result_db_to_tsv) 
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
-class AdditiveDict(UserDict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    def __add__(self, other:dict):
-        if isinstance(other,dict): 
-            return AdditiveDict({i: self[i] + other.get(i,0) for i in self.keys()})
-        else:
-            raise TypeError("The other object is not a dict")
+
             
 @dataclass
 class Experiment:
@@ -60,7 +53,7 @@ class Experiment:
     if there are specific initial concentrations for the ADM species, they can be passed as a dictionary to the initial_concentrations argument.
     reference is an optional argument that can be used to provide a reference for the experimental data. If using the database module 
     to query for Experiment objects you can query by name or reference or model_type. So, having a descriptive reference can be useful for querying as well.
-    default model name is "modified-adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
+    default model name is "e_adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
     
     Args:
         name (str): A unique name for the experiment.
@@ -69,7 +62,7 @@ class Experiment:
         data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
         initial_concentrations (dict, optional): A dictionary of initial concentrations for the ADM species. Defaults to {}.
         reference (str, optional): A reference for the experimental data. Defaults to ''.
-        model_name (str, optional): The name of the model that the experimental data is for. Defaults to "modified-adm".
+        model_name (str, optional): The name of the model that the experimental data is for. Defaults to "e_adm".
     
     Examples:
         >>> from adtoolbox import configs
@@ -87,7 +80,7 @@ class Experiment:
     data: list[list[float]]
     initial_concentrations: dict[str,float] = dataclasses.field(default_factory=dict)
     reference: str = ""
-    model_name: str = "modified-adm"
+    model_name: str = "e_adm"
     
     
     def __post_init__(self):
@@ -116,7 +109,7 @@ class Experiment:
 class Feed:
 
     """
-    The Feed class is used to store the feed information, and later use it in the modified ADM model.
+    The Feed class is used to store the feed information, and later use it in the e_adm model.
     all the entered numbers must in percentages. Carbohudrates, lipids, and proteins and si must sum up to 100, 
     and they form the total dissolved solids. Carbohydrates, lipids, proteins, and xi must sum up to 100, and they form the total suspended solids.
     
@@ -449,7 +442,7 @@ class Database:
     
     - GTDB-tk database for bacterial and archaeal 16s rRNA sequences
     
-    - ADM and modified ADM model parameters
+    - ADM and e_adm model parameters
     
     This class is instantiated with a configs.Database object. This object contains the paths to all the databases that ADToolbox uses.
     Please refer to the documentation of each method for more information on the required configurations.
@@ -500,11 +493,11 @@ class Database:
             >>> db=Database(config=configs.Database(reaction_db=os.path.join(Main_Dir,"reaction_test_db.tsv")))
             >>> db.initialize_reaction_db()
             >>> assert pd.read_table(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").shape[0]==0
-            >>> assert set(pd.read_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").columns)==set(["ec_numbers","seed_ids","reaction_names","adm1_reaction","modified_adm_reactions","pathways"])
+            >>> assert set(pd.read_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),delimiter="\t").columns)==set(["ec_numbers","seed_ids","reaction_names","adm1_reaction","e_adm_reactions","pathways"])
             >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.tsv"))
         
         """
-        pd.DataFrame(columns=["ec_numbers","seed_ids","reaction_names","adm1_reaction","modified_adm_reactions","pathways"]).to_csv(self.config.reaction_db,index=False,sep="\t")
+        pd.DataFrame(columns=["ec_numbers","seed_ids","reaction_names","adm1_reaction","e_adm_reactions","pathways"]).to_csv(self.config.reaction_db,index=False,sep="\t")
         
     def initialize_feed_db(self)->None:
         r"""This function intializes ADToolbox's Feed database by creating an empty tsv file.
@@ -705,7 +698,7 @@ class Database:
             >>> assert os.path.exists(os.path.join(Main_Dir,"protein_test_db.fasta"))==False
             >>> assert os.path.exists(os.path.join(Main_Dir,"reaction_test_db.tsv"))==False
             >>> db=Database(config=configs.Database(protein_db=os.path.join(Main_Dir,"protein_test_db.fasta"),reaction_db=os.path.join(Main_Dir,"reaction_test_db.tsv")))
-            >>> reaction_db=pd.DataFrame(columns=["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","Modified_ADM_Reactions","Pathways"])
+            >>> reaction_db=pd.DataFrame(columns=["EC_Numbers","Seed Ids","Reaction Names","ADM1_Reaction","e_adm_Reactions","Pathways"])
             >>> reaction_db.loc[0,"EC_Numbers"]="1.1.1.1"
             >>> reaction_db.to_csv(os.path.join(Main_Dir,"reaction_test_db.tsv"),index=False,sep="\t")
             >>> db.build_protein_db_from_reactions_db()
@@ -1480,6 +1473,7 @@ class Metagenomics:
             >>> from adtoolbox import core, configs
             >>> config=configs.Metagenomics() ### This uses default arguments. Refer to configs module for more information.
             >>> metagenomics=core.Metagenomics(config)
+            >>> assert type(metagenomics)==core.Metagenomics
         
         Args:
             config (configs.Metagenomics): A metagenomics configs object from configs module.
@@ -1891,7 +1885,7 @@ class Metagenomics:
         reaction_db.set_index("EC_Numbers",inplace=True)
         adm_reactions_agents = {k:0 for k in self.config.adm_mapping.keys()}
         for ec in ec_counts.keys():
-            l=reaction_db.loc[ec,"Modified_ADM_Reactions"].split("|")
+            l=reaction_db.loc[ec,"e_adm_Reactions"].split("|")
             for adm_rxn in l: 
                 adm_reactions_agents[adm_rxn]+=ec_counts[ec]
         adm_microbial_agents={}
@@ -2108,17 +2102,9 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    genomes={
-    "genome1":{1:10,2:10,3:10},
-    "genome2":{1:30,2:40,4:50},
-    "genome3":{4:40,3:30}}
-    relabunds={
-    "sample1":{"genome1":0.1,"genome2":0.2,"genome3":0.3},
-    "sample2":{"genome1":0.9,"genome2":0.05,"genome3":0.05},
-    "sample3":{"genome1":0.98,"genome2":0.01,"genome3":0.01},
-    }
-    mg=Metagenomics(configs.Metagenomics())
-    mg.calculate_group_abundances(genomes,relabunds)
+    db=Database()
+    ec_list=db.cazy_ec()
+    assert len(ec_list)>0
 
     
     

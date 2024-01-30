@@ -13,6 +13,7 @@ This module contains all the paths to the files and directories used in the prog
 RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 
 Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
+Seed_COMPOUNDS_DB = os.path.join(Main_Dir, "Database", "compounds.json")
 
 ADTOOLBOX_CONTAINERS={
 	'docker_x86':"parsaghadermazi/adtoolbox:latest",
@@ -20,89 +21,68 @@ ADTOOLBOX_CONTAINERS={
 	'singularity_x86':"docker://parsaghadermazi/adtoolbox:x86",
 	'singularity_arm64':"docker://parsaghadermazi/adtoolbox:arm64"}
 
-class Config:
-    def __init__(self,
-                adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
-				adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
-    			protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta')):
-        self.adtoolbox_singularity = adtoolbox_singularity
-        self.adtoolbox_docker = adtoolbox_docker
-        self.protein_db = protein_db
-        self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("Protein_DB_mmseqs")
-    
-class Alignment:
-    """
-    A class for aligner configurations
+E_ADM_LOCAL={
+	"model_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_model_parameters.json"),
+	"base_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_base_parameters.json"),
+	"initial_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_initial_conditions.json"),
+	"inlet_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_inlet_conditions.json"),
+	"reactions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_reactions.json"),
+	"species":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_species.json"),
+			}
 
-    """
+E_ADM_REMOTE={
+	"model_parameters":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/e_adm/e_adm_model_parameters.json",
+	"base_parameters":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/e_adm/e_adm_base_parameters.json",
+	"initial_conditions":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/e_adm/e_adm_initial_conditions.json",
+	"inlet_conditions":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/e_adm/e_adm_inlet_conditions.json",
+	"reactions":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/e_adm/e_adm_reactions.json",
+	"species":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/e_adm/e_adm_species.json"
+			}
 
-    def __init__(self, aligner_name="mmseqs2", e_value=10**-7, bit_score=45):
-        self.aligner_name = aligner_name
-        self.e_value = e_value
-        self.bit_score = bit_score
-    
-class SeedDB:
+ADM1_LOCAL={
+	"model_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","adm1_model_parameters.json"),
+	"base_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","adm1_base_parameters.json"),
+	"initial_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","adm1_initial_conditions.json"),
+	"inlet_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","adm1_inlet_conditions.json"),
+	"reactions":os.path.join(Main_Dir, "Database","ADM_Parameters","adm1_reactions.json"),
+	"species":os.path.join(Main_Dir, "Database","ADM_Parameters","adm1_species.json"),
+			}
 
-    def __init__(self, 
-        compound_db=os.path.join(Main_Dir, "Database", 'compounds.json'),
-        reaction_db=os.path.join(Main_Dir, "Database", 'reactions.json')):
-        self.compound_db = compound_db
-        self.reaction_db = reaction_db
-
-
-class Database:
-	"A class for database configurations"
-	
-	def __init__(self,
-		compound_db=os.path.join(
-		     Main_Dir, "Database", 'compounds.json'),
-		reaction_db=os.path.join(
-		     Main_Dir, "Database", 'reactions.json'),
-		local_compound_db=os.path.join(
-		        Main_Dir, "Database", 'Local_compounds.json'),
-		local_reaction_db=os.path.join(
-		        Main_Dir, "Database", 'Local_reactions.json'),
-		base_dir=os.path.join(Main_Dir,"Database"),
-		csv_reaction_db=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
-		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
-		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
-		cazy_links:str=["http://www.cazy.org/Glycoside-Hydrolases.html",
-                  		"http://www.cazy.org/Polysaccharide-Lyases.html",
-                  		"http://www.cazy.org/Carbohydrate-Esterases.html"
+ADM1_REMOTE={
+	"model_parameters":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/adm1/adm1_model_parameters.json",
+	"base_parameters":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/adm1/adm1_base_parameters.json",
+	"initial_conditions":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/adm1/adm1_initial_conditions.json",
+	"inlet_conditions":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/adm1/adm1_inlet_conditions.json",
+	"reactions":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/adm1/adm1_reactions.json",
+	"species":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/adm1/adm1_species.json"
+		}
+EXTERNAL_LINKS={
+	"cazy_links":["http://www.cazy.org/Glycoside-Hydrolases.html",
+                  "http://www.cazy.org/Polysaccharide-Lyases.html",
+                  "http://www.cazy.org/Carbohydrate-Esterases.html"
                   		],
-		amplicon_to_genome_urls={'Version': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/VERSION',
+	"amplicon2genome":{'Version': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/VERSION',
                'MD5SUM': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/MD5SUM',
                'FILE_DESCRIPTIONS': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/FILE_DESCRIPTIONS',
                'metadata_field_desc': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/metadata_field_desc.tsv',
                'bac120_metadata': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/bac120_metadata.tar.gz',
                'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all.tar.gz'
                },
-		adm_parameters_urls:dict=dict(
-		adm1_model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Model_Parameters.json",
-        adm1_base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Base_Parameters.json",
-        adm1_initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Initial_Conditions.json",
-        adm1_inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Inlet_Conditions.json",
-        adm1_reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Reactions.json",
-        adm1_species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/ADM1/ADM1_Species.json",
-		model_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Model_Parameters.json",
-        base_parameters="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Base_Parameters.json",
-        initial_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Initial_Conditions.json",
-        inlet_conditions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Inlet_Conditions.json",
-        reactions="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Reactions.json",
-        species="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Modified_ADM/Modified_ADM_Species.json",
-		),
-		adm_parameters_base_dir:str=os.path.join(Main_Dir, "Database","ADM_Parameters"),
-		seed_rxn_url:str ="https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
-		seed_compound_url:str ="https://github.com/ModelSEED/ModelSEEDDatabase/raw/master/Biochemistry/compounds.json",
-		protein_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta",
-		adtoolbox_rxn_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
-		feed_db_url:str ="https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
-		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
-		qiime_classifier_db_url:str= "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
-  		adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
-		adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
-    	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
-        adm_mapping={
+	
+	"seed_rxn_url":"https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
+ 	"seed_compound_url":"https://github.com/ModelSEED/ModelSEEDDatabase/raw/master/Biochemistry/compounds.json",
+	
+}
+
+INTERNAL_LINKS={
+	"protein_db_url":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta",
+	"adtoolbox_rxn_db_url":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
+	"feed_db_url":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
+	"qiime_classifier_db_url":"https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
+	"metagenomics_studies":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv",
+    "exmpermental_data_db":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.json"
+}
+E_ADM_MICROBIAL_GROUPS_MAPPING={
                             "Hydrolysis carbohydrates":"X_ch",
                             "Hydrolysis proteins":"X_pr",
                             "Hydrolysis lipids":"X_li",
@@ -120,21 +100,55 @@ class Database:
                             "Methanogenessis from acetate and h2":"X_Me_ac",
                             "Methanogenessis from CO2 and h2":"X_Me_CO2",
                             "Uptake of ethanol":"X_et",
-                            "Uptake of lactate":"X_lac",},
+                            "Uptake of lactate":"X_lac",
+                            }
+
+
+class Database:
+	"An instance of this class will hold all the configuration information for core.Database functionalities."
+	
+	def __init__(self,
+		compound_db:str=Seed_COMPOUNDS_DB,
+		reaction_db:str=Seed_RXN_DB,
+		local_compound_db:str=os.path.join(
+		        Main_Dir, "Database", 'Local_compounds.json'),
+		local_reaction_db:str=os.path.join(
+		        Main_Dir, "Database", 'Local_reactions.json'),
+		csv_reaction_db:str=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
+		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
+		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
+		cazy_links:str=EXTERNAL_LINKS["cazy_links"],
+		amplicon_to_genome_urls:dict=EXTERNAL_LINKS["amplicon2genome"],
+		adm_parameters_urls:dict=E_ADM_REMOTE,
+		adm_parameters:dict=E_ADM_LOCAL,
+		seed_rxn_url:str =EXTERNAL_LINKS["seed_rxn_url"],
+		seed_compound_url:str =EXTERNAL_LINKS["seed_compound_url"],
+		protein_db_url:str =INTERNAL_LINKS["protein_db_url"],
+		adtoolbox_rxn_db_url:str =INTERNAL_LINKS["adtoolbox_rxn_db_url"],
+		feed_db_url:str =INTERNAL_LINKS["feed_db_url"],
+		qiime_classifier_db:str=os.path.join(Main_Dir, "Database","qiime2_classifier_db" ,'qiime2_classifier_db.qza'),
+		qiime_classifier_db_url:str=INTERNAL_LINKS["qiime_classifier_db_url"],
+  		adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
+		adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
+    	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
+		adm_microbial_groups_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
         metagenomics_studies_db=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
         experimental_data_db=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json"),
-		studies_urls={'metagenomics_studies': 'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv',
-					  'exmpermental_data_db':'https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.json'},
-
+        metagenomics_studies_urls:dict=INTERNAL_LINKS["metagenomics_studies"],
+        exmpermental_data_db_url:dict=INTERNAL_LINKS["exmpermental_data_db"]
 
 		):
 		self.compound_db = compound_db
 		self.reaction_db = reaction_db
 		self.local_compound_db = local_compound_db
 		self.local_reaction_db = local_reaction_db
-		self.base_dir = base_dir
 		self.csv_reaction_db = csv_reaction_db
 		self.feed_db = feed_db
+		self.amplicon_to_genome_db = amplicon_to_genome_db
+		self.cazy_links = cazy_links
+		self.amplicon_to_genome_urls = amplicon_to_genome_urls
+		self.adm_parameters_urls = adm_parameters_urls
+		self.adm_parameters = adm_parameters
 		self.seed_rxn_url = seed_rxn_url
 		self.seed_compound_url = seed_compound_url
 		self.protein_db_url = protein_db_url
@@ -142,35 +156,15 @@ class Database:
 		self.feed_db_url = feed_db_url
 		self.qiime_classifier_db = qiime_classifier_db
 		self.qiime_classifier_db_url = qiime_classifier_db_url
-		self.cazy_links = cazy_links
-		self.adm_parameters_urls = adm_parameters_urls
-		self.adm_parameters_base_dir = adm_parameters_base_dir
-		self.amplicon_to_genome_db = amplicon_to_genome_db
-		self.adm1_model_parameters = os.path.join(self.adm_parameters_base_dir,"ADM1_Model_Parameters.json")
-		self.adm1_base_parameters = os.path.join(self.adm_parameters_base_dir,"ADM1_Base_Parameters.json")
-		self.adm1_initial_conditions = os.path.join(self.adm_parameters_base_dir,"ADM1_Initial_Conditions.json")
-		self.adm1_inlet_conditions = os.path.join(self.adm_parameters_base_dir,"ADM1_Inlet_Conditions.json")
-		self.adm1_reactions = os.path.join(self.adm_parameters_base_dir,"ADM1_Reactions.json")
-		self.adm1_species = os.path.join(self.adm_parameters_base_dir,"ADM1_Species.json")
-		self.model_parameters = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Model_Parameters.json")
-		self.base_parameters = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Base_Parameters.json")
-		self.initial_conditions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Initial_Conditions.json")
-		self.inlet_conditions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Inlet_Conditions.json")
-		self.reactions = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Reactions.json")
-		self.species = os.path.join(self.adm_parameters_base_dir,"Modified_ADM_Species.json")
-		self.protein_db=protein_db
 		self.adtoolbox_singularity=adtoolbox_singularity
 		self.adtoolbox_docker=adtoolbox_docker
-		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
-		self.adm_mapping=adm_mapping
+		self.protein_db=protein_db
+		self.adm_microbial_groups_mapping=adm_microbial_groups_mapping
 		self.metagenomics_studies_db=metagenomics_studies_db
 		self.experimental_data_db=experimental_data_db
-		self.studies_urls=studies_urls
-		self.amplicon_to_genome_urls=amplicon_to_genome_urls
-
-  
-  
-
+		self.metagenomics_studies_urls=metagenomics_studies_urls
+		self.exmpermental_data_db_url=exmpermental_data_db_url
+		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
 
 
 
@@ -261,28 +255,6 @@ class Metagenomics:
 		self.adm_mapping=adm_mapping
 		self.adm_cod_from_ec=adm_cod_from_ec
 		self.ec_counts_from_alignment=ec_counts_from_alignment
-
-
-
-
-
-	def genome_save_dir(self, accession_id: str):
-		""" sets the working directory for the accession id """
-		return os.path.join(self.genomes_base_dir, accession_id)
-
-	def sra_work_dir(self, sra_project_id: str):
-		""" sets the working directory for the SRA project id """
-	
-		return os.path.join(self.sra, sra_project_id)
-	
-	def qiime2_work_dir(self, sra_project_id: str):
-		""" sets the working directory for the SRA project id """
-		return os.path.join(self.sra_work_dir(sra_project_id), "qiime2")
-
-
-
-
-
 
 class Documentation:
     def __init__(self,
