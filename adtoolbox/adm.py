@@ -26,51 +26,63 @@ from __init__ import Main_Dir,PKG_DATA
 from rich.style import Style
 import dash_escher
 import configs
-import pdb
+
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
 # It is extensively based on PyADM1, and I would like to thank the author of PyADM1 for this work
 # As far as implementing the original ADM1 in python goes, I still consider this as a modification from
 # the PyADM1 code.
-
 # ----------
 
 DEFAULT_FEED=Feed(name="Default Feed",
-                  carbohydrates=10,
+                    carbohydrates=10,
                     proteins=20, 
                     lipids=20, 
                     si=30,
                     xi=50,
                     tss=80)
-RT = SeedDB(config=configs.SeedDB())
+RT = SeedDB(config=configs.Database())
 
 class _Fake_Sol:
     def __init__(self, y,t):
         self.y = y
         self.t=t
 
-
-
 class Model:
 
-    """General Class For a Model
+    """Any kinetic model could be an instance of this class.
     Args:
         model_parameters (dict): a dictionary which contains model parameters
         base_parameters (dict): a dictionary which contains base paramters
         initial_conditions (dict): a dictionary containing inlet conditions for all species
         inlet_conditions (dict): a dictionary containing inlet conditions for all species
+        feed (Feed): a Feed instance which contains the feed information
         reactions (list): a list containing all types of reactions
         species (list): a list containing all species
-        ode_system (function): a function which solves inital value ODEs
-        build_stoichiometric_matrix(function): a function which outputs a matrix for of all reactions
+        ode_system (Callable): a callable which outputs the ODE system compatible with Scipy.integrate.solve_ivp
+        build_stoichiometric_matrix(Callable): a callable which builds the stoichiometric matrix
+        control_state (dict, optional): a dictionary containing the states that are desired to be constant. Defaults to {}.
+        
         
     Returns:
-        adtoolbox.ADM.Model: returns a model instance for downstream purposes.
+        Model: returns a model instance for downstream purposes.
     """
-    
-
-
-    def __init__(self, model_parameters: dict, base_parameters: dict, initial_conditions: dict, inlet_conditions:dict,feed:Feed, reactions: list, species: list, ode_system:Callable, build_stoichiometric_matrix:Callable,control_state:dict={},metagenome_report=None, name="ADM1", switch="DAE",simulation_time=30):
+    def __init__(self, 
+                 model_parameters: dict,
+                 base_parameters: dict,
+                 initial_conditions: dict,
+                 inlet_conditions:dict,
+                 feed:Feed,
+                 reactions: list, 
+                 species: list, 
+                 ode_system:Callable, 
+                 build_stoichiometric_matrix:Callable,
+                 control_state:dict={},
+                 metagenome_report:dict=None, 
+                 name:str="ADM", 
+                 switch:str="DAE",
+                 simulation_time:float=30):
+        
         self.model_parameters = model_parameters
         self.base_parameters = base_parameters
         self.feed=feed
@@ -90,13 +102,11 @@ class Model:
         self.name = name
         self.metagenome_report = metagenome_report
         self.build_stoichiometric_matrix = build_stoichiometric_matrix
-        # self.S = build_stoichiometric_matrix(
-        #     base_parameters, model_parameters, reactions, species,self.feed)
         self.ode_system = ode_system
         self.sim_time=simulation_time
 
     @property
-    def S(self):
+    def s(self):
         return self.build_stoichiometric_matrix(
             self.base_parameters, self.model_parameters, self.reactions, self.species,self.feed)
     # def Build_COBRA_Model(self, save_model=True):
@@ -114,14 +124,24 @@ class Model:
     #         Temp_Rxn.add_metabolites(Met_Dict)
     #         # print(Temp_Rxn.reaction)
     #         model.add_reaction(Temp_Rxn)
-
         # if save_model:
         #     cobra.io.save_json_model(model, self.Name+'.json')
-    def update_parameters(self, model_parameters: dict|None=None ,
-                                base_parameters: dict|None=None,
-                                initial_conditions: dict|None=None,
-                                inlet_conditions: dict|None=None)->None:
-        """Function to update parameters in the model
+    def update_parameters(self, 
+                        model_parameters: dict|None=None,
+                        base_parameters:  dict|None=None,
+                        initial_conditions: dict|None=None,
+                        inlet_conditions: dict|None=None)->None:
+        """
+        This method updates the parameters of the model. Each argument can be a dictionary containing the parameters to be updated.
+        NOTE: It is important to note that you have to separate different kind parameters.
+        Args:
+            model_parameters (dict): a dictionary which contains the model parameters to be updated as keys and their values as values.
+            base_parameters (dict): a dictionary which contains the base parameters to be updated as keys and their values as values.
+            initial_conditions (dict): a dictionary containing the initial conditions to be updated as keys and their values as values.
+            inlet_conditions (dict): a dictionary containing the inlet conditions to be updated as keys and their values as values.
+
+        Returns:
+            None: This method does not return anything.
         """
         if model_parameters is not None:
             self.model_parameters.update(model_parameters)
@@ -182,7 +202,7 @@ class Model:
                 raise Exception
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
-            c=_Fake_Sol(np.ones((y0.shape[0],t_eval.__len__()))*1e10,t_eval)
+            c=_Fake_Sol(np.ones((y0.shape[0],len(t_eval)))*1e10,t_eval)
        
         return c
 
@@ -531,7 +551,6 @@ class Model:
                     Input(component_id='initial_conditions', component_property='data'),
                     Input(component_id='inlet_conditions', component_property='data'))
         def update_graph_fig(base_parameters: dict, model_parameters:dict, initial_conditions: dict, inlet_conditions: dict,prevent_initial_call=True)->plotly.graph_objects.Figure:
-            print("flag")
             if len(self.control_state.keys()):
                 for i in self.control_state.keys():
                     self.control_state[i]=initial_conditions[0][i]
@@ -609,12 +628,12 @@ class Model:
                           initial_conditions=self._ic.copy(),
                           inlet_conditions=self._inc.copy(),
                           feed=self.feed,
-                          reactions=self.reactions,
-                          species=self.species,
+                          reactions=self.reactions.copy(),
+                          species=self.species.copy(),
                           ode_system=self.ode_system,
                           build_stoichiometric_matrix=self.build_stoichiometric_matrix,
-                          control_state=self.control_state,
-                          metagenome_report=self.metagenome_report,
+                          control_state=self.control_state.copy(),
+                          metagenome_report=self.metagenome_report.copy(),
                           name=self.name,
                           switch=self.switch,
                           simulation_time=self.sim_time)
@@ -921,7 +940,6 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
                                             -model_parameters['Y_fa'] * model_parameters['N_bac'],
                                             f_IC_fa,
                                             model_parameters['Y_fa']]
-#HERE
     f_IC_ac_et = -((-1-(1-model_parameters['Y_ac_et']) * model_parameters['f_et_ac'])*model_parameters['C_ac'] +
                    (1-model_parameters['Y_ac_et'])* model_parameters['f_et_ac']*model_parameters['C_et'] +
                    (1-model_parameters['Y_ac_et']) * model_parameters['f_bu_ac']*model_parameters['C_bu'] +
@@ -1711,7 +1729,7 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         (c[model.species.index('S_co2')] -
          model.model_parameters['K_H_co2'] * p_gas_co2))
 
-    dCdt = np.matmul(model.S, v)
+    dCdt = np.matmul(model.s, v)
 
     phi = c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] /
                                                                                                                                                                      112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) - c[model.species.index('S_anion')]
@@ -2078,33 +2096,5 @@ def customized_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
 if __name__ == "__main__":
 
     # mod_adm1.dash_app(Sol_mod_adm1)
-    db_conf=configs.Database()
-    with open(db_conf.model_parameters, 'r') as f:
-        mp=json.load(f)
-    with open(db_conf.base_parameters, 'r') as f:
-        bp=json.load(f)
-    with open(db_conf.initial_conditions, 'r') as f:
-        ic=json.load(f)
-    with open(db_conf.inlet_conditions, 'r') as f:
-        inc=json.load(f)
-    with open(db_conf.reactions, 'r') as f:
-        r=json.load(f)
-    with open(db_conf.species, 'r') as f:
-        s=json.load(f)
-    mp["k_m_ac"]=10000
-    mp["f_et_ac"]=0.001
-    model=Model(
-        model_parameters=mp,
-        base_parameters=bp,
-        initial_conditions=ic,
-        inlet_conditions=inc,
-        feed=DEFAULT_FEED,
-        reactions=r,
-        species=s,
-        ode_system=modified_adm_ode_sys,
-        build_stoichiometric_matrix=build_modified_adm_stoichiometric_matrix,
-        
-    )
-    sol=model.solve_model(np.linspace(0, 30, 10000))
-    model.dash_app(sol)
+    pass
     

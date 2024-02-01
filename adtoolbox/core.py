@@ -346,7 +346,7 @@ class SeedDB:
 
     """
 
-    def __init__(self, config:configs.SeedDB) -> None:
+    def __init__(self, config:configs.Database) -> None:
         
         self.reaction_db = config.reaction_db
         self.compound_db = config.compound_db
@@ -1163,20 +1163,14 @@ class Database:
         
         
         """
-        if not os.path.exists(self.config.adm_parameters_base_dir):
-                os.makedirs(self.config.adm_parameters_base_dir)
-        if verbose:
-            for url in track(self.config.adm_parameters_urls.values(),description="Downloading ADM parameters"):
-                r = requests.get(url, allow_redirects=True)
-                with open(os.path.join(self.config.adm_parameters_base_dir,url.split("/")[-1]), 'wb') as f:
-                    f.write(r.content)
-            rich.print(f"[green]ADM parameters were downloaded to {self.config.adm_parameters_base_dir}")
-        
-        else:
-            for url in self.config.adm_parameters_urls.values():
-                r = requests.get(url, allow_redirects=True)
-                with open(os.path.join(self.config.adm_parameters_base_dir,url.split("/")[-1]), 'wb') as f:
-                    f.write(r.content)
+        for param in self.config.adm_parameters.keys():
+            if not pathlib.Path(self.config.adm_parameters[param]).parent.exists():
+                os.makedirs(pathlib.Path(self.config.adm_parameters[param]).parent)
+            r = requests.get(self.config.adm_parameters_urls[param], allow_redirects=True)
+            with open(self.config.adm_parameters[param], 'wb') as f:
+                f.write(r.content)
+            if verbose:
+                rich.print(f"[green]{param} downloaded to {self.config.adm_parameters[param]}")
         
     def download_seed_databases(self,verbose:bool=True) -> None :
         """This function will download the seed databases, both compound and reaction databases.

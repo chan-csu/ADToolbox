@@ -3,6 +3,7 @@ from __init__ import Main_Dir,PKG_DATA
 import pathlib
 import rich
 import json
+import warnings
 
 """
 This module contains all the paths to the files and directories used in the program.
@@ -110,10 +111,8 @@ class Database:
 	def __init__(self,
 		compound_db:str=Seed_COMPOUNDS_DB,
 		reaction_db:str=Seed_RXN_DB,
-		local_compound_db:str=os.path.join(
-		        Main_Dir, "Database", 'Local_compounds.json'),
-		local_reaction_db:str=os.path.join(
-		        Main_Dir, "Database", 'Local_reactions.json'),
+		local_compound_db:str=os.path.join(Main_Dir, "Database", 'Local_compounds.json'),
+		local_reaction_db:str=os.path.join(Main_Dir, "Database", 'Local_reactions.json'),
 		csv_reaction_db:str=os.path.join(Main_Dir, "Database", 'Reaction_Metadata.csv'),
 		feed_db=os.path.join(Main_Dir, "Database", 'feed_db.tsv'),
 		amplicon_to_genome_db=os.path.join(Main_Dir,'Database','Amplicon2GenomeDBs'),
@@ -135,8 +134,8 @@ class Database:
         metagenomics_studies_db=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
         experimental_data_db=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json"),
         metagenomics_studies_urls:dict=INTERNAL_LINKS["metagenomics_studies"],
-        exmpermental_data_db_url:dict=INTERNAL_LINKS["exmpermental_data_db"]
-
+        exmpermental_data_db_url:dict=INTERNAL_LINKS["exmpermental_data_db"],
+        check_sanity:bool=False
 		):
 		self.compound_db = compound_db
 		self.reaction_db = reaction_db
@@ -165,9 +164,13 @@ class Database:
 		self.metagenomics_studies_urls=metagenomics_studies_urls
 		self.exmpermental_data_db_url=exmpermental_data_db_url
 		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
-
-
-
+		if check_sanity:
+			self.check_adm_parameters()
+   
+	def check_adm_parameters(self):
+		branches=all([pathlib.Path(x).parent==pathlib.Path(self.adm_parameters["model_parameters"]).parent for x in self.adm_parameters.values()])
+		if not branches:
+			warnings.warn(f"The ADM parameters are not in the same directory!")
 
 class Metagenomics:
 	"""	
@@ -181,24 +184,14 @@ class Metagenomics:
             genomes_base_dir=os.path.join(Main_Dir,"Genomes"),
             align_to_gtdb_outputs_dir=os.path.join(Main_Dir,"Genomes"),
             amplicon2genome_db=Database().amplicon_to_genome_db,
-			top_repseq_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","top_repseqs.fasta"),
             qiime_outputs_dir=os.path.join(Main_Dir,'Metagenomics_Data','QIIME_Outputs'),
 			genome_alignment_script=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_alignment_script.sh"),
-            genomes_json_info=os.path.join(Main_Dir,"Genomes","Amplicon2Genome_OutInfo.json"),
 			vsearch_threads:int=4,
 			rsync_download_dir=os.path.join(Main_Dir,"Genomes","rsync_download.sh"),
 			adtoolbox_singularity=ADTOOLBOX_CONTAINERS["singularity_x86"],
 			adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
-			vsearch_script_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","vsearch_scripts.sh"),
-            feature_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature-table.tsv"),
-            rep_seq_fasta=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","dna-sequences.fasta"),
-            taxonomy_table_dir=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","taxonomy.tsv"),
             genome_alignment_output=os.path.join(Main_Dir,"Outputs"),
-			feature_to_taxa=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","feature_to_taxa.json"),
-            genome_alignment_output_json=os.path.join(Main_Dir,"Outputs","Alignment_Info.json"),
-            genome_adm_map_json=os.path.join(Main_Dir,"Outputs","ADM_From_Alignment_JSON_Output.json"),
             csv_reaction_db=Database().csv_reaction_db,
-			genome_relative_abundances=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","genome_relative_abundances.json"),
             sra=os.path.join(Main_Dir,"Metagenomics_Analysis","SRA"),
             bit_score=40,
             e_value=10**-5,
@@ -207,32 +200,20 @@ class Metagenomics:
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
-			cod_output_json=os.path.join(Main_Dir,"Metagenomics_Data","QIIME_Outputs","cod_output.json"),
-			adm_mapping=Database().adm_mapping,
-   			adm_cod_from_ec=os.path.join(Main_Dir,"Outputs","adm_From_ec.json"),
-			ec_counts_from_alignment=os.path.join(Main_Dir,"Outputs","ec_counts_from_alignment.json"),
-
+			adm_mapping=Database().adm_microbial_groups_mapping,
              ):
 		self.k = amplicon2genome_k
 		self.vsearch_similarity = vsearch_similarity
 		self.align_to_gtdb_outputs_dir = align_to_gtdb_outputs_dir
 		self.amplicon2genome_db = amplicon2genome_db
 		self.qiime_outputs_dir = qiime_outputs_dir
-		self.genomes_json_info = genomes_json_info
-		self.top_repseq_dir = top_repseq_dir
-		self.feature_table_dir = feature_table_dir
-		self.rep_seq_fasta = rep_seq_fasta
-		self.taxonomy_table_dir = taxonomy_table_dir
 		self.protein_db=Database().protein_db
 		self.protein_db_mmseqs=Database().protein_db_mmseqs
 		self.seed_rxn_db=Seed_RXN_DB
 		self.genome_alignment_output = genome_alignment_output
-		self.genome_alignment_output_json=genome_alignment_output_json
 		self.bit_score = bit_score
 		self.e_value = e_value
 		self.vsearch_threads=vsearch_threads
-		self.genome_adm_map_json=genome_adm_map_json
-		self.feature_to_taxa=feature_to_taxa
 		self.csv_reaction_db=csv_reaction_db
 		self.sra=sra
 		self.qiime2_singularity_image=qiime2_singularity_image
@@ -244,24 +225,17 @@ class Metagenomics:
 			self.gtdb_dir_fasta=str(list(pathlib.Path(self.amplicon2genome_db).rglob(Metagenomics.gtdb_dir))[0])
 		else:
 			self.gtdb_dir_fasta=None
-		self.vsearch_script_dir=vsearch_script_dir
 		self.genome_alignment_script=genome_alignment_script	
-		self.genome_relative_abundances=genome_relative_abundances
-		self.cod_output_json=cod_output_json
 		self.adtoolbox_singularity=adtoolbox_singularity
 		self.adtoolbox_docker=adtoolbox_docker
 		self.rsync_download_dir=rsync_download_dir
 		self.genomes_base_dir=genomes_base_dir
 		self.adm_mapping=adm_mapping
-		self.adm_cod_from_ec=adm_cod_from_ec
-		self.ec_counts_from_alignment=ec_counts_from_alignment
 
 class Documentation:
     def __init__(self,
                  readme=os.path.join(PKG_DATA,"README.md")):
         self.readme = readme
-
-
 
 class Utils:
 
@@ -314,3 +288,7 @@ def set_base_dir(path:str):
 				json.dump(conf,f)
 	else:
 		rich.print("[red]Base directory not changed")
+if __name__=="__main__":
+    t=Database()
+    t.adm_parameters["model_parameters"]=os.path.join(Main_Dir, "Database","somewhere_else","e_adm_model_parameters.json")
+    t.check_adm_parameters()

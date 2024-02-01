@@ -230,7 +230,12 @@ def get_sample_metadata_from_accession(accession:str,save:Union[None,str]=None)-
             json.dump(metadata,f)
     return metadata
 
-def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config())->str:
+def create_mmseqs_database(fasta_db:str,
+                           mmseqs_db:str,
+                           container:str="None",
+                           save:Union[str,None]=None,
+                           run:bool=True,
+                           config=configs.Utils())->str:
     """This function converts any database in fasta format for mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
@@ -261,7 +266,7 @@ def create_mmseqs_database(fasta_db:str,mmseqs_db:str,container:str="None",save:
     
     return bashscript
 
-def index_mmseqs_db(mmseqs_db:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config)->str:
+def index_mmseqs_db(mmseqs_db:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Utils)->str:
     """This function indexes any database in fasta format for mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
@@ -294,7 +299,7 @@ def mmseqs_search(
     container:str="None",
     save:Union[str,None]=None,
     run:bool=True,
-    config=configs.Config()
+    config=configs.Utils()
                         )->str:
     """This function searches a query database against a target database using mmseqs2.
     Specifically, this function can be used for the protein database and is highly recomended for
@@ -329,7 +334,7 @@ def mmseqs_search(
     return bashscript
 
 
-def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Config())->str:
+def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:str,container:str="None",save:Union[str,None]=None,run:bool=True,config=configs.Utils())->str:
     """This function converts the results of mmseqs search to a tsv file.
     Specifically, this function can be used for the protein database and is highly recomended for
     shotgun metagenomics samples."""
