@@ -20,6 +20,7 @@ from core import Reaction
 from collections import OrderedDict
 import dash_bootstrap_components as dbc
 import rich
+import utils
 from rich.console import Console
 from rich.table import Table
 from __init__ import Main_Dir,PKG_DATA
@@ -639,9 +640,8 @@ class Model:
                           simulation_time=self.sim_time)
 
 
-def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list)-> np.ndarray:
+def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list,feed:Feed)-> np.ndarray:
     """This function builds the stoichiometric matrix for the original ADM Model.
-    No testing is done.
     """
 
     S = np.zeros((len(species), len(reactons)))
@@ -1140,9 +1140,9 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
     return S
 
 
-def customized_adm(base_parameters: dict, model_parameters: dict, reactions: list, species: list,feed:Feed)->np.ndarray:
+def e_adm(base_parameters: dict, model_parameters: dict, reactions: list, species: list,feed:Feed)->np.ndarray:
     """ 
-    This function builds the stoichiometric matrix for the modified ADM Model.
+    This function builds the stoichiometric matrix for the e_ADM Model.
         
         Model Parameters (dict): a dictionary which contains model parameters
         base_parameters (dict): a dictionary which contains base paramters
@@ -1767,9 +1767,9 @@ def modified_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     model.info["Fluxes"]=v
     return dCdt[:, 0]
 
-def customized_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
+def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     """
-    This function is used to build the ODEs of the modified ADM1 model.
+    This function is used to build the ODEs of the e_adm model.
     
     Args:
         t (float):a matrix of zeros to be filled
@@ -2093,8 +2093,20 @@ def customized_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     model.info["Fluxes"]=v
     return dCdt[:, 0]
 
+
+
 if __name__ == "__main__":
 
-    # mod_adm1.dash_app(Sol_mod_adm1)
-    pass
+    params=utils.load_multiple_json_files(configs.ADM1_LOCAL)
+    model=Model(model_parameters=params.model_parameters,
+                base_parameters=params.base_parameters,
+                initial_conditions=params.initial_conditions,
+                build_stoichiometric_matrix=build_adm1_stoiciometric_matrix,
+                ode_system=adm1_ode_sys,
+                inlet_conditions=params.inlet_conditions,
+                species=params.species,
+                reactions=params.reactions,
+                feed=Feed)
+    model.solve_model(t_eval=np.linspace(0, 100, 1000))
+    
     

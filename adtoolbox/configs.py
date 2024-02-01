@@ -271,6 +271,7 @@ def get_base_dir():
 	return Main_Dir
 
 def set_base_dir(path:str):
+	global Main_Dir
 	ans=input("This will change the base directory of the program. Are you sure you want to continue? (y/n)")
 	if ans == "y":
 		with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'r') as f:
@@ -281,13 +282,19 @@ def set_base_dir(path:str):
 				rich.print("[red]Base directory not changed")
 				return
 			else:
+				with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'w') as f:
+					json.dump(conf,f)
+				Main_Dir=path
 				rich.print("[green]Base directory changed")
-				conf["Base_Dir"]=path
-
-			with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'w') as f:
-				json.dump(conf,f)
+				conf["Base_Dir"]=path	
 	else:
 		rich.print("[red]Base directory not changed")
+
+def get_tree_folder_stucture(dirs:dict):
+    pass
+
+
+
 if __name__=="__main__":
     t=Database()
     t.adm_parameters["model_parameters"]=os.path.join(Main_Dir, "Database","somewhere_else","e_adm_model_parameters.json")

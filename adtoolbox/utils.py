@@ -7,7 +7,7 @@ import pandas as pd
 import os
 from typing import Iterable, Any,Union
 from warnings import warn
-
+from collections import namedtuple
 class Sequence_Toolkit:
 
     aa_list = ['A', 'M', 'N', 'V', 'W', 'L', 'H', 'S', 'G', 'F',
@@ -386,6 +386,16 @@ def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
     with open(output_dir,"w") as fp:
         json.dump(genomes_json,fp)
     return
+
+def load_multiple_json_files(json_files:dict[str,str])->dict:
+
+    jsons_tuple=namedtuple("jsons_tuple",[key for key in json_files])
+    jsons={}
+    for key in json_files:
+        with open(json_files[key],"r") as f:
+            jsons[key]=json.load(f)
+    jsons_tuple=jsons_tuple(**jsons)
+    return jsons_tuple
 
 def needs_repair(func):
     def to_be_repaired(*args,**kwargs):
