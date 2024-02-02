@@ -3,18 +3,15 @@ from re import M
 import configs
 import metagenomics_report
 import core
-from __init__ import __version__
-from __init__ import Main_Dir
+from __init__ import __version__,Main_Dir
 from rich.console import Console
 import rich
 import adm
 from rich.table import Table
 from rich.prompt import Prompt
 from rich import markdown
-# import tables
 import json
 import os
-import pdb
 import numpy as np
 
 class AParser(argparse.ArgumentParser):
@@ -78,16 +75,16 @@ def main():
     
     metag_subp_2=metag_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
     metag_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=meta_config_defult.qiime_outputs_dir)
-    metag_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables",default=meta_config_defult.feature_table_dir)
-    metag_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files",default=meta_config_defult.rep_seq_fasta)
-    metag_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files",default=meta_config_defult.taxonomy_table_dir)
+    metag_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables")
+    metag_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files")
+    metag_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files")
     metag_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=meta_config_defult.genomes_base_dir)
     metag_subp_2.add_argument("-a", "--amplicon-to-genome-db", action="store", help="The Amplicon to Genome Database to use",default=meta_config_defult.amplicon2genome_db)
     metag_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=meta_config_defult.k,type=int)
     metag_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=meta_config_defult.vsearch_similarity,type=float)
     
     metag_subp_3=metag_subp.add_parser('align-genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
-    metag_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned",default=meta_config_defult.genomes_json_info)
+    metag_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned")
     metag_subp_3.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db)
     metag_subp_3.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results",default=meta_config_defult.genome_alignment_output)
     metag_subp_3.add_argument("-b", "--bit-score", action="store", help="Minimum Bit Score cutoff for alignment",default=meta_config_defult.bit_score)
@@ -98,9 +95,9 @@ def main():
     metag_subp_4.add_argument("-o", "--output-file", action="store", help="Output the directory to store the JSON file.",required=True)
     
     metag_subp_5=metag_subp.add_parser('map-genomes-to-adm', help='maps JSON file with genome infromation to ADM reactions')
-    metag_subp_5.add_argument("-i","--input-file",action="store",help="Input the address of the JSON file includeing information about the alignment of the genomes to the protein database",default=meta_config_defult.genome_alignment_output_json)
+    metag_subp_5.add_argument("-i","--input-file",action="store",help="Input the address of the JSON file includeing information about the alignment of the genomes to the protein database")
     metag_subp_5.add_argument("-m","--model",action="store",help="Model determines which mapping system you'd like to use; Current options: 'Modified_adm_reactions'",default="Modified_adm_reactions")
-    metag_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model",default=meta_config_defult.genome_adm_map_json)
+    metag_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model")
 
 
     doc_parser=subparsers.add_parser('Documentations', help='Documentations for using AD Toolbox')
@@ -109,7 +106,7 @@ def main():
     ### ADM module ###
     subparser_adm = subparsers.add_parser('ADM', help='This module provides a command line interface for running and visualizing the ADToolbox ADM and modified ADM models')
     adm_subp=subparser_adm.add_subparsers(dest='adm_Subparser',help='Available ADM Commands:')
-    subparser_adm1 = adm_subp.add_parser('original-adm1',help='Original ADM1:')
+    subparser_adm1 = adm_subp.add_parser('adm1',help='Original ADM1 Model')
     subparser_adm1.add_argument("--model-parameters", action="store", help="Model parameters for ADM 1")
     subparser_adm1.add_argument("--base-parameters", action="store", help="Provide json file with base parameters for original ADM1")
     subparser_adm1.add_argument("--initial-conditions", action="store", help="Provide json file with initial conditions for original ADM1")
@@ -119,7 +116,7 @@ def main():
     subparser_adm1.add_argument("--metagenome-report", action="store", help="Provide json file with metagenome report for original ADM1")
     subparser_adm1.add_argument("--report", action="store", help="Describe how to report the results of original ADM1. Current options are: 'dash' and 'csv'")
     
-    mod_adm_subp=adm_subp.add_parser('modified-adm',help='Modified ADM:')
+    mod_adm_subp=adm_subp.add_parser('e-adm',help='eADM Model')
     mod_adm_subp.add_argument("--model-parameters", action="store", help="Model parameters for Modified ADM")
     mod_adm_subp.add_argument("--base-parameters", action="store", help="Provide json file with base parameters for modified ADM")
     mod_adm_subp.add_argument("--initial-conditions", action="store", help="Provide json file with initial conditions for modified ADM")
@@ -270,32 +267,34 @@ def main():
     if "extend_feed_db" in args and bool(args.extend_feed_db):
         db_class.add_feedstock_to_database_from_file(args.extend_feed_db)
     
-    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'original-adm1':
+    if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'adm1':
+        
         if args.model_parameters:
             with open(args.model_parameters) as f:
                 adm_model_parameters=json.load(f)
         else:
-            with open(configs.Database().adm1_model_parameters) as f:
+            with open(configs.ADM1_LOCAL["model_parameters"]) as f:
                 adm_model_parameters=json.load(f)
+        
         if args.base_parameters:
             with open(args.base_parameters) as f:
                 adm_base_parameters=json.load(f)
         else:
-            with open(configs.Database().adm1_base_parameters) as f:
+            with open(configs.ADM1_LOCAL["base_parameters"]) as f:
                 adm_base_parameters=json.load(f)
 
         if args.initial_conditions:
             with open(args.initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
         else:
-            with open(configs.Database().adm1_initial_conditions) as f:
+            with open(configs.ADM1_LOCAL["initial_conditions"]) as f:
                 adm_initial_conditions=json.load(f)
 
         if args.inlet_conditions:
             with open(args.inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
         else:
-            with open(configs.Database().inlet_conditions) as f:
+            with open(configs.ADM1_LOCAL["inlet_conditions"]) as f:
                 adm_inlet_conditions=json.load(f)
 
         
@@ -303,14 +302,14 @@ def main():
             with open(args.reactions) as f:
                 adm_reactions=json.load(f)
         else:
-            with open(configs.Database().adm1_reactions) as f:
+            with open(configs.ADM1_LOCAL["reactions"]) as f:
                 adm_reactions=json.load(f)
         
         if args.species:
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(configs.Database().adm1_species) as f:
+            with open(configs.ADM1_LOCAL["species"]) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
@@ -330,20 +329,19 @@ def main():
             ode_system=adm.adm1_ode_sys, 
             build_stoichiometric_matrix=adm.build_adm1_stoiciometric_matrix,
             name="ADM1",
-            Switch="DAE")
-        Sol = ADM1.solve_model(
-        (0, 20), ADM1.initial_conditions[:, 0], np.linspace(0, 20, 100))
+            switch="DAE")
+        sol = ADM1.solve_model(t_eval=np.linspace(0,30, 10000))
 
         if args.report == 'dash' or args.report==None:
-            ADM1.dash_app(Sol)
+            ADM1.dash_app(sol)
         elif args.report == 'csv':
             Address=Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
-            ADM1.csv_report(Sol,Address)
+            ADM1.csv_report(sol,Address)
         else:
             print('Please provide a valid report option')
     
 
-    elif "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'modified-adm':
+    elif "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'e-adm':
         if args.model_parameters:
             with open(args.model_parameters) as f:
                 adm_model_parameters=json.load(f)

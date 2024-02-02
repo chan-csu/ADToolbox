@@ -787,11 +787,13 @@ def adm1_ode_sys(t: float, c: np.ndarray, adm1_instance:Model)-> np.ndarray:
     I12 = (I_pH_h2 * I_IN_lim)
     v = np.zeros((len(adm1_instance.reactions), 1))
     v[0] = adm1_instance.model_parameters["k_dis"]*c[12]
+    
     v[1] = adm1_instance.model_parameters['k_hyd_ch']*c[13]
     v[2] = adm1_instance.model_parameters['k_hyd_pr']*c[14]
     v[3] = adm1_instance.model_parameters['k_hyd_li']*c[15]
+    
     v[4] = adm1_instance.model_parameters['k_m_su']*c[0] / \
-        (adm1_instance.model_parameters['K_S_su']+c[0])*c[16]*I5
+(adm1_instance.model_parameters['K_S_su']+c[0])*c[16]*I5
     v[5] = adm1_instance.model_parameters['k_m_aa']*c[1] / \
         (adm1_instance.model_parameters['K_S_aa']+c[1])*c[17]*I6
     v[6] = adm1_instance.model_parameters['k_m_fa']*c[2] / \
@@ -851,7 +853,7 @@ def adm1_ode_sys(t: float, c: np.ndarray, adm1_instance:Model)-> np.ndarray:
         (c[8] - 64 * adm1_instance.model_parameters['K_H_ch4'] * p_gas_ch4)
     v[27] = adm1_instance.model_parameters['k_L_a'] * \
         (c[32] - adm1_instance.model_parameters['K_H_co2'] * p_gas_co2)
-    dCdt = np.matmul(adm1_instance.S, v)
+    dCdt = np.matmul(adm1_instance.s, v)
     phi = c[24]+c[34]-c[31] - (c[30] / 64) - (c[29] /
                                               112) - (c[28] / 160) - (c[27] / 208) - c[25]
     c[26] = (-1 * phi / 2) + \
