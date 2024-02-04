@@ -346,20 +346,21 @@ def main():
             with open(args.model_parameters) as f:
                 adm_model_parameters=json.load(f)
         else:
-            with open(configs.Database().model_parameters) as f:
+            with open(configs.E_ADM_LOCAL["model_parameters"]) as f:
                 adm_model_parameters=json.load(f)
+                
         if args.base_parameters:
             with open(args.base_parameters) as f:
                 adm_base_parameters=json.load(f)
         else:
-            with open(configs.Database().base_parameters) as f:
+            with open(configs.E_ADM_LOCAL["base_parameters"]) as f:
                 adm_base_parameters=json.load(f)
 
         if args.initial_conditions:
             with open(args.initial_conditions) as f:
                 adm_initial_conditions=json.load(f)
         else:
-            with open(configs.Database().initial_conditions) as f:
+            with open(configs.E_ADM_LOCAL["initial_conditions"]) as f:
                 adm_initial_conditions=json.load(f)
 
         
@@ -367,35 +368,34 @@ def main():
             with open(args.inlet_conditions) as f:
                 adm_inlet_conditions=json.load(f)
         else:
-            with open(configs.Database().inlet_conditions) as f:
+            with open(configs.E_ADM_LOCAL["inlet_conditions"]) as f:
                 adm_inlet_conditions=json.load(f)
 
-        
+    
         if args.reactions:
             with open(args.reactions) as f:
                 adm_reactions=json.load(f)
         else:
-            with open(configs.Database().reactions) as f:
+            with open(configs.E_ADM_LOCAL["reactions"]) as f:
                 adm_reactions=json.load(f)
         
         if args.species:
             with open(args.species) as f:
                 adm_species=json.load(f)
         else:
-            with open(configs.Database().species) as f:
+            with open(configs.E_ADM_LOCAL["species"]) as f:
                 adm_species=json.load(f)
         
         if args.metagenome_report:
             with open(args.metagenome_report) as f:
                 adm_metagenome_report=json.load(f)
-
         else:
             adm_metagenome_report=None
+            
         if args.control_states:
             with open(args.control_states) as f:
                 adm_control_states=json.load(f)
         else:
-            
             adm_control_states={}
                 
         mod_adm1 = adm.Model(model_parameters=adm_model_parameters,
@@ -405,19 +405,19 @@ def main():
                              feed=adm.DEFAULT_FEED,
                              reactions=adm_reactions,
                             species=adm_species,
-                            ode_system=adm.modified_adm_ode_sys,
-                            build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
+                            ode_system=adm.e_adm_ode_sys,
+                            build_stoichiometric_matrix=adm.build_e_adm_stoiciometric_matrix,
                             control_state=adm_control_states,
                             name="Modified_ADM1",
                             switch="DAE",
                             metagenome_report=adm_metagenome_report)
-        Sol_mod_adm1 = mod_adm1.solve_model(mod_adm1.initial_conditions[:, 0], np.linspace(0,30, 10000))
+        sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000))
 
         if args.report == 'dash' or args.report==None:
-            mod_adm1.dash_app(Sol_mod_adm1)
+            mod_adm1.dash_app(sol_mod_adm1)
         elif args.report == 'csv':
             Address=Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
-            mod_adm1.csv_report(Sol_mod_adm1,Address)
+            mod_adm1.csv_report(sol_mod_adm1,Address)
         else:
             print('Please provide a valid report option')
     

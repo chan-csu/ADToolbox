@@ -634,7 +634,7 @@ class Model:
                           ode_system=self.ode_system,
                           build_stoichiometric_matrix=self.build_stoichiometric_matrix,
                           control_state=self.control_state.copy(),
-                          metagenome_report=self.metagenome_report.copy(),
+                          metagenome_report=self.metagenome_report.copy() if self.metagenome_report else None,
                           name=self.name,
                           switch=self.switch,
                           simulation_time=self.sim_time)
@@ -871,7 +871,11 @@ def adm1_ode_sys(t: float, c: np.ndarray, adm1_instance:Model)-> np.ndarray:
     return dCdt[:, 0]
 
 
-def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parameters: dict, reactions: list, species: list,feed:Feed)->np.ndarray:
+def build_modified_adm_stoichiometric_matrix(base_parameters: dict,
+                                             model_parameters: dict,
+                                             reactions: list,
+                                             species: list,
+                                             feed:Feed)->np.ndarray:
     """ 
     This function builds the stoichiometric matrix for the modified ADM Model.
         
@@ -1142,7 +1146,7 @@ def build_modified_adm_stoichiometric_matrix(base_parameters: dict, model_parame
     return S
 
 
-def e_adm(base_parameters: dict, model_parameters: dict, reactions: list, species: list,feed:Feed)->np.ndarray:
+def build_e_adm_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactions: list, species: list,feed:Feed)->np.ndarray:
     """ 
     This function builds the stoichiometric matrix for the e_ADM Model.
         
@@ -2057,7 +2061,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         (c[model.species.index('S_co2')] -
          model.model_parameters['K_H_co2'] * p_gas_co2))
 
-    dCdt = np.matmul(model.S, v)
+    dCdt = np.matmul(model.s, v)
 
     phi = c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] /
                                                                                                                                                                      112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) - c[model.species.index('S_anion')]
@@ -2100,15 +2104,30 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
 if __name__ == "__main__":
 
     params=utils.load_multiple_json_files(configs.ADM1_LOCAL)
-    model=Model(model_parameters=params.model_parameters,
-                base_parameters=params.base_parameters,
-                initial_conditions=params.initial_conditions,
-                build_stoichiometric_matrix=build_adm1_stoiciometric_matrix,
-                ode_system=adm1_ode_sys,
-                inlet_conditions=params.inlet_conditions,
-                species=params.species,
-                reactions=params.reactions,
-                feed=Feed)
-    model.solve_model(t_eval=np.linspace(0, 100, 1000))
+    # model=Model(model_parameters=params.model_parameters,
+    #             base_parameters=params.base_parameters,
+    #             initial_conditions=params.initial_conditions,
+    #             build_stoichiometric_matrix=build_adm1_stoiciometric_matrix,
+    #             ode_system=adm1_ode_sys,
+    #             inlet_conditions=params.inlet_conditions,
+    #             species=params.species,
+    #             reactions=params.reactions,
+    #             feed=Feed)
+    # model.solve_model(t_eval=np.linspace(0, 30, 1000))
+    mod_adm1 = Model(model_parameters=params.model_parameters,
+                    base_parameters=params.base_parameters, 
+                             initial_conditions=params.initial_conditions,
+                             inlet_conditions=params.inlet_conditions,
+                             feed=DEFAULT_FEED,
+                             reactions=params.reactions,
+                            species=params.species,
+                            ode_system=modified_adm_ode_sys,
+                            build_stoichiometric_matrix=build_modified_adm_stoichiometric_matrix,
+                            control_state={},
+                            name="Modified_ADM1",
+                            switch="DAE",
+                            metagenome_report=None)
+    sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000))
+    
     
     
