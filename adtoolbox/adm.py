@@ -198,8 +198,8 @@ class Model:
         y0=self.initial_conditions[:, 0]
         try:
             c = scipy.integrate.solve_ivp(self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self])
-            if not c.success:
-                raise Exception
+            # if not c.success:
+            #     raise Exception
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
             c=_Fake_Sol(np.ones((y0.shape[0],len(t_eval)))*1e10,t_eval)
@@ -549,8 +549,10 @@ class Model:
                     Input(component_id='base_parameters', component_property='data'),
                     Input(component_id='model_parameters', component_property='data'),
                     Input(component_id='initial_conditions', component_property='data'),
-                    Input(component_id='inlet_conditions', component_property='data'))
-        def update_graph_fig(base_parameters: dict, model_parameters:dict, initial_conditions: dict, inlet_conditions: dict,prevent_initial_call=True)->plotly.graph_objects.Figure:
+                    Input(component_id='inlet_conditions', component_property='data'),
+                    prevent_initial_call=True
+                    )
+        def update_graph_fig(base_parameters: dict, model_parameters:dict, initial_conditions: dict, inlet_conditions: dict)->plotly.graph_objects.Figure:
             if len(self.control_state.keys()):
                 for i in self.control_state.keys():
                     self.control_state[i]=initial_conditions[0][i]
@@ -1071,22 +1073,19 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     f_IC_Me_ach2 = 0
     S[list(map(species.index, ["S_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC'])),
         reactions.index('Methanogenessis from acetate and h2')] = [-1,
-                                                                   (1 - model_parameters['Y_h2_ac']
-                                                                    )*model_parameters['f_ac_h2'],
-                                                                   (1 -
-                                                                       model_parameters['Y_Me_ac']),
+                                                                   (1 - model_parameters['Y_h2_ac'])*model_parameters['f_ac_h2'],
+                                                                   (1 - model_parameters['Y_Me_ac']),
                                                                    model_parameters['Y_Me_ac'],
                                                                    f_IC_Me_ach2]
 
     f_IC_Me_CO2h2 = -(model_parameters['Y_Me_CO2']*model_parameters['C_ch4'] +
                       model_parameters['Y_Me_h2']*model_parameters['C_bac'])
     
-    S[list(map(species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_IC'])),
+    S[list(map(species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_co2'])),
         reactions.index('Methanogenessis from CO2 and h2')] = [-1,
-                                                               (1 -
-                                                                model_parameters['Y_h2_CO2']),
+                                                               (1 - model_parameters['Y_h2_CO2']),
                                                                (model_parameters['Y_Me_CO2']),
-                                                               f_IC_Me_CO2h2]
+                                                               -1]
     
     f_IC_et_ox=-(-model_parameters['C_et'] +
                     (1-model_parameters['Y_ac_et_ox'])*model_parameters['C_bac']
@@ -1152,11 +1151,11 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     S[list(map(species.index, ["S_ac_ion"])),
         reactions.index('Acid Base Equilibrium (Ac)')] = [-1]
 
-    # S[list(map(species.index, ["S_CO2", "S_hco3_ion"])),  # I don't think this is right، should look at the reaction in ADM1
-    #     reactions.index('Acid Base Equilibrium (CO2)')] = [-1, 1]
+    S[list(map(species.index, ["S_hco3_ion"])),  # I don't think this is right، should look at the reaction in ADM1
+        reactions.index('Acid Base Equilibrium (CO2)')] = [-1]
 
-    # S[list(map(species.index, ["S_nh3", "S_nh4_ion"])),
-    #     reactions.index('Acid Base Equilibrium (IN)')] = [-1, 1]  # I don't think this is right، should look at the reaction in ADM1
+    S[list(map(species.index, ["S_nh3", "S_nh4_ion"])),
+        reactions.index('Acid Base Equilibrium (In)')] = [-1, 1]  # I don't think this is right، should look at the reaction in ADM1
 
     S[list(map(species.index, ["S_h2", "S_gas_h2"])),
         reactions.index('Gas Transfer H2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
@@ -1164,6 +1163,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
         reactions.index('Gas Transfer CH4')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
     S[list(map(species.index, ["S_co2", "S_gas_co2"])),
         reactions.index('Gas Transfer CO2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+    
     return S
 
 
@@ -1501,7 +1501,6 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         np.ndarray: The output is dCdt, the change of concentration with respect to time. 
     """
     ### Initialize the ion concentrations
-    c[c<0]=0
     if t==0:
         c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
         c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
@@ -1510,8 +1509,11 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
         c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
         c[model.species.index('S_hco3_ion')] = c[model.species.index('S_IC')] - c[model.species.index('S_co2')]
+        c[model.species.index('S_anion')]=c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] /
+                                                                                                                                                                     112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) 
     
     if model.switch=="DAE":
+        
         c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
         c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
         c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
@@ -1519,10 +1521,9 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
         c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
         c[model.species.index('S_hco3_ion')] = model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')]/(model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')])
-    
         
     c[model.species.index('S_nh4_ion')] = c[model.species.index('S_IN')] - c[model.species.index('S_nh3')]
-    c[model.species.index('S_co2')] = c[model.species.index('S_IC')] - c[model.species.index('S_hco3_ion')]
+    # c[model.species.index('S_co2')] = c[model.species.index('S_IC')] - c[model.species.index('S_hco3_ion')]
     
     
     
@@ -1661,6 +1662,7 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Decay of X_Me_CO2')] = model.model_parameters['k_dec_X_Me_CO2']*c[model.species.index('X_Me_CO2')]
     v[model.reactions.index('Decay of Xet')] = model.model_parameters['k_dec_X_et']*c[model.species.index('X_et')]
     v[model.reactions.index('Decay of Xlac')] = model.model_parameters['k_dec_X_lac']*c[model.species.index('X_lac')]
+    
     if model.switch!="DAE":
         v[model.reactions.index('Acid Base Equilibrium (Va)')] = model.model_parameters['k_A_B_va'] * \
             (c[model.species.index('S_va_ion')] * (model.model_parameters['K_a_va'] + c[model.species.index('S_H_ion')]) -
@@ -1710,12 +1712,8 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Gas Transfer H2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_h2')] - 16 *
                                                     model.model_parameters['K_H_h2'] * p_gas_h2))
 
-    v[model.reactions.index('Gas Transfer CH4')] = max(0,model.model_parameters['k_L_a'] * \
-                                                    (c[model.species.index('S_ch4')] - 64 *
-                                                    model.model_parameters['K_H_ch4'] * p_gas_ch4))
-    v[model.reactions.index('Gas Transfer CO2')] = max(0,model.model_parameters['k_L_a'] * \
-        (c[model.species.index('S_co2')] -
-         model.model_parameters['K_H_co2'] * p_gas_co2))
+    v[model.reactions.index('Gas Transfer CH4')] = max(0,1 * (c[model.species.index('S_ch4')] - 64 * model.model_parameters['K_H_ch4'] * p_gas_ch4))
+    v[model.reactions.index('Gas Transfer CO2')] = max(0,1 * (c[model.species.index('S_co2')] - model.model_parameters['K_H_co2'] * p_gas_co2))
 
     dCdt = np.matmul(model.s, v)
     if t>1:
@@ -1728,22 +1726,19 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         c[model.species.index('S_H_ion')] = (-1 * phi / 2) + \
         (0.5 * np.sqrt(phi**2 + 4 * model.model_parameters['K_w']))
 
-    dCdt[0: model.species.__len__()-3] = dCdt[0: model.species.__len__()-3]+model.base_parameters['q_in'] / \
-        model.base_parameters["V_liq"] * \
-        (model.inlet_conditions[0: model.species.__len__(
-        )-3]-c[0: model.species.__len__()-3].reshape(-1, 1))
+    dCdt[0: len(model.species)-3] = dCdt[0: len(model.species)-3]+model.base_parameters['q_in'] / \
+        model.base_parameters["V_liq"] * (model.inlet_conditions[0: len(model.species)-3]-c[0: len(model.species)-3].reshape(-1, 1))
 
-    dCdt[model.species.__len__()-3:] = dCdt[model.species.__len__()-3:]+q_gas/model.base_parameters["V_gas"] * \
-        (model.inlet_conditions[model.species.__len__() -
-         3:]-c[model.species.__len__()-3:].reshape(-1, 1))
+    dCdt[len(model.species)-3:] = dCdt[len(model.species)-3:]+q_gas/model.base_parameters["V_gas"] * \
+        (model.inlet_conditions[len(model.species)-3:]-c[len(model.species)-3:].reshape(-1, 1))
 
-    dCdt[[model.species.index('S_H_ion'), model.species.index(
-        'S_co2'), model.species.index('S_nh4_ion')], 0] = 0
+    # dCdt[[model.species.index('S_H_ion'), model.species.index(
+    #     'S_co2'), model.species.index('S_nh4_ion')], 0] = 0
+    
+    dCdt[[model.species.index('S_H_ion'), model.species.index('S_nh4_ion')], 0] = 0
 
     if model.switch == "DAE":
-        
         dCdt[model.species.index('S_va_ion'):model.species.index('S_co2')] = 0
-
         dCdt[model.species.index('S_nh3')] = 0
 
   
@@ -1752,6 +1747,8 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         for state in model.control_state.keys():
             c[model.species.index(state)]=model.control_state[state]
             dCdt[model.species.index(state)]=0
+    
+    
     model.info["Fluxes"]=v
     return dCdt[:, 0]
 
@@ -2095,6 +2092,7 @@ if __name__ == "__main__":
     )
     params=utils.load_multiple_json_files(local_params)
     # params=utils.load_multiple_json_files(configs.ADM1_LOCAL)
+    # pd.DataFrame(params.reactions)
     # model=Model(model_parameters=params.model_parameters,
     #             base_parameters=params.base_parameters,
     #             initial_conditions=params.initial_conditions,
@@ -2114,11 +2112,14 @@ if __name__ == "__main__":
                             species=params.species,
                             ode_system=e_adm_2_ode_sys,
                             build_stoichiometric_matrix=build_e_adm_2_stoichiometric_matrix,
-                            control_state={},
+                            control_state={
+                                "S_h2":0.00001,
+                                "S_co2":0.00001,
+                                },
                             name="Modified_ADM1",
                             switch="DAE",
                             metagenome_report=None)
-    sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000))
+    sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000),method="LSODA")
     mod_adm1.dash_app(sol_mod_adm1)
     
     
