@@ -855,15 +855,13 @@ def adm1_ode_sys(t: float, c: np.ndarray, adm1_instance:Model)-> np.ndarray:
     v[27] = adm1_instance.model_parameters['k_L_a'] * \
         (c[32] - adm1_instance.model_parameters['K_H_co2'] * p_gas_co2)
     dCdt = np.matmul(adm1_instance.s, v)
-    phi = c[24]+c[34]-c[31] - (c[30] / 64) - (c[29] /
-                                              112) - (c[28] / 160) - (c[27] / 208) - c[25]
-    c[26] = (-1 * phi / 2) + \
-        (0.5 * np.sqrt(phi**2 + 4 * adm1_instance.model_parameters['K_w']))
-    dCdt[0: 35] = dCdt[0: 35]+adm1_instance.base_parameters['q_in'] / \
-        adm1_instance.base_parameters["V_liq"] * \
+    phi = c[24]+c[34]-c[31] - (c[30] / 64) - (c[29] / 112) - (c[28] / 160) - (c[27] / 208) - c[25]
+    c[26] = (-1 * phi / 2) + (0.5 * np.sqrt(phi**2 + 4 * adm1_instance.model_parameters['K_w']))
+    
+    dCdt[0: 35] = dCdt[0: 35]+adm1_instance.base_parameters['q_in'] / adm1_instance.base_parameters["V_liq"] * \
         (adm1_instance.inlet_conditions[0: 35]-c[0:35].reshape(-1, 1))
-    dCdt[35:] = dCdt[35:]+q_gas/adm1_instance.base_parameters["V_gas"] * \
-        (adm1_instance.inlet_conditions[35:]-c[35:].reshape(-1, 1))
+        
+    dCdt[35:] = dCdt[35:]+q_gas/adm1_instance.base_parameters["V_gas"] * (adm1_instance.inlet_conditions[35:]-c[35:].reshape(-1, 1))
     dCdt[[26, 32, 34], 0] = 0
     if adm1_instance.switch == "DAE":
         dCdt[7] = 0
@@ -1501,75 +1499,60 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         np.ndarray: The output is dCdt, the change of concentration with respect to time. 
     """
     ### Initialize the ion concentrations
-    if t==0:
-        c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
-        c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
-        c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
-        c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
-        c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
-        c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
-        c[model.species.index('S_hco3_ion')] = c[model.species.index('S_IC')] - c[model.species.index('S_co2')]
-        c[model.species.index('S_anion')]=c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] /
-                                                                                                                                                                     112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) 
-    
-    if model.switch=="DAE":
-        
-        c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
-        c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
-        c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
-        c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
-        c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
-        c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
-        c[model.species.index('S_hco3_ion')] = model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')]/(model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')])
-        
+    # if t==0:
+    #     c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
+    #     c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
+    #     c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
+    #     c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
+    #     c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
+    #     c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
+    #     c[model.species.index('S_hco3_ion')] = c[model.species.index('S_IC')] - c[model.species.index('S_co2')]
+    #     c[model.species.index('S_anion')]=c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] /
+    #                                                                                                                                                                  112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) 
     c[model.species.index('S_nh4_ion')] = c[model.species.index('S_IN')] - c[model.species.index('S_nh3')]
-    # c[model.species.index('S_co2')] = c[model.species.index('S_IC')] - c[model.species.index('S_hco3_ion')]
+    c[model.species.index('S_co2')]= c[model.species.index('S_IC')] -  c[model.species.index('S_hco3_ion')]
+
     
-    
-    
+    # if model.switch=="DAE":
+        
+    #     c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
+    #     c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
+    #     c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
+    #     c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
+    #     c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
+    #     c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
+    #     c[model.species.index('S_hco3_ion')] = model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')]/(model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')])
+        
     I_pH_aa = (model.model_parameters["K_pH_aa"] ** model.model_parameters['nn_aa'])/(np.power(
         c[model.species.index('S_H_ion')], model.model_parameters['nn_aa']) + np.power(model.model_parameters["K_pH_aa"], model.model_parameters['nn_aa']))
-
     I_pH_ac = (model.model_parameters['K_pH_ac'] ** model.model_parameters["n_ac"])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_ac'] + model.model_parameters['K_pH_ac'] ** model.model_parameters['n_ac'])
-
     I_pH_pro = (model.model_parameters['K_pH_pro'] ** model.model_parameters["n_pro"])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_pro'] + model.model_parameters['K_pH_pro'] ** model.model_parameters['n_pro'])
-
     I_pH_bu = (model.model_parameters['K_pH_bu'] ** model.model_parameters["n_bu"])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_bu'] + model.model_parameters['K_pH_bu'] ** model.model_parameters['n_bu'])
-
     I_pH_va = (model.model_parameters['K_pH_va'] ** model.model_parameters["n_va"])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_va'] + model.model_parameters['K_pH_va'] ** model.model_parameters['n_va'])
-
     I_pH_cap = (model.model_parameters['K_pH_cap'] ** model.model_parameters["n_cap"])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_cap'] + model.model_parameters['K_pH_cap'] ** model.model_parameters['n_cap'])
-
     I_pH_h2 = (model.model_parameters['K_pH_h2']**model.model_parameters['n_h2'])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_h2'] + model.model_parameters['K_pH_h2']**model.model_parameters['n_h2'])
-
-    I_IN_lim = 1 / \
-        (1+(model.model_parameters['K_S_IN'] / (c[model.species.index('S_IN')]+10**-9)))
-
+    I_IN_lim = 1 / (1+(model.model_parameters['K_S_IN'] / (c[model.species.index('S_IN')]+10**-9)))
     I_h2_fa = 1 / (1+(c[model.species.index('S_h2')] /(model.model_parameters['K_I_h2_fa']+10**-9)))
 
-    I_h2_c4 = 1 / (1+(c[model.species.index('S_h2')] /
-                   (model.model_parameters['K_I_h2_c4']+10**-9)))
+    I_h2_c4 = 1 / (1+(c[model.species.index('S_h2')] / (model.model_parameters['K_I_h2_c4']+10**-9)))
 
-    I_h2_pro = (1/(1+(c[model.species.index('S_h2')] /
-                (model.model_parameters['K_I_h2_pro']+10**-9))))
+    I_h2_pro = (1/(1+(c[model.species.index('S_h2')] / (model.model_parameters['K_I_h2_pro']+10**-9))))
 
-    I_nh3 = 1/(1+(c[model.species.index('S_nh3')] /
-               (model.model_parameters['K_I_nh3']+10**-9)))
+    I_nh3 = 1/(1+(c[model.species.index('S_nh3')] / (model.model_parameters['K_I_nh3']+10**-9)))
 
-    I_h2_oxidation=(1/(1+(c[model.species.index('S_h2')] /
-                (model.model_parameters['K_I_h2_ox']+10**-9))))
+    I_h2_oxidation=(1/(1+(c[model.species.index('S_h2')] / (model.model_parameters['K_I_h2_ox']+10**-9))))
 
     I5 = (I_pH_aa * I_IN_lim)
-    I6 = I5.copy()
+    I6 = I5
     I7 = (I_pH_aa * I_IN_lim * I_h2_fa)
     I8 = (I_pH_aa * I_IN_lim * I_h2_c4)
-    I9 = I8.copy()
+    I9 = I8
     I10 = (I_pH_pro * I_IN_lim * I_h2_pro)
     I11 = (I_pH_ac * I_IN_lim * I_nh3)
     I12 = (I_pH_h2 * I_IN_lim)
@@ -1663,83 +1646,75 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Decay of Xet')] = model.model_parameters['k_dec_X_et']*c[model.species.index('X_et')]
     v[model.reactions.index('Decay of Xlac')] = model.model_parameters['k_dec_X_lac']*c[model.species.index('X_lac')]
     
-    if model.switch!="DAE":
-        v[model.reactions.index('Acid Base Equilibrium (Va)')] = model.model_parameters['k_A_B_va'] * \
-            (c[model.species.index('S_va_ion')] * (model.model_parameters['K_a_va'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_va'] * c[model.species.index('S_va')])
-
-        v[model.reactions.index('Acid Base Equilibrium (Bu)')] = model.model_parameters['k_A_B_bu'] * \
-            (c[model.species.index('S_bu_ion')] * (model.model_parameters['K_a_bu'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_bu'] * c[model.species.index('S_bu')])
-
-        v[model.reactions.index('Acid Base Equilibrium (Pro)')] = model.model_parameters['k_A_B_pro'] * \
-            (c[model.species.index('S_pro_ion')] * (model.model_parameters['K_a_pro'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_pro'] * c[model.species.index('S_pro')])
-
-        v[model.reactions.index('Acid Base Equilibrium (Cap)')] = model.model_parameters['k_A_B_cap'] * \
-            (c[model.species.index('S_cap_ion')] * (model.model_parameters['K_a_cap'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_cap'] * c[model.species.index('S_cap')])
-
-        v[model.reactions.index('Acid Base Equilibrium (Lac)')] = model.model_parameters['k_A_B_lac'] * \
-            (c[model.species.index('S_lac_ion')] * (model.model_parameters['K_a_lac'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_lac'] * c[model.species.index('S_lac')])
-
-        v[model.reactions.index('Acid Base Equilibrium (Ac)')] = model.model_parameters['k_A_B_ac'] * \
-            (c[model.species.index('S_ac_ion')] * (model.model_parameters['K_a_ac'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_ac'] * c[model.species.index('S_ac')])
-
-        v[model.reactions.index('Acid Base Equilibrium (CO2)')] = model.model_parameters['k_A_B_co2'] * \
-            (c[model.species.index('S_hco3_ion')] * (model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')])
-
-        v[model.reactions.index('Acid Base Equilibrium (In)')] = model.model_parameters['k_A_B_IN'] * \
-            (c[model.species.index('S_nh3')] * (model.model_parameters['K_a_IN'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_IN'] * c[model.species.index('S_IC')])
+    
+    v[model.reactions.index('Acid Base Equilibrium (Va)')] = model.model_parameters['k_A_B_va'] * \
+        (c[model.species.index('S_va_ion')] * (model.model_parameters['K_a_va'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_va'] * c[model.species.index('S_va')])
+    v[model.reactions.index('Acid Base Equilibrium (Bu)')] = model.model_parameters['k_A_B_bu'] * \
+        (c[model.species.index('S_bu_ion')] * (model.model_parameters['K_a_bu'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_bu'] * c[model.species.index('S_bu')])
+    v[model.reactions.index('Acid Base Equilibrium (Pro)')] = model.model_parameters['k_A_B_pro'] * \
+        (c[model.species.index('S_pro_ion')] * (model.model_parameters['K_a_pro'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_pro'] * c[model.species.index('S_pro')])
+    v[model.reactions.index('Acid Base Equilibrium (Cap)')] = model.model_parameters['k_A_B_cap'] * \
+        (c[model.species.index('S_cap_ion')] * (model.model_parameters['K_a_cap'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_cap'] * c[model.species.index('S_cap')])
+    v[model.reactions.index('Acid Base Equilibrium (Lac)')] = model.model_parameters['k_A_B_lac'] * \
+        (c[model.species.index('S_lac_ion')] * (model.model_parameters['K_a_lac'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_lac'] * c[model.species.index('S_lac')])
+    v[model.reactions.index('Acid Base Equilibrium (Ac)')] = model.model_parameters['k_A_B_ac'] * \
+        (c[model.species.index('S_ac_ion')] * (model.model_parameters['K_a_ac'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_ac'] * c[model.species.index('S_ac')])
+    v[model.reactions.index('Acid Base Equilibrium (CO2)')] = model.model_parameters['k_A_B_co2'] * \
+        (c[model.species.index('S_hco3_ion')] * (model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')])
+    v[model.reactions.index('Acid Base Equilibrium (In)')] = model.model_parameters['k_A_B_IN'] * \
+        (c[model.species.index('S_nh3')] * (model.model_parameters['K_a_IN'] + c[model.species.index('S_H_ion')]) -
+         model.model_parameters['K_a_IN'] * c[model.species.index('S_IC')])
 
     
-    p_gas_h2 = c[model.species.index('S_gas_h2')] * model.base_parameters["R"] * \
-        model.base_parameters["T_op"] / 16
-    p_gas_ch4 = c[model.species.index('S_gas_ch4')] * model.base_parameters["R"] * \
-        model.base_parameters["T_op"] / 64
-    p_gas_co2 = c[model.species.index('S_gas_co2')] * model.base_parameters["R"] * \
-        model.base_parameters["T_op"]
-    p_gas_h2o = 0.0313 * \
-        np.exp(5290 *
-               (1 / model.base_parameters["T_base"] - 1 / model.base_parameters["T_op"]))
+    p_gas_h2 = c[model.species.index('S_gas_h2')] * model.base_parameters["R"] * model.base_parameters["T_op"] / 16
+    p_gas_ch4 = c[model.species.index('S_gas_ch4')] * model.base_parameters["R"] * model.base_parameters["T_op"] / 64
+    p_gas_co2 = c[model.species.index('S_gas_co2')] * model.base_parameters["R"] * model.base_parameters["T_op"]
+    p_gas_h2o = 0.0313 * np.exp(5290 *(1 / model.base_parameters["T_base"] - 1 / model.base_parameters["T_op"]))
+    
     P_gas = p_gas_h2 + p_gas_ch4 + p_gas_co2 + p_gas_h2o
-    q_gas = max(
-        0, (model.model_parameters['k_p'] * (P_gas - model.base_parameters['P_atm'])))
-    v[model.reactions.index('Gas Transfer H2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_h2')] - 16 *
-                                                    model.model_parameters['K_H_h2'] * p_gas_h2))
-
-    v[model.reactions.index('Gas Transfer CH4')] = max(0,1 * (c[model.species.index('S_ch4')] - 64 * model.model_parameters['K_H_ch4'] * p_gas_ch4))
-    v[model.reactions.index('Gas Transfer CO2')] = max(0,1 * (c[model.species.index('S_co2')] - model.model_parameters['K_H_co2'] * p_gas_co2))
-
+    
+    q_gas = max(0, (model.model_parameters['k_p'] * (P_gas - model.base_parameters['P_atm'])))
+    
+    v[model.reactions.index('Gas Transfer H2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_h2')] - 16 *model.model_parameters['K_H_h2'] * p_gas_h2))
+    v[model.reactions.index('Gas Transfer CH4')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_ch4')] - 64 * model.model_parameters['K_H_ch4'] * p_gas_ch4))
+    v[model.reactions.index('Gas Transfer CO2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_co2')] - model.model_parameters['K_H_co2'] * p_gas_co2))
     dCdt = np.matmul(model.s, v)
+    
     if t>1:
         print("debug")
-    phi = c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] /
-                                                                                                                                                                     112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) - c[model.species.index('S_anion')]
+        
+    phi = c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - \
+    (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] / 112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) - c[model.species.index('S_anion')]
+    
     if 'S_H_ion' in model.control_state.keys():
         c[model.species.index('S_H_ion')]=model.control_state['S_H_ion']
     else:
-        c[model.species.index('S_H_ion')] = (-1 * phi / 2) + \
-        (0.5 * np.sqrt(phi**2 + 4 * model.model_parameters['K_w']))
+        c[model.species.index('S_H_ion')] = (-1 * phi / 2) + (0.5 * np.sqrt(phi**2 + 4 * model.model_parameters['K_w']))
 
-    dCdt[0: len(model.species)-3] = dCdt[0: len(model.species)-3]+model.base_parameters['q_in'] / \
-        model.base_parameters["V_liq"] * (model.inlet_conditions[0: len(model.species)-3]-c[0: len(model.species)-3].reshape(-1, 1))
+    dCdt[0: len(model.species)-3] = dCdt[0: len(model.species)-3]+model.base_parameters['q_in'] / model.base_parameters["V_liq"] * (model.inlet_conditions[0: len(model.species)-3]-c[0: len(model.species)-3].reshape(-1, 1))
 
-    dCdt[len(model.species)-3:] = dCdt[len(model.species)-3:]+q_gas/model.base_parameters["V_gas"] * \
-        (model.inlet_conditions[len(model.species)-3:]-c[len(model.species)-3:].reshape(-1, 1))
+    dCdt[len(model.species)-3:] = dCdt[len(model.species)-3:]+q_gas/model.base_parameters["V_gas"] * (model.inlet_conditions[len(model.species)-3:]-c[len(model.species)-3:].reshape(-1, 1))
 
-    # dCdt[[model.species.index('S_H_ion'), model.species.index(
-    #     'S_co2'), model.species.index('S_nh4_ion')], 0] = 0
+    dCdt[[model.species.index('S_H_ion'), model.species.index('S_co2'), model.species.index('S_nh4_ion')], 0] = 0
     
-    dCdt[[model.species.index('S_H_ion'), model.species.index('S_nh4_ion')], 0] = 0
-
     if model.switch == "DAE":
         dCdt[model.species.index('S_va_ion'):model.species.index('S_co2')] = 0
         dCdt[model.species.index('S_nh3')] = 0
+        c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
+        c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
+        c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
+        c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
+        c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
+        c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
+        c[model.species.index('S_hco3_ion')] = c[model.species.index('S_IC')] - c[model.species.index('S_co2')]
+
 
   
 
@@ -2063,7 +2038,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         'S_co2'), model.species.index('S_nh4_ion')], 0] = 0
 
     if model.switch == "DAE":
-        dCdt[model.species.index('S_h2')] = 0
+        # dCdt[model.species.index('S_h2')] = 0
 
         dCdt[model.species.index('S_va_ion'):model.species.index('S_co2')] = 0
 
@@ -2091,7 +2066,7 @@ if __name__ == "__main__":
         reactions="/Users/parsaghadermarzi/Desktop/Academics/Projects/Anaerobic_Digestion_Modeling/16s_study/Database/ADM_Parameters/Modified_ADM_Reactions.json",
     )
     params=utils.load_multiple_json_files(local_params)
-    # params=utils.load_multiple_json_files(configs.ADM1_LOCAL)
+    # params_adm1=utils.load_multiple_json_files(configs.ADM1_LOCAL)
     # pd.DataFrame(params.reactions)
     # model=Model(model_parameters=params.model_parameters,
     #             base_parameters=params.base_parameters,
@@ -2113,13 +2088,12 @@ if __name__ == "__main__":
                             ode_system=e_adm_2_ode_sys,
                             build_stoichiometric_matrix=build_e_adm_2_stoichiometric_matrix,
                             control_state={
-                                "S_h2":0.00001,
-                                "S_co2":0.00001,
+                             
                                 },
                             name="Modified_ADM1",
                             switch="DAE",
                             metagenome_report=None)
-    sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000),method="LSODA")
+    sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000),method="BDF")
     mod_adm1.dash_app(sol_mod_adm1)
     
     
