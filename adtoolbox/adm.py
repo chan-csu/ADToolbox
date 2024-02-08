@@ -198,8 +198,8 @@ class Model:
         y0=self.initial_conditions[:, 0]
         try:
             c = scipy.integrate.solve_ivp(self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self])
-            # if not c.success:
-            #     raise Exception
+            if not c.success:
+                raise Exception
         except Exception as e:
             print("Could not solve model, setting C to a very large value")
             c=_Fake_Sol(np.ones((y0.shape[0],len(t_eval)))*1e10,t_eval)
