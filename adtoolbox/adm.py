@@ -1686,9 +1686,6 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Gas Transfer CH4')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_ch4')] - 64 * model.model_parameters['K_H_ch4'] * p_gas_ch4))
     v[model.reactions.index('Gas Transfer CO2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_co2')] - model.model_parameters['K_H_co2'] * p_gas_co2))
     dCdt = np.matmul(model.s, v)
-    
-    if t>1:
-        print("debug")
         
     phi = c[model.species.index('S_cation')]+c[model.species.index('S_nh4_ion')]-c[model.species.index('S_hco3_ion')]-(c[model.species.index('S_lac_ion')] / 88) - \
     (c[model.species.index('S_ac_ion')] / 64) - (c[model.species.index('S_pro_ion')] / 112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208) - c[model.species.index('S_anion')]
