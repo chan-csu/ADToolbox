@@ -1936,6 +1936,36 @@ class Metagenomics:
             relative_abundances[sample]=(feature_table.sort_values(sample,ascending=False).head(top_k)[sample]/(feature_table.sort_values(sample,ascending=False).head(top_k)[sample].sum())).to_dict()
         return relative_abundances
     
+    def assign_ec_to_genome(self,alignment_file:str)->dict:
+        """
+        This function takes an alignment file and assigns the EC numbers to the genomes based on the alignment file,
+        and the e-adm groupings of the EC numbers. The output is a dictionary where the keys e-adm reactions and the values are the EC numbers,
+        that are found in the genome and are grouped under the e-adm reaction.
+        
+        Args:
+            alignment_file (str): The address of the alignment file.
+            
+        Returns:
+            dict: A dictionary containing the e-adm reactions and the EC numbers that are found in the genome and are grouped under the e-adm reaction.
+        """
+
+        aligntable = pd.read_table(alignment_file,delimiter="\t")
+        aligntable = aligntable[(aligntable["bits"]>self.config.bit_score) & (aligntable["evalue"]<self.config.e_value)]
+
+        ec_align_list = aligntable["target"].str.split("|",expand=True)
+        ec_align_list = list(ec_align_list[1].unique()) 
+
+        metadatatable = pd.read_table(self.config.csv_reaction_db, sep=',').drop_duplicates("EC_Numbers")[(['EC_Numbers','Modified_ADM_Reactions'])].dropna(axis=0)
+        metadatatable=metadatatable[metadatatable["EC_Numbers"].isin(ec_align_list)]
+        adm_reactions=list(set(metadatatable["Modified_ADM_Reactions"].str.split("|").sum()))
+        adm_to_ecs={}
+        for reaction in adm_reactions:
+            adm_to_ecs[reaction]=list(metadatatable[metadatatable["Modified_ADM_Reactions"].str.contains(reaction)]["EC_Numbers"])
+            
+        return adm_to_ecs
+
+    
+
 
     def seqs_from_sra(self,accession:str,target_dir:str,container:str="None")-> tuple[str,dict]:
         """ 
@@ -2096,9 +2126,8 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    db=Database()
-    ec_list=db.cazy_ec()
-    assert len(ec_list)>0
+    mg=Metagenomics(config=configs.Metagenomics(csv_reaction_db="/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Reaction_Metadata.csv"))
+    mg.assign_ec_to_genome("/Users/parsaghadermarzi/Desktop/ADToolbox/Outputs/Alignment_Results_mmseq_GCA_019748235.1_ASM1974823v1.tsv")
 
     
     
