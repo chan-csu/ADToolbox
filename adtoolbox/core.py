@@ -1387,7 +1387,7 @@ class Database:
                             progress.update(task1, advance=len(data))
                             f.write(data)
 
-            for keys in ['bac120_metadata', 'bac120_ssu']:
+            for keys in ['bac120_ssu']:
                 with requests.get(url[keys], allow_redirects=True, stream=True) as r:
                     total_size = int(r.headers.get('content-length', 0))
                     block_size = 1024
@@ -1410,7 +1410,7 @@ class Database:
             with requests.get(url['metadata_field_desc'], allow_redirects=True, stream=False) as r:
                 with open(os.path.join(self.config.amplicon_to_genome_db, 'metadata_field_desc.tsv'), 'wb') as f:
                     f.write(r.content)
-            for keys in ['bac120_metadata', 'bac120_ssu']:
+            for keys in [ 'bac120_ssu']:
                 with requests.get(url[keys], allow_redirects=True, stream=False) as r:
                     with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]), 'wb') as f:
                         f.write(r.content)
@@ -2141,8 +2141,8 @@ class Metagenomics:
 
 
 if __name__ == "__main__":
-    mg=Metagenomics(config=configs.Metagenomics(csv_reaction_db="/Users/parsaghadermarzi/Desktop/ADToolbox/Database/Reaction_Metadata.csv"))
-    mg.assign_ec_to_genome("/Users/parsaghadermarzi/Desktop/ADToolbox/Outputs/Alignment_Results_mmseq_GCA_019748235.1_ASM1974823v1.tsv")
+    db=Database(configs.Database())
+    db.download_amplicon_to_genome_db()
 
     
     
