@@ -83,6 +83,16 @@ INTERNAL_LINKS={
 	"metagenomics_studies":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv",
     "exmpermental_data_db":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.json"
 }
+
+STUDIES_REMOTE={
+		"metagenomics_studies":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv",
+    "exmpermental_data_db":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.json"
+}
+
+STUDIES_LOCAL={
+		"metagenomics_studies":os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
+	"exmpermental_data_db":os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json")
+}
 E_ADM_MICROBIAL_GROUPS_MAPPING={
                             "Hydrolysis carbohydrates":"X_ch",
                             "Hydrolysis proteins":"X_pr",
@@ -133,8 +143,8 @@ class Database:
 		adm_microbial_groups_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
         metagenomics_studies_db=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
         experimental_data_db=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json"),
-        metagenomics_studies_urls:dict=INTERNAL_LINKS["metagenomics_studies"],
-        exmpermental_data_db_url:dict=INTERNAL_LINKS["exmpermental_data_db"],
+        studies_remote=STUDIES_REMOTE,
+        studies_local=STUDIES_LOCAL,
         check_sanity:bool=False
 		):
 		self.compound_db = compound_db
@@ -161,8 +171,8 @@ class Database:
 		self.adm_microbial_groups_mapping=adm_microbial_groups_mapping
 		self.metagenomics_studies_db=metagenomics_studies_db
 		self.experimental_data_db=experimental_data_db
-		self.metagenomics_studies_urls=metagenomics_studies_urls
-		self.exmpermental_data_db_url=exmpermental_data_db_url
+		self.studies_remote=studies_remote
+		self.studies_local=studies_local
 		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
 		if check_sanity:
 			self.check_adm_parameters()

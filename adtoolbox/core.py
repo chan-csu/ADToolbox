@@ -1331,12 +1331,13 @@ class Database:
             >>> assert os.path.getsize(os.path.join(Main_Dir,"studies_test_db.tsv"))>0
             >>> os.remove(os.path.join(Main_Dir,"studies_test_db.tsv"))
         """
-        for i in self.config.studies.urls:
-            r = requests.get(self.config.studies.urls[i], allow_redirects=True)
-            if not os.path.exists(self.config.studies.base_dir):
-                os.makedirs(self.config.studies.base_dir,exist_ok=True)
-            with open(os.path.join(self.config.studies.base_dir,self.config.studies.urls[i].split("/")[-1]), 'wb') as f:
+        for i in self.config.studies_remote:
+            r = requests.get(self.config.studies_remote[i], allow_redirects=True)
+            if not os.path.exists(Path(self.config.studies_local[i]).parent):
+                os.makedirs(Path(self.config.studies_local[i]).parent)
+            with open(self.config.studies_local[i], 'wb') as f:
                 f.write(r.content)
+            
             if verbose:
                 rich.print(f"[bold green]Downloaded {self.config.studies.urls[i]}[/bold green]")
     
