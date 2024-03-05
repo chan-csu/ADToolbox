@@ -1315,7 +1315,7 @@ class Database:
         
         rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
             
-    def download_studies_database(self,verbode:bool=True)->None:
+    def download_studies_database(self,verbose:bool=True)->None:
         """
         This function will download the required files for studies functionality.
 
@@ -1337,7 +1337,7 @@ class Database:
                 os.makedirs(self.config.studies.base_dir,exist_ok=True)
             with open(os.path.join(self.config.studies.base_dir,self.config.studies.urls[i].split("/")[-1]), 'wb') as f:
                 f.write(r.content)
-            if verbode:
+            if verbose:
                 rich.print(f"[bold green]Downloaded {self.config.studies.urls[i]}[/bold green]")
     
     def download_amplicon_to_genome_db(self,verbose:bool=True):
