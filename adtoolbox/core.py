@@ -1300,7 +1300,7 @@ class Database:
         if verbose:
             rich.print(f"[green]Feed database downloaded to {self.config.feed_db}")
     
-    def download_qiime_classifier_db(self)->None:
+    def download_qiime_classifier_db(self,verbose:bool=True)->None:
         r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True,stream=True)
         block_size = 1024
         total_size = int(r.headers.get('content-length', 0))
@@ -1312,8 +1312,8 @@ class Database:
                 for data in r.iter_content(block_size):
                     progress.update(task, advance=len(data))
                     f.write(data)
-        
-        rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
+        if verbose:
+            rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
             
     def download_studies_database(self,verbose:bool=True)->None:
         """
