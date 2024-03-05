@@ -1339,7 +1339,7 @@ class Database:
                 f.write(r.content)
             
             if verbose:
-                rich.print(f"[bold green]Downloaded {self.config.studies.urls[i]}[/bold green]")
+                rich.print(f"[bold green]Downloaded {self.config.studies_remote[i]}[/bold green]")
     
     def download_amplicon_to_genome_db(self,verbose:bool=True):
         """
