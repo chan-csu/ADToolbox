@@ -1196,6 +1196,8 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"seed_compound.json"))
         """
         r = requests.get(self.config.seed_rxn_url, allow_redirects=True,stream=True)
+        if not os.path.exists(Path(self.config.reaction_db).parent):
+            os.makedirs(Path(self.config.reaction_db).parent)
         with open(self.config.reaction_db, 'wb') as f:
             f.write(r.content)
         if verbose:
@@ -1227,6 +1229,10 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
         """
         r = requests.get(self.config.protein_db_url, allow_redirects=True)
+        
+        if not os.path.exists(Path(self.config.protein_db).parent):
+            os.makedirs(Path(self.config.protein_db).parent)
+        
         with open(self.config.protein_db, 'wb') as f:
             f.write(r.content)
         if verbose:
@@ -1254,6 +1260,10 @@ class Database:
         """
     
         r = requests.get(self.config.adtoolbox_rxn_db_url, allow_redirects=True)
+        
+        if not os.path.exists(Path(self.config.csv_reaction_db).parent):
+            os.makedirs(Path(self.config.csv_reaction_db).parent)
+
         with open(self.config.csv_reaction_db, 'wb') as f:
             f.write(r.content)
         if verbose:
@@ -1281,6 +1291,10 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
         """
         r = requests.get(self.config.feed_db_url, allow_redirects=True)
+        
+        if not os.path.exists(Path(self.config.feed_db).parent):
+            os.makedirs(Path(self.config.feed_db).parent)
+        
         with open(self.config.feed_db, 'wb') as f:
             f.write(r.content)
         if verbose:
