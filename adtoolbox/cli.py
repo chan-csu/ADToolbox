@@ -148,7 +148,7 @@ def main():
 
     if args.ADToolbox_Module == 'Database' and "database_module" in args:
         if args.database_module=="initialize-feed-db":
-            db_class.init_feedstock_database()
+            db_class.initialize_feed_db()
         
         elif args.database_module=="download-reaction-db":
             db_class.download_reaction_database()
