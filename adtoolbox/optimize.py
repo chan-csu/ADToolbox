@@ -286,7 +286,7 @@ class NNSurrogateTuner:
         return loss.detach().numpy()
 
         
-    def optimize(self, **kwargs)->dict:
+    def optimize(self, perturbation_method:str="random", **kwargs)->dict:
         costs=[]
         if not self._initialized:
             for pop in self._popuplation:
@@ -302,7 +302,24 @@ class NNSurrogateTuner:
             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
             if abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3:
                 print("Local optima reached: Perturbing the best solution and continuing.")
-                new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
+                
+                if perturbation_method=="random":
+                    new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
+                
+                
+                elif perturbation_method=="estimate_gradient_directions":
+                    diff=self._aquired["parameters"]-self._best_tensor
+                    cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
+                    diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
+                    new_params=self._best_tensor+np.random.rand(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
+                    
+
+                    
+                
+                elif perturbation_method=="predict_pattern":
+                    pass
+                
+                
             new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
             ## make sure not in the local optima
@@ -316,9 +333,9 @@ class NNSurrogateTuner:
                 self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"]}
                 with open(f"{str(self.history_file_path.absolute())}","wb") as file:
                     pickle.dump(self.history,file)
-            if i>50:
-                self._aquired["parameters"]=self._aquired["parameters"][-20:,:]
-                self._aquired["cost"]=self._aquired["cost"][-20:]   
+            if i>51:
+                self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
+                self._aquired["cost"]=self._aquired["cost"][-50:]   
                 
         
         return self.history
