@@ -300,7 +300,7 @@ class NNSurrogateTuner:
             new_params=self._suggest_parameters()
             new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-            if abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3:
+            if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
                 print("Local optima reached: Perturbing the best solution and continuing.")
                 
                 if perturbation_method=="random":
@@ -311,9 +311,7 @@ class NNSurrogateTuner:
                     diff=self._aquired["parameters"]-self._best_tensor
                     cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
                     diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
-                    new_params=self._best_tensor+np.random.rand(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
-                    
-
+                    new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
                     
                 
                 elif perturbation_method=="predict_pattern":
@@ -330,7 +328,7 @@ class NNSurrogateTuner:
             self._best_cost=np.min(self._aquired["cost"])
             print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
             if i%self.save_every==0:
-                self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"]}
+                self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
                 with open(f"{str(self.history_file_path.absolute())}","wb") as file:
                     pickle.dump(self.history,file)
             if i>51:
@@ -342,7 +340,15 @@ class NNSurrogateTuner:
     
     def load_history_file(self,address:str)->None:
         with open(address,"rb") as f:
-            self._aquired=pickle.load(f)
+            info=pickle.load(f)
+            
+        parameters=info["parameters"][np.argmin(info["cost"])]
+        cost=np.min(info["cost"])
+        parameters=dict(zip(info["tunable_parameters"],parameters))
+        p_=np.array([parameters[i] for i in self.tunables.keys()]).reshape(1,-1)
+        self._aquired={"cost":[cost],"parameters":p_,"tunable_parameters":list(self.tunables.keys())}
+        self.base_model.update_parameters(**{self.var_type:parameters})
+        # self._aquired=info
         self._initialized=True
 
             
