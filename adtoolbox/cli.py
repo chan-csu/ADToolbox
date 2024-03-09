@@ -40,7 +40,7 @@ def main():
     add_feed.add_argument("-c", "--carbohydrates", action="store", help="Carbohydrate content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-p", "--proteins", action="store", help="Protein content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-l", "--lipids", action="store", help="Lipid content of the feed to be added to the database in percentage",required=True,type=float)
-    add_feed.add_argument("t","--tss", action="store", help="Total suspended solid content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("-t","--tss", action="store", help="Total suspended solid content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-s","--si", action="store", help="Soluble inert content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-x","--xi", action="store", help="particulate inert content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-r","--reference", action="store", help="Reference where the numbers come from",required=True)
