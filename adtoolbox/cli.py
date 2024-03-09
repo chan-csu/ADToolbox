@@ -34,6 +34,7 @@ def main():
     ### Database Module -------------------------------------------------------------
     subparser_database = subparsers.add_parser('Database', help='This module provides a command line interface to build or download the databases that ADToolbox requires')
     db_subp=subparser_database.add_subparsers(dest="database_module", help='Database commands:')
+    
     db_subp.add_parser("initialize-feed-db", help="Initialize the Feed DB") 
     add_feed=db_subp.add_parser("add-feed", help="Add a feed to the feed database")
     add_feed.add_argument("-n", "--name", action="store", help="Name of the feed to be added to the database")
@@ -44,6 +45,10 @@ def main():
     add_feed.add_argument("-s","--si", action="store", help="Soluble inert content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-x","--xi", action="store", help="particulate inert content of the feed to be added to the database in percentage",required=True,type=float)
     add_feed.add_argument("-r","--reference", action="store", help="Reference where the numbers come from",required=True)
+    
+    show_feed_db=db_subp.add_parser("show-feed-db", help="Shows the feed database")
+    show_feed_db.add_argument("-f","--filter", action="store", help="Filters the feed database",required=False)
+    
     
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("download-seed-reaction-db", help="Downloads the seed reaction database in JSON format")
@@ -169,6 +174,21 @@ def main():
                            xi=args.xi,
                            reference=args.reference)
             db_class.add_feed_to_feed_db(feed=feed)
+        
+        elif args.database_module=="show-feed-db":
+            if args.filter:
+                t=db_class.get_feed_from_feed_db(field_name="name",field_value=args.filter)
+            else:
+                t=db_class.get_feed_from_feed_db()
+            if t:
+                feed_table = Table(title="Feed Database",expand=True,safe_box=True)
+                for i in t[0].to_dict().keys():
+                    feed_table.add_column(i, justify="center", style="cyan", no_wrap=True)
+                for i in t:
+                    feed_table.add_row(*map(str,list(i.values())))
+                console.print(feed_table)
+
+
         
         elif args.database_module=="download-reaction-db":
             db_class.download_reaction_database()
