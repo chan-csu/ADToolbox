@@ -35,6 +35,16 @@ def main():
     subparser_database = subparsers.add_parser('Database', help='This module provides a command line interface to build or download the databases that ADToolbox requires')
     db_subp=subparser_database.add_subparsers(dest="database_module", help='Database commands:')
     db_subp.add_parser("initialize-feed-db", help="Initialize the Feed DB") 
+    add_feed=db_subp.add_parser("add-feed", help="Add a feed to the feed database")
+    add_feed.add_argument("-n", "--name", action="store", help="Name of the feed to be added to the database")
+    add_feed.add_argument("-c", "--carbohydrates", action="store", help="Carbohydrate content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("-p", "--proteins", action="store", help="Protein content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("-l", "--lipids", action="store", help="Lipid content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("t","--tss", action="store", help="Total suspended solid content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("-s","--si", action="store", help="Soluble inert content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("-x","--xi", action="store", help="particulate inert content of the feed to be added to the database in percentage",required=True,type=float)
+    add_feed.add_argument("-r","--reference", action="store", help="Reference where the numbers come from",required=True)
+    
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("download-seed-reaction-db", help="Downloads the seed reaction database in JSON format")
     db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
@@ -149,6 +159,16 @@ def main():
     if args.ADToolbox_Module == 'Database' and "database_module" in args:
         if args.database_module=="initialize-feed-db":
             db_class.initialize_feed_db()
+        elif args.database_module=="add-feed":
+            feed=core.Feed(name=args.name,
+                           carbohydrates=args.carbohydrates,
+                           proteins=args.proteins,
+                           lipids=args.lipids,
+                           tss=args.tss,
+                           si=args.si,
+                           xi=args.xi,
+                           reference=args.reference)
+            db_class.add_feed_to_feed_db(feed=feed)
         
         elif args.database_module=="download-reaction-db":
             db_class.download_reaction_database()
