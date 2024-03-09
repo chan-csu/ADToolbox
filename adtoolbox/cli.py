@@ -184,8 +184,8 @@ def main():
                 feed_table = Table(title="Feed Database",expand=True,safe_box=True)
                 for i in t[0].to_dict().keys():
                     feed_table.add_column(i, justify="center", style="cyan", no_wrap=True)
-                for i in t.to_dict():
-                    feed_table.add_row(*map(str,list(i.values())))
+                for i in t:
+                    feed_table.add_row(*map(str,list(i.to_dict().values())))
                 console.print(feed_table)
 
 
