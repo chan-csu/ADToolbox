@@ -179,7 +179,7 @@ def main():
             if args.filter:
                 t=db_class.get_feed_from_feed_db(field_name="name",field_value=args.filter)
             else:
-                t=db_class.get_feed_from_feed_db()
+                t=db_class.get_feed_from_feed_db(field_name="name",field_value="")
             if t:
                 feed_table = Table(title="Feed Database",expand=True,safe_box=True)
                 for i in t[0].to_dict().keys():
