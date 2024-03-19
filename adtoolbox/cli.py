@@ -32,6 +32,9 @@ def main():
     subparsers = parser.add_subparsers(dest="ADToolbox_Module", help='ADToolbox Modules:')
 
     ### Database Module -------------------------------------------------------------
+    
+    
+    #### FEED DATABASE ####
     subparser_database = subparsers.add_parser('Database', help='This module provides a command line interface to build or download the databases that ADToolbox requires')
     db_subp=subparser_database.add_subparsers(dest="database_module", help='Database commands:')
     
@@ -50,6 +53,21 @@ def main():
     show_feed_db.add_argument("-f","--filter", action="store", help="Filters the feed database",required=False)
     
     
+### METAGENOMICS STUDIES DATABASE ###
+    db_subp.add_parser("initialize-metagenomics-studies-db", help="Initialize the Metagenomics Studies DB")
+    add_metagenomics_study=db_subp.add_parser("add-metagenomics-study", help="Add a metagenomics study to the Kbase")
+    add_metagenomics_study.add_argument("-n", "--name", help="Metagenomics Study Name to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-t", "--type", help="Metagenomics Study Type to be added to the Kbase",required=True)
+    add_metagenomics_study.add_argument("-m", "--microbiome", help="Microbiome where the metagenomics study belongs to",required=True)
+    add_metagenomics_study.add_argument("-s","--sample_accession", help="SRA accession ID for the sample",required=True)    
+    add_metagenomics_study.add_argument("-c","--comments", help="Comments on the study of interest",required=True)
+    add_metagenomics_study.add_argument("-p","--study_accession", help="SRA accession ID for the project",required=True)
+
+
+
+    
+###  DOWNLOAD DATABASES ###
+
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("download-seed-reaction-db", help="Downloads the seed reaction database in JSON format")
     db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
@@ -57,25 +75,9 @@ def main():
     db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
     db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases")
     db_subp.add_parser("download-all-databases", help="downloads all databases that are required by ADToolbox at once")
-    db_subp.add_parser("show-tables", help="Show the list of all studies in Kbase")
 
-    add_metagenomics_study=db_subp.add_parser("add-metagenomics-study", help="Add a metagenomics study to the Kbase")
-    add_metagenomics_study.add_argument("-n", "--name", help="Metagenomics Study Name to be added to the Kbase",required=True)
-    add_metagenomics_study.add_argument("-t", "--type", help="Metagenomics Study Type to be added to the Kbase",required=True)
-    add_metagenomics_study.add_argument("-r", "--reference", help="Metagenomics Study Reference to be added to the Kbase",required=True)
-    add_metagenomics_study.add_argument("-m","--microbiome", help="Microbiome ID to be added to the Kbase",required=True)
-    add_metagenomics_study.add_argument("-s","--sra_accession", help="SRA accession ID for the project",required=True)
-    add_metagenomics_study.add_argument("-c","--comments", help="Comments on the study of interest",required=True)
+###
 
-
-    add_experimental_data_study=db_subp.add_parser("add-experimental-data-study", help="Add a study with experimental data to the Kbase")
-    add_experimental_data_study.add_argument("-i", "--study-id", help="Study ID to be added to the Kbase",required=True)
-    add_experimental_data_study.add_argument("-n", "--name", help="Study Name to be added to the Kbase",required=True)
-    add_experimental_data_study.add_argument("-t", "--type", help="Study Type to be added to the Kbase",required=True)
-    add_experimental_data_study.add_argument("-r", "--reference", help="Study Reference to be added to the Kbase",required=True)
-
-    
-    
     ### Metagenomics Module ###
     meta_config_defult=configs.Metagenomics()
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help="This module provides the import metagenomics functionalities of ADToolbox in the command line")
@@ -187,6 +189,18 @@ def main():
                 for i in t:
                     feed_table.add_row(*map(str,list(i.to_dict().values())))
                 console.print(feed_table)
+    if args.ADToolbox_Module == 'Database' and "database_module" in args:
+        if args.database_module=="initialize-metagenomics-studies-db":
+            db_class.initialize_metagenomics_studies_db()
+        elif args.database_module=="add-metagenomics-study":
+            metagenomics_study=core.MetagenomicsStudy(name=args.name,
+                                                      type=args.type,
+                                                      microbiome=args.microbiome,
+                                                      sample_accession=args.sample_accession,
+                                                      comments=args.comments,
+                                                      study_accession=args.study_accession)
+            db_class.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study=metagenomics_study)
+        
 
 
         
@@ -212,10 +226,10 @@ def main():
         
         elif args.database_module=="download-all-databases":
             db_class.download_all_databases()
-        
-        # elif args.database_module=="show-tables":
-        #     tables.dash_app(configs=configs.Database())
-        
+
+
+
+
 
 
     #### Metagenomics Module #####
@@ -304,8 +318,6 @@ def main():
         console.print(feed_table)
     
 
-    if "extend_feed_db" in args and bool(args.extend_feed_db):
-        db_class.add_feedstock_to_database_from_file(args.extend_feed_db)
     
     if "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'adm1':
         
