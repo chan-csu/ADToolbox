@@ -63,7 +63,11 @@ def main():
     add_metagenomics_study.add_argument("-c","--comments", help="Comments on the study of interest",required=True)
     add_metagenomics_study.add_argument("-p","--study_accession", help="SRA accession ID for the project",required=True)
 
-
+### PROTEIN DATABASE ###
+    db_subp.add_parser("initialize-protein-db", help="Generates the protein database for ADToolbox")
+    add_protein=db_subp.add_parser("add-protein", help="Add a protein to the protein database")
+    add_protein.add_argument("-i", "--uniport-id", action="store", help="Uniport ID of the protein to be added to the database",required=True)
+    add_protein.add_argument("-n", "--name", action="store", help="The name to be attached to the protein, usally is EC number",required=True)
 
     
 ###  DOWNLOAD DATABASES ###
@@ -71,7 +75,6 @@ def main():
     db_subp.add_parser("download-reaction-db", help="Downloads the reaction database in CSV format")
     db_subp.add_parser("download-seed-reaction-db", help="Downloads the seed reaction database in JSON format")
     db_subp.add_parser("build-protein-db", help="Generates the protein database for ADToolbox")
-    db_subp.add_parser("download-feed-db", help="Downloads the feed database in JSON format")
     db_subp.add_parser("download-protein-db", help="Downloads the protein database in fasta format; You can alternatively build it from reaction database.")
     db_subp.add_parser("download-amplicon-to-genome-dbs", help="downloads amplicon to genome databases")
     db_subp.add_parser("download-all-databases", help="downloads all databases that are required by ADToolbox at once")
@@ -203,6 +206,11 @@ def main():
         
 
 
+    if args.ADToolbox_Module == 'Database' and "database_module" in args:
+        if args.database_module=="initialize-protein-db":
+            db_class.initialize_protein_db()
+        elif args.database_module=="add-protein":
+            db_class.add_protein_to_protein_db(protein_id=args.uniport_id,header_tail=args.name)
         
         elif args.database_module=="download-reaction-db":
             db_class.download_reaction_database()

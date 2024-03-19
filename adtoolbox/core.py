@@ -477,6 +477,8 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta")) # remove the file to clean up
         """
 
+        if not (pathlib.Path(self.config.protein_db).parent).exists():
+            pathlib.Path(self.config.protein_db).parent.mkdir(parents=True)
         with open(self.config.protein_db, 'w') as f:
             pass
     
