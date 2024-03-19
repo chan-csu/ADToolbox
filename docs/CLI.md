@@ -94,6 +94,8 @@ positional arguments:
 nload-protein-db,download-amplicon-to-genome-dbs}
                         Database Modules:
     initialize-feed-db  Initialize the Feed DB
+    add-feed            Add a feed to the feed database
+    show-feed-db        Shows the feed table
     download-reaction-db
                         Downloads the reaction database in CSV
                         format
@@ -126,8 +128,21 @@ We now go over these commands one by one:
 - initialize-feed-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future feed information that you add. You can run this command  by:
 
 ```
-
 ADToolbox Database initialize-feed-db
+
+```
+
+- add-feed: This will add feed data to the database. Such data includes: NAME (the name of the feed), CARBOHYDRATES (carbohydrate content of the feed in a percentage), PROTEINS (protein content of the feed in a percecntage), LIPIDS (lipid content of the feed in a percentage), TSS (total suspended solid content of the feed in a percentage), SI (soluable inert content of feed in a percentage), XI (particulate inert content of feed in a percentage), and REFERENCE (reference where numbers came from).
+
+```
+ADToolbox Database add-feed
+
+```
+
+- show-feed-db: As the name implies, this will show the user the feed database along with any values they have added to it, in the command window. 
+
+```
+ADToolbox Database show-feed-db
 
 ```
 
