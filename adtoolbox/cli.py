@@ -13,6 +13,7 @@ from rich import markdown
 import json
 import os
 import numpy as np
+import subprocess
 
 class AParser(argparse.ArgumentParser):
     def _print_message(self, message, file=None):
@@ -86,38 +87,34 @@ def main():
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help="This module provides the import metagenomics functionalities of ADToolbox in the command line")
     metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='[yellow] Available Metagenomics Commands:')
     
+    metag_subp_1=metag_subp.add_parser('download_from_sra', help='This module provides a command line interface to download metagenomics data from SRA')
+    metag_subp_1.add_argument("-s","--sample_accession",action="store",help="SRA accession ID for the sample",required=True)
+    metag_subp_1.add_argument("-o","--output-dir",action="store",help="Output directory to store the downloaded data",required=True)
+    metag_subp_1.add_argument("-c","--container",action="store",help="Container to use for the download: None, docker, or singualrity",default="None")
     
-    metag_subp_1=metag_subp.add_parser('Metagenomics_Report', help='This module provides a command line interface to the metagenomics report web interface')
-    metag_subp_1.add_argument("-j","--json-file",help="Address to the JSON file that contains the metagenomics report",required=True)
-    metag_subp_1.add_argument("-m","--mds",help="Uses MDS plot if true else uses TSNE",action="store_true")
-    metag_subp_1.add_argument("-t","--threed",help="whether to use 3D plot instead of 2d",action="store_true")
-    metag_subp_1.add_argument("-n","--not-normalize",help="Do not normalize the data",action="store_true")
+    # metag_subp_1=metag_subp.add_parser('Metagenomics_Report', help='This module provides a command line interface to the metagenomics report web interface')
+    # metag_subp_1.add_argument("-j","--json-file",help="Address to the JSON file that contains the metagenomics report",required=True)
+    # metag_subp_1.add_argument("-m","--mds",help="Uses MDS plot if true else uses TSNE",action="store_true")
+    # metag_subp_1.add_argument("-t","--threed",help="whether to use 3D plot instead of 2d",action="store_true")
+    # metag_subp_1.add_argument("-n","--not-normalize",help="Do not normalize the data",action="store_true")
     
-    metag_subp_2=metag_subp.add_parser('amplicon-to-genome', help='Downloads the representative genome from each amplicon')
-    metag_subp_2.add_argument("-q", "--qiime-outputs-dir", action="store", help="Input the directory to the QIIME outputs",default=meta_config_defult.qiime_outputs_dir)
-    metag_subp_2.add_argument("-f", "--feature-table-dir", action="store", help="Input the directory to the feature table output from [bold]QIIME output tables")
-    metag_subp_2.add_argument("-r", "--rep-Seq-dir", action="store", help="Input the directory to the repseq fasta output from [bold]QIIME output files")
-    metag_subp_2.add_argument("-t", "--taxonomy-table-dir", action="store", help="Input the directory to the taxonomy table output from [bold]QIIME output files")
-    metag_subp_2.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the representative genome files",default=meta_config_defult.genomes_base_dir)
-    metag_subp_2.add_argument("-a", "--amplicon-to-genome-db", action="store", help="The Amplicon to Genome Database to use",default=meta_config_defult.amplicon2genome_db)
-    metag_subp_2.add_argument("--k", action="store", help="Top k genomes to be selected",default=meta_config_defult.k,type=int)
-    metag_subp_2.add_argument("--similarity", action="store", help="Similarity cutoff in the 16s V4 region for genome selection",default=meta_config_defult.vsearch_similarity,type=float)
+
     
-    metag_subp_3=metag_subp.add_parser('align-genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
-    metag_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned")
-    metag_subp_3.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db)
-    metag_subp_3.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results",default=meta_config_defult.genome_alignment_output)
-    metag_subp_3.add_argument("-b", "--bit-score", action="store", help="Minimum Bit Score cutoff for alignment",default=meta_config_defult.bit_score)
-    metag_subp_3.add_argument("-e", "--e-value", action="store", help="Minimum e-vlaue score cutoff for alignment",default=meta_config_defult.e_value)
+    # metag_subp_3=metag_subp.add_parser('align-genomes', help='Align Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
+    # metag_subp_3.add_argument("-i", "--input-file", action="store", help="Input the address of the JSON file includeing information about the genomes to be aligned")
+    # metag_subp_3.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db)
+    # metag_subp_3.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results",default=meta_config_defult.genome_alignment_output)
+    # metag_subp_3.add_argument("-b", "--bit-score", action="store", help="Minimum Bit Score cutoff for alignment",default=meta_config_defult.bit_score)
+    # metag_subp_3.add_argument("-e", "--e-value", action="store", help="Minimum e-vlaue score cutoff for alignment",default=meta_config_defult.e_value)
     
-    metag_subp_4=metag_subp.add_parser("make-json-from-genomes",help="Generates JSON file required by Align-Genomes for custom genomes.")
-    metag_subp_4.add_argument("-i", "--input-file", action="store", help="Input the address of the CSV file includeing information about the genomes to be aligned",required=True)
-    metag_subp_4.add_argument("-o", "--output-file", action="store", help="Output the directory to store the JSON file.",required=True)
+    # metag_subp_4=metag_subp.add_parser("make-json-from-genomes",help="Generates JSON file required by Align-Genomes for custom genomes.")
+    # metag_subp_4.add_argument("-i", "--input-file", action="store", help="Input the address of the CSV file includeing information about the genomes to be aligned",required=True)
+    # metag_subp_4.add_argument("-o", "--output-file", action="store", help="Output the directory to store the JSON file.",required=True)
     
-    metag_subp_5=metag_subp.add_parser('map-genomes-to-adm', help='maps JSON file with genome infromation to ADM reactions')
-    metag_subp_5.add_argument("-i","--input-file",action="store",help="Input the address of the JSON file includeing information about the alignment of the genomes to the protein database")
-    metag_subp_5.add_argument("-m","--model",action="store",help="Model determines which mapping system you'd like to use; Current options: 'Modified_adm_reactions'",default="Modified_adm_reactions")
-    metag_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model")
+    # metag_subp_5=metag_subp.add_parser('map-genomes-to-adm', help='maps JSON file with genome infromation to ADM reactions')
+    # metag_subp_5.add_argument("-i","--input-file",action="store",help="Input the address of the JSON file includeing information about the alignment of the genomes to the protein database")
+    # metag_subp_5.add_argument("-m","--model",action="store",help="Model determines which mapping system you'd like to use; Current options: 'Modified_adm_reactions'",default="Modified_adm_reactions")
+    # metag_subp_5.add_argument("-o","--output-dir",action="store",help="address to store the JSON report to be loaded with a model")
 
 
     doc_parser=subparsers.add_parser('Documentations', help='Documentations for using AD Toolbox')
@@ -242,15 +239,9 @@ def main():
 
 
     #### Metagenomics Module #####
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="amplicon-to-genome":
-        meta_config_defult.feature_table_dir=args.feature_table_dir
-        meta_config_defult.qiime_outputs_dir=args.qiime_outputs_dir
-        meta_config_defult.rep_seq_fasta=args.rep_Seq_dir
-        meta_config_defult.taxonomy_table_dir=args.taxonomy_table_dir
-        meta_config_defult.genomes_base_dir=args.output_dir
-        meta_config_defult.amplicon2genome_db=args.amplicon_to_genome_db
-        meta_config_defult.k=args.k
-        meta_config_defult.vsearch_similarity=args.similarity
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="download_from_SRA":
+        prefetch_script,sample_metadata=core.Metagenomics(meta_config_defult).seqs_from_sra(accession=args.sample_accession,target_dir=args.output_dir,container=args.container)
+        subprocess.run(f"{prefetch_script}",shell=True)
         # core.Metagenomics(meta_config_defult).amplicon2genome()
         ### UNDER CONSTRUCTION ###
 
@@ -268,18 +259,18 @@ def main():
 
         
 
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="align-genomes":
-        if "input_file" in args and "output_dir" in args:
-            Meta_Config=configs.Metagenomics(genomes_json_info=args.input_file,genome_alignment_output=args.output_dir,genome_alignment_output_json=os.path.join(args.output_dir,"Alignment_Info.json"))
-            core.Metagenomics(Meta_Config).Align_Genomes()
+    # if args.ADToolbox_Module == 'Metagenomics' and "metag_Subparser" in args and args.metag_Subparser=="align-genomes":
+    #     if "input_file" in args and "output_dir" in args:
+    #         Meta_Config=configs.Metagenomics(genomes_json_info=args.input_file,genome_alignment_output=args.output_dir,genome_alignment_output_json=os.path.join(args.output_dir,"Alignment_Info.json"))
+    #         core.Metagenomics(Meta_Config).Align_Genomes()
 
     
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args:
-        print(args)
-        ncomp=3 if args.threed else 2
-        method="MDS" if args.mds else "TSNE"
-        normalize=False if args.not_normalize else True
-        metagenomics_report.main(args.json_file,method=method,normalize=normalize,n_components=ncomp)
+    # if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args:
+    #     print(args)
+    #     ncomp=3 if args.threed else 2
+    #     method="MDS" if args.mds else "TSNE"
+    #     normalize=False if args.not_normalize else True
+    #     metagenomics_report.main(args.json_file,method=method,normalize=normalize,n_components=ncomp)
 
 
 
