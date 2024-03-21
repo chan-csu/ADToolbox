@@ -82,20 +82,31 @@ Any database that is used by ADToolbox can be modified from this module. Type th
 ADToolbox Database --help
 ──────────────────────────── ADToolBox ────────────────────────────
 usage: ADToolBox Database [-h]
-                          {initialize-feed-db,extend-feed-db,show-f
-eed-db,download-reaction-db,download-seed-reaction-db,build-protein
--db,download-feed-db,download-protein-db,download-amplicon-to-genom
-e-dbs}
+                          {initialize-feed-db,add-feed,sh
+ow-feed-db,initialize-metagenomics-studies-db,add-metagen
+omics-study,initialize-protein-db,add-protein,download-re
+action-db,download-seed-reaction-db,build-protein-db,down
+load-protein-db,download-amplicon-to-genome-dbs,download-
+all-databases}
                           ...
 
 positional arguments:
-  {initialize-feed-db,extend-feed-db,show-feed-db,download-reaction
--db,download-seed-reaction-db,build-protein-db,download-feed-db,dow
-nload-protein-db,download-amplicon-to-genome-dbs}
-                        Database Modules:
+  {initialize-feed-db,add-feed,show-feed-db,initialize-me
+tagenomics-studies-db,add-metagenomics-study,initialize-p
+rotein-db,add-protein,download-reaction-db,download-seed-
+reaction-db,build-protein-db,download-protein-db,download
+-amplicon-to-genome-dbs,download-all-databases}
+                        Database commands:
     initialize-feed-db  Initialize the Feed DB
     add-feed            Add a feed to the feed database
-    show-feed-db        Shows the feed table
+    show-feed-db        Shows the feed database
+    initialize-metagenomics-studies-db
+                        Initialize the Metagenomics Studies DB
+    add-metagenomics-study
+                        Add a metagenomics study to the Kbase
+    initialize-protein-db
+                        Generates the protein database for ADToolbox
+    add-protein         Add a protein to the protein database           
     download-reaction-db
                         Downloads the reaction database in CSV
                         format
@@ -104,8 +115,6 @@ nload-protein-db,download-amplicon-to-genome-dbs}
                         JSON format
     build-protein-db    Generates the protein database for
                         ADToolbox
-    download-feed-db    Downloads the feed database in JSON
-                        format
     download-protein-db
                         Downloads the protein database in fasta
                         format; You can alternatively build it
@@ -114,16 +123,12 @@ nload-protein-db,download-amplicon-to-genome-dbs}
                         downloads amplicon to genome databases
     download-all-databases
                         downloads all databases that are required by ADToolbox at once
-    show-tables         Show the list of all studies in Kbase
-    add-metagenomics-study
-                        Add a metagenomics study to the Kbase
-    add-experimental-data-study
-                        Add a study with experimental data to the Kbase
+    
 options:
   -h, --help            show this help message and exit
 ```
 
-We now go over these commands one by one:
+We will now go over these commands one by one:
 
 - initialize-feed-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future feed information that you add. You can run this command  by:
 
@@ -132,17 +137,59 @@ ADToolbox Database initialize-feed-db
 
 ```
 
-- add-feed: This will add feed data to the database. Such data includes: NAME (the name of the feed), CARBOHYDRATES (carbohydrate content of the feed in a percentage), PROTEINS (protein content of the feed in a percecntage), LIPIDS (lipid content of the feed in a percentage), TSS (total suspended solid content of the feed in a percentage), SI (soluable inert content of feed in a percentage), XI (particulate inert content of feed in a percentage), and REFERENCE (reference where numbers came from).
+- add-feed: This will add feed data to the database. Such data includes: the name of the feed (-n, --name), carbohydrate content of the feed in a percentage (-c, --carbohydrates), protein content of the feed in a percecntage (-p, --proteins), lipid content of the feed in a percentage (-l, --lipids), total suspended solid content of the feed in a percentage (-t, --tss), soluable inert content of feed in a percentage (-s, --si), particulate inert content of feed in a percentage (-x, --xi), and a reference where numbers came from (-r, --reference).  This command is run by:
 
 ```
 ADToolbox Database add-feed
 
 ```
+An example of this would look like:
 
-- show-feed-db: As the name implies, this will show the user the feed database along with any values they have added to it, in the command window. 
+```
+ADToolbox Database add-feed -n "test feed" -c 20 -p 20 -l 20 -t 20 -s 20 -x 20 -r "test reference"
+
+```
+
+- show-feed-db: As the name implies, this will show the user the feed database along with any values they have added to it, in the command window. This command is run by:
 
 ```
 ADToolbox Database show-feed-db
+
+```
+- initialize-metagenomics-studies-db: This will create an empty TSV file in the Database sub-directory in your base directory that will hold all the future information about various metagenomics studies that you add. You can run this command  by:
+
+```
+ADToolbox Database initialize-metagenomics-studies-db
+
+```
+- add-metagenomics-study: This command will add a metagenomics study to the Kbase and will require the study name (-n,--name), study type (-t, --type), microbiome where the metagenomics study belongs to (-m, --microbiome), SRA accession ID for the sample (-s, --sample_accesion), SRA accession ID for the project (-p, --study_accesion), and comments on the study of interest (-c, --comments). This command is run by:
+
+```
+ADToolbox Database add-metagenomics-study
+
+```
+An example of this would look like:
+
+```
+ADToolbox Database add-metagenomics-study  -n test_study -t 16s -m "anaerobic digestion"  -s 11111111 -c "this is just a test" -p 222222
+
+```
+- initialize-protein-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future protein information that you add. You can run this command  by:
+
+```
+ADToolbox Database initialize-protein-db
+
+```
+- add-protein: As the name implies, this will add information about a protein to the empty protein database. Information about such protein includes its UniProt ID (-i, --uniprot-id), and the name attached to the protein which is usually the EC number (-n, --name). You can run this command by:
+
+```
+ADToolbox Database add-protein
+
+```
+An example of this would look like:
+
+```
+ADToolbox Database add-protein -i ATEST1 -n 1.1.1.1
 
 ```
 
@@ -154,13 +201,6 @@ ADToolbox Database show-feed-db
 ```
 ADToolbox Database download-reaction-db
 
-```
-
-- download-feed-db: Downloads the default feed database in JSON format
-
-```
-
-ADToolbox Database download-feed-db
 
 ```
 
