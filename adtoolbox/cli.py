@@ -197,7 +197,7 @@ def main():
             db_class.initialize_metagenomics_studies_db()
         elif args.database_module=="add-metagenomics-study":
             metagenomics_study=core.MetagenomicsStudy(name=args.name,
-                                                      type=args.type,
+                                                      study_type=args.type,
                                                       microbiome=args.microbiome,
                                                       sample_accession=args.sample_accession,
                                                       comments=args.comments,
