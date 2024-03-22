@@ -1659,7 +1659,7 @@ class Metagenomics:
         return alignment_dict
     
     
-    def download_genome(self,identifier:str,container:str="None")-> str:
+    def download_genome(self,identifier:str,output_dir:str,container:str="None")-> str:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         Note that this function uses rsync to download the genomes. 
 
@@ -1686,10 +1686,10 @@ class Metagenomics:
                             identifier[6:9]+'/'+\
                             identifier[9:].split('.')[0]
             
-        genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
+        genome_dir=pathlib.Path(output_dir)
             
         if container=="None":
-            bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
+            bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
         if container=="docker":
             bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
@@ -1745,6 +1745,7 @@ class Metagenomics:
     def align_genome_to_protein_db(
             self,
             address:str,
+            outdir:str,
             name:str,
             container:str="None",
             )->tuple[str,str]:
@@ -1777,7 +1778,7 @@ class Metagenomics:
  
         if container=="None":
             bash_script = ""
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
             bash_script += "mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
@@ -1785,11 +1786,11 @@ class Metagenomics:
         
         if container=="docker":
             bash_script = ""
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
             bash_script +="docker run -it "+ \
             " -v "+address+":"+address+ \
             " -v "+self.config.protein_db+":"+self.config.protein_db+ \
-            " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+            " -v "+outdir+":"+outdir+ \
             f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
@@ -1797,11 +1798,11 @@ class Metagenomics:
 
         if container=="singularity":
             bash_script = ""
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
             bash_script +="singularity exec "+ \
             " -B "+address+":"+address+ \
             " -B "+self.config.protein_db+":"+self.config.protein_db+ \
-            " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+            " -B "+outdir+":"+outdir+ \
             f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \

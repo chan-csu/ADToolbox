@@ -85,12 +85,20 @@ def main():
     ### Metagenomics Module ###
     meta_config_defult=configs.Metagenomics()
     subparser_metagenomics= subparsers.add_parser('Metagenomics', help="This module provides the import metagenomics functionalities of ADToolbox in the command line")
-    metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='[yellow] Available Metagenomics Commands:')
+    metag_subp=subparser_metagenomics.add_subparsers(dest='metag_subparser',help='Available Metagenomics Commands:')
     
     metag_subp_1=metag_subp.add_parser('download_from_sra', help='This module provides a command line interface to download metagenomics data from SRA')
     metag_subp_1.add_argument("-s","--sample_accession",action="store",help="SRA accession ID for the sample",required=True)
     metag_subp_1.add_argument("-o","--output-dir",action="store",help="Output directory to store the downloaded data",required=True)
     metag_subp_1.add_argument("-c","--container",action="store",help="Container to use for the download: None, docker, or singualrity",default="None")
+    
+    metag_subp_1=metag_subp.add_parser('download_genome', help='This module provides a command line interface to download genomes from NCBI')
+    metag_subp_1.add_argument("-g","--genome_accession",action="store",help="NCBI accession ID for the genome",required=True)
+    metag_subp_1.add_argument("-o","--output-dir",action="store",help="Output directory to store the downloaded data",required=True)
+    metag_subp_1.add_argument("-c","--container",action="store",help="Container to use for the download: None, docker, or singualrity",default="None")
+
+
+    
     
     # metag_subp_1=metag_subp.add_parser('Metagenomics_Report', help='This module provides a command line interface to the metagenomics report web interface')
     # metag_subp_1.add_argument("-j","--json-file",help="Address to the JSON file that contains the metagenomics report",required=True)
@@ -244,6 +252,13 @@ def main():
         subprocess.run(f"{prefetch_script}",shell=True)
         # core.Metagenomics(meta_config_defult).amplicon2genome()
         ### UNDER CONSTRUCTION ###
+    
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="download_genome":
+        subprocess.run(core.Metagenomics(meta_config_defult).download_genome(identifier=args.genome_accession,
+                                                              output_dir=args.output_dir,
+                                                              container=args.container),shell=True)
+    
+
 
     if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="map-genomes-to-adm":
         meta_config_defult.genome_alignment_output_json=args.input_file
