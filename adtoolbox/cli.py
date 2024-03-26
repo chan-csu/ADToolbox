@@ -104,6 +104,13 @@ def main():
     metag_subp_1.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results",default=meta_config_defult.genome_alignment_output,required=True)
     metag_subp_1.add_argument("-c", "--container", action="store", help="Container to use for the alignment: None, docker, or singualrity",default="None")
     metag_subp_1.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db,required=False)
+    
+    metag_subp_1=metag_subp.add_parser('align-multiple-genomes' , help='Align multiple Genomes to the protein database of ADToolbox, or any other fasta with protein sequences')
+    metag_subp_1.add_argument("-i", "--input-file", action="store", help="The address to a JSON file that holds the information about the genomes",required=True)
+    metag_subp_1.add_argument("-o", "--output-dir", action="store", help="Output the directory to store the alignment results",required=True)
+    metag_subp_1.add_argument("-c", "--container", action="store", help="Container to use for the alignment: None, docker, or singualrity",default="None")
+    metag_subp_1.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db,required=False)
+
 
     
     
@@ -278,6 +285,20 @@ def main():
             container=args.container
         )
         subprocess.run(mg,shell=True)
+    
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="align-multiple-genomes":
+        if args.protein_db_dir:
+            meta_config_defult.protein_db=args.protein_db_dir
+        with open(args.input_file) as f:
+            genomes=json.load(f)
+        for genome in genomes:
+            mg=core.Metagenomics(meta_config_defult).align_genome_to_protein_db(
+                address=genome["address"],
+                outdir=args.output_dir,
+                name=genome["name"],
+                container=args.container
+            )
+            subprocess.run(mg,shell=True)
 
     if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="map-genomes-to-adm":
         meta_config_defult.genome_alignment_output_json=args.input_file
