@@ -111,9 +111,8 @@ def main():
     metag_subp_1.add_argument("-c", "--container", action="store", help="Container to use for the alignment: None, docker, or singualrity",default="None")
     metag_subp_1.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db,required=False)
 
+    metag_subp_1=metag_subp.add_parser('find-representative-genomes' , help='Finds representative genomes from the repseqs fasta file')
 
-    
-    
     
     
     # metag_subp_1=metag_subp.add_parser('Metagenomics_Report', help='This module provides a command line interface to the metagenomics report web interface')
@@ -293,9 +292,9 @@ def main():
             genomes=json.load(f)
         for genome in genomes:
             mg=core.Metagenomics(meta_config_defult).align_genome_to_protein_db(
-                address=genome["address"],
+                address=genomes[genome],
                 outdir=args.output_dir,
-                name=genome["name"],
+                name=genome,
                 container=args.container
             )
             subprocess.run(mg,shell=True)
