@@ -1069,6 +1069,14 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
         reactions.index('Uptake of caproate')] = [-1,
                                                   (1 - Y_cap),
                                                   Y_cap]
+        
+    Y_cap=0 if nitrogen_limited else model_parameters['Y_bu']
+    S[list(map(species.index, ["S_bu", "S_ac", "X_VFA_deg"])),
+        reactions.index('Uptake of butyrate')] = [-1,
+                                                  (1 - Y_cap),
+                                                  Y_cap]
+        
+        
     
     Y_Me_ac=0 if nitrogen_limited else model_parameters["Y_Me_ac"]
     f_IC_Me_ach2 = 0
@@ -1645,6 +1653,10 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
 
     v[model.reactions.index('Uptake of caproate')] = model.model_parameters['k_m_cap']*c[model.species.index('S_cap')] / \
         (model.model_parameters['K_S_cap']+c[model.species.index('S_cap')]
+         )*c[model.species.index('X_VFA_deg')]*I13
+    
+    v[model.reactions.index('Uptake of butyrate')] = model.model_parameters['k_m_bu_deg']*c[model.species.index('S_bu')] / \
+        (model.model_parameters['K_S_bu']+c[model.species.index('S_bu')]
          )*c[model.species.index('X_VFA_deg')]*I13
 
     v[model.reactions.index('Methanogenessis from acetate and h2')] = model.model_parameters['k_m_h2_Me_ac']*c[model.species.index('S_h2')]*c[model.species.index('S_ac')] / \

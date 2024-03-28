@@ -1551,7 +1551,10 @@ class Metagenomics:
         return {'top_featureids':top_featureids,'top_taxa':top_taxa,'top_repseqs':top_repseqs,'top_abundances':top_abundances}    
         
     
-    def align_to_gtdb(self,container:str="None")->str:
+    def align_to_gtdb(self,
+                      query_dir:str,
+                      output_dir:str,
+                      container:str="None")->str:
         """This function takes the representative sequences of the top k features and generates the script to
         align these feature sequences to gtdb using VSEARCH. If you intend to run this you either
         need to have VSEARCH installed or run it with a container option. You can use either the docker or singularity
@@ -1584,12 +1587,12 @@ class Metagenomics:
             str: The script that is supposed to be running later.
         """
         ### Load all the required files
-        alignment_dir = os.path.join(self.config.align_to_gtdb_outputs_dir,'Alignments')
-        match_table=os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
+        alignment_dir = os.path.join(output_dir,'Alignments')
+        match_table=os.path.join(output_dir,'matches.blast')
         gtdb_dir_fasta=self.config.gtdb_dir_fasta
         ### End Loading
-        query=self.config.top_repseq_dir
-        dirs=[self.config.align_to_gtdb_outputs_dir,
+        query=query_dir
+        dirs=[output_dir,
             gtdb_dir_fasta,
             query
             ]
@@ -1637,7 +1640,7 @@ class Metagenomics:
     
     
     
-    def get_genomes_from_gtdb_alignment(self)->dict:
+    def get_genomes_from_gtdb_alignment(self,alignment_dir:str)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
         using the GTDB-Tk. In the outputted dictionary, the keys are feature ids and the values are the representative genomes.
 
@@ -1649,7 +1652,7 @@ class Metagenomics:
         Args:
             save (bool, optional): Whether to save the json file or not. Defaults to True.
         """
-        matches = os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
+        matches = os.path.join(alignment_dir,'matches.blast')
         aligned=pd.read_table(matches,header=None,delimiter='\t')
         aligned.drop_duplicates(0,inplace=True)
         aligned[1]=aligned[1].apply(lambda x: ("".join(x.split('_')[1:])).split("~")[0])

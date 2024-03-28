@@ -14,7 +14,7 @@ import json
 import os
 import numpy as np
 import subprocess
-
+import pandas as pd
 class AParser(argparse.ArgumentParser):
     def _print_message(self, message, file=None):
         rich.print(message, file=file)
@@ -112,6 +112,11 @@ def main():
     metag_subp_1.add_argument("-d", "--protein-db-dir", action="store", help="Directory containing the protein database to be used for alignment",default=meta_config_defult.protein_db,required=False)
 
     metag_subp_1=metag_subp.add_parser('find-representative-genomes' , help='Finds representative genomes from the repseqs fasta file')
+    metag_subp_1.add_argument("-i", "--input-file", action="store", help="The address to the repseqs fasta file",required=True)
+    metag_subp_1.add_argument("-o", "--output-dir", action="store", help="The directory of the output file",required=True)
+    metag_subp_1.add_argument("-c", "--container", action="store", help="Container to use for the alignment: None, docker, or singualrity",default="None")
+    metag_subp_1.add_argument("-s", "--similarity", action="store", help="Similarity cutoff for clustering",default=0.97,type=float)
+    metag_subp_1.add_argument("-f", "--format", action="store", help="Format of the output file. Either json or csv",default="csv")
 
     
     
@@ -299,17 +304,25 @@ def main():
             )
             subprocess.run(mg,shell=True)
 
-    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="map-genomes-to-adm":
-        meta_config_defult.genome_alignment_output_json=args.input_file
-        model_reactions=args.model
-        meta_config_defult.genome_adm_map_json=args.output_dir
-        if model_reactions=="Modified_adm_reactions":
-            reactions=configs.Modified_ADM().reactions
-            with open(reactions,"r") as f:
-                reactions=json.load(f)
-            core.Metagenomics(meta_config_defult).adm_from_alignment_json(reactions,Model=model_reactions)
+    if args.ADToolbox_Module == 'Metagenomics' and "metag_subparser" in args and args.metag_subparser=="find-representative-genomes":
+        meta_config_defult.vsearch_similarity=args.similarity
+        print(args.output_dir)
+        mg=core.Metagenomics(meta_config_defult).align_to_gtdb(
+            query_dir=args.input_file,
+            output_dir=args.output_dir,
+            container=args.container,
+        )
+        subprocess.run(mg,shell=True)
+        res=core.Metagenomics(meta_config_defult).get_genomes_from_gtdb_alignment(args.output_dir)
+        if args.format=="csv":
+            pd.DataFrame.from_dict(res,orient="index").to_csv(os.path.join(args.output_dir,"representative_genomes.csv"))
+        elif args.format=="json":
+            with open(os.path.join(args.output_dir,"representative_genomes.json"),"w") as f:
+                json.dump(res,f)
         else:
-            rich.print(f"[red] No Reaction mapping exists for {model_reactions}; execution aborted!")
+            raise ValueError("Please provide a valid format for the output file")
+        
+        
 
         
 
@@ -527,10 +540,6 @@ def main():
         else:
             print('Please provide a valid report option')
     
-
-
-
-
 
 if __name__ == "__main__":
     main()
