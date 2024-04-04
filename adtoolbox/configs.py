@@ -291,11 +291,13 @@ def set_base_dir(path:str):
 				rich.print("[red]Base directory not changed")
 				return
 			else:
+				
+				Main_Dir=path
+				conf["Base_Dir"]=path
 				with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),'w') as f:
 					json.dump(conf,f)
-				Main_Dir=path
-				rich.print("[green]Base directory changed")
-				conf["Base_Dir"]=path	
+				
+				rich.print("[green]Base directory changed")	
 	else:
 		rich.print("[red]Base directory not changed")
 

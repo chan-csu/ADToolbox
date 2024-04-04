@@ -477,6 +477,8 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta")) # remove the file to clean up
         """
 
+        if not (pathlib.Path(self.config.protein_db).parent).exists():
+            pathlib.Path(self.config.protein_db).parent.mkdir(parents=True)
         with open(self.config.protein_db, 'w') as f:
             pass
     
@@ -1549,7 +1551,10 @@ class Metagenomics:
         return {'top_featureids':top_featureids,'top_taxa':top_taxa,'top_repseqs':top_repseqs,'top_abundances':top_abundances}    
         
     
-    def align_to_gtdb(self,container:str="None")->str:
+    def align_to_gtdb(self,
+                      query_dir:str,
+                      output_dir:str,
+                      container:str="None")->str:
         """This function takes the representative sequences of the top k features and generates the script to
         align these feature sequences to gtdb using VSEARCH. If you intend to run this you either
         need to have VSEARCH installed or run it with a container option. You can use either the docker or singularity
@@ -1582,12 +1587,12 @@ class Metagenomics:
             str: The script that is supposed to be running later.
         """
         ### Load all the required files
-        alignment_dir = os.path.join(self.config.align_to_gtdb_outputs_dir,'Alignments')
-        match_table=os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
+        alignment_dir = os.path.join(output_dir,'Alignments')
+        match_table=os.path.join(output_dir,'matches.blast')
         gtdb_dir_fasta=self.config.gtdb_dir_fasta
         ### End Loading
-        query=self.config.top_repseq_dir
-        dirs=[self.config.align_to_gtdb_outputs_dir,
+        query=query_dir
+        dirs=[output_dir,
             gtdb_dir_fasta,
             query
             ]
@@ -1635,7 +1640,7 @@ class Metagenomics:
     
     
     
-    def get_genomes_from_gtdb_alignment(self)->dict:
+    def get_genomes_from_gtdb_alignment(self,alignment_dir:str)->dict:
         """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
         using the GTDB-Tk. In the outputted dictionary, the keys are feature ids and the values are the representative genomes.
 
@@ -1647,7 +1652,7 @@ class Metagenomics:
         Args:
             save (bool, optional): Whether to save the json file or not. Defaults to True.
         """
-        matches = os.path.join(self.config.align_to_gtdb_outputs_dir,'matches.blast')
+        matches = os.path.join(alignment_dir,'matches.blast')
         aligned=pd.read_table(matches,header=None,delimiter='\t')
         aligned.drop_duplicates(0,inplace=True)
         aligned[1]=aligned[1].apply(lambda x: ("".join(x.split('_')[1:])).split("~")[0])
@@ -1657,7 +1662,7 @@ class Metagenomics:
         return alignment_dict
     
     
-    def download_genome(self,identifier:str,container:str="None")-> str:
+    def download_genome(self,identifier:str,output_dir:str,container:str="None")-> str:
         """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         Note that this function uses rsync to download the genomes. 
 
@@ -1684,10 +1689,10 @@ class Metagenomics:
                             identifier[6:9]+'/'+\
                             identifier[9:].split('.')[0]
             
-        genome_dir=pathlib.Path(self.config.genome_save_dir(identifier))
+        genome_dir=pathlib.Path(output_dir)
             
         if container=="None":
-            bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+self.config.genome_save_dir(identifier))
+            bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
         if container=="docker":
             bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
@@ -1743,6 +1748,7 @@ class Metagenomics:
     def align_genome_to_protein_db(
             self,
             address:str,
+            outdir:str,
             name:str,
             container:str="None",
             )->tuple[str,str]:
@@ -1775,7 +1781,7 @@ class Metagenomics:
  
         if container=="None":
             bash_script = ""
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
             bash_script += "mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
@@ -1783,11 +1789,11 @@ class Metagenomics:
         
         if container=="docker":
             bash_script = ""
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
             bash_script +="docker run -it "+ \
             " -v "+address+":"+address+ \
             " -v "+self.config.protein_db+":"+self.config.protein_db+ \
-            " -v "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+            " -v "+outdir+":"+outdir+ \
             f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
@@ -1795,11 +1801,11 @@ class Metagenomics:
 
         if container=="singularity":
             bash_script = ""
-            alignment_file=os.path.join(self.config.genome_alignment_output,"Alignment_Results_mmseq_"+name+".tsv")
+            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
             bash_script +="singularity exec "+ \
             " -B "+address+":"+address+ \
             " -B "+self.config.protein_db+":"+self.config.protein_db+ \
-            " -B "+self.config.genome_alignment_output+":"+self.config.genome_alignment_output+ \
+            " -B "+outdir+":"+outdir+ \
             f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
