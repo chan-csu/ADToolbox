@@ -2017,6 +2017,8 @@ class Metagenomics:
             
             for item in acc_folder.rglob("*.sra"):
                 fasterq_dump_script+=f"\nrm {item}"
+            
+            prefetch_script+=fasterq_dump_script
 
         
         elif container=="docker":
