@@ -2010,14 +2010,13 @@ class Metagenomics:
         """   
         if container=="None":
             prefetch_script=f"""#!/bin/bash\nprefetch {accession} -O {target_dir}"""
-
-            fasterq_dump_script=(f"for i in $(ls {target_dir});\n"
-                                 f"do fasterq-dump --split-files {target_dir}/$i -O {target_dir}/$i/\n"
-                                 f"rm {target_dir}/$i/*.sra\n"
-                                 "done")
-        
-
-            prefetch_script=prefetch_script+"\n"+fasterq_dump_script
+            acc_folder=pathlib.Path(target_dir)/accession
+            fasterq_dump_script=""
+            for item in acc_folder.rglob("*.sra"):
+                fasterq_dump_script+=f"\nfasterq-dump {item} -O {acc_folder} --split-files"
+            
+            for item in acc_folder.rglob("*.sra"):
+                fasterq_dump_script+=f"\nrm {item}"
 
         
         elif container=="docker":

@@ -560,6 +560,7 @@ class Model:
                     prevent_initial_call=True
                     )
         def update_graph_fig(base_parameters: dict, model_parameters:dict, initial_conditions: dict, inlet_conditions: dict)->plotly.graph_objects.Figure:
+            
             if len(self.control_state.keys()):
                 for i in self.control_state.keys():
                     self.control_state[i]=initial_conditions[0][i]
@@ -909,12 +910,12 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
       reactions.index('Hydrolysis lipids')] = [-1, 1]
     
     Y_su=0 if nitrogen_limited else model_parameters['Y_su']
-    
+    f_ac_su=1-model_parameters['f_pro_su']-model_parameters['f_et_su']-model_parameters['f_lac_su']
     f_IC_su = -(-model_parameters['C_su'] +
                 (1-Y_su)*model_parameters['f_pro_su']*model_parameters['C_pro'] +
                 (1-Y_su)*model_parameters['f_et_su']*model_parameters['C_et'] +
                 (1-Y_su)*model_parameters['f_lac_su']*model_parameters['C_lac'] +
-                (1-Y_su)*model_parameters['f_ac_su']*model_parameters['C_ac'] +
+                (1-Y_su)*f_ac_su*model_parameters['C_ac'] +
                 Y_su*model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_su", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_su"])),
@@ -922,17 +923,18 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                               (1-Y_su) * model_parameters['f_pro_su'],
                                               (1-Y_su) * model_parameters['f_et_su'],
                                               (1-Y_su) * model_parameters['f_lac_su'],
-                                              (1-Y_su) * model_parameters['f_ac_su'],
+                                              (1-Y_su) * f_ac_su,
                                               -model_parameters['N_bac']*Y_su,
                                               f_IC_su,
                                               Y_su]
       
     Y_aa=0 if nitrogen_limited else model_parameters['Y_aa']
+    f_ac_aa=1-model_parameters['f_pro_aa']-model_parameters['f_et_aa']-model_parameters['f_lac_aa']
     f_IC_aa = -(-model_parameters['C_aa'] +
                 (1-Y_aa)*model_parameters['f_pro_aa']*model_parameters['C_pro'] +
                 (1-Y_aa)*model_parameters['f_et_aa']*model_parameters['C_et'] +
                 (1-Y_aa)*model_parameters['f_lac_aa']*model_parameters['C_lac'] +
-                (1-Y_aa)*model_parameters['f_ac_aa']*model_parameters['C_ac'] +
+                (1-Y_aa)*f_ac_aa*model_parameters['C_ac'] +
                 (1-Y_aa)*model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_aa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_aa"])),
@@ -940,17 +942,18 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                    (1-Y_aa) * model_parameters['f_pro_aa'],
                                                    (1-Y_aa) * model_parameters['f_et_aa'],
                                                    (1-Y_aa) * model_parameters['f_lac_aa'],
-                                                   (1-Y_aa) * model_parameters['f_ac_aa'],
+                                                   (1-Y_aa) * f_ac_aa,
                                                    model_parameters['N_aa']-Y_aa * model_parameters['N_bac'],
                                                    f_IC_aa,
                                                    Y_aa]
       
     Y_fa=0 if nitrogen_limited else model_parameters['Y_fa']
+    f_ac_fa=1-model_parameters['f_pro_fa']-model_parameters['f_et_fa']-model_parameters['f_lac_fa']
     f_IC_fa = -(-model_parameters['C_fa']+
                 (1-Y_fa)*model_parameters['f_pro_fa']*model_parameters['C_pro'] +
                 (1-Y_fa)*model_parameters['f_et_fa']*model_parameters['C_et'] +
                 (1-Y_fa)*model_parameters['f_lac_fa']*model_parameters['C_lac'] +
-                (1-Y_fa)*model_parameters['f_ac_fa']*model_parameters['C_ac'] +
+                (1-Y_fa)*f_ac_fa*model_parameters['C_ac'] +
                 (1-Y_fa)*model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_fa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_fa"])),
@@ -958,11 +961,12 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                             (1-Y_fa) * model_parameters['f_pro_fa'],
                                             (1-Y_fa) * model_parameters['f_et_fa'],
                                             (1-Y_fa) * model_parameters['f_lac_fa'],
-                                            (1-Y_fa) * model_parameters['f_ac_fa'],
+                                            (1-Y_fa) * f_ac_fa,
                                             -Y_fa * model_parameters['N_bac'],
                                             f_IC_fa,
                                             Y_fa]
-
+    if any([f_ac_fa<0,f_ac_aa<0,f_ac_su<0]):
+        raise ValueError("f_ac is negative")
     Y_ac_et=0 if nitrogen_limited else model_parameters['Y_ac_et']
     Y_ac_lac=0 if nitrogen_limited else model_parameters['Y_ac_lac']
     f_IC_ac_et = -(-model_parameters['C_ac'] +
@@ -981,7 +985,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                   (1- model_parameters['f_et_ac']-model_parameters['Y_ac']) * model_parameters['f_bu_ac'],
                                                   -Y_ac_et * model_parameters['N_bac'],
                                                   f_IC_ac_et,
-                                                  (1- model_parameters['f_et_ac']-Y_ac_et) * model_parameters['f_h2_ac'],
+                                                  (1- model_parameters['f_et_ac']-Y_ac_et) * (1-model_parameters['f_bu_ac']),
                                                   Y_ac_et]
 
     S[list(map(species.index, ["S_ac", "S_lac", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_lac"])),
@@ -990,8 +994,9 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                      (1-model_parameters['f_lac_ac']-Y_ac_lac) * model_parameters['f_bu_ac'],
                                                      -Y_ac_lac * model_parameters['N_bac'],
                                                      f_IC_ac_lac,
-                                                     (1-model_parameters['f_lac_ac']-Y_ac_lac) * model_parameters['f_h2_ac'],
+                                                     (1-model_parameters['f_lac_ac']-Y_ac_lac) * (1-model_parameters['f_bu_ac']),
                                                      Y_ac_lac]
+    
     Y_pro_et=0 if nitrogen_limited else model_parameters['Y_pro_et']
     Y_pro_lac=0 if nitrogen_limited else model_parameters['Y_pro_et']
     
@@ -1011,18 +1016,16 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                      (1-model_parameters['f_et_pro']-Y_pro_et) * model_parameters['f_va_pro'],
                                                      -Y_pro_et *  model_parameters['N_bac'],
                                                      f_IC_pro_et,
-                                                     (1-model_parameters['f_et_pro']-Y_pro_et) * model_parameters['f_h2_pro'],
+                                                     (1-model_parameters['f_et_pro']-Y_pro_et) * (1-model_parameters['f_va_pro']),
                                                      model_parameters['Y_chain_et_pro']]
 
     S[list(map(species.index, ["S_pro", "S_lac", "S_va", "S_IN", "S_IC", "S_h2", "X_chain_lac"])),
         reactions.index('Uptake of propionate_lac')] = [-1,
                                                         model_parameters['f_lac_pro'],
-                                                        (1-model_parameters['f_lac_pro']-Y_pro_lac) *
-                                                        model_parameters['f_va_pro'],
+                                                        (1-model_parameters['f_lac_pro']-Y_pro_lac) * model_parameters['f_va_pro'],
                                                         -Y_pro_lac * model_parameters['N_bac'],
                                                         f_IC_pro_lac,
-                                                        (1-model_parameters['f_lac_pro']-Y_pro_lac) *
-                                                        model_parameters['f_h2_pro'],
+                                                        (1-model_parameters['f_lac_pro']-Y_pro_lac) * (1-model_parameters['f_va_pro']),
                                                         model_parameters['Y_chain_lac_pro']]
 
     Y_bu_et=0 if nitrogen_limited else model_parameters['Y_bu_et']
@@ -1043,7 +1046,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                      (1-model_parameters['f_et_bu']-Y_bu_et) * model_parameters['f_cap_bu'],
                                                      -Y_bu_et * model_parameters['N_bac'],
                                                      f_IC_bu_et,
-                                                     (1-model_parameters['f_et_bu']-Y_bu_et)*model_parameters['f_h2_bu'],
+                                                     (1-model_parameters['f_et_bu']-Y_bu_et)*(1-model_parameters['f_cap_bu']),
                                                      Y_bu_et]
 
     S[list(map(species.index, ["S_bu", "S_lac", "S_cap", "S_IN", "S_IC", "S_h2", "X_chain_lac"])),
@@ -1052,7 +1055,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                       (1- model_parameters['f_lac_bu']-Y_bu_lac) * model_parameters['f_cap_bu'],
                                                       -Y_bu_lac *model_parameters['N_bac'],
                                                       f_IC_bu_lac,
-                                                      (1- model_parameters['f_lac_bu']-Y_bu_lac)*model_parameters['f_h2_bu'],
+                                                      (1- model_parameters['f_lac_bu']-Y_bu_lac)*(1-model_parameters['f_cap_bu']),
                                                       Y_bu_lac]
 
 
@@ -1079,7 +1082,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
         
     
     Y_Me_ac=0 if nitrogen_limited else model_parameters["Y_Me_ac"]
-    f_IC_Me_ach2 = 0
+    f_IC_Me_ach2 =0
     S[list(map(species.index, ["S_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC', 'S_IN'])),
         reactions.index('Methanogenessis from acetate and h2')] = [-1,
                                                                    model_parameters['f_ac_h2'],
@@ -1092,9 +1095,9 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     Y_Me_CO2=0 if nitrogen_limited else model_parameters["Y_Me_CO2"]
 
     
-    S[list(map(species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_co2',"S_IN"])),
+    S[list(map(species.index, ["S_gas_h2", "S_gas_ch4", "X_Me_CO2", 'S_gas_co2',"S_IN"])),
         reactions.index('Methanogenessis from CO2 and h2')] = [-1,
-                                                               (1 +model_parameters['f_co2_ch4']- Y_Me_CO2),
+                                                               (1 -model_parameters['f_co2_ch4']- Y_Me_CO2),
                                                                (Y_Me_CO2),
                                                                model_parameters['f_co2_ch4'],
                                                                 -Y_Me_CO2 *model_parameters['N_bac']
@@ -1116,7 +1119,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                 (1-Y_pro_lac_ox)*model_parameters['C_bac']
                 +Y_pro_lac_ox*model_parameters['C_pro'])
     
-    S[list(map(species.index, ["S_lac", "X_lac","S_pro","S_IC"])),
+    S[list(map(species.index, ["S_lac" ,"S_pro","X_lac","S_IC"])),
         reactions.index('Uptake of lactate')] = [-1, 1-Y_pro_lac_ox,Y_pro_lac_ox,f_IC_lac_ox]
 
     S[list(map(species.index, ["X_su", "TSS","S_IN","S_IC"])),
