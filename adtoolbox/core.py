@@ -1990,7 +1990,7 @@ class Metagenomics:
 
     def seqs_from_sra(self,accession:str,target_dir:str,container:str="None")-> tuple[str,dict]:
         """ 
-        This method downloads the fastq files from the SRA database using the accession number of the project or run.
+        This method downloads the fastq files from the SRA database using the accession number (ONLY SAMPLE ACCESSION AND NOT PROJECT ACCESSION) of the project or run.
         The method uses the fasterq-dump tool to download the fastq files. This method also extracts the sample metadata from the SRA database for future use.
         #NOTE In order for this method to work without any container, you need to have the SRA toolkit installed on your system or
         at least have prefetch and fasterq-dump installed on your system. For more information on how to install the SRA toolkit, please refer to the following link:
@@ -2012,14 +2012,12 @@ class Metagenomics:
             prefetch_script=f"""#!/bin/bash\nprefetch {accession} -O {target_dir}"""
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
-            for item in acc_folder.rglob("*.sra"):
-                fasterq_dump_script+=f"\nfasterq-dump {item} -O {acc_folder} --split-files"
-            
-            for item in acc_folder.rglob("*.sra"):
-                fasterq_dump_script+=f"\nrm {item}"
+            sra_file=acc_folder/(accession+".sra")
+            fasterq_dump_script+=f"\nfasterq-dump {sra_file} -O {acc_folder} --split-files"
+            fasterq_dump_script+=f"\nrm {sra_file}"
             
             prefetch_script+=fasterq_dump_script
-
+ 
         
         elif container=="docker":
             warn("Docker is not supported yet")
@@ -2027,7 +2025,8 @@ class Metagenomics:
         sample_metadata=utils.get_sample_metadata_from_accession(accession)      
             
         
-        return prefetch_script,sample_metadata
+        return prefetch_script,sample_metadata     
+            
 
     
     
@@ -2055,7 +2054,7 @@ class Metagenomics:
             ---------
         Args:
             read_1 (str): directory of the forward reads file
-            read_2 (str): directory of the reverse reads file. This is provided only if the reads are paired end. If this is not the case, 
+            read_2 (str): directory of the reverse reads file. This is provided only if the reads are paired end. If this is not the case,
             sample_name (str, optional): The name of the sample. If None, the name of the sample will be the name of the directory where the fastq files are located. Defaults to None.
             manifest_dir (str, optional): The directory where the manifest file will be saved. If None, the manifest file will be saved in the same directory as the fastq files. Defaults to None.
             workings_dir (str, optional): The directory where the qiime2 outputs will be saved. If None, the outputs will be saved in the same directory as the fastq files. Defaults to None.
@@ -2064,7 +2063,7 @@ class Metagenomics:
             qiime2_bash_str (str): The bash script that will be used to run qiime2 in python string format
             manifest (dict): The manifest file that will be used to run qiime2 in python dictionary format
     
-
+ 
         """
         
         if sample_name is None:
@@ -2073,7 +2072,7 @@ class Metagenomics:
             manifest_dir=pathlib.Path(read_1).parent
         else:
             manifest_dir=pathlib.Path(manifest_dir)
-
+ 
         if workings_dir is None:
             workings_dir=pathlib.Path(read_1).parent
         else:
@@ -2100,7 +2099,7 @@ class Metagenomics:
         else:
             with open(self.config.qiime2_single_end_bash_str,"r") as f:
                 qiime2_bash_str=f.read()
-
+ 
         if container=="None":
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
@@ -2115,11 +2114,11 @@ class Metagenomics:
                         pec=""
                     else:
                         pec="-v "+read_2+":"+read_2+" "
-                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {str(manifest_dir)}:/data/ -v {read_1}:{read_1} {pec} -v {Path(self.config.qiime_classifier_db).parent}:/data/{Path(self.config.qiime_classifier_db).parent.name} -w /data  {self.config.qiime2_docker_image}"+" "+line
+                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {str(manifest_dir)}:{str(manifest_dir)} -v {read_1}:{read_1} -v {read_2}:{read_2} {pec} -v {self.config.qiime_classifier_db}:{self.config.qiime_classifier_db} -w /data  {self.config.qiime2_docker_image}"+" "+line
             qiime2_bash_str="\n".join(qiime2_bash_str)
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir.name))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir.name))
-            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",os.path.join(str(Path(self.config.qiime_classifier_db).parent.name),str(Path(self.config.qiime_classifier_db).name)))
+            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",os.path.join(str(manifest_dir),"manifest.tsv"))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
+            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",self.config.qiime_classifier_db)
             if not paired_end:
                 manifest['absolute-filepath']=[x for x in manifest['absolute-filepath']]
             
@@ -2137,7 +2136,7 @@ class Metagenomics:
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(Path(self.config.qiime_classifier_db)))
-
+ 
         else:
             raise ValueError("Container must be None, singularity or docker")
         

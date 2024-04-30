@@ -160,9 +160,9 @@ class Model:
                 self.inlet_conditions[self.species.index(k)]=v
             
 
-        
+    
 
-    def solve_model(self, t_eval: np.ndarray, method="BDF")->scipy.integrate._ivp.ivp.OdeResult:
+    def solve_model(self, t_eval: np.ndarray, method="LSODA")->scipy.integrate._ivp.ivp.OdeResult:
         """
         Function to solve the model. 
         Examples:
@@ -483,11 +483,10 @@ class Model:
                 return [html.H2("Time (Day)",style={'textAlign': 'center'}),dcc.Slider(0,self.sim_time,int(self.sim_time/20),value=0,id="Escher_Slider",marks=None,tooltip={"placement": "bottom", "always_visible": True})]
 
         @app.callback(Output(component_id="Escher", component_property='children'), Input(component_id="Drop_Down_Escher", component_property='value'),
-        Input(component_id="Escher_Slider", component_property='value'))        
+        Input(component_id="Escher_Slider", component_property='value'),prevent_initial_call=True)        
         def draw_escher(drop_down_escher,escher_slider):
-            print("draw_escher")
             rxn_data={}
-            self.ode_system(0,sol.y[:,int(sol.y.shape[1]/30*escher_slider)],self)
+            self.ode_system(0,sol.y[:,int(sol.y.shape[1]/self.sim_time*escher_slider)],self)
             fluxes=self.info["Fluxes"]
             for ind,i in enumerate(self.reactions):
                 rxn_data[i.replace(" ","_")]= fluxes[ind]
@@ -495,7 +494,8 @@ class Model:
             if drop_down_escher=="Show Map":
                 return [dash_escher.DashEscher(mapData=escher_map,modelData=cobra_model,
             options={
-             'reaction_data':rxn_data
+             'reaction_data':rxn_data,
+             'enable_keys':False,
             }
             ,height='1000px',
         width='100%')
@@ -582,7 +582,7 @@ class Model:
             sol_df = pd.DataFrame(solution)
 
             fig = px.line(sol_df, x="t", y=sol_df.columns,
-                  title="Concentration of species")
+                          title="Concentration of species")
             fig.update_layout(
             title={
             'y': 0.95,
@@ -590,9 +590,9 @@ class Model:
             "font_size": 30,
             'xanchor': 'center',
             'yanchor': 'top'},
-            legend=dict(font=dict(size= 20)),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            legend=dict(font=dict(size= 20),),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
 
                 )
             fig.update_xaxes(
@@ -600,30 +600,27 @@ class Model:
             "text": "Time (Days)",
             "font_size": 25,
                 },
-                 tickfont_size=20
+                 tickfont_size=20,
+            linecolor='grey',
+            gridcolor='grey',
                 )
             fig.update_yaxes(
             title={
             "text": "Concentrations (kg COD/m^3)",
             "font_size": 25,
              },
-             tickfont_size=20
+            tickfont_size=20,
+            linecolor='grey',
+            gridcolor='grey',
+
             
                 )
-            fig.update_traces(line=dict(width=5))
-
+            fig.update_traces(line=dict(width=3))
             return fig
             
 
 
         app.run_server(port=8000, host='127.0.0.1')
-
-    def sol_to_df(self,Address: str)->None:
-        """Converts the matrix to a pandas data frame then to a csv"""
-
-        df = pd.DataFrame(self.S, columns=self.reactions, index=self.species)
-        df.to_csv(Address, header=True,
-                  index=True)
 
     def csv_report(self,sol: scipy.integrate._ivp.ivp.OdeResult ,address: str)->None:
         """Converts the results to a pandas data frame then to a csv"""
@@ -646,7 +643,31 @@ class Model:
                           metagenome_report=self.metagenome_report.copy() if self.metagenome_report else None,
                           name=self.name,
                           switch=self.switch,
+                          time_limit=self.time_limit,
                           simulation_time=self.sim_time)
+    
+    def build_cobra_model(self,address:str=None):
+        """This method builds a cobra model from an instance of Model. One particular use
+        of such models is to build an escher map from the model."""
+        try:
+            import cobra
+        except ImportError:
+            raise ImportError("CobraPy is not installed, please install it to use this function")
+        model = cobra.Model(self.name)
+        for reaction in self.reactions:
+            temp_reaction = cobra.Reaction(reaction.replace(" ", "_"), name=reaction.replace(" ", "_"))
+            temp_mets = np.where(self.s[:, self.reactions.index(reaction)] != 0)
+            met_dict = {}
+            for met in temp_mets[0]:
+                metabolite = cobra.Metabolite(self.species[met].replace(" ", "_"),
+                                              name=self.species[met].replace(" ", "_"), compartment="Model")
+                met_dict[metabolite] = self.s[met, self.reactions.index(reaction)]
+            temp_reaction.add_metabolites(met_dict)
+            model.add_reactions([temp_reaction])
+        if address:
+            cobra.io.save_json_model(model, address)
+        return model
+
 
 
 def build_adm1_stoiciometric_matrix(base_parameters: dict, model_parameters: dict, reactons: list, species:list,feed:Feed,nitrogen_limited:bool=False)-> np.ndarray:
@@ -918,6 +939,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                 (1-Y_su)*f_ac_su*model_parameters['C_ac'] +
                 Y_su*model_parameters['C_bac'])
 
+
     S[list(map(species.index, ["S_su", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_su"])),
       reactions.index('Uptake of sugars')] = [-1,
                                               (1-Y_su) * model_parameters['f_pro_su'],
@@ -935,7 +957,9 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                 (1-Y_aa)*model_parameters['f_et_aa']*model_parameters['C_et'] +
                 (1-Y_aa)*model_parameters['f_lac_aa']*model_parameters['C_lac'] +
                 (1-Y_aa)*f_ac_aa*model_parameters['C_ac'] +
-                (1-Y_aa)*model_parameters['C_bac'])
+                Y_aa*model_parameters['C_bac'])
+
+
 
     S[list(map(species.index, ["S_aa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_aa"])),
       reactions.index('Uptake of amino acids')] = [-1,
@@ -954,7 +978,9 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                 (1-Y_fa)*model_parameters['f_et_fa']*model_parameters['C_et'] +
                 (1-Y_fa)*model_parameters['f_lac_fa']*model_parameters['C_lac'] +
                 (1-Y_fa)*f_ac_fa*model_parameters['C_ac'] +
-                (1-Y_fa)*model_parameters['C_bac'])
+                Y_fa*model_parameters['C_bac'])
+    # if f_IC_fa<0:
+    #     raise ValueError("f_IC_fa is negative") 
 
     S[list(map(species.index, ["S_fa", "S_pro", "S_et", "S_lac", "S_ac", "S_IN", "S_IC", "X_fa"])),
       reactions.index('Uptake of LCFA')] = [-1,
@@ -972,12 +998,13 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     f_IC_ac_et = -(-model_parameters['C_ac'] +
                     model_parameters['f_et_ac']*model_parameters['C_et'] +
                    (1-model_parameters['f_et_ac']-Y_ac_et) * model_parameters['f_bu_ac']*model_parameters['C_bu'] +
-                   (1-model_parameters['f_et_ac']-Y_ac_et)*model_parameters['C_bac'])
+                   Y_ac_et*model_parameters['C_bac'])
 
     f_IC_ac_lac = -(-model_parameters['C_ac'] +
                     model_parameters['f_lac_ac']*model_parameters['C_lac'] +
                     (1-model_parameters['f_lac_ac']-Y_ac_lac) * model_parameters['f_bu_ac']*model_parameters['C_bu'] +
-                    (1-model_parameters['f_lac_ac']-Y_ac_lac)*model_parameters['C_bac'])
+                    Y_ac_lac*model_parameters['C_bac'])
+
 
     S[list(map(species.index, ["S_ac", "S_et", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_et"])),
       reactions.index('Uptake of acetate_et')] = [-1,
@@ -1003,13 +1030,16 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     f_IC_pro_et = -(-model_parameters['C_pro'] +
                     model_parameters['f_et_pro']*model_parameters['C_et'] +
                     (1-model_parameters['f_et_pro']-Y_pro_et)*model_parameters['f_va_pro']*model_parameters['C_va'] +
-                    (1-model_parameters['f_et_pro']-Y_pro_et)*model_parameters['C_bac'])
+                    (Y_pro_et)*model_parameters['C_bac'])
 
     f_IC_pro_lac = -(-model_parameters['C_pro'] +
                      model_parameters['f_lac_pro']*model_parameters['C_lac'] +
                      (1-model_parameters['f_lac_pro']-Y_pro_lac)*model_parameters['f_va_pro']*model_parameters['C_va'] +
-                     (1-model_parameters['f_lac_pro']-Y_pro_lac)*model_parameters['C_bac'])
+                     (Y_pro_lac)*model_parameters['C_bac'])
+    
 
+
+    
     S[list(map(species.index, ["S_pro", "S_et", "S_va", "S_IN", "S_IC", "S_h2", "X_chain_et"])),
       reactions.index('Uptake of propionate_et')] = [-1,
                                                     model_parameters['f_et_pro'],
@@ -1033,12 +1063,13 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     f_IC_bu_et = -(-model_parameters['C_bu'] +
                     model_parameters['f_et_bu']*model_parameters['C_et'] +
                    (1-model_parameters['f_et_bu']-Y_bu_et)*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
-                   (1-model_parameters['f_et_bu']-Y_bu_et)*model_parameters['C_bac'])
+                   (Y_bu_et)*model_parameters['C_bac'])
 
     f_IC_bu_lac = -(-model_parameters['C_bu'] +
                     model_parameters['f_lac_bu']*model_parameters['C_lac'] +
                     (1-model_parameters['f_lac_bu']-Y_bu_lac)*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
-                    (1-model_parameters['f_lac_bu']-Y_bu_lac)*model_parameters['C_bac'])
+                    (Y_bu_lac)*model_parameters['C_bac'])
+    
 
     S[list(map(species.index, ["S_bu", "S_et", "S_cap", "S_IN", "S_IC", "S_h2", "X_chain_et"])),
         reactions.index('Uptake of butyrate_et')] = [-1,
@@ -1083,7 +1114,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     
     Y_Me_ac=0 if nitrogen_limited else model_parameters["Y_Me_ac"]
     f_IC_Me_ach2 =0
-    S[list(map(species.index, ["S_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC', 'S_IN'])),
+    S[list(map(species.index, ["S_gas_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC', 'S_IN'])),
         reactions.index('Methanogenessis from acetate and h2')] = [-1,
                                                                    model_parameters['f_ac_h2'],
                                                                    (1 +model_parameters['f_ac_h2']- Y_Me_ac),
@@ -1548,17 +1579,6 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         raise Exception("Time limit exceeded")
 
         
-    
-    # if model.switch=="DAE":
-        
-    #     c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
-    #     c[model.species.index('S_bu_ion')]=model.model_parameters['K_a_bu']/(model.model_parameters['K_a_bu']+c[model.species.index('S_H_ion')])*c[model.species.index('S_bu')]
-    #     c[model.species.index('S_pro_ion')]=model.model_parameters['K_a_pro']/(model.model_parameters['K_a_pro']+c[model.species.index('S_H_ion')])*c[model.species.index('S_pro')]
-    #     c[model.species.index('S_cap_ion')]=model.model_parameters['K_a_cap']/(model.model_parameters['K_a_cap']+c[model.species.index('S_H_ion')])*c[model.species.index('S_cap')]
-    #     c[model.species.index('S_ac_ion')]=model.model_parameters['K_a_ac']/(model.model_parameters['K_a_ac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_ac')]
-    #     c[model.species.index('S_lac_ion')]=model.model_parameters['K_a_lac']/(model.model_parameters['K_a_lac']+c[model.species.index('S_H_ion')])*c[model.species.index('S_lac')]    
-    #     c[model.species.index('S_hco3_ion')] = model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')]/(model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')])
-        
     I_pH_aa = (model.model_parameters["K_pH_aa"] ** model.model_parameters['nn_aa'])/(np.power(
         c[model.species.index('S_H_ion')], model.model_parameters['nn_aa']) + np.power(model.model_parameters["K_pH_aa"], model.model_parameters['nn_aa']))
     I_pH_ac = (model.model_parameters['K_pH_ac'] ** model.model_parameters["n_ac"])/(
@@ -1599,11 +1619,7 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     I15 =   max(0,(I_pH_va * I_IN_lim * I_h2_c4))
     I16 =   max(0,I_IN_lim * I_nh3*I_pH_aa*I_h2_oxidation)
 
-    if t>9:
-        pass
     v = np.zeros((len(model.reactions), 1))
-    # if t>10:
-    #     print("flag")
 
     v[model.reactions.index('TSS_Disintegration')] = model.model_parameters["k_dis_TSS"]*c[model.species.index('TSS')]
 
@@ -1662,13 +1678,13 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         (model.model_parameters['K_S_bu']+c[model.species.index('S_bu')]
          )*c[model.species.index('X_VFA_deg')]*I13
 
-    v[model.reactions.index('Methanogenessis from acetate and h2')] = model.model_parameters['k_m_h2_Me_ac']*c[model.species.index('S_h2')]*c[model.species.index('S_ac')] / \
-        (model.model_parameters['K_S_h2_Me_ac']*c[model.species.index('S_h2')]+model.model_parameters['K_S_ac_Me']*c[model.species.index(
-            'S_ac')]+c[model.species.index('S_ac')]*c[model.species.index('S_h2')]+10**-9)*c[model.species.index('X_Me_ac')]*I12
+    v[model.reactions.index('Methanogenessis from acetate and h2')] = model.model_parameters['k_m_h2_Me_ac']*c[model.species.index('S_gas_h2')]*c[model.species.index('S_ac')] / \
+        (model.model_parameters['K_S_h2_Me_ac']*c[model.species.index('S_gas_h2')]+model.model_parameters['K_S_ac_Me']*c[model.species.index(
+            'S_ac')]+c[model.species.index('S_ac')]*c[model.species.index('S_gas_h2')]+10**-9)*c[model.species.index('X_Me_ac')]*I12
 
-    v[model.reactions.index('Methanogenessis from CO2 and h2')] = model.model_parameters['k_m_h2_Me_CO2']*c[model.species.index('S_h2')]*c[model.species.index('S_co2')] / \
-        (model.model_parameters['K_S_h2_Me_CO2']*c[model.species.index('S_h2')]+model.model_parameters['K_S_CO2_Me']*c[model.species.index(
-            'S_co2')]+c[model.species.index('S_co2')]*c[model.species.index('S_h2')]+10**-9)*c[model.species.index('X_Me_CO2')]*I12
+    v[model.reactions.index('Methanogenessis from CO2 and h2')] = model.model_parameters['k_m_h2_Me_CO2']*c[model.species.index('S_gas_h2')]*c[model.species.index('S_gas_co2')] / \
+        (model.model_parameters['K_S_h2_Me_CO2']*c[model.species.index('S_gas_h2')]+model.model_parameters['K_S_CO2_Me']*c[model.species.index(
+            'S_gas_co2')]+c[model.species.index('S_gas_co2')]*c[model.species.index('S_gas_h2')]+10**-9)*c[model.species.index('X_Me_CO2')]*I12
 
 
     v[model.reactions.index('Uptake of ethanol')] = model.model_parameters['k_m_et']*c[model.species.index('S_et')] / \
@@ -1731,7 +1747,8 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     v[model.reactions.index('Gas Transfer H2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_h2')] - 16 *model.model_parameters['K_H_h2'] * p_gas_h2))
     v[model.reactions.index('Gas Transfer CH4')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_ch4')] - 64 * model.model_parameters['K_H_ch4'] * p_gas_ch4))
     v[model.reactions.index('Gas Transfer CO2')] = max(0,model.model_parameters['k_L_a'] * (c[model.species.index('S_co2')] - model.model_parameters['K_H_co2'] * p_gas_co2))
-
+    if t>10:
+        pass
     if c[model.species.index('S_IN')]<0.01:
         model.nitrogen_limited=True
     else:
@@ -2142,9 +2159,9 @@ if __name__ == "__main__":
                             switch="DAE",
                             metagenome_report=None)
     mod_adm1.control_state['S_H_ion']=0.000001
+    mod_adm1.time_limit=100000
     
-    sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 100),method="Radau")
-    mod_adm1.dash_app(sol_mod_adm1)
+    mod_adm1.dash_app(mod_adm1.solve_model(t_eval=np.linspace(0, 30, 1000)))
     
     
     

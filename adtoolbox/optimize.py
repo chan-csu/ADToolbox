@@ -232,7 +232,7 @@ class NNSurrogateTuner:
     def _generate_initial_population(self):
         self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
 
-    def _cost(self, parameters: dict)->float:
+    def _cost(self, parameters: dict,ode_method:str)->float:
         """
         This function is called by openbox to evaluate a configuration.
         :param config: The configuration to evaluate.
@@ -247,7 +247,7 @@ class NNSurrogateTuner:
                 _model= self.base_model.copy()
                 _model.update_parameters(**{self.var_type:parameters})
                 _model.update_parameters(initial_conditions=ic)
-                solution=_model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
+                solution=_model.solve_model(np.array(experiment.time),method=ode_method).y[experiment.variables,:]
                 res+=np.sum(np.square(solution.T-experiment.data))
 
             return res
@@ -286,11 +286,11 @@ class NNSurrogateTuner:
         return loss.detach().numpy()
 
         
-    def optimize(self, perturbation_method:str="random", **kwargs)->dict:
+    def optimize(self, perturbation_method:str="random",ode_method="LSODA", **kwargs)->dict:
         costs=[]
         if not self._initialized:
             for pop in self._popuplation:
-                costs.append(self._cost(dict(zip(self.tunables.keys(),pop))))
+                costs.append(self._cost(dict(zip(self.tunables.keys(),pop)),ode_method=ode_method))
             self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
         self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
         self._best_cost=np.min(self._aquired["cost"])
@@ -321,7 +321,7 @@ class NNSurrogateTuner:
             new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
             ## make sure not in the local optima
-            new_cost=self._cost(dict(zip(self.tunables.keys(),new_params)))
+            new_cost=self._cost(dict(zip(self.tunables.keys(),new_params)),ode_method=ode_method)
             self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
             self._aquired["cost"].append(new_cost)
             self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
