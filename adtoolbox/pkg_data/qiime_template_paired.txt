@@ -7,7 +7,7 @@ qiime tools import \
 qiime dada2 denoise-paired \
 --i-demultiplexed-seqs <qiime2_work_dir>/demux-paired-end.qza \
 --p-trunc-len-f 150 \
---p-trunc-len-r 180 \
+--p-trunc-len-r 150 \
 --p-n-threads 0 \
 --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
 --o-table <qiime2_work_dir>/feature-table.qza \
