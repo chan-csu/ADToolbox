@@ -11,7 +11,7 @@ nav:
   - Installation: Installation.md
   - Commandline Interface: CLI.md
   - API: API.md
-  - Parameter Tuning: Parameter_Tuning.md
+  - Parameter Tuning: parameter_tuning.html
   - Metagenomics Pipelines: Metagenomics_Pipeline.md
 
 plugins:

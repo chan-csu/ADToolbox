@@ -7,7 +7,7 @@ import sys
 
 """Project Setup for ADToolBox."""
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 

@@ -1563,13 +1563,8 @@ class Metagenomics:
 
         Required Configs:
         
-            config.top_repseq_dir: The path to fasta file including the repseqs to be aligned.
             ---------
             config.gtdb_dir_fasta: The path to the gtdb fasta database.
-            ---------   
-            config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of this function will be savedThere are two outputs:
-                1. matches.blast: This is the tabularized blast output of the alignment.
-                2. Alignments: This is the raw alignment file.
             ---------
             config.vsearch_similarity: The similarity threshold for the alignment to be used by VSEARCH.
             ---------
@@ -1610,7 +1605,7 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
-            bash_script='docker run -it '
+            bash_script='docker run'
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
             
@@ -1995,8 +1990,10 @@ class Metagenomics:
         #NOTE In order for this method to work without any container, you need to have the SRA toolkit installed on your system or
         at least have prefetch and fasterq-dump installed on your system. For more information on how to install the SRA toolkit, please refer to the following link:
         https://github.com/ncbi/sra-tools
+    
         Required Configs:
             None
+        
         
         Args:
             accession (str): The accession number of the SRA project or run

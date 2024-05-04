@@ -394,7 +394,7 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
                 for idx,extra in enumerate(show_extra_states):
                     fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=model.species[model.species.index(extra)],mode="lines",line=dict(
                         color=pallet[idx+len(data.variables)])))
-            fig.show()
+            fig.show(renderer="svg")
     
     elif isinstance(data,Iterable):
         
@@ -445,7 +445,7 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
             for idx,extra in enumerate(show_extra_states):
                 fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=model.species[model.species.index(extra)],mode="lines",line=dict(
                     color=pallet[idx+len(data[0].variables)])))
-        fig.show()
+        fig.show(renderer="svg")
     else:
         raise TypeError("Data argument should be either a core. Experiment object or an iterable of core.Experiment objects.")
         

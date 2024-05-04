@@ -183,7 +183,7 @@ class Database:
 
 class Metagenomics:
 	"""	
-	A class for Amplicon2Genome Configs
+	An instance of this class will hold all the configuration information for core.Metagenomics functionalities.
 	"""
 	### Here we have some class variables that are used in the class
 	gtdb_dir="ssu_all_*.fna"
@@ -247,7 +247,8 @@ class Documentation:
         self.readme = readme
 
 class Utils:
-
+	"""
+	An instance of this class will hold all the configuration information for utils module functionalities."""
 	def __init__(self,
 	slurm_template:str=os.path.join(PKG_DATA,"slurm_template.txt"),
 	docker_template_qiime:str=None,
@@ -277,9 +278,11 @@ class Utils:
   
 
 def get_base_dir():
+	"This function returns the current base directory of the program."
 	return Main_Dir
 
 def set_base_dir(path:str):
+	"""This function changes the base directory of the program"""
 	global Main_Dir
 	ans=input("This will change the base directory of the program. Are you sure you want to continue? (y/n)")
 	if ans == "y":
@@ -301,8 +304,7 @@ def set_base_dir(path:str):
 	else:
 		rich.print("[red]Base directory not changed")
 
-def get_tree_folder_stucture(dirs:dict):
-    pass
+
 
 
 

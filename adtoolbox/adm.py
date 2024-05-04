@@ -176,7 +176,7 @@ class Model:
         y0=self.initial_conditions[:, 0]
         try:
             self._be_time=time.time()
-            c = scipy.integrate.solve_ivp(self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self],rtol=1e-3)
+            c = scipy.integrate.solve_ivp(self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self],rtol=1e-6)
             if not c.success:
                 raise Exception
         except Exception as e:
@@ -239,7 +239,7 @@ class Model:
                  cobra_model:str|None=os.path.join(PKG_DATA,"Modified_ADM_Model.json"))->None:
         """A method that creates the dash web app for a model based on an ODE solution.
         
-        Example:
+        Examples:
             >>> import numpy as np
             >>> reactions=['rxn1','rxn2']
             >>> species=['a','b','c']
@@ -1564,7 +1564,7 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     c[model.species.index('S_co2')]= c[model.species.index('S_IC')] -  c[model.species.index('S_hco3_ion')]
     c[model.species.index('S_nh3')]= c[model.species.index('S_IN')] - c[model.species.index('S_nh4_ion')]
         
-    if (time.time()-model._be_time)>model.time_limit:
+    if (time.time()-model._be_time )>model.time_limit and model.time_limit!=-1:
         raise Exception("Time limit exceeded")
 
         
