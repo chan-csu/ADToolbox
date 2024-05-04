@@ -260,8 +260,14 @@ positional arguments:
                         genomes from NCBI      
     align-genome        Align genomes to the protein database
                         of ADToolbox, or any other fasta with
-                        protein sequences                       
-
+                        protein sequences
+    align-multiple-genomes
+                        Align multiple Genomes to the protein
+                        database of ADToolbox, or any other
+                        fasta with protein sequences                                           
+    find-representative-genomes
+                        Finds representative genomes from the
+                        repseqs fasta file
 options:
   -h, --help            show this help message and exit
 
@@ -290,7 +296,7 @@ An example of this command would look like:
 ADToolbox Metagenomics download_genome -g GCA021152825.1 -o OUTPUT/DIRECTORY/PATHNAME -c None
 
 ```
-- align-genome: This command requires that you to give a name for the genome (-n,--name),the address of the JSON file that includes information about the genomes to be aligned (-i,--input-file), and output directory to store alignment results (-o,--output-dir), a container to use for the alignment (-c,--container), and the directory containing the protein database to be used for the alignment (-d, --protein-db-dir).  If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. Overall, this command takes a genome and aligns it to a protein sequence. You can run this command by: 
+- align-genome: This command requires that you to give a name for the genome (-n,--name),the address of the JSON file that includes information about the genome to be aligned (-i,--input-file), and output directory to store alignment results (-o,--output-dir), a container to use for the alignment (-c,--container), and the directory containing the protein database to be used for the alignment (-d, --protein-db-dir).  If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. Overall, this command takes a genome and aligns it to a protein sequence. You can run this command by: 
 
 ```
 ADToolBox Metagenomics align-genome
@@ -302,10 +308,35 @@ An example of this code would look like:
 ADToolbox Metagenomics align-genome -n "test genome" -i INPUT/PATHNAME/OF/GENOME -o OUTPUT/PATHNAME/DIRECTORY -c None -d PATHNAME/OF/PROTEIN
 
 ```
+- align-multiple-genomes: This command allows you to align multiple genomes to the protein database of ADToolbox, or any other fasta file with protein sequences. It requires to user to input the address to a JSON file that holds the information about the genomes (-i,--input-file), an output directory to store the alignment results (-o,--output-dir), a container to use for the alignment (-c,--container), and the directory containing the protein database to be used for alignment (-d,--protein-db-dir). If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. This command can be run by: 
+
+```
+ADToolbox Metagenomics align-multiple-genomes
+
+```
+An example of this command looks like:
+
+```
+ADToolbox Metagenomics align-multiple-genomes -i PATHNAME/TO/FILE/OF/GENOMES -o OUTPUT/DIRECTORY -c None -d DIRECTORY/OF/PROTEIN/DATABSE
+
+```
+- find-represenative-genomes: This command maps represenative amplicon sequences to a representative genome in GTDB database. It requires the user to provide the address to the repseqs fasta file (-i,--input-file), the directory of the output file (-o, --output-dir), a container used for the alignment (-c,--container), and the format of the output file which can be json or csv (-f,--format). Something optional that you can provide is the similarity cutoff for clustering; though, the default is 0.97 (-s,--similarity). If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. You can run this code by:
+
+```
+ADToolbox Metagenomics find-representative-genomes
+
+```
+An example of this code will look like: 
+
+```
+ADToolbox Metagenomics find-representative-genomes -i PATHNAME/TO/REPSEQS/FASTA/FILE -o PATHNAME/TO/OUTPUT/DIRECTORY -c None -f csv
+
+```
+
 -------------------------------
 ### 4. ADM Module
 
-ADM module provides all the tools needed to run instances of ADM Model. This include the originsl ADM, Batstone et al., and the Modified-ADM suggested by the Authors of ADToolbox. In order to find out about all the functionalities in this module, you can run:
+ADM module provides all the tools needed to run instances of ADM Model. This includes the original ADM, Batstone et al., and the Modified-ADM suggested by the Authors of ADToolbox. In order to find out about all the functionalities in this module, you can run:
 
 ```
 
