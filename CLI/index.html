@@ -304,7 +304,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Parameter_Tuning/" class="md-nav__link">
+      <a href="../parameter_tuning.html" class="md-nav__link">
         Parameter Tuning
       </a>
     </li>
@@ -493,18 +493,31 @@ ADToolbox Configs --set-base-dir ~/Desktop/ADToolbox
 <pre><code>ADToolbox Database --help
 ──────────────────────────── ADToolBox ────────────────────────────
 usage: ADToolBox Database [-h]
-                          {initialize-feed-db,extend-feed-db,show-f
-eed-db,download-reaction-db,download-seed-reaction-db,build-protein
--db,download-feed-db,download-protein-db,download-amplicon-to-genom
-e-dbs}
+                          {initialize-feed-db,add-feed,sh
+ow-feed-db,initialize-metagenomics-studies-db,add-metagen
+omics-study,initialize-protein-db,add-protein,download-re
+action-db,download-seed-reaction-db,build-protein-db,down
+load-protein-db,download-amplicon-to-genome-dbs,download-
+all-databases}
                           ...
 
 positional arguments:
-  {initialize-feed-db,extend-feed-db,show-feed-db,download-reaction
--db,download-seed-reaction-db,build-protein-db,download-feed-db,dow
-nload-protein-db,download-amplicon-to-genome-dbs}
-                        Database Modules:
+  {initialize-feed-db,add-feed,show-feed-db,initialize-me
+tagenomics-studies-db,add-metagenomics-study,initialize-p
+rotein-db,add-protein,download-reaction-db,download-seed-
+reaction-db,build-protein-db,download-protein-db,download
+-amplicon-to-genome-dbs,download-all-databases}
+                        Database commands:
     initialize-feed-db  Initialize the Feed DB
+    add-feed            Add a feed to the feed database
+    show-feed-db        Shows the feed database
+    initialize-metagenomics-studies-db
+                        Initialize the Metagenomics Studies DB
+    add-metagenomics-study
+                        Add a metagenomics study to the Kbase
+    initialize-protein-db
+                        Generates the protein database for ADToolbox
+    add-protein         Add a protein to the protein database           
     download-reaction-db
                         Downloads the reaction database in CSV
                         format
@@ -513,8 +526,6 @@ nload-protein-db,download-amplicon-to-genome-dbs}
                         JSON format
     build-protein-db    Generates the protein database for
                         ADToolbox
-    download-feed-db    Downloads the feed database in JSON
-                        format
     download-protein-db
                         Downloads the protein database in fasta
                         format; You can alternatively build it
@@ -523,20 +534,63 @@ nload-protein-db,download-amplicon-to-genome-dbs}
                         downloads amplicon to genome databases
     download-all-databases
                         downloads all databases that are required by ADToolbox at once
-    show-tables         Show the list of all studies in Kbase
-    add-metagenomics-study
-                        Add a metagenomics study to the Kbase
-    add-experimental-data-study
-                        Add a study with experimental data to the Kbase
+
 options:
   -h, --help            show this help message and exit
 </code></pre>
-<p>We now go over these commands one by one:</p>
+<p>We will now go over these commands one by one:</p>
 <ul>
 <li>initialize-feed-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future feed information that you add. You can run this command  by:</li>
 </ul>
-<pre><code>
-ADToolbox Database initialize-feed-db
+<pre><code>ADToolbox Database initialize-feed-db
+
+</code></pre>
+<ul>
+<li>add-feed: This will add feed data to the database. Such data includes: the name of the feed (-n, --name), carbohydrate content of the feed in a percentage (-c, --carbohydrates), protein content of the feed in a percecntage (-p, --proteins), lipid content of the feed in a percentage (-l, --lipids), total suspended solid content of the feed in a percentage (-t, --tss), soluable inert content of feed in a percentage (-s, --si), particulate inert content of feed in a percentage (-x, --xi), and a reference where numbers came from (-r, --reference).  This command is run by:</li>
+</ul>
+<pre><code>ADToolbox Database add-feed
+
+</code></pre>
+<p>An example of this would look like:</p>
+<pre><code>ADToolbox Database add-feed -n &quot;test feed&quot; -c 20 -p 20 -l 20 -t 20 -s 20 -x 20 -r &quot;test reference&quot;
+
+</code></pre>
+<ul>
+<li>show-feed-db: As the name implies, this will show the user the feed database along with any values they have added to it, in the command window. This command is run by:</li>
+</ul>
+<pre><code>ADToolbox Database show-feed-db
+
+</code></pre>
+<ul>
+<li>initialize-metagenomics-studies-db: This will create an empty TSV file in the Database sub-directory in your base directory that will hold all the future information about various metagenomics studies that you add. You can run this command  by:</li>
+</ul>
+<pre><code>ADToolbox Database initialize-metagenomics-studies-db
+
+</code></pre>
+<ul>
+<li>add-metagenomics-study: This command will add a metagenomics study to the Kbase and will require the study name (-n,--name), study type (-t, --type), microbiome where the metagenomics study belongs to (-m, --microbiome), SRA accession ID for the sample (-s, --sample_accesion), SRA accession ID for the project (-p, --study_accesion), and comments on the study of interest (-c, --comments). This command is run by:</li>
+</ul>
+<pre><code>ADToolbox Database add-metagenomics-study
+
+</code></pre>
+<p>An example of this would look like:</p>
+<pre><code>ADToolbox Database add-metagenomics-study  -n test_study -t 16s -m &quot;anaerobic digestion&quot;  -s 11111111 -c &quot;this is just a test&quot; -p 222222
+
+</code></pre>
+<ul>
+<li>initialize-protein-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future protein information that you add. You can run this command  by:</li>
+</ul>
+<pre><code>ADToolbox Database initialize-protein-db
+
+</code></pre>
+<ul>
+<li>add-protein: As the name implies, this will add information about a protein to the empty protein database. Information about such protein includes its UniProt ID (-i, --uniprot-id), and the name attached to the protein which is usually the EC number (-n, --name). You can run this command by:</li>
+</ul>
+<pre><code>ADToolbox Database add-protein
+
+</code></pre>
+<p>An example of this would look like:</p>
+<pre><code>ADToolbox Database add-protein -i ATEST1 -n 1.1.1.1
 
 </code></pre>
 <p><em>NOTE</em>: Skip the following download commands if you have run <code>ADToolbox Configs download-all-databases</code></p>
@@ -545,11 +599,6 @@ ADToolbox Database initialize-feed-db
 
 </code></pre>
 <p>ADToolbox Database download-reaction-db</p>
-<pre><code>
-- download-feed-db: Downloads the default feed database in JSON format
-
-</code></pre>
-<p>ADToolbox Database download-feed-db</p>
 <pre><code>
 - download-protein-db: Downloads the protein database in fasta format; You can alternatively build it from reaction database if you have downloaded it; Check below.
 
@@ -581,242 +630,51 @@ ADToolbox Metagenomics --help
 
 ──────────────────────────── ADToolBox ────────────────────────────
 usage: ADToolBox Metagenomics [-h]
-                              {amplicon-to-genome,align-genomes,mak
-e-json-from-genomes,map-genomes-to-adm}
+                              {download_from_sra}
                               ...
 
 positional arguments:
-  {amplicon-to-genome,align-genomes,make-json-from-genomes,map-geno
-mes-to-adm}
-                         Available Metagenomics Commands:
-    amplicon-to-genome  Downloads the representative genome from
-                        each amplicon
-    align-genomes       Align Genomes to the protein database of
-                        ADToolbox, or any other fasta with
-                        protein sequences
-    make-json-from-genomes
-                        Generates JSON file required by Align-
-                        Genomes for custom genomes.
-    map-genomes-to-adm  maps JSON file with genome infromation to
-                        ADM reactions
+  {download_from_sra,download_genome}
+    download_from_sra   This module provides a command line interface to download
+                        metagenomics data from SRA
+    download_genome     This module provides a command line interface to download
+                        genomes from NCBI      
+    align-genome        Align genomes to the protein database
+                        of ADToolbox, or any other fasta with
+                        protein sequences                       
 
 options:
   -h, --help            show this help message and exit
 
 </code></pre>
-<p>As of right now, there are 3 main submodules exist in the Metagenomics module:</p>
 <ul>
-<li>amplicon-to-genome: If you have 16s Data from QIIME, you can, hopefully, find the representative genomes for each replicon in an automated way
-using this functionality by selecting different parameters:</li>
+<li>download_from_sra: This command takes a sample accesion ID (-s, --sample_accesion) for a sample, downloads it, and places it into a directory provided by the you (-o, --output-dir). It also requires you to state a container you are using. If you are downloading locally, put "None". Otherwise, you can use the containers docker or singularity. You can run this command by:</li>
 </ul>
-<pre><code>ADToolbox Metagenomics amplicon-to-genome --help
-
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox Metagenomics amplicon-to-genome [-h] [-q QIIME_OUTPUTS_DIR]
-                                                 [-f FEATURE_TABLE_DIR]
-                                                 [-r REP_SEQ_DIR]
-                                                 [-t TAXONOMY_TABLE_DIR]
-                                                 [-o OUTPUT_DIR]
-                                                 [-a AMPLICON_TO_GENOME_DB]
-                                                 [--k K]
-                                                 [--similarity SIMILARITY]
-
-options:
-  -h, --help            show this help message and exit
-  -q QIIME_OUTPUTS_DIR, --qiime-outputs-dir QIIME_OUTPUTS_DIR
-                        Input the directory to the QIIME outputs
-  -f FEATURE_TABLE_DIR, --feature-table-dir FEATURE_TABLE_DIR
-                        Input the directory to the feature table output from
-                        QIIME output tables
-  -r REP_SEQ_DIR, --rep-Seq-dir REP_SEQ_DIR
-                        Input the directory to the repseq fasta output from
-                        QIIME output files
-  -t TAXONOMY_TABLE_DIR, --taxonomy-table-dir TAXONOMY_TABLE_DIR
-                        Input the directory to the taxonomy table output from
-                        QIIME output files
-  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
-                        Output the directory to store the representative
-                        genome files
-  -a AMPLICON_TO_GENOME_DB, --amplicon-to-genome-db AMPLICON_TO_GENOME_DB
-                        The Amplicon to Genome Database to use
-  --k K                 Top k genomes to be selected
-  --similarity SIMILARITY
-                        Similarity cutoff in the 16s V4 region for genome
-                        selection
+<pre><code>ADToolbox Metagenomics download_from_sra
 
 </code></pre>
-<p>If you do not provide any arguents, the default directories and values will be used. By default, ADToolbox looks at
-your base directory, that you set in Configs, in :<code>Metagenomics_Data/QIIME_Outputs</code>. </p>
-<ul>
-<li>
-<p>If you want to use your default arguments, you need to provide the directory to Feature table, taxonomy table, repseq fasta file from QIIME.</p>
-</li>
-<li>
-<p>If you do not want to use the amplicon to genome database that you downloaded in Configs or Database modules, you can point to the database directory of your interest as well by <code>--amplicon-to-genome-db</code> or <code>-a</code></p>
-</li>
-<li>
-<p>From each sample you can choose the top k abundant taxa to be selected for downloading genome, for instance <code>--k 10</code> will select the top 10 taxa from each sample</p>
-</li>
-<li>
-<p>When selecting genomes you need a precentage of similarity cutoff to select a representaive genome from GTDB. You do this by <code>--similarity 96</code>. This will set 96% as a similarity cutoff.</p>
-</li>
-<li>
-<p>Finally, you need to provide the directory where you want the representative genomes to be saved. Additionally, a few extra files 
-providing information about the fetched genomes will be saved here:</p>
-</li>
-<li>
-<p><code>GenomeAccessions.csv</code> provides the NCBI accession IDs of the found genomes.</p>
-</li>
-<li><code>SelectedFeatures.csv</code> provides the feature IDs, hashes, from QIIME outputs for the fetched genomes.</li>
-<li><code>TopKTaxa.csv</code> taxonomy name of the replicons for which a genome has been found.</li>
-<li><code>Amplicon2Genome_OutInfo.json</code> <strong><em>important</em></strong> This JSON file is a metadata about the genomes that were found. This is later used to align these genomes to the protein database.</li>
-</ul>
-<p>A complete amplicon-to-genome command will look like:</p>
-<pre><code>ADToolbox Metagenomics amplicon-to-genome -f ~/Desktop/test/feature-table.tsv \
--r ~/Desktop/test/dna-sequences.fasta \
--t ~/Desktop/test/taxonomy.tsv \
--o ~/Desktop/test/ --k 10 \
--q ~/Desktop/test/ \
--a ~/Desktop/ADToolbox/Database/Amplicon2GenomeDBs/
+<p>An example of this command would look like:</p>
+<pre><code>ADToolbox Metagenomics download_from_sra -s SRR28403133 -o OUTPUT/DIRECTORY/PATHNAME -c None
 
 </code></pre>
 <ul>
-<li>align-genomes This submodule uses MMseqs to align a list of genomes to the protein database of ADToolbox for functional analysis.</li>
+<li>download_genome: This command requires you to provide a NCBI accesion ID for a genome (-g, --genome_accesion), and output directory (-o,--output-dir), and a container (-c, --container). It will then take the NCBI accesion ID for a genome and download it in the directory provided by you. If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. You can run this command by: </li>
 </ul>
-<p>You can run this submodule by the following arguments:</p>
-<pre><code>
-ADToolbox Metagenomics align-genomes --help    
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox Metagenomics align-genomes [-h] [-i INPUT_FILE]
-                                            [-d PROTEIN_DB_DIR]
-                                            [-o OUTPUT_DIR] [-b BIT_SCORE]
-                                            [-e E_VALUE]
+<pre><code>ADToolbox Metagenomics download_genome
 
-options:
-  -h, --help            show this help message and exit
-  -i INPUT_FILE, --input-file INPUT_FILE
-                        Input the address of the JSON file includeing
-                        information about the genomes to be aligned
-  -d PROTEIN_DB_DIR, --protein-db-dir PROTEIN_DB_DIR
-                        Directory containing the protein database to be used
-                        for alignment
-  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
-                        Output the directory to store the alignment results
-  -b BIT_SCORE, --bit-score BIT_SCORE
-                        Minimum Bit Score cutoff for alignment
-  -e E_VALUE, --e-value E_VALUE
-                        Minimum e-vlaue score cutoff for alignment
+</code></pre>
+<p>An example of this command would look like:</p>
+<pre><code>ADToolbox Metagenomics download_genome -g GCA021152825.1 -o OUTPUT/DIRECTORY/PATHNAME -c None
 
 </code></pre>
 <ul>
-<li>
-<p>input-file: you need to give a JSON file similar to what you create in amplicon-to-genome, see previous submodule, so that ADToolbox finds
-all the information it needs about the genomes</p>
-</li>
-<li>
-<p>protein-db-dir: you can provide ADToolboxes protein database fasta file, or any protein database that you would like to align your genomes with.</p>
-</li>
-<li>output-dir: Describes the location to save the alignment results. </li>
-<li>bits-core: Minimum bit score to filter out the alignment results.</li>
-<li>e_value: Minimum bit score to filter out the alignment results.</li>
+<li>align-genome: This command requires that you to give a name for the genome (-n,--name),the address of the JSON file that includes information about the genomes to be aligned (-i,--input-file), and output directory to store alignment results (-o,--output-dir), a container to use for the alignment (-c,--container), and the directory containing the protein database to be used for the alignment (-d, --protein-db-dir).  If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. Overall, this command takes a genome and aligns it to a protein sequence. You can run this command by: </li>
 </ul>
-<p>The outputs of this step includes one more import file:</p>
-<p><code>Alignment_Info.json</code>  -&gt; This file is used by map-genomes-to-adm</p>
-<p>A complete command for this submodule would looklike:</p>
-<pre><code>
-ADToolBox Metagenomics align-genomes \
---input-file ~/Desktop/ADToolbox/Genomes/Amplicon2Genome_OutInfo.json
---protein-db-dir ~/Desktop/ADToolbox/Database/Protein_DB.fasta
---output-dir ~/Desktop/ADToolbox/Outputs/ \
---bit-score 40 \
---e-value 0.000001
+<pre><code>ADToolBox Metagenomics align-genome
 
 </code></pre>
-<hr />
-<ul>
-<li>make-json-from-genomes Sometimes you have genomes either from assembly or downloading it manually. In this case you can import your genomes 
-to the pipeline by making a JSON file similar to  <code>Amplicon2Genome_OutInfo.json</code>. To this you need to make a CSV file for your genomes:</li>
-</ul>
-<pre><code>
-ADToolbox Metagenomics make-json-from-genomes  --help
-
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox Metagenomics make-json-from-genomes [-h] -i INPUT_FILE -o
-                                                     OUTPUT_FILE
-
-options:
-  -h, --help            show this help message and exit
-  -i INPUT_FILE, --input-file INPUT_FILE
-                        Input the address of the CSV file includeing
-                        information about the genomes to be aligned
-  -o OUTPUT_FILE, --output-file OUTPUT_FILE
-                        Output the directory to store the JSON file.
-
-</code></pre>
-<ul>
-<li>input-file: This input file should be the address to a CSV file exactly in the following column format:</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>Genome_ID</th>
-<th>NCBI_Name</th>
-<th>Genome_Dir</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Genome1</td>
-<td>xyz</td>
-<td>~/Desktop/...</td>
-</tr>
-</tbody>
-</table>
-<p>1- Genome_ID: Identifier for the genome, preferrably; NCBI ID
-2- NCBI_Name: NCBI taxonomy name for the genome: Does not need to be in a specific format
-3- Genome_Dir: Absolute path to the fasta files: NOT .gz</p>
-<ul>
-<li>output-file: output directory for the generated JSON to be saved. </li>
-</ul>
-<p>An example of this command would be:</p>
-<pre><code>
-ADToolBox Metagenomics make-json-from-genomes --input-file ~/Desktop/MyGenomes.CSV --output-files ~/Desktop/Genome_info.json
-
-</code></pre>
-<hr />
-<ul>
-<li>map-genomes-to-adm: This command will take a JSON file that has Alignment info for all of the genomes, and will output the mapping to ADM models. This is how you run this command:</li>
-</ul>
-<pre><code>
-ADToolbox Metagenomics map-genomes-to-adm --help
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox Metagenomics map-genomes-to-adm [-h] [-i INPUT_FILE]
-                                                 [-m MODEL] [-o OUTPUT_DIR]
-
-options:
-  -h, --help            show this help message and exit
-  -i INPUT_FILE, --input-file INPUT_FILE
-                        Input the address of the JSON file includeing
-                        information about the alignment of the genomes to the
-                        protein database
-  -m MODEL, --model MODEL
-                        Model determines which mapping system you'd like to
-                        use; Current options: 'Modified_ADM_Reactions'
-  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
-                        address to store the JSON report to be loaded with a
-                        model
-
-
-
-</code></pre>
-<ul>
-<li>input-file: This should be the alignment info JSON file created in align-genome step.</li>
-<li>model: this must be a string defining the model that you want to map the aligned reactions to. Current option is only
-"Modified_ADM_Reactions"</li>
-<li>output-dir: Directory to save the Genome alignment report, Metagenome report, in JSON format. This can be used later in ADM module to include the role of different genomes in the process.</li>
-</ul>
-<p>An example of a complete command for this submodule is:</p>
-<pre><code>ADToolbox Metagenomics map-genomes-to-adm -i ~/Desktop/alignment_info.json -m Modified_ADM_Reactions -o ~/Desktop/ADM_Mapping_Report.json
+<p>An example of this code would look like:</p>
+<pre><code>ADToolbox Metagenomics align-genome -n &quot;test genome&quot; -i INPUT/PATHNAME/OF/GENOME -o OUTPUT/PATHNAME/DIRECTORY -c None -d PATHNAME/OF/PROTEIN
 
 </code></pre>
 <hr />
