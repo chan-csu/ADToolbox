@@ -105,7 +105,7 @@ class Model:
     def s(self):
         """Returns the stoichiometric matrix of a model"""
         return self.build_stoichiometric_matrix(
-            self.base_parameters, self.model_parameters, self.reactions, self.species,self.feed, nitrogen_limited=self.nitrogen_limited)
+            base_parameters=self.base_parameters,model_parameters= self.model_parameters,reactions= self.reactions,species= self.species,feed=self.feed, nitrogen_limited=self.nitrogen_limited)
 
     def update_parameters(self, 
                         model_parameters: dict|None=None,
@@ -193,7 +193,7 @@ class Model:
 
 
         
-    def plot(self, Sol: scipy.integrate._ivp.ivp.OdeResult, type: str = "Line")-> None:
+    def plot(self, Sol: scipy.integrate._ivp.ivp.OdeResult, type: str = "Line")-> go.Figure:
         """ A function which returns a plot of the solution from the ODE
         """
         solution = {
@@ -205,7 +205,7 @@ class Model:
 
         if type == "Line":
             fig = px.line(sol_df, x="t", y=sol_df.columns,
-                          title="Concentration of species",text=sol_df.columns)
+                          title="Concentration of species")
             fig.update_layout(
                 title={
                     'y': 0.95,
@@ -228,15 +228,19 @@ class Model:
                     "font_size": 25,
                 }
             )
-            fig.show()
 
         elif type == "Sankey":
             ### Maybe add a sankey plot here later
             pass
+        
+        return fig
+    
+        
 
     def dash_app(self, sol: scipy.integrate._ivp.ivp.OdeResult,
                  escher_map:str|None=os.path.join(PKG_DATA,"Modified_ADM_Map.json"),
-                 cobra_model:str|None=os.path.join(PKG_DATA,"Modified_ADM_Model.json"))->None:
+                 cobra_model:str|None=os.path.join(PKG_DATA,"Modified_ADM_Model.json"),
+                 **kwargs)->None:
         """A method that creates the dash web app for a model based on an ODE solution.
         
         Examples:
@@ -487,12 +491,21 @@ class Model:
             fluxes=self.info["Fluxes"]
             for ind,i in enumerate(self.reactions):
                 rxn_data[i.replace(" ","_")]= fluxes[ind]
-            
+            if kwargs.get('min_flux',None):
+                min_scale={ 'type': 'value','value':kwargs.get('min_flux') , 'color': 'red','size':10 }
+            else:
+                min_scale={ 'type': 'min' , 'color': 'red','size':10 }
+            if kwargs.get('max_flux',None):
+                max_scale={ 'type': 'value','value':kwargs.get('max_flux') , 'color': 'green','size':10 }
+            else:
+                max_scale={ 'type': 'max', 'color': 'green','size':10 }
+                
             if drop_down_escher=="Show Map":
                 return [dash_escher.DashEscher(mapData=escher_map,modelData=cobra_model,
             options={
              'reaction_data':rxn_data,
              'enable_keys':False,
+             'reaction_scale':[min_scale,max_scale],
             }
             ,height='1000px',
         width='100%')
@@ -509,9 +522,10 @@ class Model:
             if len(self.control_state.keys()):
                 for i in self.control_state.keys():
                     self.control_state[i]=initial_conditions[0][i]
-
-            self.base_parameters = base_parameters[0]
-            self.model_parameters = model_parameters[0]
+            if len(base_parameters):
+                self.base_parameters = base_parameters[0]
+            if len(model_parameters):
+                self.model_parameters = model_parameters[0]
             self.initial_conditions = np.array(
             [initial_conditions[0][i] for i in self.species])[:, np.newaxis]
             self.inlet_conditions = np.array(
