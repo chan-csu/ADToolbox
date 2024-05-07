@@ -47,7 +47,6 @@ debugpy==1.6.3
 decorator==5.1.1
 defusedxml==0.7.1
 depinfo==2.2.0
-diffeqpy==2.4.0
 dill==0.3.5.1
 diskcache==5.6.3
 dnspython==2.6.1
@@ -87,8 +86,6 @@ jedi==0.18.1
 jill==0.11.5
 Jinja2==3.1.4
 joblib==1.2.0
-jsonschema==3.2.0
-jsonschema-specifications==2023.12.1
 juliacall==0.9.15
 juliapkg==0.1.10
 jupyter==1.0.0
