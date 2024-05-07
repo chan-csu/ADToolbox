@@ -67,6 +67,7 @@ fsspec==2023.9.2
 future==1.0.0
 ghp-import==2.1.0
 greenlet==2.0.2
+gunicorn==22.0.0
 griffe==0.25.4
 h11==0.14.0
 h5py==3.9.0
