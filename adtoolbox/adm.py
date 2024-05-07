@@ -1573,7 +1573,7 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
                                                                                                                                                                      112) - (c[model.species.index('S_bu_ion')] / 160)-(c[model.species.index('S_cap_ion')] / 230) - (c[model.species.index('S_va_ion')] / 208)-phi
 
     c[model.species.index('S_hco3_ion')] = model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')]/(model.model_parameters['K_a_co2'] + c[model.species.index('S_H_ion')])
-    c[model.species.index('S_nh4_ion')]=  model.base_parameters['K_b_nh3'] * c[model.species.index('S_IN')]/(model.base_parameters['K_b_nh3'] + model.base_parameters['K_W'] / c[model.species.index('S_H_ion')])
+    c[model.species.index('S_nh4_ion')]=  model.model_parameters['K_b_nh3'] * c[model.species.index('S_IN')]/(model.model_parameters['K_b_nh3'] + model.base_parameters['K_W'] / c[model.species.index('S_H_ion')])
     
     c[model.species.index('S_co2')]= c[model.species.index('S_IC')] -  c[model.species.index('S_hco3_ion')]
     c[model.species.index('S_nh3')]= c[model.species.index('S_IN')] - c[model.species.index('S_nh4_ion')]

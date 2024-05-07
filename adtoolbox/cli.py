@@ -15,6 +15,7 @@ import os
 import numpy as np
 import subprocess
 import pandas as pd
+import utils
 class AParser(argparse.ArgumentParser):
     def _print_message(self, message, file=None):
         rich.print(message, file=file)
@@ -461,76 +462,26 @@ def main():
     
 
     elif "ADToolbox_Module" in args and args.ADToolbox_Module == 'ADM' and "adm_Subparser" in args and args.adm_Subparser == 'e-adm':
-        if args.model_parameters:
-            with open(args.model_parameters) as f:
-                adm_model_parameters=json.load(f)
-        else:
-            with open(configs.E_ADM_LOCAL["model_parameters"]) as f:
-                adm_model_parameters=json.load(f)
-                
-        if args.base_parameters:
-            with open(args.base_parameters) as f:
-                adm_base_parameters=json.load(f)
-        else:
-            with open(configs.E_ADM_LOCAL["base_parameters"]) as f:
-                adm_base_parameters=json.load(f)
-
-        if args.initial_conditions:
-            with open(args.initial_conditions) as f:
-                adm_initial_conditions=json.load(f)
-        else:
-            with open(configs.E_ADM_LOCAL["initial_conditions"]) as f:
-                adm_initial_conditions=json.load(f)
-
-        
-        if args.inlet_conditions:
-            with open(args.inlet_conditions) as f:
-                adm_inlet_conditions=json.load(f)
-        else:
-            with open(configs.E_ADM_LOCAL["inlet_conditions"]) as f:
-                adm_inlet_conditions=json.load(f)
-
-    
-        if args.reactions:
-            with open(args.reactions) as f:
-                adm_reactions=json.load(f)
-        else:
-            with open(configs.E_ADM_LOCAL["reactions"]) as f:
-                adm_reactions=json.load(f)
-        
-        if args.species:
-            with open(args.species) as f:
-                adm_species=json.load(f)
-        else:
-            with open(configs.E_ADM_LOCAL["species"]) as f:
-                adm_species=json.load(f)
-        
-        if args.metagenome_report:
-            with open(args.metagenome_report) as f:
-                adm_metagenome_report=json.load(f)
-        else:
-            adm_metagenome_report=None
-            
+        params=utils.load_multiple_json_files(configs.E_ADM_2_LOCAL)
+        control_state={"S_H_ion":10**(-6.5)}
         if args.control_states:
             with open(args.control_states) as f:
-                adm_control_states=json.load(f)
-        else:
-            adm_control_states={}
+                control_state.update(json.load(f))
                 
-        mod_adm1 = adm.Model(model_parameters=adm_model_parameters,
-                             base_parameters=adm_base_parameters, 
-                             initial_conditions=adm_initial_conditions, 
-                             inlet_conditions=adm_inlet_conditions,
+        mod_adm1 = adm.Model(model_parameters=params.model_parameters,
+                             base_parameters=params.base_parameters,
+                             initial_conditions=params.initial_conditions, 
+                             inlet_conditions=params.inlet_conditions,
                              feed=adm.DEFAULT_FEED,
-                             reactions=adm_reactions,
-                            species=adm_species,
-                            ode_system=adm.e_adm_ode_sys,
-                            build_stoichiometric_matrix=adm.build_e_adm_stoiciometric_matrix,
-                            control_state=adm_control_states,
+                             reactions=params.reactions,
+                            species=params.species,
+                            ode_system=adm.e_adm_2_ode_sys,
+                            build_stoichiometric_matrix=adm.build_e_adm_2_stoichiometric_matrix,
+                            control_state=control_state,
                             name="Modified_ADM1",
                             switch="DAE",
-                            metagenome_report=adm_metagenome_report)
-        sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000))
+                            )
+        sol_mod_adm1 = mod_adm1.solve_model(t_eval=np.linspace(0,30, 10000),method="BDF")
 
         if args.report == 'dash' or args.report==None:
             mod_adm1.dash_app(sol_mod_adm1)

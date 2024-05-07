@@ -12,7 +12,7 @@
         <link rel="prev" href="../CLI/">
       
       
-        <link rel="next" href="../parameter_tuning.html">
+        <link rel="next" href="../modeling.html">
       
       <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.9">
@@ -1301,8 +1301,23 @@
   
   
     <li class="md-nav__item">
+      <a href="../modeling.html" class="md-nav__link">
+        Modeling Pipeline
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../parameter_tuning.html" class="md-nav__link">
-        Parameter Tuning
+        Parameter Tuning Pipeline
       </a>
     </li>
   
@@ -2454,24 +2469,7 @@ metag_object=core.Metagenomics(metag_conf)
 
         <details class="quote">
           <summary>Source code in <code>adtoolbox/configs.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
@@ -2519,7 +2517,24 @@ metag_object=core.Metagenomics(metag_conf)
 <span class="normal">179</span>
 <span class="normal">180</span>
 <span class="normal">181</span>
-<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Database</span><span class="p">:</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Database</span><span class="p">:</span>
 	<span class="s2">&quot;An instance of this class will hold all the configuration information for core.Database functionalities.&quot;</span>
 
 	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -2621,24 +2636,7 @@ metag_object=core.Metagenomics(metag_conf)
 
         <details class="quote">
           <summary>Source code in <code>adtoolbox/configs.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
 <span class="normal">204</span>
@@ -2679,7 +2677,24 @@ metag_object=core.Metagenomics(metag_conf)
 <span class="normal">239</span>
 <span class="normal">240</span>
 <span class="normal">241</span>
-<span class="normal">242</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Metagenomics</span><span class="p">:</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Metagenomics</span><span class="p">:</span>
 <span class="w">	</span><span class="sd">&quot;&quot;&quot;	</span>
 <span class="sd">	An instance of this class will hold all the configuration information for core.Metagenomics functionalities.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
@@ -2774,24 +2789,7 @@ metag_object=core.Metagenomics(metag_conf)
 
         <details class="quote">
           <summary>Source code in <code>adtoolbox/configs.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
 <span class="normal">269</span>
@@ -2802,7 +2800,24 @@ metag_object=core.Metagenomics(metag_conf)
 <span class="normal">274</span>
 <span class="normal">275</span>
 <span class="normal">276</span>
-<span class="normal">277</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Utils</span><span class="p">:</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Utils</span><span class="p">:</span>
 <span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	An instance of this class will hold all the configuration information for utils module functionalities.&quot;&quot;&quot;</span>
 	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -15530,7 +15545,21 @@ https://github.com/ncbi/sra-tools</p>
 <span class="normal">613</span>
 <span class="normal">614</span>
 <span class="normal">615</span>
-<span class="normal">616</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Any kinetic model could be an instance of this class.</span>
 <span class="sd">    Args:</span>
@@ -15593,7 +15622,7 @@ https://github.com/ncbi/sra-tools</p>
     <span class="k">def</span> <span class="nf">s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the stoichiometric matrix of a model&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_stoichiometric_matrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reactions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="p">,</span> <span class="n">nitrogen_limited</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nitrogen_limited</span><span class="p">)</span>
+            <span class="n">base_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span><span class="p">,</span><span class="n">model_parameters</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">,</span><span class="n">reactions</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reactions</span><span class="p">,</span><span class="n">species</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">,</span><span class="n">feed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="p">,</span> <span class="n">nitrogen_limited</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nitrogen_limited</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                         <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -15681,7 +15710,7 @@ https://github.com/ncbi/sra-tools</p>
 
 
 
-    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span><span class="p">)</span><span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; A function which returns a plot of the solution from the ODE</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">solution</span> <span class="o">=</span> <span class="p">{</span>
@@ -15693,7 +15722,7 @@ https://github.com/ncbi/sra-tools</p>
 
         <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Line&quot;</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">sol_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">sol_df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
-                          <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Concentration of species&quot;</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="n">sol_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+                          <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Concentration of species&quot;</span><span class="p">)</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
                 <span class="n">title</span><span class="o">=</span><span class="p">{</span>
                     <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span>
@@ -15716,15 +15745,19 @@ https://github.com/ncbi/sra-tools</p>
                     <span class="s2">&quot;font_size&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
         <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Sankey&quot;</span><span class="p">:</span>
             <span class="c1">### Maybe add a sankey plot here later</span>
             <span class="k">pass</span>
 
+        <span class="k">return</span> <span class="n">fig</span>
+
+
+
     <span class="k">def</span> <span class="nf">dash_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span>
                  <span class="n">escher_map</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span><span class="s2">&quot;Modified_ADM_Map.json&quot;</span><span class="p">),</span>
-                 <span class="n">cobra_model</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span><span class="s2">&quot;Modified_ADM_Model.json&quot;</span><span class="p">))</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+                 <span class="n">cobra_model</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span><span class="s2">&quot;Modified_ADM_Model.json&quot;</span><span class="p">),</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A method that creates the dash web app for a model based on an ODE solution.</span>
 
 <span class="sd">        Examples:</span>
@@ -15975,12 +16008,21 @@ https://github.com/ncbi/sra-tools</p>
             <span class="n">fluxes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;Fluxes&quot;</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reactions</span><span class="p">):</span>
                 <span class="n">rxn_data</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)]</span><span class="o">=</span> <span class="n">fluxes</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_flux&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">min_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_flux&#39;</span><span class="p">)</span> <span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">min_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span> <span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_flux&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">max_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_flux&#39;</span><span class="p">)</span> <span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">max_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
 
             <span class="k">if</span> <span class="n">drop_down_escher</span><span class="o">==</span><span class="s2">&quot;Show Map&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[</span><span class="n">dash_escher</span><span class="o">.</span><span class="n">DashEscher</span><span class="p">(</span><span class="n">mapData</span><span class="o">=</span><span class="n">escher_map</span><span class="p">,</span><span class="n">modelData</span><span class="o">=</span><span class="n">cobra_model</span><span class="p">,</span>
             <span class="n">options</span><span class="o">=</span><span class="p">{</span>
              <span class="s1">&#39;reaction_data&#39;</span><span class="p">:</span><span class="n">rxn_data</span><span class="p">,</span>
              <span class="s1">&#39;enable_keys&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+             <span class="s1">&#39;reaction_scale&#39;</span><span class="p">:[</span><span class="n">min_scale</span><span class="p">,</span><span class="n">max_scale</span><span class="p">],</span>
             <span class="p">}</span>
             <span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="s1">&#39;1000px&#39;</span><span class="p">,</span>
         <span class="n">width</span><span class="o">=</span><span class="s1">&#39;100%&#39;</span><span class="p">)</span>
@@ -15997,9 +16039,10 @@ https://github.com/ncbi/sra-tools</p>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">control_state</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_state</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">control_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">initial_conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span> <span class="o">=</span> <span class="n">base_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span> <span class="o">=</span> <span class="n">model_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span> <span class="o">=</span> <span class="n">base_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span> <span class="o">=</span> <span class="n">model_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
             <span class="p">[</span><span class="n">initial_conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">inlet_conditions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
@@ -16179,21 +16222,7 @@ of such models is to build an escher map from the model.</p>
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
-<span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">607</span>
 <span class="normal">608</span>
 <span class="normal">609</span>
 <span class="normal">610</span>
@@ -16202,7 +16231,21 @@ of such models is to build an escher map from the model.</p>
 <span class="normal">613</span>
 <span class="normal">614</span>
 <span class="normal">615</span>
-<span class="normal">616</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_cobra_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">address</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_cobra_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">address</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method builds a cobra model from an instance of Model. One particular use</span>
 <span class="sd">    of such models is to build an escher map from the model.</span>
 <span class="sd">    Args:</span>
@@ -16248,22 +16291,22 @@ of such models is to build an escher map from the model.</p>
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a copy of the model&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">model_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
                       <span class="n">base_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
@@ -16301,11 +16344,11 @@ of such models is to build an escher map from the model.</p>
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">csv_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span> <span class="p">,</span><span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">csv_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span> <span class="p">,</span><span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts the results to a pandas data frame then to a csv&quot;&quot;&quot;</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">)</span>
     <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">address</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot;_Report.csv&quot;</span><span class="p">),</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -16321,7 +16364,7 @@ of such models is to build an escher map from the model.</p>
 
 
 <h3 id="adtoolbox.adm.Model.dash_app" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">dash_app</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">escher_map</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span> <span class="s1">&#39;Modified_ADM_Map.json&#39;</span><span class="p">),</span> <span class="n">cobra_model</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span> <span class="s1">&#39;Modified_ADM_Model.json&#39;</span><span class="p">))</span></code>
+<code class="highlight language-python"><span class="n">dash_app</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">escher_map</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span> <span class="s1">&#39;Modified_ADM_Map.json&#39;</span><span class="p">),</span> <span class="n">cobra_model</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span> <span class="s1">&#39;Modified_ADM_Model.json&#39;</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 </h3>
 
@@ -16400,10 +16443,7 @@ of such models is to build an escher map from the model.</p>
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
 <span class="normal">241</span>
 <span class="normal">242</span>
 <span class="normal">243</span>
@@ -16731,9 +16771,24 @@ of such models is to build an escher map from the model.</p>
 <span class="normal">565</span>
 <span class="normal">566</span>
 <span class="normal">567</span>
-<span class="normal">568</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">dash_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">dash_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span>
              <span class="n">escher_map</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span><span class="s2">&quot;Modified_ADM_Map.json&quot;</span><span class="p">),</span>
-             <span class="n">cobra_model</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span><span class="s2">&quot;Modified_ADM_Model.json&quot;</span><span class="p">))</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+             <span class="n">cobra_model</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PKG_DATA</span><span class="p">,</span><span class="s2">&quot;Modified_ADM_Model.json&quot;</span><span class="p">),</span>
+             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A method that creates the dash web app for a model based on an ODE solution.</span>
 
 <span class="sd">    Examples:</span>
@@ -16984,12 +17039,21 @@ of such models is to build an escher map from the model.</p>
         <span class="n">fluxes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;Fluxes&quot;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reactions</span><span class="p">):</span>
             <span class="n">rxn_data</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)]</span><span class="o">=</span> <span class="n">fluxes</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_flux&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">min_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_flux&#39;</span><span class="p">)</span> <span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">min_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span> <span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_flux&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">max_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_flux&#39;</span><span class="p">)</span> <span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_scale</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">10</span> <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">drop_down_escher</span><span class="o">==</span><span class="s2">&quot;Show Map&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">dash_escher</span><span class="o">.</span><span class="n">DashEscher</span><span class="p">(</span><span class="n">mapData</span><span class="o">=</span><span class="n">escher_map</span><span class="p">,</span><span class="n">modelData</span><span class="o">=</span><span class="n">cobra_model</span><span class="p">,</span>
         <span class="n">options</span><span class="o">=</span><span class="p">{</span>
          <span class="s1">&#39;reaction_data&#39;</span><span class="p">:</span><span class="n">rxn_data</span><span class="p">,</span>
          <span class="s1">&#39;enable_keys&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+         <span class="s1">&#39;reaction_scale&#39;</span><span class="p">:[</span><span class="n">min_scale</span><span class="p">,</span><span class="n">max_scale</span><span class="p">],</span>
         <span class="p">}</span>
         <span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="s1">&#39;1000px&#39;</span><span class="p">,</span>
     <span class="n">width</span><span class="o">=</span><span class="s1">&#39;100%&#39;</span><span class="p">)</span>
@@ -17006,9 +17070,10 @@ of such models is to build an escher map from the model.</p>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">control_state</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_state</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">control_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">initial_conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span> <span class="o">=</span> <span class="n">base_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span> <span class="o">=</span> <span class="n">model_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span> <span class="o">=</span> <span class="n">base_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span> <span class="o">=</span> <span class="n">model_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
         <span class="p">[</span><span class="n">initial_conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inlet_conditions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
@@ -17124,7 +17189,8 @@ of such models is to build an escher map from the model.</p>
 <span class="normal">232</span>
 <span class="normal">233</span>
 <span class="normal">234</span>
-<span class="normal">235</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span><span class="p">)</span><span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">235</span>
+<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sol</span><span class="p">:</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">_ivp</span><span class="o">.</span><span class="n">ivp</span><span class="o">.</span><span class="n">OdeResult</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Line&quot;</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; A function which returns a plot of the solution from the ODE</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">solution</span> <span class="o">=</span> <span class="p">{</span>
@@ -17136,7 +17202,7 @@ of such models is to build an escher map from the model.</p>
 
     <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Line&quot;</span><span class="p">:</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">sol_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">sol_df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
-                      <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Concentration of species&quot;</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="n">sol_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+                      <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Concentration of species&quot;</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
             <span class="n">title</span><span class="o">=</span><span class="p">{</span>
                 <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span>
@@ -17159,11 +17225,12 @@ of such models is to build an escher map from the model.</p>
                 <span class="s2">&quot;font_size&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Sankey&quot;</span><span class="p">:</span>
         <span class="c1">### Maybe add a sankey plot here later</span>
         <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -17596,21 +17663,7 @@ No testing is done.</p>
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">746</span>
-<span class="normal">747</span>
-<span class="normal">748</span>
-<span class="normal">749</span>
-<span class="normal">750</span>
-<span class="normal">751</span>
-<span class="normal">752</span>
-<span class="normal">753</span>
-<span class="normal">754</span>
-<span class="normal">755</span>
-<span class="normal">756</span>
-<span class="normal">757</span>
-<span class="normal">758</span>
-<span class="normal">759</span>
-<span class="normal">760</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">760</span>
 <span class="normal">761</span>
 <span class="normal">762</span>
 <span class="normal">763</span>
@@ -17724,7 +17777,21 @@ No testing is done.</p>
 <span class="normal">871</span>
 <span class="normal">872</span>
 <span class="normal">873</span>
-<span class="normal">874</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">adm1_ode_sys</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span><span class="n">Model</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="normal">874</span>
+<span class="normal">875</span>
+<span class="normal">876</span>
+<span class="normal">877</span>
+<span class="normal">878</span>
+<span class="normal">879</span>
+<span class="normal">880</span>
+<span class="normal">881</span>
+<span class="normal">882</span>
+<span class="normal">883</span>
+<span class="normal">884</span>
+<span class="normal">885</span>
+<span class="normal">886</span>
+<span class="normal">887</span>
+<span class="normal">888</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">adm1_ode_sys</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span><span class="n">Model</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; The ODE system for the original ADM.</span>
 <span class="sd">        No testing is done.</span>
 
@@ -17967,21 +18034,7 @@ No testing is done.</p>
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span>
-<span class="normal">631</span>
-<span class="normal">632</span>
-<span class="normal">633</span>
-<span class="normal">634</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">634</span>
 <span class="normal">635</span>
 <span class="normal">636</span>
 <span class="normal">637</span>
@@ -18090,7 +18143,21 @@ No testing is done.</p>
 <span class="normal">740</span>
 <span class="normal">741</span>
 <span class="normal">742</span>
-<span class="normal">743</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_adm1_stoiciometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">reactons</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">species</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span><span class="n">feed</span><span class="p">:</span><span class="n">Feed</span><span class="p">,</span><span class="n">nitrogen_limited</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="normal">743</span>
+<span class="normal">744</span>
+<span class="normal">745</span>
+<span class="normal">746</span>
+<span class="normal">747</span>
+<span class="normal">748</span>
+<span class="normal">749</span>
+<span class="normal">750</span>
+<span class="normal">751</span>
+<span class="normal">752</span>
+<span class="normal">753</span>
+<span class="normal">754</span>
+<span class="normal">755</span>
+<span class="normal">756</span>
+<span class="normal">757</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_adm1_stoiciometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">reactons</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">species</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span><span class="n">feed</span><span class="p">:</span><span class="n">Feed</span><span class="p">,</span><span class="n">nitrogen_limited</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This function builds the stoichiometric matrix for the ADM1 Model.</span>
 <span class="sd">    Args:</span>
 <span class="sd">        base_parameters (dict): a dictionary containing the base parameters</span>
@@ -18261,21 +18328,7 @@ species (list): a list containing all species
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 877</span>
-<span class="normal"> 878</span>
-<span class="normal"> 879</span>
-<span class="normal"> 880</span>
-<span class="normal"> 881</span>
-<span class="normal"> 882</span>
-<span class="normal"> 883</span>
-<span class="normal"> 884</span>
-<span class="normal"> 885</span>
-<span class="normal"> 886</span>
-<span class="normal"> 887</span>
-<span class="normal"> 888</span>
-<span class="normal"> 889</span>
-<span class="normal"> 890</span>
-<span class="normal"> 891</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 891</span>
 <span class="normal"> 892</span>
 <span class="normal"> 893</span>
 <span class="normal"> 894</span>
@@ -18576,7 +18629,21 @@ species (list): a list containing all species
 <span class="normal">1189</span>
 <span class="normal">1190</span>
 <span class="normal">1191</span>
-<span class="normal">1192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_e_adm_2_stoichiometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<span class="normal">1192</span>
+<span class="normal">1193</span>
+<span class="normal">1194</span>
+<span class="normal">1195</span>
+<span class="normal">1196</span>
+<span class="normal">1197</span>
+<span class="normal">1198</span>
+<span class="normal">1199</span>
+<span class="normal">1200</span>
+<span class="normal">1201</span>
+<span class="normal">1202</span>
+<span class="normal">1203</span>
+<span class="normal">1204</span>
+<span class="normal">1205</span>
+<span class="normal">1206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_e_adm_2_stoichiometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
                                              <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
                                              <span class="n">reactions</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
                                              <span class="n">species</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
@@ -18939,21 +19006,7 @@ species (list): a list containing all species
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1195</span>
-<span class="normal">1196</span>
-<span class="normal">1197</span>
-<span class="normal">1198</span>
-<span class="normal">1199</span>
-<span class="normal">1200</span>
-<span class="normal">1201</span>
-<span class="normal">1202</span>
-<span class="normal">1203</span>
-<span class="normal">1204</span>
-<span class="normal">1205</span>
-<span class="normal">1206</span>
-<span class="normal">1207</span>
-<span class="normal">1208</span>
-<span class="normal">1209</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1209</span>
 <span class="normal">1210</span>
 <span class="normal">1211</span>
 <span class="normal">1212</span>
@@ -19277,7 +19330,21 @@ species (list): a list containing all species
 <span class="normal">1530</span>
 <span class="normal">1531</span>
 <span class="normal">1532</span>
-<span class="normal">1533</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_e_adm_stoiciometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<span class="normal">1533</span>
+<span class="normal">1534</span>
+<span class="normal">1535</span>
+<span class="normal">1536</span>
+<span class="normal">1537</span>
+<span class="normal">1538</span>
+<span class="normal">1539</span>
+<span class="normal">1540</span>
+<span class="normal">1541</span>
+<span class="normal">1542</span>
+<span class="normal">1543</span>
+<span class="normal">1544</span>
+<span class="normal">1545</span>
+<span class="normal">1546</span>
+<span class="normal">1547</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_e_adm_stoiciometric_matrix</span><span class="p">(</span><span class="n">base_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
                                      <span class="n">model_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
                                      <span class="n">reactions</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
                                      <span class="n">species</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
@@ -19700,21 +19767,7 @@ species (list): a list containing all species
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1535</span>
-<span class="normal">1536</span>
-<span class="normal">1537</span>
-<span class="normal">1538</span>
-<span class="normal">1539</span>
-<span class="normal">1540</span>
-<span class="normal">1541</span>
-<span class="normal">1542</span>
-<span class="normal">1543</span>
-<span class="normal">1544</span>
-<span class="normal">1545</span>
-<span class="normal">1546</span>
-<span class="normal">1547</span>
-<span class="normal">1548</span>
-<span class="normal">1549</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1549</span>
 <span class="normal">1550</span>
 <span class="normal">1551</span>
 <span class="normal">1552</span>
@@ -19945,7 +19998,21 @@ species (list): a list containing all species
 <span class="normal">1777</span>
 <span class="normal">1778</span>
 <span class="normal">1779</span>
-<span class="normal">1780</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">e_adm_2_ode_sys</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="normal">1780</span>
+<span class="normal">1781</span>
+<span class="normal">1782</span>
+<span class="normal">1783</span>
+<span class="normal">1784</span>
+<span class="normal">1785</span>
+<span class="normal">1786</span>
+<span class="normal">1787</span>
+<span class="normal">1788</span>
+<span class="normal">1789</span>
+<span class="normal">1790</span>
+<span class="normal">1791</span>
+<span class="normal">1792</span>
+<span class="normal">1793</span>
+<span class="normal">1794</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">e_adm_2_ode_sys</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function is used to build the ODEs of the e-adm2 model.</span>
 
@@ -19972,7 +20039,7 @@ species (list): a list containing all species
                                                                                                                                                                      <span class="mi">112</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_bu_ion&#39;</span><span class="p">)]</span> <span class="o">/</span> <span class="mi">160</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_cap_ion&#39;</span><span class="p">)]</span> <span class="o">/</span> <span class="mi">230</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_va_ion&#39;</span><span class="p">)]</span> <span class="o">/</span> <span class="mi">208</span><span class="p">)</span><span class="o">-</span><span class="n">phi</span>
 
     <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_hco3_ion&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="s1">&#39;K_a_co2&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_IC&#39;</span><span class="p">)]</span><span class="o">/</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="s1">&#39;K_a_co2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_H_ion&#39;</span><span class="p">)])</span>
-    <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_nh4_ion&#39;</span><span class="p">)]</span><span class="o">=</span>  <span class="n">model</span><span class="o">.</span><span class="n">base_parameters</span><span class="p">[</span><span class="s1">&#39;K_b_nh3&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_IN&#39;</span><span class="p">)]</span><span class="o">/</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">base_parameters</span><span class="p">[</span><span class="s1">&#39;K_b_nh3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">base_parameters</span><span class="p">[</span><span class="s1">&#39;K_W&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_H_ion&#39;</span><span class="p">)])</span>
+    <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_nh4_ion&#39;</span><span class="p">)]</span><span class="o">=</span>  <span class="n">model</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="s1">&#39;K_b_nh3&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_IN&#39;</span><span class="p">)]</span><span class="o">/</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">[</span><span class="s1">&#39;K_b_nh3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">base_parameters</span><span class="p">[</span><span class="s1">&#39;K_W&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_H_ion&#39;</span><span class="p">)])</span>
 
     <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_co2&#39;</span><span class="p">)]</span><span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_IC&#39;</span><span class="p">)]</span> <span class="o">-</span>  <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_hco3_ion&#39;</span><span class="p">)]</span>
     <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_nh3&#39;</span><span class="p">)]</span><span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_IN&#39;</span><span class="p">)]</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;S_nh4_ion&#39;</span><span class="p">)]</span>
@@ -20275,21 +20342,7 @@ species (list): a list containing all species
 
       <details class="quote">
         <summary>Source code in <code>adtoolbox/adm.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1782</span>
-<span class="normal">1783</span>
-<span class="normal">1784</span>
-<span class="normal">1785</span>
-<span class="normal">1786</span>
-<span class="normal">1787</span>
-<span class="normal">1788</span>
-<span class="normal">1789</span>
-<span class="normal">1790</span>
-<span class="normal">1791</span>
-<span class="normal">1792</span>
-<span class="normal">1793</span>
-<span class="normal">1794</span>
-<span class="normal">1795</span>
-<span class="normal">1796</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1796</span>
 <span class="normal">1797</span>
 <span class="normal">1798</span>
 <span class="normal">1799</span>
@@ -20602,7 +20655,21 @@ species (list): a list containing all species
 <span class="normal">2106</span>
 <span class="normal">2107</span>
 <span class="normal">2108</span>
-<span class="normal">2109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">e_adm_ode_sys</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="normal">2109</span>
+<span class="normal">2110</span>
+<span class="normal">2111</span>
+<span class="normal">2112</span>
+<span class="normal">2113</span>
+<span class="normal">2114</span>
+<span class="normal">2115</span>
+<span class="normal">2116</span>
+<span class="normal">2117</span>
+<span class="normal">2118</span>
+<span class="normal">2119</span>
+<span class="normal">2120</span>
+<span class="normal">2121</span>
+<span class="normal">2122</span>
+<span class="normal">2123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">e_adm_ode_sys</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function is used to build the ODEs of the e_adm model.</span>
 

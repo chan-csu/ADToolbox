@@ -22,6 +22,23 @@ ADTOOLBOX_CONTAINERS={
 	'singularity_x86':"docker://parsaghadermazi/adtoolbox:x86",
 	'singularity_arm64':"docker://parsaghadermazi/adtoolbox:arm64"}
 
+E_ADM_2_REMOTE={
+	"model_parameters":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_model_parameters.json",
+	"base_parameters":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_base_parameters.json",
+	"initial_conditions":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_initial_conditions.json",
+	"inlet_conditions":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_inlet_conditions.json",
+	"reactions":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_reactions.json",
+	"species":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_species.json"
+			}
+E_ADM_2_LOCAL={
+	"model_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_model_parameters.json"),
+	"base_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_base_parameters.json"),
+	"initial_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_initial_conditions.json"),
+	"inlet_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_inlet_conditions.json"),
+	"reactions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_reactions.json"),
+	"species":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_species.json"),	
+}
+
 E_ADM_LOCAL={
 	"model_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_model_parameters.json"),
 	"base_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_base_parameters.json"),
