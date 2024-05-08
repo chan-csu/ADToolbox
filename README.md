@@ -10,6 +10,7 @@ Interested in trying ADToolbox? Run the notebooks on Binder or Colab:
 <a target="_blank" href="https://colab.research.google.com/github/chan-csu/ADToolbox/blob/main/README.md">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
+[![PyPI version](https://badge.fury.io/py/adtoolbox.svg)](https://badge.fury.io/py/adtoolbox)
 
 ADToolbox comes with a detailed documentation website. You can access this website using the link below:
 
