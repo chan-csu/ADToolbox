@@ -2,4 +2,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 */*/*_Configs.json
-adtoolbox/pkg_data/ADToolbox_Configs.json
+*/adtoolbox/pkg_data/ADToolbox_Configs.json
