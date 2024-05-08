@@ -7,6 +7,8 @@ AD Toolbox is developed in Chan Lab at Colorado State University. The main goal 
 Interested in trying ADToolbox? Run the notebooks on Binder:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/chan-csu/ADToolbox/HEAD)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/chan-csu/ADToolbox/tree/main/Examples)
+
 
 ADToolbox comes with a detailed documentation website. You can access this website using the link below:
 
