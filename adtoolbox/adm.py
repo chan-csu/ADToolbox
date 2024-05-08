@@ -579,7 +579,7 @@ class Model:
             
 
 
-        app.run_server(port=8000, host='127.0.0.1')
+        app.run_server(port=8000, host='127.0.0.1',jupyter_mode="jupyterlab")
 
     def csv_report(self,sol: scipy.integrate._ivp.ivp.OdeResult ,address: str)->None:
         """Converts the results to a pandas data frame then to a csv"""
