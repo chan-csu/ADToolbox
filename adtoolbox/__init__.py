@@ -13,6 +13,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 PKG_DATA=os.path.join(os.path.dirname(os.path.realpath(__file__)),"pkg_data")
 
+if not os.path.exists(os.path.join(PKG_DATA,"ADToolbox_Configs.json")):
+    with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),"w") as f:
+        json.dump({"Base_Dir":""},f)
+
 with open(os.path.join(PKG_DATA,"ADToolbox_Configs.json"),"r") as f:
     conf = json.load(f)
     Main_Dir=conf["Base_Dir"]
