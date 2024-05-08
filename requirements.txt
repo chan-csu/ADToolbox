@@ -97,6 +97,7 @@ jupyter_client==7.3.5
 jupyterlab-pygments==0.2.2
 jupyterlab-widgets==1.1.7
 jupytext==1.15.2
+jupyter-dash>=0.4.0
 kaleido==0.2.1
 kiwisolver==1.4.4
 lightgbm==4.0.0
