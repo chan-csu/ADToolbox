@@ -1,5 +1,5 @@
 import os
-from __init__ import Main_Dir,PKG_DATA
+from adtoolbox import Main_Dir,PKG_DATA
 import pathlib
 import rich
 import json

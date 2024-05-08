@@ -24,7 +24,7 @@ import tarfile
 import configs
 from rich.progress import track,Progress
 import rich
-from __init__ import Main_Dir
+from adtoolbox import Main_Dir
 from typing import Iterable
 from typing import Union
 from dataclasses import dataclass
