@@ -3,7 +3,7 @@ from re import M
 import configs
 import metagenomics_report
 import core
-from __init__ import __version__,Main_Dir
+from adtoolbox import __version__,Main_Dir
 from rich.console import Console
 import rich
 import adm

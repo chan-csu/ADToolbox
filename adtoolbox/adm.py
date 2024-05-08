@@ -16,7 +16,7 @@ from core import Feed
 import pandas as pd
 import dash_bootstrap_components as dbc
 import utils
-from __init__ import Main_Dir,PKG_DATA
+from .__init__ import Main_Dir,PKG_DATA
 import dash_escher
 import configs
 import time

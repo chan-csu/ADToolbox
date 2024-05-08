@@ -1,7 +1,7 @@
 import sys
 import os
 from cli import main as main
-import __init__
+import adtoolbox
 
 if __name__ == '__main__':
     main()
