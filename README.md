@@ -12,6 +12,8 @@ Interested in trying ADToolbox? Run the notebooks on Binder or Colab:
 </a>
 [![PyPI version](https://badge.fury.io/py/adtoolbox.svg)](https://badge.fury.io/py/adtoolbox)
 
+***NOTE***:Binder implementations don't offer escher map functionalities yet.
+
 ADToolbox comes with a detailed documentation website. You can access this website using the link below:
 
 ** [Full Documentation Here](https://chan-csu.github.io/ADToolbox/) **
