@@ -1333,7 +1333,7 @@ class Database:
             >>> assert os.path.getsize(os.path.join(Main_Dir,"studies_test_db.tsv"))>0
             >>> os.remove(os.path.join(Main_Dir,"studies_test_db.tsv"))
         """
-        for i in self.config.studies_remote:
+        for i in ["metagenomics_studies","exmpermental_data_db"]:
             r = requests.get(self.config.studies_remote[i], allow_redirects=True)
             if not os.path.exists(Path(self.config.studies_local[i]).parent):
                 os.makedirs(Path(self.config.studies_local[i]).parent)
