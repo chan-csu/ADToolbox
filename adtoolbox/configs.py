@@ -94,10 +94,10 @@ EXTERNAL_LINKS={
 INTERNAL_LINKS={
 	"protein_db_url":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta",
 	"adtoolbox_rxn_db_url":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
-	"feed_db_url":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Feed_DB.json",
+	"feed_db_url":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/feed_db.tsv",
 	"qiime_classifier_db_url":"https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
 	"metagenomics_studies":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv",
-    "exmpermental_data_db":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/experimental_data_references.json"
+    "exmpermental_data_db":"https://github.com/ParsaGhadermazi/Database/blob/main/ADToolbox/experimental_data_references.json"
 }
 
 STUDIES_REMOTE={
