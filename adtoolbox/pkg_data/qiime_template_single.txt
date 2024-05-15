@@ -6,17 +6,12 @@ qiime tools import \
 --input-format SingleEndFastqManifestPhred33V2
 qiime dada2 denoise-single \
 --i-demultiplexed-seqs <qiime2_work_dir>/demux-single-end.qza \
---p-trunc-len 0 \
+--p-trunc-len <p-trunc-len> \
 --p-n-threads 0 \
 --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
 --o-table <qiime2_work_dir>/feature-table.qza \
 --o-denoising-stats <qiime2_work_dir>/stats.qza
 
-qiime feature-classifier classify-sklearn \
---i-classifier <classifier> \
---i-reads <qiime2_work_dir>/rep-seqs.qza \
---p-n-jobs 4 \
---o-classification <qiime2_work_dir>/taxonomy.qza
 
 qiime tools export \
 --input-path  <qiime2_work_dir>/feature-table.qza \

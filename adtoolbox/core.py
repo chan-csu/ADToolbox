@@ -20,7 +20,7 @@ from collections import Counter
 from collections import namedtuple
 import pathlib
 import asyncio
-import tarfile
+import gzip
 import configs
 from rich.progress import track,Progress
 import rich
@@ -1399,8 +1399,9 @@ class Database:
                             for data in r.iter_content(block_size):
                                 progress.update(task1, advance=len(data))
                                 f.write(data)
-                with tarfile.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1])) as f_in:
-                    f_in.extractall(self.config.amplicon_to_genome_db)
+                with gzip.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]),"r") as f_in:
+                    with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1].replace(".gz","")),"wb") as f_out:
+                        f_out.write(f_in.read())
 
                 
                 os.remove(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]))
@@ -1416,8 +1417,9 @@ class Database:
                 with requests.get(url[keys], allow_redirects=True, stream=False) as r:
                     with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]), 'wb') as f:
                         f.write(r.content)
-                with tarfile.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1])) as f_in:
-                    f_in.extractall(self.config.amplicon_to_genome_db)
+                with gzip.open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1]),"r") as f_in:
+                    with open(os.path.join(self.config.amplicon_to_genome_db, url[keys].split("/")[-1].replace(".gz","")),"wb") as f_out:
+                        f_out.write(f_in.read())
         if verbose:
             rich.print("[bold green]Downloaded all the required files for Amplicon to Genome functionality.[/bold green]")
                     
@@ -1605,7 +1607,7 @@ class Metagenomics:
                         ' --top_hits_only'+'\n')
         
         if container=="docker":
-            bash_script='docker run'
+            bash_script='docker run '
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
             
@@ -1690,7 +1692,7 @@ class Metagenomics:
             bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
         if container=="docker":
-            bash_script+=('docker run -it -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+            bash_script+=('docker run -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
             
         if container=="singularity":
             bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
@@ -1709,6 +1711,7 @@ class Metagenomics:
             await asyncio.create_subprocess_exec(*self.download_genome(identifier=identifier,container=container).split(" "))
     
     def extract_genome_info(self,
+                            base_dir:str,
                             endpattern:str="genomic.fna.gz",
                             filters:dict={
                                           "INCLUDE":[],
@@ -1718,10 +1721,10 @@ class Metagenomics:
         is a dictionary where the keys are the genome IDs and the values are the paths to the genome files.
         
         Required Configs:
-            config.genomes_base_dir: The path to the base directory where the genomes are saved.
-            ---------
+            None
+        ---------
         Args:
-            genome_info (dict[str,str]): A dictionary containing the genome information.
+            base_dir (str): The path to the base directory where the genomes are saved.
             endpattern (str, optional): The end pattern of the genome files. Defaults to "genomic.fna.gz".
             filters (dict, optional): The filters to be applied to the genome files. This filter must be a 
             dictionary with two keys: INCLUDE and EXCLUDE. The values of these keys must be lists of strings.
@@ -1730,14 +1733,14 @@ class Metagenomics:
         Returns:
             dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
         """
-        base_dir = pathlib.Path(self.config.genomes_base_dir)
+        base_dir = pathlib.Path(base_dir)
         genome_info = {}
         for genome_dir in base_dir.iterdir():
             if genome_dir.is_dir():
                 candids=list(genome_dir.rglob(f'*{endpattern}'))
                 for candid in candids:
                     if all([i in candid.name for i in filters["INCLUDE"]]) and all([i not in candid.name for i in filters["EXCLUDE"]]):
-                        genome_info[genome_dir.name]=str(candid.absolute())           
+                        genome_info[candid.name.replace("_genomic.fna.gz","")]=str(candid.absolute())           
         return genome_info
      
     def align_genome_to_protein_db(
@@ -1755,18 +1758,16 @@ class Metagenomics:
         you need to have the container installed on your system. You may select from "None", "docker", "singularity".
 
         Requires:
-            config.genome_alignment_output: The path to the directory where the alignment results will be saved.
-            ---------
-            config.protein_db: The path to the ADToolbox protein database in fasta.
+            config.protein_db: The address of the protein database of the ADToolbox.
             ---------
             config.adtoolbox_docker: The name of the docker image to be used by ADToolbox (Only if using Docker as container).
             ---------
             config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
             ---------
         Args:
-            address (str): The address of the genome fasta file. The file must be in fasta format.
-            run (bool, optional): Whether to run the alignment. Defaults to True.
-            save (bool, optional): Whether to save the alignment scripts. Defaults to True.
+            address (str): The address of the genome to be aligned.
+            outdir (str): The output directory where the alignment files will be saved.
+            name (str): The name of the genome.
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
 
         Returns:
@@ -1785,7 +1786,7 @@ class Metagenomics:
         if container=="docker":
             bash_script = ""
             alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
-            bash_script +="docker run -it "+ \
+            bash_script +="docker run "+ \
             " -v "+address+":"+address+ \
             " -v "+self.config.protein_db+":"+self.config.protein_db+ \
             " -v "+outdir+":"+outdir+ \
@@ -2034,7 +2035,8 @@ class Metagenomics:
                             manifest_dir:str|None=None,
                             workings_dir:str|None=None,
                             save_manifest:bool=True,
-                            container:str='None') -> tuple[str,str]:
+                            container:str='None',
+                            **kwargs) -> tuple[str,str]:
         """
         This method uses the input fastq files to run qiime2. The method uses the qiime2 template scripts that are provided in pkg_data module.
         The method also creates a manifest file for qiime2. The manifest file is created based on the input fastq files.
@@ -2096,11 +2098,24 @@ class Metagenomics:
         else:
             with open(self.config.qiime2_single_end_bash_str,"r") as f:
                 qiime2_bash_str=f.read()
+        if kwargs.get("p_trunc_len",None) is not None:
+            if not paired_end:
+                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len>",str(kwargs.get("p_trunc_len")[0]))
+            else:
+                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-f>",str(kwargs.get("p_trunc_len")[0]))
+                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-r>",str(kwargs.get("p_trunc_len")[1]))
+        else:
+            if not paired_end:
+                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len>",self.config.qiime2_p_trunc_len[0])
+            else:
+                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-f>",self.config.qiime2_p_trunc_len[0])
+                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-r>",self.config.qiime2_p_trunc_len[1])
  
         if container=="None":
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(self.config.qiime_classifier_db))
+            
         
         elif container=="docker":
             qiime2_bash_str=qiime2_bash_str.splitlines()

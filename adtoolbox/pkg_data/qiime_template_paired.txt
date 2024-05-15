@@ -4,20 +4,15 @@ qiime tools import \
 --input-path <manifest> \
 --output-path <qiime2_work_dir>/demux-paired-end.qza \
 --input-format PairedEndFastqManifestPhred33V2
+
 qiime dada2 denoise-paired \
 --i-demultiplexed-seqs <qiime2_work_dir>/demux-paired-end.qza \
---p-trunc-len-f 150 \
---p-trunc-len-r 150 \
+--p-trunc-len-f <p-trunc-len-f> \
+--p-trunc-len-r <p-trunc-len-r> \
 --p-n-threads 0 \
 --o-representative-sequences <qiime2_work_dir>/rep-seqs.qza \
 --o-table <qiime2_work_dir>/feature-table.qza \
 --o-denoising-stats <qiime2_work_dir>/stats.qza
-
-qiime feature-classifier classify-sklearn \
---i-classifier <classifier> \
---i-reads <qiime2_work_dir>/rep-seqs.qza \
---p-n-jobs 4 \
---o-classification <qiime2_work_dir>/taxonomy.qza
 
 qiime tools export \
 --input-path  <qiime2_work_dir>/feature-table.qza \
@@ -25,8 +20,6 @@ qiime tools export \
 qiime tools export \
 --input-path  <qiime2_work_dir>/rep-seqs.qza \
 --output-path  <qiime2_work_dir>/
-qiime tools export \
---input-path  <qiime2_work_dir>/taxonomy.qza \
---output-path  <qiime2_work_dir>/
+
 
 biom convert --to-tsv -i <qiime2_work_dir>/feature-table.biom -o <qiime2_work_dir>/feature-table.tsv

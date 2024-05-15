@@ -17,7 +17,7 @@ Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
 Seed_COMPOUNDS_DB = os.path.join(Main_Dir, "Database", "compounds.json")
 
 ADTOOLBOX_CONTAINERS={
-	'docker_x86':"parsaghadermazi/adtoolbox:latest",
+	'docker_x86':"parsaghadermazi/adtoolbox:x86",
 	'docker_arm64':"parsaghadermazi/adtoolbox:arm64",
 	'singularity_x86':"docker://parsaghadermazi/adtoolbox:x86",
 	'singularity_arm64':"docker://parsaghadermazi/adtoolbox:arm64"}
@@ -83,7 +83,7 @@ EXTERNAL_LINKS={
                'MD5SUM': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/MD5SUM',
                'FILE_DESCRIPTIONS': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/FILE_DESCRIPTIONS',
                'metadata_field_desc': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/metadata_field_desc.tsv',
-               'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all.tar.gz'
+               'bac120_ssu': 'https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/genomic_files_all/ssu_all.fna.gz'
                },
 	
 	"seed_rxn_url":"https://github.com/modelSEED/modelSEEDDatabase/raw/master/Biochemistry/reactions.json",
@@ -200,7 +200,7 @@ class Metagenomics:
 	An instance of this class will hold all the configuration information for core.Metagenomics functionalities.
 	"""
 	### Here we have some class variables that are used in the class
-	gtdb_dir="ssu_all_*.fna"
+	gtdb_dir="ssu_all*.fna"
 	def __init__(self, 
             amplicon2genome_k=10,
             vsearch_similarity=0.97,
@@ -224,6 +224,7 @@ class Metagenomics:
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
 			adm_mapping=Database().adm_microbial_groups_mapping,
+			qiime2_p_trunc_len:tuple[int,int]=("250","250"),
              ):
 		self.k = amplicon2genome_k
 		self.vsearch_similarity = vsearch_similarity
@@ -254,7 +255,8 @@ class Metagenomics:
 		self.rsync_download_dir=rsync_download_dir
 		self.genomes_base_dir=genomes_base_dir
 		self.adm_mapping=adm_mapping
-
+		self.qiime2_p_trunc_len=qiime2_p_trunc_len
+		
 class Documentation:
     def __init__(self,
                  readme=os.path.join(PKG_DATA,"README.md")):
