@@ -223,7 +223,7 @@ class Metagenomics:
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
-			adm_mapping=Database().adm_microbial_groups_mapping,
+			adm_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
 			qiime2_p_trunc_len:tuple[int,int]=("250","250"),
              ):
 		self.k = amplicon2genome_k
