@@ -2018,7 +2018,14 @@ class Metagenomics:
  
         
         elif container=="docker":
-            warn("Docker is not supported yet")
+            prefetch_script=f"""#!/bin/bash\n"""
+            prefetch_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} prefetch {accession} -O {target_dir}\n"
+            acc_folder=pathlib.Path(target_dir)/accession
+            fasterq_dump_script=""
+            sra_file=acc_folder/(accession+".sra")
+            fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} fasterq-dump {sra_file} -O {acc_folder} --split-files\n"
+            fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} rm {sra_file}"
+            prefetch_script+=fasterq_dump_script
        
         sample_metadata=utils.get_sample_metadata_from_accession(accession)      
             
