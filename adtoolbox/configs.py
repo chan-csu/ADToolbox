@@ -1,5 +1,5 @@
 import os
-from adtoolbox import Main_Dir,PKG_DATA
+from adtoolbox import Main_Dir, PKG_DATA
 import pathlib
 import rich
 import json
@@ -16,21 +16,22 @@ RXN_DB = os.path.join(Main_Dir, "Database", "Reaction_Metadata.csv")
 Seed_RXN_DB = os.path.join(Main_Dir, "Database", "reactions.json")
 Seed_COMPOUNDS_DB = os.path.join(Main_Dir, "Database", "compounds.json")
 
-ADTOOLBOX_CONTAINERS={
-	'docker_x86':"parsaghadermazi/adtoolbox:x86",
-	'docker_arm64':"parsaghadermazi/adtoolbox:arm64",
-	'singularity_x86':"docker://parsaghadermazi/adtoolbox:x86",
-	'singularity_arm64':"docker://parsaghadermazi/adtoolbox:arm64"}
+ADTOOLBOX_CONTAINERS = {
+    'docker_x86': "parsaghadermazi/adtoolbox:x86",
+    'docker_arm64': "parsaghadermazi/adtoolbox:arm64",
+    'singularity_x86': "docker://parsaghadermazi/adtoolbox:x86",
+    'singularity_arm64': "docker://parsaghadermazi/adtoolbox:arm64"}
 
-E_ADM_2_REMOTE={
-	"model_parameters":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_model_parameters.json",
-	"base_parameters":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_base_parameters.json",
-	"initial_conditions":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_initial_conditions.json",
-	"inlet_conditions":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_inlet_conditions.json",
-	"reactions":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_reactions.json",
-	"species":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_species.json"
-			}
-E_ADM_2_LOCAL={
+E_ADM_2_REMOTE = {
+   "model_parameters": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_model_parameters.json",
+   "base_parameters": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_base_parameters.json",
+   "initial_conditions": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_initial_conditions.json",
+   "inlet_conditions": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_inlet_conditions.json",
+   "reactions": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_reactions.json",
+   "species": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm_2/e_adm_2_species.json"
+                 }
+
+E_ADM_2_LOCAL = {
 	"model_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_model_parameters.json"),
 	"base_parameters":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_base_parameters.json"),
 	"initial_conditions":os.path.join(Main_Dir, "Database","ADM_Parameters","e_adm_2_initial_conditions.json"),

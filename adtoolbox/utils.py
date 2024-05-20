@@ -49,13 +49,14 @@ class Sequence_Toolkit:
 
 
 
-def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
+def wrap_for_slurm(command:str,jobname:str,run:bool,save:bool,config:configs.Utils)->str:
     """
     This is a function that wraps a bash script in a slurm script.
     All resource allocation configuration is obtained from config argument
     Args:
         command: bash command to run in python string format
         run: if True, the slurm script is executed
+        jobname: the name of the job to be submitted
         save: if True, the slurm script is saved to the path specified in config
         config: Configs.Utils object that detemines the template form and slurm options
     
@@ -67,11 +68,11 @@ def wrap_for_slurm(command:str,run:bool,save:bool,config:configs.Utils())->str:
     
     command = command.replace("#!/bin/bash","") 
     slurm_script = slurm_template.replace("<command>",command)
-    slurm_script = slurm_script.replace("<sample_name>",config.slurm_job_name)
+    slurm_script = slurm_script.replace("<sample_name>",jobname)
     slurm_script = slurm_script.replace("<wall_time>",config.slurm_wall_time)
     slurm_script = slurm_script.replace("<executer>",config.slurm_executer)
-    slurm_script = slurm_script.replace("<job_name>",config.slurm_job_name)
-    slurm_script = slurm_script.replace("<sample_outlog>",config.slurm_outlog)
+    slurm_script = slurm_script.replace("<job_name>",jobname)
+    slurm_script = slurm_script.replace("<sample_outlog>",jobname)
     slurm_script = slurm_script.replace("<memory>",config.slurm_memory)
     slurm_script = slurm_script.replace("<cpus>",config.slurm_cpus)
     
@@ -140,22 +141,23 @@ def extract_zipped_file(input_file:str,container:str="None",configs=configs.Util
         
     return script,
 
+
 def generate_batch_script(
-    generator_function:callable,
-    number_of_batches:int,
-    input_series:list[list],
-    input_var:list[str],
-    container:str="None",
-    save:Union[str,None]=None,
-    run:bool=False,
-    header:str="#!/bin/bash\n",
-    **kwargs)->tuple:
+    generator_function: callable,
+    number_of_batches: int,
+    input_series: list[list],
+    input_var: list[str],
+    container: str = "None",
+    save: Union[str, None] = None,
+    run: bool = False,
+    header: str = "#!/bin/bash\n",
+    **kwargs) -> tuple:
     """
     This is a general function that generates an iterable of bash scripts for running a function
     that creates a bash script on an iterable of inputs.
     
     """
-    batch_size = len(list(zip(*input_series)))//number_of_batches+1
+    batch_size = len(list(zip(*input_series)))//number_of_batches
     batches=[]
     for i in range(len(input_series)):
         batches.append([input_series[i][j:j+batch_size] for j in range(0,len(input_series[i]),batch_size)])

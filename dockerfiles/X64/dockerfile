@@ -22,4 +22,3 @@ RUN wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.1.0/sratoolkit.3.1.0-ubunt
 RUN tar -vxzf sratoolkit.3.1.0-ubuntu64.tar.gz
 ENV PATH="${PATH}:sratoolkit.3.1.0-ubuntu64/bin/"
 
-ENTRYPOINT ["/bin/bash"]
