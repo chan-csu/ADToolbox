@@ -38,6 +38,7 @@ from utils import (wrap_for_slurm,
                    index_mmseqs_db,
                    mmseqs_search,
                    mmseqs_result_db_to_tsv) 
+import polars as pl
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
@@ -1872,11 +1873,14 @@ class Metagenomics:
             dict: A dictionary of EC numbers and their counts.
 
         """
-        alignment_table = pd.read_table(alignment_file,sep='\t')
-        alignment_table = alignment_table[(alignment_table['evalue']<self.config.e_value)&(alignment_table['bits']>self.config.bit_score)]
-        alignment_table["target"]=alignment_table["target"].apply(lambda x:x.split("|")[1])
-        ec_counts=alignment_table["target"].value_counts().to_dict()
-        return ec_counts
+        df=(pl.scan_csv(alignment_file, separator='\t',) 
+        .filter((pl.col("evalue") < self.config.e_value)&(pl.col("bits") >self.config.bit_score))
+        .with_columns((pl.col("target").str.split_exact("|",1).struct[1].alias("EC")))
+        .unique(["query","EC"],keep="first")
+        .groupby("EC")
+        .count()
+        ).collect(streaming=True)
+        return pd.DataFrame(df.to_dicts()).set_index("EC").to_dict()["count"]
     
     def get_cod_from_ec_counts(self,ec_counts:dict)->dict:
         """This function takes a json file that comtains ec counts and converts it to ADM microbial agents counts.
