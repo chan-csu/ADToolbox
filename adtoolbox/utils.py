@@ -49,7 +49,7 @@ class Sequence_Toolkit:
 
 
 
-def wrap_for_slurm(command:str,jobname:str,run:bool,save:bool,config:configs.Utils)->str:
+def wrap_for_slurm(command:str,jobname:str,run:bool,save:None|str,config:configs.Utils)->str:
     """
     This is a function that wraps a bash script in a slurm script.
     All resource allocation configuration is obtained from config argument
@@ -77,13 +77,11 @@ def wrap_for_slurm(command:str,jobname:str,run:bool,save:bool,config:configs.Uti
     slurm_script = slurm_script.replace("<cpus>",config.slurm_cpus)
     
     if save:
-        with open(config.slurm_save_dir,'w') as f:
+        with open(save,'w') as f:
             f.write(slurm_script)
 
     if run:
-        workingdir=pathlib.Path(config.slurm_save_dir).parents[1]
-        slurmfile=pathlib.Path(config.slurm_save_dir)
-        subprocess.run([f"sbatch {str(slurmfile.relative_to(workingdir))}"],cwd=workingdir,shell=True)        
+        subprocess.run([f"sbatch {save}"],shell=True)        
     return slurm_script
 
 def fasta_to_dict(fasta:str)->dict:
