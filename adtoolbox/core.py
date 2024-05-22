@@ -2022,13 +2022,23 @@ class Metagenomics:
  
         
         elif container=="docker":
-            prefetch_script=f"""#!/bin/bash\n"""
+            prefetch_script=f""""""
             prefetch_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} prefetch {accession} -O {target_dir}\n"
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
             sra_file=acc_folder/(accession+".sra")
             fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} fasterq-dump {sra_file} -O {acc_folder} --split-files\n"
             fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} rm {sra_file}"
+            prefetch_script+=fasterq_dump_script
+        
+        elif container=="singularity":
+            prefetch_script=f""""""
+            prefetch_script+=f"singularity exec -B {target_dir}:{target_dir} {self.config.adtoolbox_singularity} prefetch {accession} -O {target_dir}\n"
+            acc_folder=pathlib.Path(target_dir)/accession
+            fasterq_dump_script=""
+            sra_file=acc_folder/(accession+".sra")
+            fasterq_dump_script+=f"singularity exec -B {target_dir}:{target_dir} {self.config.adtoolbox_singularity} fasterq-dump {sra_file} -O {acc_folder} --split-files\n"
+            fasterq_dump_script+=f"singularity exec -B {target_dir}:{target_dir} {self.config.adtoolbox_singularity} rm {sra_file}"
             prefetch_script+=fasterq_dump_script
        
         sample_metadata=utils.get_sample_metadata_from_accession(accession)      
