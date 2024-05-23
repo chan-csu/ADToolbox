@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "adtoolbox"
-version = "0.5.12"
+version = "0.5.14"
 description = "A tool for modeling and optimization of anaerobic digestion process."
 authors = ["ParsaGhadermazi <54489047+ParsaGhadermazi@users.noreply.github.com>"]
 readme= "README.md"
