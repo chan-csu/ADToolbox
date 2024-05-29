@@ -4,6 +4,13 @@ RUN  apt-get update \
   && apt-get install -y wget \
   && rm -rf /var/lib/apt/lists/*
 
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh 
+RUN mkdir /.conda 
+RUN bash Miniconda3-latest-Linux-x86_64.sh -b 
+RUN rm -f Miniconda3-latest-Linux-x86_64.sh 
+ENV PATH="${PATH}:~/miniconda3/bin"
+SHELL ["/bin/bash", "-i", "-c"] 
+RUN conda install bioconda::fastp -y
   
 RUN wget https://github.com/torognes/vsearch/releases/download/v2.28.1/vsearch-2.28.1-linux-x86_64.tar.gz
 RUN tar xzf vsearch-2.28.1-linux-x86_64.tar.gz

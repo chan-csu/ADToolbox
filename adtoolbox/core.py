@@ -2048,8 +2048,38 @@ class Metagenomics:
         
         return prefetch_script,sample_metadata     
             
-
-    
+    def merge_paired_sequences(self,read_1:str,read_2:str,outputfile:str,container:str="None",**kwargs)->tuple[str]:
+        """ This method merges the paired end reads using the fastp tool. Note that any additional keyword arguments will be passed to the fastp tool.   
+        Required Configs:
+            None
+        Args:
+            read_1 (str): The directory of the forward reads file.
+            read_2 (str): The directory of the reverse reads file.
+            outputfile (str): The directory of the output file.
+            container (str, optional): The containerization tool that will be used to run the bash scripts. Defaults to "None". Options are "None","docker","singularity".
+        
+        Returns:
+            str: The bash script that will be used to merge the paired end reads in python string format
+        """
+        if container=="None":
+            bash_script=f"""fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
+            for key,value in kwargs.items():
+                key_=key.replace("_","-")
+                bash_script+=f" --{key_} {value} "
+                
+        elif container=="docker":
+            bash_script=f"""docker run -v {read_1}:{read_1} -v {read_2}:{read_2} -v {outputfile}:{outputfile} {self.config.adtoolbox_docker} fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
+            for key,value in kwargs.items():
+                key_=key.replace("_","-")
+                bash_script+=f" --{key_} {value} "
+        
+        elif container=="singularity":
+            bash_script=f"""singularity exec -B {read_1}:{read_1} -B {read_2}:{read_2} -B {outputfile}:{outputfile} {self.config.adtoolbox_singularity} fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
+            for key,value in kwargs.items():
+                key_=key.replace("_","-")
+                bash_script+=f" --{key_} {value} "
+                    
+        return bash_script,
     
     def run_qiime2_from_sra(self,
                             read_1:str,
