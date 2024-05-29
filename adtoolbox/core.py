@@ -2074,7 +2074,7 @@ class Metagenomics:
                 bash_script+=f" --{key_} {value} "
         
         elif container=="singularity":
-            bash_script=f"""singularity exec -B {read_1}:{read_1} -B {read_2}:{read_2} -B {outputfile}:{outputfile} {self.config.adtoolbox_singularity} fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
+            bash_script=f"""singularity exec  {self.config.adtoolbox_singularity} fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
             for key,value in kwargs.items():
                 key_=key.replace("_","-")
                 bash_script+=f" --{key_} {value} "
