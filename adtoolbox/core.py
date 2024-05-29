@@ -1988,13 +1988,15 @@ class Metagenomics:
     
 
 
-    def seqs_from_sra(self,accession:str,target_dir:str,container:str="None")-> tuple[str,dict]:
+    def seqs_from_sra(self,accession:str,target_dir:str,container:str="None",**kwargs)-> tuple[str,dict]:
         """ 
         This method downloads the fastq files from the SRA database using the accession number (ONLY SAMPLE ACCESSION AND NOT PROJECT ACCESSION) of the project or run.
         The method uses the fasterq-dump tool to download the fastq files. This method also extracts the sample metadata from the SRA database for future use.
         #NOTE In order for this method to work without any container, you need to have the SRA toolkit installed on your system or
         at least have prefetch and fasterq-dump installed on your system. For more information on how to install the SRA toolkit, please refer to the following link:
-        https://github.com/ncbi/sra-tools
+        https://github.com/ncbi/sra-tools.
+        
+        Any additional keyword
     
         Required Configs:
             None
@@ -2011,11 +2013,11 @@ class Metagenomics:
     
         """   
         if container=="None":
-            prefetch_script=f"""#!/bin/bash\nprefetch {accession} -O {target_dir}"""
+            prefetch_script=f"""#!/bin/bash\nprefetch {accession} -O {target_dir} --max-size 100000000\n"""
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
             sra_file=acc_folder/(accession+".sra")
-            fasterq_dump_script+=f"\nfasterq-dump {sra_file} -O {acc_folder} --split-files"
+            fasterq_dump_script+=f"\nfasterq-dump {sra_file} -O {acc_folder} --split-files --temp {acc_folder}"
             fasterq_dump_script+=f"\nrm {sra_file}"
             
             prefetch_script+=fasterq_dump_script
@@ -2023,21 +2025,21 @@ class Metagenomics:
         
         elif container=="docker":
             prefetch_script=f""""""
-            prefetch_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} prefetch {accession} -O {target_dir}\n"
+            prefetch_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} prefetch {accession} -O {target_dir} --max-size 100000000\n"
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
             sra_file=acc_folder/(accession+".sra")
-            fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} fasterq-dump {sra_file} -O {acc_folder} --split-files\n"
+            fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} fasterq-dump {sra_file} -O {acc_folder} --split-files --temp {acc_folder}\n"
             fasterq_dump_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} rm {sra_file}"
             prefetch_script+=fasterq_dump_script
         
         elif container=="singularity":
             prefetch_script=f""""""
-            prefetch_script+=f"singularity exec {self.config.adtoolbox_singularity} prefetch {accession} -O {target_dir}\n"
+            prefetch_script+=f"singularity exec {self.config.adtoolbox_singularity} prefetch {accession} -O {target_dir} --max-size 100000000\n"
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
             sra_file=acc_folder/(accession+".sra")
-            fasterq_dump_script+=f"singularity exec {self.config.adtoolbox_singularity} fasterq-dump {sra_file} -O {acc_folder} --split-files\n"
+            fasterq_dump_script+=f"singularity exec {self.config.adtoolbox_singularity} fasterq-dump {sra_file} -O {acc_folder} --split-files --temp {acc_folder}\n"
             fasterq_dump_script+=f"singularity exec {self.config.adtoolbox_singularity} rm {sra_file}"
             prefetch_script+=fasterq_dump_script
        
