@@ -13,7 +13,6 @@ import utils
 import configs
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
-from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 from collections import Counter
@@ -723,30 +722,7 @@ class Database:
                 f.write(value+"\n")
 
     def cazy_ec(self)->list:
-        """
-        This method returns a list of EC numbers that are extracted from the Cazy website.
-        This method is useful for adding more carbohydrate metabolism reactions to the reaction database.
-        
-        Returns:
-            list: A list of EC numbers for carbohydrate metabolism found on CAZy database.
-        
-        Examples:
-            >>> db=Database()
-            >>> ec_list=db.cazy_ec()
-            >>> assert len(ec_list)>0
-        """
-
-        ec_list = []
-        for link in self.config.cazy_links:
-            page = requests.get(link)
-            soup = BeautifulSoup(page.content, "html.parser")
-            results = soup.find("div", class_="cadre_principal").find_all(
-                "th", class_="thec")
-            for ec_number in results:
-                if '-' not in ec_number.text.strip() and '.' in ec_number.text.strip():
-                    ec_list.append(ec_number.text.strip())
-                    
-        return ec_list
+        pass
           
     def add_protein_to_protein_db(self, protein_id:str, header_tail:str)->None:
         """
@@ -1126,18 +1102,7 @@ class Database:
                                       container=container,
                                       run=False,
                                       config=self.config)
-        
-        if container=="None":
-            pass
-        
-        elif container=="singularity":
-            script=f"singularity exec --bind {self.config.protein_db}:{self.config.protein_db},{self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_singularity} {script}"
-        
-        elif container=="docker":
-            script=f"docker run -v {self.config.protein_db}:{self.config.protein_db} -v {self.config.protein_db_mmseqs}:{self.config.protein_db_mmseqs} {self.config.adtoolbox_docker} {script}"
-        
-        else:
-            raise ValueError("Container should be either None, singularity or docker!")
+
     
         return script
 
@@ -2074,7 +2039,7 @@ class Metagenomics:
                 bash_script+=f" --{key_} {value} "
         
         elif container=="singularity":
-            bash_script=f"""singularity exec  {self.config.adtoolbox_singularity} fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
+            bash_script=f"""singularity exec {self.config.adtoolbox_singularity} fastp -i {read_1} -I {read_2}  -m --merged_out {outputfile}"""
             for key,value in kwargs.items():
                 key_=key.replace("_","-")
                 bash_script+=f" --{key_} {value} "

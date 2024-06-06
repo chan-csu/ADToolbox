@@ -21,38 +21,12 @@ tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)"
 tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "cloudpickle"]
 
 [[package]]
-name = "beautifulsoup4"
-version = "4.11.1"
-description = "Screen-scraping library"
-category = "main"
-optional = false
-python-versions = ">=3.6.0"
-
-[package.dependencies]
-soupsieve = ">1.2"
-
-[package.extras]
-html5lib = ["html5lib"]
-lxml = ["lxml"]
-
-[[package]]
 name = "brotli"
 version = "1.0.9"
 description = "Python bindings for the Brotli compression library"
 category = "main"
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "bs4"
-version = "0.0.1"
-description = "Dummy package for Beautiful Soup"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-beautifulsoup4 = "*"
 
 [[package]]
 name = "certifi"
@@ -761,14 +735,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
-name = "soupsieve"
-version = "2.3.2.post1"
-description = "A modern CSS selector implementation for Beautiful Soup."
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
 name = "statsmodels"
 version = "0.13.2"
 description = "Statistical computations and models for Python"
@@ -898,14 +864,12 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "d464afcafac5f0f1f3d055957f0312bed6bfdac10fbf4b6e662bea19389ff6e2"
+content-hash = "5c6139798c09a031916a27a77b47cca2ef4aecf29b8f438f8493dd8e9b6ba8af"
 
 [metadata.files]
 atomicwrites = []
 attrs = []
-beautifulsoup4 = []
 brotli = []
-bs4 = []
 certifi = []
 charset-normalizer = []
 click = []
@@ -961,7 +925,6 @@ scikit-optimize = []
 scipy = []
 setuptools-scm = []
 six = []
-soupsieve = []
 statsmodels = []
 sympy = []
 tenacity = []

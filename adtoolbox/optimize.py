@@ -16,7 +16,7 @@ import torch
 import pickle
 import pathlib
 from collections import namedtuple
-
+import numba
 Validation=namedtuple("Validation",("r_squared","rmse"))
 
         
@@ -231,7 +231,7 @@ class NNSurrogateTuner:
     
     def _generate_initial_population(self):
         self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
-
+    @numba.jit
     def _cost(self, parameters: dict,ode_method:str)->float:
         """
         This function is called by openbox to evaluate a configuration.
@@ -255,7 +255,7 @@ class NNSurrogateTuner:
             raise NotImplementedError("Fitness mode not implemented.")
     
 
-        
+    @numba.jit
     def _suggest_parameters(self):
         if len(self._aquired)==0:
             raise ValueError("No sample is aquired yet.")
@@ -271,7 +271,7 @@ class NNSurrogateTuner:
                 self._optimizer_inputs.zero_grad()
                 self._optimizer_inputs.zero_grad()
         return input_data.detach().numpy()
-    
+    @numba.jit
     def _train_surrogate(self):
         net_inputs=torch.tensor(self._aquired["parameters"],dtype=torch.float32)
         net_labels=torch.tensor(self._aquired["cost"],dtype=torch.float32)
@@ -285,7 +285,7 @@ class NNSurrogateTuner:
             self._optimizer_model.zero_grad()
         return loss.detach().numpy()
 
-        
+    @numba.jit
     def optimize(self, perturbation_method:str="random",ode_method="LSODA", **kwargs)->dict:
         costs=[]
         if not self._initialized:
