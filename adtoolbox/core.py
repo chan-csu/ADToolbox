@@ -1550,9 +1550,9 @@ class Metagenomics:
             str: The script that is supposed to be running later.
         """
         ### Load all the required files
-        alignment_dir = os.path.join(output_dir,'Alignments')
-        match_table=os.path.join(output_dir,'matches.blast')
-        gtdb_dir_fasta=self.config.gtdb_dir_fasta
+        alignment_dir = str(pathlib.Path(os.path.join(output_dir,'Alignments')).absolute())
+        match_table=str(pathlib.Path(os.path.join(output_dir,'matches.blast')))
+        gtdb_dir_fasta=str(pathlib.Path(self.config.gtdb_dir_fasta))
         ### End Loading
         query=query_dir
         dirs=[output_dir,
