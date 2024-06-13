@@ -1646,7 +1646,7 @@ class Metagenomics:
         """
         base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
         bash_script=""
-
+        identifier=identifier.replace("_","")
         specific_ncbi_dir = identifier[0:3]+'/'+\
                             identifier[3:6]+'/'+\
                             identifier[6:9]+'/'+\
