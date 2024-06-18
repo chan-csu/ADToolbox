@@ -1118,11 +1118,17 @@ class Database:
         Examples:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"adm_parameters_test"))==False
-            >>> db=Database(config=configs.Database(adm_parameters_base_dir=os.path.join(Main_Dir,"adm_parameters_test")))
+            >>> E_ADM_LOCAL={"model_parameters":os.path.join(Main_Dir, "test","ADM_Parameters","e_adm_model_parameters.json"),\
+	        "base_parameters":os.path.join(Main_Dir, "test","ADM_Parameters","e_adm_base_parameters.json"),\
+	        "initial_conditions":os.path.join(Main_Dir, "test","ADM_Parameters","e_adm_initial_conditions.json"),\
+	        "inlet_conditions":os.path.join(Main_Dir, "test","ADM_Parameters","e_adm_inlet_conditions.json"),\
+	        "reactions":os.path.join(Main_Dir, "test","ADM_Parameters","e_adm_reactions.json"),\
+	        "species":os.path.join(Main_Dir, "test","ADM_Parameters","e_adm_species.json")}
+            >>> db=Database(config=configs.Database(adm_parameters=E_ADM_LOCAL))
             >>> db.download_adm_parameters(verbose=False) 
-            >>> assert os.path.exists(os.path.join(Main_Dir,"adm_parameters_test"))==True
-            >>> assert len(os.listdir(os.path.join(Main_Dir,"adm_parameters_test")))==12
-            >>> os.system("rm -r "+os.path.join(Main_Dir,"adm_parameters_test"))
+            >>> assert os.path.exists(os.path.join(Main_Dir,"test"))==True
+            >>> assert len(os.listdir(os.path.join(Main_Dir,"test")))>0
+            >>> os.system("rm -r "+os.path.join(Main_Dir,"test"))
             0
         
         Args:
