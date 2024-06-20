@@ -98,14 +98,14 @@ INTERNAL_LINKS={
 	"feed_db_url":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/feed_db.tsv",
 	"qiime_classifier_db_url":"https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
 	"metagenomics_studies":"https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv",
-    "exmpermental_data_db":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/experimental_data_references.json"
+    "experimental_data_db":"https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/experimental_data_references.json"
 }
 
 
 
 STUDIES_LOCAL={
 		"metagenomics_studies":os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
-	"exmpermental_data_db":os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json")
+	"experimental_data_db":os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json")
 }
 E_ADM_MICROBIAL_GROUPS_MAPPING={
                             "Hydrolysis carbohydrates":"X_ch",
@@ -155,8 +155,6 @@ class Database:
 		adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
     	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
 		adm_microbial_groups_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
-        metagenomics_studies_db=os.path.join(Main_Dir,"Database","Studies","metagenomics_studies.tsv"),
-        experimental_data_db=os.path.join(Main_Dir,"Database","Studies","experimental_data_references.json"),
         studies_remote=INTERNAL_LINKS,
         studies_local=STUDIES_LOCAL,
         check_sanity:bool=False
@@ -183,8 +181,6 @@ class Database:
 		self.adtoolbox_docker=adtoolbox_docker
 		self.protein_db=protein_db
 		self.adm_microbial_groups_mapping=adm_microbial_groups_mapping
-		self.metagenomics_studies_db=metagenomics_studies_db
-		self.experimental_data_db=experimental_data_db
 		self.studies_remote=studies_remote
 		self.studies_local=studies_local
 		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")

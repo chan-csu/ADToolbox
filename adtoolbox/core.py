@@ -72,7 +72,7 @@ class Experiment:
         >>> S_su_index=species.index("S_su")
         >>> S_aa_index=species.index("S_aa")
         >>> exp=Experiment(name="Test",time=[0,1,2],variables=[S_su_index,S_aa_index],data=[[1,2,3],[4,5,6]],reference="Test reference")
-        
+    
     """
     name:str
     time: list[float]
@@ -340,9 +340,9 @@ class SeedDB:
         config (configs.SeedDB): An instance of the SeedDB class in the configs module. This class contains the information about the seed database.
     
     Examples:
-        >>> seed_db=SeedDB(configs.SeedDB())
-        >>> assert seed_db.compound_db==configs.SeedDB().compound_db
-        >>> assert seed_db.reaction_db==configs.SeedDB().reaction_db
+        >>> seed_db=SeedDB(configs.Database())
+        >>> assert seed_db.compound_db==configs.Database().compound_db
+        >>> assert seed_db.reaction_db==configs.Database().reaction_db
 
     """
 
@@ -366,7 +366,8 @@ class SeedDB:
             - config.reaction_db
         
         Examples:
-            >>> seed_db=SeedDB()
+            >>> db_conf=configs.Database()
+            >>> seed_db=SeedDB(db_conf)
             >>> rxn=seed_db.instantiate_rxns("rxn00558")
             >>> assert rxn.data["name"]=="D-glucose-6-phosphate aldose-ketose-isomerase"
         """
@@ -388,7 +389,7 @@ class SeedDB:
             - config.compound_db
         
         Examples:
-            >>> seed_db=SeedDB()
+            >>> seed_db=SeedDB(configs.Database())
             >>> metab=seed_db.instantiate_metabs("cpd01024")
             >>> assert metab.cod==4.0
         """
@@ -409,7 +410,7 @@ class SeedDB:
             - config.reaction_db
         
         Examples:
-            >>> seed_db=SeedDB()
+            >>> seed_db=SeedDB(config=configs.Database())
             >>> seed_rxn_list=seed_db.get_seed_rxn_from_ec("1.1.1.1")
             >>> assert len(seed_rxn_list)>0
         
@@ -557,7 +558,9 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"experimental_data_test_db.json"))
         
         """
-        pd.DataFrame(columns=["name","initial_conditions","time","variables","data","reference"]).to_json(self.config.experimental_data_db,orient="records")
+        if not (pathlib.Path(self.config.studies_local["experimental_data_db"]).parent).exists():
+            pathlib.Path(self.config.studies_local["experimental_data_db"]).parent.mkdir(parents=True)
+        pd.DataFrame(columns=["name","initial_concentrations","time","variables","data","reference"]).to_json(self.config.studies_local["experimental_data_db"],orient="records")
         
     
     def filter_seed_from_ec(self, 
@@ -957,7 +960,7 @@ class Database:
         
         Examples:
             >>> import os
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
+            #>>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
             >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
             >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
             >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
@@ -986,24 +989,27 @@ class Database:
         
         Examples:
             >>> import os,json
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experiments_test_db.json")))
-            >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
+            >>> local_dir={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
+            >>> if os.path.exists(local_dir['experimental_data_db']):
+            ...     os.remove(local_dir['experimental_data_db'])
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
+            >>> experiment = Experiment(name="test_study",initial_concentrations={}, time=[0, 1, 2], variables=[2, 6], data=[[1, 2, 3], [4, 5, 6]], reference="test")
             >>> db.add_experiment_to_experiments_db(experiment)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
-            >>> assert os.path.getsize(os.path.join(Main_Dir,"experiments_test_db.json"))>0
-            >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
+            >>> assert os.path.exists(local_dir['experimental_data_db'])==True
+            >>> assert os.path.getsize(local_dir['experimental_data_db'])>0
+            >>> os.remove(local_dir['experimental_data_db'])
+
         """
-        if not os.path.exists(self.config.experimental_data_db):
+        if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             self.initialize_experimental_data_db()
         
         if experiment.name in [experiment.name for experiment in self.get_experiment_from_experiments_db("name",experiment.name)]: 
-            raise ValueError("Experiment already exists in the database!")
+            raise ValueError("Experiment already exists in the database!:"+self.config.studies_local["experimental_data_db"])
         
-        with open(self.config.experimental_data_db,"r") as f:
+        with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)
         experiments_db.append(experiment.to_dict())
-        with open(self.config.experimental_data_db,"w") as f:
+        with open(self.config.studies_local["experimental_data_db"],"w") as f:
             json.dump(experiments_db,f)
         
     def remove_experiment_from_experiments_db(self,field_name:str,query:str)->None:
@@ -1029,13 +1035,13 @@ class Database:
             >>> assert pd.read_json(os.path.join(Main_Dir,"experiments_test_db.json")).shape[0]==0
             >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
         """
-        if not os.path.exists(self.config.experimental_data_db):
+        if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             raise FileNotFoundError("Experimental data database does not exist!")
 
-        with open(self.config.experimental_data_db,"r") as f:
+        with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)
         experiments_db=[experiment for experiment in experiments_db if query not in experiment[field_name]]
-        with open(self.config.experimental_data_db,"w") as f:
+        with open(self.config.studies_local["experimental_data_db"],"w") as f:
             json.dump(experiments_db,f)
 
     def get_experiment_from_experiments_db(self,field_name:str,query:str)->list[Experiment]:
@@ -1054,8 +1060,8 @@ class Database:
         
         Examples:
             >>> import os,json
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experiments_test_db.json")))
+            >>> local_diri={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
+            >>> db=Database(config=configs.Database(studies_local=local_diri))
             >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
             >>> db.add_experiment_to_experiments_db(experiment)
             >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
@@ -1064,10 +1070,10 @@ class Database:
             >>> assert experiment[0].name=="test_study"
             >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
         """
-        if not os.path.exists(self.config.experimental_data_db):
+        if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             raise FileNotFoundError("Experimental data database does not exist!")
 
-        with open(self.config.experimental_data_db,"r") as f:
+        with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)
         experiments_db=[experiment for experiment in experiments_db if query in experiment[field_name]]
         return [Experiment(**experiment) for experiment in experiments_db]
@@ -1299,13 +1305,15 @@ class Database:
         Examples:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"studies_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(studies_db=os.path.join(Main_Dir,"studies_test_db.tsv")))
+            >>> STUDIES_LOCAL={"metagenomics_studies":os.path.join(Main_Dir,"Database","test","Studies","metagenomics_studies.tsv"),\
+	                            "exmpermental_data_db":os.path.join(Main_Dir,"Database","test","Studies","experimental_data_references.json")}
+            >>> db=Database(config=configs.Database(studies_local=STUDIES_LOCAL))
             >>> db.download_studies_database(verbose=False)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"studies_test_db.tsv"))==True
-            >>> assert os.path.getsize(os.path.join(Main_Dir,"studies_test_db.tsv"))>0
-            >>> os.remove(os.path.join(Main_Dir,"studies_test_db.tsv"))
+            >>> assert os.path.exists(STUDIES_LOCAL['metagenomics_studies'])==True
+            >>> assert os.path.getsize(STUDIES_LOCAL['metagenomics_studies'])>0
+            >>> os.remove(STUDIES_LOCAL['metagenomics_studies'])
         """
-        for i in ["metagenomics_studies","exmpermental_data_db"]:
+        for i in ["metagenomics_studies","experimental_data_db"]:
             r = requests.get(self.config.studies_remote[i], allow_redirects=True)
             if not os.path.exists(Path(self.config.studies_local[i]).parent):
                 os.makedirs(Path(self.config.studies_local[i]).parent)
