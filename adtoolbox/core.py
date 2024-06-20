@@ -65,9 +65,8 @@ class Experiment:
         model_name (str, optional): The name of the model that the experimental data is for. Defaults to "e_adm".
     
     Examples:
-        >>> from adtoolbox import configs
         >>> import json
-        >>> with open(configs.Database().species,"r") as f:
+        >>> with open(configs.Database().adm_parameters["species"],"r") as f:
         ...     species=json.load(f)
         >>> S_su_index=species.index("S_su")
         >>> S_aa_index=species.index("S_aa")
@@ -126,7 +125,7 @@ class Feed:
         reference (str, optional): A reference for the feed data. Defaults to ''.    
     
     Examples:
-        >>> feed=Feed(name="Test",carbohydrates=20,lipids=20,proteins=20,si=20,xi=20,tss=70)
+        >>> feed=Feed(name="Test",carbohydrates=25,lipids=25,proteins=25,si=25,xi=25,tss=70)
         >>> assert feed.ch_tss==feed.lip_tss==feed.prot_tss==feed.xi_tss==0.25
         
     """
@@ -530,15 +529,15 @@ class Database:
         
         Examples:
             >>> import os
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> local_dir={'metagenomics_studies':os.path.join(Main_Dir,"test","metagenomics_test_db.tsv")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> db.initialize_metagenomics_studies_db()
-            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]==0
-            >>> assert set(pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").columns)==set(["name","study_type","microbiome","sample_accession","comments","study_accession"])
-            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
-        
+            >>> assert pd.read_table(local_dir['metagenomics_studies'],delimiter="\t").shape[0]==0
+            >>> assert set(pd.read_table(local_dir['metagenomics_studies'],delimiter="\t").columns)==set(["name","study_type","microbiome","sample_accession","comments","study_accession"])
+            >>> os.remove(local_dir['metagenomics_studies'])
+         
         """
-        pd.DataFrame(columns=["name","study_type","microbiome","sample_accession","comments","study_accession"]).to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
+        pd.DataFrame(columns=["name","study_type","microbiome","sample_accession","comments","study_accession"]).to_csv(self.config.studies_local["metagenomics_studies"],index=False,sep="\t")
         
     def initialize_experimental_data_db(self)->None:
         """This function intializes ADToolbox's experimental data database by creating an empty json file.
@@ -548,15 +547,14 @@ class Database:
             - config.experimental_data_db
         
         Examples:
-            >>> import os
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experimental_data_test_db.json"))==False
-            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experimental_data_test_db.json")))
+            >>> import os,json
+            >>> local_dir={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> db.initialize_experimental_data_db()
-            >>> assert pd.read_json(os.path.join(Main_Dir,"experimental_data_test_db.json")).shape[0]==0
-            >>> with open(os.path.join(Main_Dir,"experimental_data_test_db.json"),"r") as f:
+            >>> assert pd.read_json(local_dir['experimental_data_db']).shape[0]==0
+            >>> with open(local_dir['experimental_data_db'],"r") as f:
             ...     assert json.load(f)==[]
-            >>> os.remove(os.path.join(Main_Dir,"experimental_data_test_db.json"))
-        
+            >>> os.remove(local_dir['experimental_data_db'])
         """
         if not (pathlib.Path(self.config.studies_local["experimental_data_db"]).parent).exists():
             pathlib.Path(self.config.studies_local["experimental_data_db"]).parent.mkdir(parents=True)
@@ -900,19 +898,19 @@ class Database:
 
         Examples:
             >>> import os
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> local_dir={'metagenomics_studies':os.path.join(Main_Dir,"test","metagenomics_test_db.tsv")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
             >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==True
-            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]>0
-            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+            >>> assert os.path.exists(local_dir['metagenomics_studies'])==True
+            >>> assert pd.read_table(local_dir['metagenomics_studies'],delimiter="\t").shape[0]>0
+            >>> os.remove(local_dir['metagenomics_studies'])
         """
-        if not os.path.exists(self.config.metagenomics_studies_db):
+        if not os.path.exists(self.config.studies_local["metagenomics_studies"]):
             self.initialize_metagenomics_studies_db()
-        metagenomics_studies_db=pd.read_table(self.config.metagenomics_studies_db,delimiter="\t")
+        metagenomics_studies_db=pd.read_table(self.config.studies_local["metagenomics_studies"],delimiter="\t")
         metagenomics_studies_db=pd.concat([metagenomics_studies_db,pd.DataFrame([metagenomics_study.to_dict()])],ignore_index=True,axis=0)
-        metagenomics_studies_db.to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
+        metagenomics_studies_db.to_csv(self.config.studies_local["metagenomics_studies"],index=False,sep="\t")
     
     def remove_metagenomics_study_from_metagenomics_studies_db(self,field_name:str,query:str)->None:
         r"""
@@ -926,23 +924,23 @@ class Database:
             query (str): The query string.
 
         Examples:
-            >>> import os
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> import os,json
+            >>> local_dir={'metagenomics_studies':os.path.join(Main_Dir,"test","metagenomics_test_db.json")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
             >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==True
-            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> assert os.path.exists(local_dir['metagenomics_studies'])==True
+            >>> assert pd.read_table(local_dir['metagenomics_studies'],delimiter="\t").shape[0]>0
             >>> db.remove_metagenomics_study_from_metagenomics_studies_db("name","test_study")
-            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]==0
-            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+            >>> assert pd.read_table(local_dir['metagenomics_studies'],delimiter="\t").shape[0]==0
+            >>> os.remove(local_dir['metagenomics_studies'])
         """
-        if not os.path.exists(self.config.metagenomics_studies_db):
+        if not os.path.exists(self.config.studies_local["metagenomics_studies"]):
             raise FileNotFoundError("Metagenomics studies database does not exist!")
 
-        metagenomics_studies_db=pd.read_table(self.config.metagenomics_studies_db,delimiter="\t")
+        metagenomics_studies_db=pd.read_table(self.config.studies_local["metagenomics_studies"],delimiter="\t")
         metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)==False]
-        metagenomics_studies_db.to_csv(self.config.metagenomics_studies_db,index=False,sep="\t")
+        metagenomics_studies_db.to_csv(self.config.studies_local["metagenomics_studies"],index=False,sep="\t")
     
     def get_metagenomics_study_from_metagenomics_studies_db(self,field_name:str,query:str)->list[MetagenomicsStudy]:
         r"""
@@ -960,20 +958,20 @@ class Database:
         
         Examples:
             >>> import os
-            #>>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(metagenomics_studies_db=os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv")))
+            >>> local_dir={'metagenomics_studies':os.path.join(Main_Dir,"test","metagenomics_test_db.tsv")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> metagenomics_study=MetagenomicsStudy(name="test_study",study_type="metagenomics",microbiome="anaerobic digester",sample_accession="test",comments="test",study_accession="test")
             >>> db.add_metagenomics_study_to_metagenomics_studies_db(metagenomics_study)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))==True
-            >>> assert pd.read_table(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"),delimiter="\t").shape[0]>0
+            >>> assert os.path.exists(local_dir['metagenomics_studies'])==True
+            >>> assert pd.read_table(local_dir['metagenomics_studies'],delimiter="\t").shape[0]>0
             >>> metagenomics_study=db.get_metagenomics_study_from_metagenomics_studies_db("name","test_study")
             >>> assert metagenomics_study[0].name=="test_study"
-            >>> os.remove(os.path.join(Main_Dir,"metagenomics_studies_test_db.tsv"))
+            >>> os.remove(local_dir['metagenomics_studies'])
         """
-        if not os.path.exists(self.config.metagenomics_studies_db):
+        if not os.path.exists(self.config.studies_local["metagenomics_studies"]):
             raise FileNotFoundError("Metagenomics studies database does not exist!")
 
-        metagenomics_studies_db=pd.read_table(self.config.metagenomics_studies_db,delimiter="\t")
+        metagenomics_studies_db=pd.read_table(self.config.studies_local["metagenomics_studies"],delimiter="\t")
         metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)]
         return [MetagenomicsStudy(**metagenomics_study.to_dict()) for _,metagenomics_study in metagenomics_studies_db.iterrows()]
     
@@ -1025,15 +1023,16 @@ class Database:
 
         Examples:
             >>> import os,json
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.tsv"))==False
-            >>> db=Database(config=configs.Database(experimental_data_db=os.path.join(Main_Dir,"experiments_test_db.json")))
+            >>> local_dir={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
             >>> db.add_experiment_to_experiments_db(experiment)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
-            >>> assert os.path.getsize(os.path.join(Main_Dir,"experiments_test_db.json"))>0
+            >>> assert os.path.exists(local_dir['experimental_data_db'])==True
+            >>> assert os.path.getsize(local_dir['experimental_data_db'])>0
             >>> db.remove_experiment_from_experiments_db("name","test_study")
-            >>> assert pd.read_json(os.path.join(Main_Dir,"experiments_test_db.json")).shape[0]==0
-            >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
+            >>> assert pd.read_json(local_dir['experimental_data_db']).shape[0]==0
+            >>> os.remove(local_dir['experimental_data_db'])
+
         """
         if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             raise FileNotFoundError("Experimental data database does not exist!")
@@ -1060,16 +1059,19 @@ class Database:
         
         Examples:
             >>> import os,json
-            >>> local_diri={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
-            >>> db=Database(config=configs.Database(studies_local=local_diri))
+            >>> local_dir={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
+            >>> db=Database(config=configs.Database(studies_local=local_dir))
             >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
             >>> db.add_experiment_to_experiments_db(experiment)
-            >>> assert os.path.exists(os.path.join(Main_Dir,"experiments_test_db.json"))==True
-            >>> assert os.path.getsize(os.path.join(Main_Dir,"experiments_test_db.json"))>0
+            >>> assert os.path.exists(local_dir['experimental_data_db'])==True
+            >>> assert os.path.getsize(local_dir['experimental_data_db'])>0
             >>> experiment=db.get_experiment_from_experiments_db("name","test_study")
             >>> assert experiment[0].name=="test_study"
-            >>> os.remove(os.path.join(Main_Dir,"experiments_test_db.json"))
+            >>> os.remove(local_dir['experimental_data_db'])
         """
+
+
+        
         if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             raise FileNotFoundError("Experimental data database does not exist!")
 
@@ -1306,7 +1308,7 @@ class Database:
             >>> import os
             >>> assert os.path.exists(os.path.join(Main_Dir,"studies_test_db.tsv"))==False
             >>> STUDIES_LOCAL={"metagenomics_studies":os.path.join(Main_Dir,"Database","test","Studies","metagenomics_studies.tsv"),\
-	                            "exmpermental_data_db":os.path.join(Main_Dir,"Database","test","Studies","experimental_data_references.json")}
+	                            "experimental_data_db":os.path.join(Main_Dir,"Database","test","Studies","experimental_data_references.json")}
             >>> db=Database(config=configs.Database(studies_local=STUDIES_LOCAL))
             >>> db.download_studies_database(verbose=False)
             >>> assert os.path.exists(STUDIES_LOCAL['metagenomics_studies'])==True
