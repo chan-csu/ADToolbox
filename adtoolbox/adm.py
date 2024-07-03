@@ -48,7 +48,7 @@ class Model:
     Args:
         model_parameters (dict): a dictionary which contains model parameters
         base_parameters (dict): a dictionary which contains base paramters
-        initial_conditions (dict): a dictionary containing inlet conditions for all species
+        initial_conditions (dict): a dictionary containing initial conditions for all species
         inlet_conditions (dict): a dictionary containing inlet conditions for all species
         feed (Feed): a Feed instance which contains the feed information
         reactions (list): a list containing all types of reactions

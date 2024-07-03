@@ -1168,7 +1168,6 @@ class Database:
         
         Examples:
             >>> import os
-            >>> assert os.path.exists(os.path.join(Main_Dir,"seed_rxn.json"))==False
             >>> assert os.path.exists(os.path.join(Main_Dir,"seed_compound.json"))==False
             >>> db=Database(config=configs.Database(reaction_db=os.path.join(Main_Dir,"seed_rxn.json"),compound_db=os.path.join(Main_Dir,"seed_compound.json")))
             >>> db.download_seed_databases(verbose=False)
@@ -1477,7 +1476,8 @@ class Metagenomics:
             None
         """
         self.config=config
-            
+
+    #### NEEDS to BE FIXED        
     def find_top_taxa(
         self,
         sample_name:str,
@@ -1538,8 +1538,8 @@ class Metagenomics:
     def align_to_gtdb(self,
                       query_dir:str,
                       output_dir:str,
-                      container:str="None")->str:
-        """This function takes the representative sequences of the top k features and generates the script to
+                      container:str="None")->tuple[str]:
+        r"""This function takes the representative sequences of the top k features and generates the script to
         align these feature sequences to gtdb using VSEARCH. If you intend to run this you either
         need to have VSEARCH installed or run it with a container option. You can use either the docker or singularity
         as container options. Otherwise you can use None and run it with the assumption that VSEARCH is installed.
@@ -1558,7 +1558,15 @@ class Metagenomics:
             ---------
             config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
             ---------
-        
+        Examples:
+            >>> import os
+            >>> query_dir=os.path.join(Main_Dir,"test","query.fa")
+            >>> output_dir=os.path.join(Main_Dir,"test")
+            >>> conf=configs.Metagenomics(vsearch_similarity=0.8)
+            >>> conf.gtdb_dir_fasta=(os.path.join(Main_Dir,"db.fa"))
+            >>> obj = Metagenomics(conf) 
+            >>> assert obj.align_to_gtdb(query_dir, output_dir, container="docker")[0] == f'docker run -v {output_dir}:{output_dir} -v {conf.gtdb_dir_fasta}:{conf.gtdb_dir_fasta} -v {query_dir}:{query_dir} parsaghadermazi/adtoolbox:x86 vsearch --top_hits_only --blast6out {output_dir}/matches.blast --usearch_global {query_dir} --db {conf.gtdb_dir_fasta} --id {conf.vsearch_similarity} --threads 4 --alnout {output_dir}/Alignments --top_hits_only\n'
+
         Args:
             container (str, optional): The container to use. Defaults to "None".
         
@@ -1620,29 +1628,36 @@ class Metagenomics:
     
     
     def get_genomes_from_gtdb_alignment(self,alignment_dir:str)->dict:
-        """This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
+        r"""This function takes the alignment file generated from the align_to_gtdb function and generates the the genome information
         using the GTDB-Tk. In the outputted dictionary, the keys are feature ids and the values are the representative genomes.
 
-        Required Configs:
-            config.align_to_gtdb_outputs_dir: The path to the directory where the outputs of the align_to_gtdb function are saved.
-            ---------
-            config.feature_to_taxa: The path to the json file where the json file including feature ids and the representative genomes will be saved.
-        
+        Examples:
+            >>> import os
+            >>> alignments=["0034e3d0368ec41aeb7f346b434f8d46","GB_GCA_937889405.1~CALAPC010000121.1","100.0","253","0","0"	,"1","253",	"1","1009",	"-1","0"]
+            >>> hit="\t".join(alignments)
+            >>> output= os.path.join(Main_Dir,"test","matches.blast")
+            >>> with open(output,"w") as f:
+            ...    f.write(hit)
+            101
+            >>> obj=Metagenomics(configs.Metagenomics())
+            >>> obj.get_genomes_from_gtdb_alignment(output)
+            {'0034e3d0368ec41aeb7f346b434f8d46': 'GCA_937889405.1'}
+            
+    
         Args:
             save (bool, optional): Whether to save the json file or not. Defaults to True.
         """
-        matches = os.path.join(alignment_dir,'matches.blast')
+        matches = os.path.join(alignment_dir)
         aligned=pd.read_table(matches,header=None,delimiter='\t')
         aligned.drop_duplicates(0,inplace=True)
         aligned[1]=aligned[1].apply(lambda x: ("_".join(x.split('_')[1:])).split("~")[0])
         alignment_dict=dict(zip(aligned[0],aligned[1]))
 
-        
         return alignment_dict
     
     
     def download_genome(self,identifier:str,output_dir:str,container:str="None")-> str:
-        """This function downloads the genomes from NCBI using the refseq/genbank identifiers.
+        r"""This function downloads the genomes from NCBI using the refseq/genbank identifiers.
         Note that this function uses rsync to download the genomes. 
 
         Required Configs:
@@ -1652,6 +1667,13 @@ class Metagenomics:
             ---------
             config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
             ---------
+        Examples:
+            >>> import os 
+            >>> genome_identifier="GCA_937889405.1"
+            >>> output=os.path.join(Main_Dir,"test")
+            >>> obj = Metagenomics(configs.Metagenomics()) 
+            >>> assert obj.download_genome(identifier=genome_identifier,output_dir= output)[0] == 'rsync -avz --progress rsync://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/937/889/405 '+output
+
         Args:
             identifier list[str]: The list of identifiers for the genomes. It can be either refseq or genbank.
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
@@ -1732,7 +1754,7 @@ class Metagenomics:
             name:str,
             container:str="None",
             )->tuple[str,str]:
-        """
+        r"""
         This is a function that will align a genome to the Protein Database of the ADToolbox using mmseqs2.
         If you want to save the scripts, set save to True. Note that the alignment tables will be saved in any case.
         Note that this function uses mmseqs2 to align the genomes to the protein database. So, to run this function without
@@ -1746,6 +1768,14 @@ class Metagenomics:
             ---------
             config.adtoolbox_singularity: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
             ---------
+        Example: 
+            >>> import os
+            >>> output=os.path.join(Main_Dir,"test")
+            >>> address=os.path.join(Main_Dir,"test","genome_sequence.fa")
+            >>> obj = Metagenomics(configs.Metagenomics()) 
+            >>> name="test_align"
+            >>> assert obj.align_genome_to_protein_db(address=address,outdir=output,name=name,container="docker")[0].split(" ")==['docker', 'run', '', '-v', address+':'+address, '-v', configs.Database().protein_db+':'+configs.Database().protein_db, '-v', output+':'+output, 'parsaghadermazi/adtoolbox:x86', '', 'mmseqs', 'easy-search', address, configs.Database().protein_db, output+'/Alignment_Results_mmseq_test_align.tsv', 'tmpfiles', '--format-mode', '4', '\n\n']
+
         Args:
             address (str): The address of the genome to be aligned.
             outdir (str): The output directory where the alignment files will be saved.
@@ -1802,6 +1832,18 @@ class Metagenomics:
         
             protein_db_mmseqs (str): The address of the existing/to be created protein database of the ADToolbox for mmseqs.
             --------
+        Example:
+            >>> import os
+            >>> query_seq= "os.path.join(Main_Dir,"test","query.seq")
+            >>> alignment_file= "output_alignment.txt"
+            >>> protein_db_mmseqs=os.path.join(Main_Dir,"test","protein_db_mmseqs")
+            >>> with open(protein_db_mmseqs,'w') as f:
+            ...     f.write("")
+            0
+            >>> obj = Metagenomics(configs.Metagenomics()) 
+            >>> assert obj.align_short_reads_to_protein_db(query_seq=query_seq, alignment_file_name= protein_db_mmseqs, container="docker")[0] == ''
+            >>> os.remove(protein_db_mmseqs)
+
         Args:
             query_seq (str): The address of the query sequence.
             alignment_file_name (str): The name of the alignment file.
@@ -1837,7 +1879,7 @@ class Metagenomics:
         return script,path_query.parent/(alignment_file_name+".tsv")
     
     def extract_ec_from_alignment(self,alignment_file:str)->dict[str,int]:
-        """
+        r"""
         This function extracts the number of times an EC number is found in the alignment file when aligned to ADToolbox protein database.
         
         Required Configs:
@@ -1847,6 +1889,23 @@ class Metagenomics:
             ---------
             config.ec_counts_from_alignment: The address of the json file that the results will be saved in.
             ---------
+
+        Example:
+            >>> import os
+            >>> alignments=["CP001673.1","Q8YNF9|1.4.4.2","0.566","2859","414","0","1021521","1024379","27", "982", "0.000E+00","1109"]
+            >>> headers=["query","target","fident","alnlen","mismatch","gapopen", "qstart", "qend ","tstart","tend","evalue", "bits"]
+            >>> hit="\t".join(alignments)
+            >>> headers_tab="\t".join(headers)
+            >>> combine= headers + "\n" + hit
+            >>> output= os.path.join(Main_Dir,"test","mmseqs_alignments.tsv")
+            >>> with open(output,"w") as f:
+            ...    f.write(combine)
+            100
+            >>> obj=Metagenomics(configs.Metagenomics())
+            >>> obj.extract_ec_from_alignment(output)
+            {'CP001673.1':'Q8YNF9'}
+
+    
         Args:
             alignment_file (str): The address of the alignment file.
         
