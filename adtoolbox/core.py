@@ -1005,18 +1005,12 @@ class Database:
         """
         if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             self.initialize_experimental_data_db()
-<<<<<<< Updated upstream
-        
-        if experiment.name in [experiment.name for experiment in self.get_experiment_from_experiments_db("name",experiment.name)]: 
-            raise ValueError("Experiment already exists in the database!:"+self.config.studies_local["experimental_data_db"])
-=======
         if force:
             for exp in self.get_experiment_from_experiments_db("name",experiment.name):
                 self.remove_experiment_from_experiments_db("name",exp.name)
             
         else:
             raise ValueError("Experiment already exists in the database!")
->>>>>>> Stashed changes
         
         with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)

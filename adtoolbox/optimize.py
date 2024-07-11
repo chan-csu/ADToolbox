@@ -188,7 +188,6 @@ class NNSurrogateTuner:
              save_every:int=10,
              history_file_path:pathlib.Path=pathlib.Path("./history.pkl"),
              exp_std:float=5,
-             ode_solver:str="Radau"
              )->None:
 
         self.base_model = base_model
@@ -225,7 +224,6 @@ class NNSurrogateTuner:
         self.exp_std=exp_std
         torch.set_num_threads(1)
         self._initialized=False
-        self.ode_solver=ode_solver
         
     def _get_space(self)->np.ndarray:
         self._param_space=np.array(list(zip(*self.tunables.values()))).T
