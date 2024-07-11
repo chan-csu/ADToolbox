@@ -187,7 +187,8 @@ class NNSurrogateTuner:
              initial_points:int=5,
              save_every:int=10,
              history_file_path:pathlib.Path=pathlib.Path("./history.pkl"),
-             exp_std:float=5
+             exp_std:float=5,
+             ode_solver:str="Radau"
              )->None:
 
         self.base_model = base_model
@@ -224,6 +225,7 @@ class NNSurrogateTuner:
         self.exp_std=exp_std
         torch.set_num_threads(1)
         self._initialized=False
+        self.ode_solver=ode_solver
         
     def _get_space(self)->np.ndarray:
         self._param_space=np.array(list(zip(*self.tunables.values()))).T
@@ -231,7 +233,6 @@ class NNSurrogateTuner:
     
     def _generate_initial_population(self):
         self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
-    @numba.jit
     def _cost(self, parameters: dict,ode_method:str)->float:
         """
         This function is called by openbox to evaluate a configuration.
@@ -243,11 +244,11 @@ class NNSurrogateTuner:
             res=0
             for experiment in self.train_data:
                 ic=experiment.initial_concentrations.copy()
-                ic.update({self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
+                ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
                 _model= self.base_model.copy()
                 _model.update_parameters(**{self.var_type:parameters})
                 _model.update_parameters(initial_conditions=ic)
-                solution=_model.solve_model(np.array(experiment.time),method=ode_method).y[experiment.variables,:]
+                solution=_model.solve_model(np.array(experiment.time),method=ode_method).y[[_model.species.index(i) for i in experiment.variables],:]
                 res+=np.sum(np.square(solution.T-experiment.data))
 
             return res
@@ -255,7 +256,6 @@ class NNSurrogateTuner:
             raise NotImplementedError("Fitness mode not implemented.")
     
 
-    @numba.jit
     def _suggest_parameters(self):
         if len(self._aquired)==0:
             raise ValueError("No sample is aquired yet.")
@@ -271,7 +271,6 @@ class NNSurrogateTuner:
                 self._optimizer_inputs.zero_grad()
                 self._optimizer_inputs.zero_grad()
         return input_data.detach().numpy()
-    @numba.jit
     def _train_surrogate(self):
         net_inputs=torch.tensor(self._aquired["parameters"],dtype=torch.float32)
         net_labels=torch.tensor(self._aquired["cost"],dtype=torch.float32)
@@ -285,7 +284,6 @@ class NNSurrogateTuner:
             self._optimizer_model.zero_grad()
         return loss.detach().numpy()
 
-    @numba.jit
     def optimize(self, perturbation_method:str="random",ode_method="LSODA", **kwargs)->dict:
         costs=[]
         if not self._initialized:
@@ -359,7 +357,7 @@ class NNSurrogateTuner:
 
     
 
-def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False,show_extra_states:Iterable[str]|None=None)->tuple[dict[str,pd.DataFrame],plotly.graph_objs.Figure|None]:
+def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False,show_extra_states:Iterable[str]|None=None,ode_solver:str="Radau")->tuple[dict[str,pd.DataFrame],plotly.graph_objs.Figure|None]:
     """
     This function can be used to compare the model's predictions to the experimental data of interest.
     
@@ -375,42 +373,23 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
     
     pallet=px.colors.qualitative.Plotly
     fig=None
-    if isinstance(data,Experiment):
-  
-        ic=data.initial_concentrations.copy()
-        ic.update({model.species[k]:data.data[0,idx] for idx,k in enumerate(data.variables) })
-        model.update_parameters(initial_conditions=ic)
-        solution=model.solve_model(np.array(data.time))
-        out={"model":pd.DataFrame(solution.y[data.variables,:].T,index=np.array(data.time).tolist(),columns=data.variables),
-             "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
-        if plot:
-            fig=go.Figure()
-            for idx,variable in enumerate(data.variables):
-                fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=model.species[variable],mode="lines",line=dict(
-                    color=pallet[idx])))
-                fig.add_trace(go.Scatter(x=out["data"].index,y=out["data"][variable],name=model.species[variable]+" observed",mode="markers",marker=dict(
-                    color=pallet[idx])))
-            if show_extra_states:
-                for idx,extra in enumerate(show_extra_states):
-                    fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=model.species[model.species.index(extra)],mode="lines",line=dict(
-                        color=pallet[idx+len(data.variables)])))
-            fig.show(renderer="svg")
+
     
-    elif isinstance(data,Iterable):
+    if isinstance(data,Iterable):
         
         if plot:
             fig=go.Figure()
         ic=pd.concat([pd.DataFrame(i.initial_concentrations,index=[0]) for  i in data ]).mean().to_dict()
-        ic.update({model.species[k]:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
+        ic.update({k:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
         model.update_parameters(initial_conditions=ic)
-        solution=model.solve_model(np.array(data[0].time))
-        out={"model":pd.DataFrame(solution.y[data[0].variables,:].T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
+        solution=model.solve_model(np.array(data[0].time),method=ode_solver)
+        out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data[0].variables],:].T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
         for idx,variable in enumerate(data[0].variables):
-            fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=model.species[variable],mode="lines",line=dict(
+            fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=variable,mode="lines",line=dict(
                     color=pallet[idx])))
         df=[]
         for data_ in data:
-            conc=pd.DataFrame(data_.data,columns=[model.species[i] for i in data_.variables],index=data_.time)
+            conc=pd.DataFrame(data_.data,columns=data_.variables,index=data_.time)
             conc["time"]=conc.index
             conc=conc.melt(id_vars=["time"])
             df.append(conc)
@@ -425,8 +404,8 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
             e=[]
             for time in times:
                 t.append(time)
-                y.append(df_grouped.get_group((time,comp)).mean()["value"])
-                e.append(df_grouped.get_group((time,comp)).std()["value"]/np.sqrt(df_grouped.get_group((time,comp)).shape[0]))
+                y.append(df_grouped.get_group((time,comp)).mean(numeric_only=True)["value"])
+                e.append(df_grouped.get_group((time,comp)).std(numeric_only=True)["value"]/np.sqrt(df_grouped.get_group((time,comp)).shape[0]))
             fig.add_trace(go.Scatter(x=t,
                                     y=y,
                                     error_y=dict(
@@ -443,11 +422,30 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
             
         if show_extra_states:
             for idx,extra in enumerate(show_extra_states):
-                fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=model.species[model.species.index(extra)],mode="lines",line=dict(
+                fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=extra,mode="lines",line=dict(
                     color=pallet[idx+len(data[0].variables)])))
         fig.show(renderer="svg")
+
     else:
-        raise TypeError("Data argument should be either a core. Experiment object or an iterable of core.Experiment objects.")
+  
+        ic=data.initial_concentrations.copy()
+        ic.update({k:data.data[0,idx] for idx,k in enumerate(data.variables) })
+        model.update_parameters(initial_conditions=ic)
+        solution=model.solve_model(np.array(data.time),method=ode_solver)
+        out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data.variables],:].T,index=np.array(data.time).tolist(),columns=data.variables),
+             "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
+        if plot:
+            fig=go.Figure()
+            for idx,variable in enumerate(data.variables):
+                fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=variable,mode="lines",line=dict(
+                    color=pallet[idx])))
+                fig.add_trace(go.Scatter(x=out["data"].index,y=out["data"][variable],name=variable+" observed",mode="markers",marker=dict(
+                    color=pallet[idx])))
+            if show_extra_states:
+                for idx,extra in enumerate(show_extra_states):
+                    fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=extra,mode="lines",line=dict(
+                        color=pallet[idx+len(data.variables)])))
+            fig.show(renderer="svg")
         
     return  out,fig
 

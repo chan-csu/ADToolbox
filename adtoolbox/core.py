@@ -58,7 +58,7 @@ class Experiment:
     Args:
         name (str): A unique name for the experiment.
         time (list): A list of time points in days.
-        variables (list): A list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
+        variables (list): A list of strings that represent the species that are in the used model (most commonly ADM) that we have concentration data for.
         data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
         initial_concentrations (dict, optional): A dictionary of initial concentrations for the ADM species. Defaults to {}.
         reference (str, optional): A reference for the experimental data. Defaults to ''.
@@ -68,14 +68,19 @@ class Experiment:
         >>> import json
         >>> with open(configs.Database().adm_parameters["species"],"r") as f:
         ...     species=json.load(f)
+<<<<<<< Updated upstream
         >>> S_su_index=species.index("S_su")
         >>> S_aa_index=species.index("S_aa")
         >>> exp=Experiment(name="Test",time=[0,1,2],variables=[S_su_index,S_aa_index],data=[[1,2,3],[4,5,6]],reference="Test reference")
     
+=======
+        >>> exp=Experiment(name="Test",time=[0,1,2],variables=["S_su","S_aa"],data=[[1,2,3],[4,5,6]],reference="Test reference")
+        
+>>>>>>> Stashed changes
     """
     name:str
     time: list[float]
-    variables: list[int]
+    variables: list[str]
     data: list[list[float]]
     initial_concentrations: dict[str,float] = dataclasses.field(default_factory=dict)
     reference: str = ""
@@ -975,7 +980,7 @@ class Database:
         metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)]
         return [MetagenomicsStudy(**metagenomics_study.to_dict()) for _,metagenomics_study in metagenomics_studies_db.iterrows()]
     
-    def add_experiment_to_experiments_db(self,experiment:Experiment)->None:
+    def add_experiment_to_experiments_db(self,experiment:Experiment,force:bool=False)->None:
         r"""
         This function adds an experiment to the experiments database. It takes an experiment and adds it to the experiments database.
         
@@ -1000,9 +1005,18 @@ class Database:
         """
         if not os.path.exists(self.config.studies_local["experimental_data_db"]):
             self.initialize_experimental_data_db()
+<<<<<<< Updated upstream
         
         if experiment.name in [experiment.name for experiment in self.get_experiment_from_experiments_db("name",experiment.name)]: 
             raise ValueError("Experiment already exists in the database!:"+self.config.studies_local["experimental_data_db"])
+=======
+        if force:
+            for exp in self.get_experiment_from_experiments_db("name",experiment.name):
+                self.remove_experiment_from_experiments_db("name",exp.name)
+            
+        else:
+            raise ValueError("Experiment already exists in the database!")
+>>>>>>> Stashed changes
         
         with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)

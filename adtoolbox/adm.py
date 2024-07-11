@@ -82,7 +82,6 @@ class Model:
         self.base_parameters = base_parameters
         self.feed=feed
         for items in control_state.keys():
-            initial_conditions[items]
             initial_conditions[items]=control_state[items]
         self.control_state=control_state
         self.inlet_conditions = np.array(
