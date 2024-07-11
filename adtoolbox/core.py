@@ -61,6 +61,8 @@ class Experiment:
         variables (list): A list of strings that represent the species that are in the used model (most commonly ADM) that we have concentration data for.
         data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
         initial_concentrations (dict, optional): A dictionary of initial concentrations for the ADM species. Defaults to {}.
+        base_parameters (dict, optional): A dictionary of base parameters for the model. Defaults to {}.
+        constants (list, optional): A list of strings that represent the species that are in the used model (most commonly ADM) that are held constant during the simulations. Their value will come from the initial_concentrations. Defaults to [].
         reference (str, optional): A reference for the experimental data. Defaults to ''.
         model_name (str, optional): The name of the model that the experimental data is for. Defaults to "e_adm".
     
@@ -68,21 +70,16 @@ class Experiment:
         >>> import json
         >>> with open(configs.Database().adm_parameters["species"],"r") as f:
         ...     species=json.load(f)
-<<<<<<< Updated upstream
-        >>> S_su_index=species.index("S_su")
-        >>> S_aa_index=species.index("S_aa")
-        >>> exp=Experiment(name="Test",time=[0,1,2],variables=[S_su_index,S_aa_index],data=[[1,2,3],[4,5,6]],reference="Test reference")
-    
-=======
         >>> exp=Experiment(name="Test",time=[0,1,2],variables=["S_su","S_aa"],data=[[1,2,3],[4,5,6]],reference="Test reference")
         
->>>>>>> Stashed changes
     """
     name:str
     time: list[float]
     variables: list[str]
     data: list[list[float]]
     initial_concentrations: dict[str,float] = dataclasses.field(default_factory=dict)
+    base_parameters: dict[str,float] = dataclasses.field(default_factory=dict)
+    constants: list[str] = dataclasses.field(default_factory=tuple)
     reference: str = ""
     model_name: str = "e_adm"
     
@@ -103,6 +100,8 @@ class Experiment:
                 "variables":self.variables,
                 "data":self.data.T.tolist(),
                 "initial_concentrations":self.initial_concentrations,
+                "base_parameters":self.base_parameters,
+                "constants":self.constants,
                 "reference":self.reference,
                 "model_name":self.model_name}
     

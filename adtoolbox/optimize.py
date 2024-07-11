@@ -378,7 +378,10 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
         if plot:
             fig=go.Figure()
         ic=pd.concat([pd.DataFrame(i.initial_concentrations,index=[0]) for  i in data ]).mean().to_dict()
+        
         ic.update({k:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
+        model.control_state={k:data[0].initial_concentrations[k] for k in data[0].constants}
+        model.update_parameters(base_parameters=data[0].base_parameters)
         model.update_parameters(initial_conditions=ic)
         solution=model.solve_model(np.array(data[0].time),method=ode_solver)
         out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data[0].variables],:].T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
@@ -428,6 +431,8 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
   
         ic=data.initial_concentrations.copy()
         ic.update({k:data.data[0,idx] for idx,k in enumerate(data.variables) })
+        model.control_state={k:data.initial_concentrations[k] for k in data.constants}
+        model.update_parameters(base_parameters=data.base_parameters)
         model.update_parameters(initial_conditions=ic)
         solution=model.solve_model(np.array(data.time),method=ode_solver)
         out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data.variables],:].T,index=np.array(data.time).tolist(),columns=data.variables),
