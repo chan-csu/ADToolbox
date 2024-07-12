@@ -246,6 +246,9 @@ class NNSurrogateTuner:
                 _model= self.base_model.copy()
                 _model.update_parameters(**{self.var_type:parameters})
                 _model.update_parameters(initial_conditions=ic)
+                _model.base_parameters=experiment.base_parameters
+                _model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
+
                 solution=_model.solve_model(np.array(experiment.time),method=ode_method).y[[_model.species.index(i) for i in experiment.variables],:]
                 res+=np.sum(np.square(solution.T-experiment.data))
 
@@ -383,8 +386,9 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
         model.control_state={k:data[0].initial_concentrations[k] for k in data[0].constants}
         model.update_parameters(base_parameters=data[0].base_parameters)
         model.update_parameters(initial_conditions=ic)
-        solution=model.solve_model(np.array(data[0].time),method=ode_solver)
-        out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data[0].variables],:].T,index=np.array(data[0].time).tolist(),columns=data[0].variables)}
+        all_time_points=np.array(sorted(list(set(sum([exp.time for exp in data],start=[])))))
+        solution=model.solve_model(all_time_points,method=ode_solver)
+        out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data[0].variables],:].T,index=np.array(all_time_points).tolist(),columns=data[0].variables)}
         for idx,variable in enumerate(data[0].variables):
             fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=variable,mode="lines",line=dict(
                     color=pallet[idx])))
