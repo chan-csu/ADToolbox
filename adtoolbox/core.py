@@ -41,73 +41,6 @@ import polars as pl
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
-            
-@dataclass
-class Experiment:
-    """
-    This class creates an interface for the experimental data to be used in different places in ADToolbox.
-    First you should give each experiment a name. Time must be a list of time points in days, and there must be a time 0 point assinged to each experiment.
-    variables must be a list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
-    data must be a list of lists. Each list in the list must be a list of concentrations for each species at each time point.
-    IMPORTANT: The order of the species in the data list must match the order of the species in the variables list.
-    if there are specific initial concentrations for the ADM species, they can be passed as a dictionary to the initial_concentrations argument.
-    reference is an optional argument that can be used to provide a reference for the experimental data. If using the database module 
-    to query for Experiment objects you can query by name or reference or model_type. So, having a descriptive reference can be useful for querying as well.
-    default model name is "e_adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
-    
-    Args:
-        name (str): A unique name for the experiment.
-        time (list): A list of time points in days.
-        variables (list): A list of strings that represent the species that are in the used model (most commonly ADM) that we have concentration data for.
-        data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
-        initial_concentrations (dict, optional): A dictionary of initial concentrations for the ADM species. Defaults to {}.
-        base_parameters (dict, optional): A dictionary of base parameters for the model. Defaults to {}.
-        constants (list, optional): A list of strings that represent the species that are in the used model (most commonly ADM) that are held constant during the simulations. Their value will come from the initial_concentrations. Defaults to [].
-        reference (str, optional): A reference for the experimental data. Defaults to ''.
-        model_name (str, optional): The name of the model that the experimental data is for. Defaults to "e_adm".
-    
-    Examples:
-        >>> import json
-        >>> with open(configs.Database().adm_parameters["species"],"r") as f:
-        ...     species=json.load(f)
-        >>> exp=Experiment(name="Test",time=[0,1,2],variables=["S_su","S_aa"],data=[[1,2,3],[4,5,6]],reference="Test reference")
-        
-    """
-    name:str
-    time: list[float]
-    variables: list[str]
-    data: list[list[float]]
-    initial_concentrations: dict[str,float] = dataclasses.field(default_factory=dict)
-    base_parameters: dict[str,float] = dataclasses.field(default_factory=dict)
-    constants: list[str] = dataclasses.field(default_factory=tuple)
-    reference: str = ""
-    model_name: str = "e_adm"
-    
-    
-    def __post_init__(self):
-        self.data=np.array(self.data).T
-        self.validate()
-    
-    def validate(self):
-        assert len(self.time)==self.data.shape[0], "Number of time points must match number of rows in data."
-        assert len(self.variables)==self.data.shape[1] , "Number of variables must match number of columns in data."
-        assert self.time[0]==0, "Time must start at 0."
-        return "successful"
-    
-    def to_dict(self):
-        return {"name":self.name,
-                "time":self.time,
-                "variables":self.variables,
-                "data":self.data.T.tolist(),
-                "initial_concentrations":self.initial_concentrations,
-                "base_parameters":self.base_parameters,
-                "constants":self.constants,
-                "reference":self.reference,
-                "model_name":self.model_name}
-    
-
-    
-    
 @dataclass
 class Feed:
 
@@ -170,6 +103,76 @@ class Feed:
                 "xi":self.xi,
                 "reference":self.reference}
 
+          
+@dataclass
+class Experiment:
+    """
+    This class creates an interface for the experimental data to be used in different places in ADToolbox.
+    First you should give each experiment a name. Time must be a list of time points in days, and there must be a time 0 point assinged to each experiment.
+    variables must be a list of integers that represent the variables that are the index of the ADM species that we have concentration data for.
+    data must be a list of lists. Each list in the list must be a list of concentrations for each species at each time point.
+    IMPORTANT: The order of the species in the data list must match the order of the species in the variables list.
+    if there are specific initial concentrations for the ADM species, they can be passed as a dictionary to the initial_concentrations argument.
+    reference is an optional argument that can be used to provide a reference for the experimental data. If using the database module 
+    to query for Experiment objects you can query by name or reference or model_type. So, having a descriptive reference can be useful for querying as well.
+    default model name is "e_adm". This can be changed by passing a different model name to the model_name argument. This also helps with querying.
+    
+    Args:
+        name (str): A unique name for the experiment.
+        time (list): A list of time points in days.
+        variables (list): A list of strings that represent the species that are in the used model (most commonly ADM) that we have concentration data for.
+        data (list): A list of lists. Each list in the list must be a list of concentrations for each species at each time point.
+        feed (Feed): An instance of feed class
+        initial_concentrations (dict, optional): A dictionary of initial concentrations for the ADM species. Defaults to {}.
+        base_parameters (dict, optional): A dictionary of base parameters for the model. Defaults to {}.
+        constants (list, optional): A list of strings that represent the species that are in the used model (most commonly ADM) that are held constant during the simulations. Their value will come from the initial_concentrations. Defaults to [].
+        reference (str, optional): A reference for the experimental data. Defaults to ''.
+        model_name (str, optional): The name of the model that the experimental data is for. Defaults to "e_adm".
+    
+    Examples:
+        >>> import json
+        >>> with open(configs.Database().adm_parameters["species"],"r") as f:
+        ...     species=json.load(f)
+        >>> exp=Experiment(name="Test",time=[0,1,2],variables=["S_su","S_aa"],data=[[1,2,3],[4,5,6]],reference="Test reference")
+        
+    """
+    name:str
+    time: list[float]
+    variables: list[str]
+    data: list[list[float]]
+    feed: Feed
+    initial_concentrations: dict[str,float] = dataclasses.field(default_factory=dict)
+    base_parameters: dict[str,float] = dataclasses.field(default_factory=dict)
+    constants: list[str] = dataclasses.field(default_factory=tuple)
+    reference: str = ""
+    model_name: str = "e_adm"
+    
+    
+    def __post_init__(self):
+        self.data=np.array(self.data).T
+        self.validate()
+    
+    def validate(self):
+        assert len(self.time)==self.data.shape[0], "Number of time points must match number of rows in data."
+        assert len(self.variables)==self.data.shape[1] , "Number of variables must match number of columns in data."
+        assert self.time[0]==0, "Time must start at 0."
+        return "successful"
+    
+    def to_dict(self):
+        return {"name":self.name,
+                "time":self.time,
+                "variables":self.variables,
+                "data":self.data.T.tolist(),
+                "feed":self.feed.to_dict(),
+                "initial_concentrations":self.initial_concentrations,
+                "base_parameters":self.base_parameters,
+                "constants":self.constants,
+                "reference":self.reference,
+                "model_name":self.model_name}
+    
+
+    
+    
     
 
 @dataclass
@@ -1085,6 +1088,8 @@ class Database:
         with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)
         experiments_db=[experiment for experiment in experiments_db if query in experiment[field_name]]
+        for experiment in experiments_db:
+            experiment["feed"]=Feed(**experiment["feed"])
         return [Experiment(**experiment) for experiment in experiments_db]
         
     def build_mmseqs_database(self,container:str="None")->str:

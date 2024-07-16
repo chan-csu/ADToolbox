@@ -248,6 +248,7 @@ class NNSurrogateTuner:
                 _model.update_parameters(initial_conditions=ic)
                 _model.base_parameters=experiment.base_parameters
                 _model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
+                _model.feed=experiment.feed
 
                 solution=_model.solve_model(np.array(experiment.time),method=ode_method).y[[_model.species.index(i) for i in experiment.variables],:]
                 res+=np.sum(np.square(solution.T-experiment.data))
