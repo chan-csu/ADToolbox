@@ -133,7 +133,8 @@ class Experiment:
         >>> import json
         >>> with open(configs.Database().adm_parameters["species"],"r") as f:
         ...     species=json.load(f)
-        >>> exp=Experiment(name="Test",time=[0,1,2],variables=["S_su","S_aa"],data=[[1,2,3],[4,5,6]],reference="Test reference")
+        >>> feed=Feed(name="Test",carbohydrates=25,lipids=25,proteins=25,si=25,xi=25,tss=70)
+        >>> exp=Experiment(name="Test",time=[0,1,2],variables=["S_su","S_aa"],data=[[1,2,3],[4,5,6]],feed=Feed,reference="Test reference")
         
     """
     name:str
@@ -998,8 +999,9 @@ class Database:
             >>> if os.path.exists(local_dir['experimental_data_db']):
             ...     os.remove(local_dir['experimental_data_db'])
             >>> db=Database(config=configs.Database(studies_local=local_dir))
-            >>> experiment = Experiment(name="test_study",initial_concentrations={}, time=[0, 1, 2], variables=[2, 6], data=[[1, 2, 3], [4, 5, 6]], reference="test")
-            >>> db.add_experiment_to_experiments_db(experiment)
+            >>> feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+            >>> experiment = Experiment(name="test2_study",initial_concentrations={}, time=[0, 1, 2], variables=["S_bu","S_ac"], data=[[1, 2, 3], [4, 5, 6]],feed=feed,reference="test")
+            >>> db.add_experiment_to_experiments_db(experiment,force=True)
             >>> assert os.path.exists(local_dir['experimental_data_db'])==True
             >>> assert os.path.getsize(local_dir['experimental_data_db'])>0
             >>> os.remove(local_dir['experimental_data_db'])
@@ -1035,11 +1037,12 @@ class Database:
             >>> import os,json
             >>> local_dir={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
             >>> db=Database(config=configs.Database(studies_local=local_dir))
-            >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
-            >>> db.add_experiment_to_experiments_db(experiment)
+            >>> feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+            >>> experiment = Experiment(name="test2_study",initial_concentrations={}, time=[0, 1, 2], variables=["S_bu","S_ac"], data=[[1, 2, 3], [4, 5, 6]],feed=feed,reference="test")
+            >>> db.add_experiment_to_experiments_db(experiment,force=True)
             >>> assert os.path.exists(local_dir['experimental_data_db'])==True
             >>> assert os.path.getsize(local_dir['experimental_data_db'])>0
-            >>> db.remove_experiment_from_experiments_db("name","test_study")
+            >>> db.remove_experiment_from_experiments_db("name","test2_study")
             >>> assert pd.read_json(local_dir['experimental_data_db']).shape[0]==0
             >>> os.remove(local_dir['experimental_data_db'])
 
@@ -1071,12 +1074,13 @@ class Database:
             >>> import os,json
             >>> local_dir={'experimental_data_db':os.path.join(Main_Dir,"test","experiments_test_db.json")}
             >>> db=Database(config=configs.Database(studies_local=local_dir))
-            >>> experiment=Experiment(name="test_study",time=[0,1,2],variables=[2,6],data= [[1,2,3],[4,5,6]],reference="test")
-            >>> db.add_experiment_to_experiments_db(experiment)
+            >>> feed=Feed(name="test_feed",carbohydrates=10,lipids=20,proteins=30,tss=80,si=10,xi=30,reference="test")
+            >>> experiment = Experiment(name="test2_study",initial_concentrations={}, time=[0, 1, 2], variables=["S_bu","S_ac"], data=[[1, 2, 3], [4, 5, 6]],feed=feed,reference="test")
+            >>> db.add_experiment_to_experiments_db(experiment,force=True)
             >>> assert os.path.exists(local_dir['experimental_data_db'])==True
             >>> assert os.path.getsize(local_dir['experimental_data_db'])>0
-            >>> experiment=db.get_experiment_from_experiments_db("name","test_study")
-            >>> assert experiment[0].name=="test_study"
+            >>> experiment=db.get_experiment_from_experiments_db("name","test2_study")
+            >>> assert experiment[0].name=="test2_study"
             >>> os.remove(local_dir['experimental_data_db'])
         """
 
@@ -1837,7 +1841,7 @@ class Metagenomics:
                                         alignment_file_name:str,
                                         container:str="None",
                                         )->tuple[str,str]:
-        """This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
+        r"""This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
         mmseqs wrappers in utils are used to perform this task. The result of this task is an alignment table.
         
         Required Configs:
@@ -1846,14 +1850,14 @@ class Metagenomics:
             --------
         Example:
             >>> import os
-            >>> query_seq= "os.path.join(Main_Dir,"test","query.seq")
+            >>> query_seq= os.path.join(Main_Dir,"test","query.seq")
             >>> alignment_file= "output_alignment.txt"
             >>> protein_db_mmseqs=os.path.join(Main_Dir,"test","protein_db_mmseqs")
             >>> with open(protein_db_mmseqs,'w') as f:
             ...     f.write("")
             0
-            >>> obj = Metagenomics(configs.Metagenomics()) 
-            >>> assert obj.align_short_reads_to_protein_db(query_seq=query_seq, alignment_file_name= protein_db_mmseqs, container="docker")[0] == ''
+            >>> obj = Metagenomics(configs.Metagenomics(protein_db_mmseqs=protein_db_mmseqs)) 
+            >>> assert obj.align_short_reads_to_protein_db(query_seq=query_seq, alignment_file_name= protein_db_mmseqs, container="docker")[0] == 'docker run -v /home/parsa/ADresearch/test/query.seq:/home/parsa/ADresearch/test/query.seq -v /home/parsa/ADresearch/test:/home/parsa/ADresearch/test parsaghadermazi/adtoolbox:x86 mmseqs createdb /home/parsa/ADresearch/test/query.seq /home/parsa/ADresearch/test/query\ndocker run -v /home/parsa/ADresearch/test/query:/home/parsa/ADresearch/test/query -v /home/parsa/ADresearch/test:/home/parsa/ADresearch/test -v /home/parsa/ADresearch/test/protein_db_mmseqs:/home/parsa/ADresearch/test/protein_db_mmseqs parsaghadermazi/adtoolbox:x86 mmseqs search /home/parsa/ADresearch/test/query /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/tmp\ndocker run -v /home/parsa/ADresearch/test/query:/home/parsa/ADresearch/test/query -v /home/parsa/ADresearch/test:/home/parsa/ADresearch/test -v /home/parsa/ADresearch/test/protein_db_mmseqs:/home/parsa/ADresearch/test/protein_db_mmseqs parsaghadermazi/adtoolbox:x86 mmseqs convertalis /home/parsa/ADresearch/test/query /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/protein_db_mmseqs.tsv --format-mode 4\n'
             >>> os.remove(protein_db_mmseqs)
 
         Args:
@@ -1904,19 +1908,18 @@ class Metagenomics:
 
         Example:
             >>> import os
-            >>> alignments=["CP001673.1","Q8YNF9|1.4.4.2","0.566","2859","414","0","1021521","1024379","27", "982", "0.000E+00","1109"]
-            >>> headers=["query","target","fident","alnlen","mismatch","gapopen", "qstart", "qend ","tstart","tend","evalue", "bits"]
-            >>> hit="\t".join(alignments)
-            >>> headers_tab="\t".join(headers)
-            >>> combine= headers + "\n" + hit
-            >>> output= os.path.join(Main_Dir,"test","mmseqs_alignments.tsv")
-            >>> with open(output,"w") as f:
-            ...    f.write(combine)
-            100
-            >>> obj=Metagenomics(configs.Metagenomics())
-            >>> obj.extract_ec_from_alignment(output)
-            {'CP001673.1':'Q8YNF9'}
-
+            >>> output = os.path.join(Main_Dir, "test", "mmseqs_alignments.tsv")
+            >>> alignments = ["CP001673.1", "Q8YNF9|1.4.4.2", "0.566", "2859", "414", "0", "1021521", "1024379", "27", "982", "0.000E+00", "1109"]
+            >>> headers = ["query", "target", "fident", "alnlen", "mismatch", "gapopen", "qstart", "qend ", "tstart", "tend", "evalue", "bits"]
+            >>> hit = "\t".join(alignments)
+            >>> headers_tab = "\t".join(headers)
+            >>> combine = headers_tab + "\n" + hit
+            >>> with open(output, "w") as f:
+            ...     f.write(combine)
+            161
+            >>> obj = Metagenomics(configs.Metagenomics())
+            >>> obj.extract_ec_from_alignment(output) 
+            {'1.4.4.2': 1}
     
         Args:
             alignment_file (str): The address of the alignment file.
@@ -1935,7 +1938,7 @@ class Metagenomics:
         return pd.DataFrame(df.to_dicts()).set_index("EC").to_dict()["count"]
     
     def get_cod_from_ec_counts(self,ec_counts:dict)->dict:
-        """This function takes a json file that comtains ec counts and converts it to ADM microbial agents counts.
+        r"""This function takes a json file that comtains ec counts and converts it to ADM microbial agents counts.
         Required Configs:
             config.adm_mapping : A dictionary that maps ADM reactions to ADM microbial agents.
             ---------
@@ -1943,6 +1946,21 @@ class Metagenomics:
             ---------
             config.adm_cod_from_ec  : The address of the json file that the results will be saved in.
             ---------
+        Example:
+            >>> import os
+            >>> output = os.path.join(Main_Dir, "test", "cod_from_ec_counts")
+            >>> alignments = ["CP001673.1", "Q8YNF9|1.4.4.2", "0.566", "2859", "414", "0", "1021521", "1024379", "27", "982", "0.000E+00", "1109"]
+            >>> headers = ["query", "target", "fident", "alnlen", "mismatch", "gapopen", "qstart", "qend ", "tstart", "tend", "evalue", "bits"]
+            >>> hit = "\t".join(alignments)
+            >>> headers_tab = "\t".join(headers)
+            >>> combine = headers_tab + "\n" + hit
+            >>> with open(output, "w") as f:
+            ...     f.write(combine)
+            161
+            >>> obj = Metagenomics(configs.Metagenomics())
+            >>> obj.get_cod_from_ec_counts(output) 
+            [('ADM_microbe_1', 161), ('ADM_microbe_2', 0), ('ADM_microbe_3', 0)]
+
         Args:
             ec_counts (dict): A dictionary containing the counts for each ec number.  
         Returns:
@@ -1986,7 +2004,7 @@ class Metagenomics:
     
     def extract_relative_abundances(self,feature_table_dir:str,sample_names:Union[list[str],None]=None,top_k:int=-1)->dict:
         
-        """
+        r"""
         This method extracts the relative abundances of the features in each sample from the feature table. The feature table must follow the qiime2 feature-table format.
         NOTE: The final feature abundances sum to 1 for each sample.
         Required Configs:
@@ -2010,11 +2028,25 @@ class Metagenomics:
         return relative_abundances
     
     def assign_ec_to_genome(self,alignment_file:str)->dict:
-        """
+        r"""
         This function takes an alignment file and assigns the EC numbers to the genomes based on the alignment file,
         and the e-adm groupings of the EC numbers. The output is a dictionary where the keys e-adm reactions and the values are the EC numbers,
         that are found in the genome and are grouped under the e-adm reaction.
         
+        Example: 
+            >>> import os
+            >>> output = os.path.join(Main_Dir, "test", "ec_to_genome")
+            >>> alignments = ["CP001673.1", "Q8YNF9|1.4.4.2", "0.566", "2859", "414", "0", "1021521", "1024379", "27", "982", "0.000E+00", "1109"]
+            >>> headers = ["query", "target", "fident", "alnlen", "mismatch", "gapopen", "qstart", "qend ", "tstart", "tend", "evalue", "bits"]
+            >>> hit = "\t".join(alignments)
+            >>> headers_tab = "\t".join(headers)
+            >>> combine = headers_tab + "\n" + hit
+            >>> with open(output, "w") as f:
+            ...     f.write(combine)
+            161
+            >>> obj = Metagenomics(configs.Metagenomics())
+            >>> obj.assign_ec_to_genome(output) 
+
         Args:
             alignment_file (str): The address of the alignment file.
             

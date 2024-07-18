@@ -220,6 +220,8 @@ class Metagenomics:
             qiime2_paired_end_bash_str=os.path.join(PKG_DATA,"qiime_template_paired.txt"),
             qiime2_single_end_bash_str=os.path.join(PKG_DATA,"qiime_template_single.txt"),
 			qiime_classifier_db=Database().qiime_classifier_db,
+			protein_db:str=Database().protein_db,
+			protein_db_mmseqs:str=Database().protein_db_mmseqs,
 			adm_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
 			qiime2_p_trunc_len:tuple[int,int]=("250","250"),
              ):
@@ -228,8 +230,9 @@ class Metagenomics:
 		self.align_to_gtdb_outputs_dir = align_to_gtdb_outputs_dir
 		self.amplicon2genome_db = amplicon2genome_db
 		self.qiime_outputs_dir = qiime_outputs_dir
-		self.protein_db=Database().protein_db
-		self.protein_db_mmseqs=Database().protein_db_mmseqs
+		self.protein_db=protein_db
+
+		self.protein_db_mmseqs=protein_db_mmseqs
 		self.seed_rxn_db=Seed_RXN_DB
 		self.genome_alignment_output = genome_alignment_output
 		self.bit_score = bit_score
