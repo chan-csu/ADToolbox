@@ -17,6 +17,8 @@ import pickle
 import pathlib
 from collections import namedtuple
 import numba
+import ray
+import time
 Validation=namedtuple("Validation",("r_squared","rmse"))
 
         
@@ -286,57 +288,107 @@ class NNSurrogateTuner:
             self._optimizer_model.zero_grad()
         return loss.detach().numpy()
 
-    def optimize(self, perturbation_method:str="random",ode_method="LSODA", **kwargs)->dict:
-        costs=[]
-        if not self._initialized:
-            for pop in self._popuplation:
-                costs.append(self._cost(dict(zip(self.tunables.keys(),pop)),ode_method=ode_method))
-            self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
-        self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-        self._best_cost=np.min(self._aquired["cost"])
-        for i in range(self.n_steps):
-            loss=self._train_surrogate()
-            print(f"Training Loss: {loss}")
-            new_params=self._suggest_parameters()
-            new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-            new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-            if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
-                print("Local optima reached: Perturbing the best solution and continuing.")
-                
-                if perturbation_method=="random":
-                    new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
-                
-                
-                elif perturbation_method=="estimate_gradient_directions":
-                    diff=self._aquired["parameters"]-self._best_tensor
-                    cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
-                    diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
-                    new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
-                    
-                
-                elif perturbation_method=="predict_pattern":
-                    pass
-                
-                
-            new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-            new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-            ## make sure not in the local optima
-            new_cost=self._cost(dict(zip(self.tunables.keys(),new_params)),ode_method=ode_method)
-            self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
-            self._aquired["cost"].append(new_cost)
+    def optimize(self, perturbation_method:str="random",ode_method="LSODA",parallel:bool=False, **kwargs)->dict:
+        if not parallel:
+            costs=[]
+            if not self._initialized:
+                for num,pop in enumerate(self._popuplation):
+                    costs.append(self._cost(dict(zip(self.tunables.keys(),pop)),ode_method=ode_method))
+
+                self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
             self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
             self._best_cost=np.min(self._aquired["cost"])
-            print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
-            if i%self.save_every==0:
-                self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
-                with open(f"{str(self.history_file_path.absolute())}","wb") as file:
-                    pickle.dump(self.history,file)
-            if i>51:
-                self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
-                self._aquired["cost"]=self._aquired["cost"][-50:]   
-                
+            for i in range(self.n_steps):
+                loss=self._train_surrogate()
+                print(f"Training Loss: {loss}")
+                new_params=self._suggest_parameters()
+                new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+                new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+                if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
+                    print("Local optima reached: Perturbing the best solution and continuing.")
+
+                    if perturbation_method=="random":
+                        new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
+
+
+                    elif perturbation_method=="estimate_gradient_directions":
+                        diff=self._aquired["parameters"]-self._best_tensor
+                        cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
+                        diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
+                        new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
+
+
+                    elif perturbation_method=="predict_pattern":
+                        pass
+                    
+                    
+                new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+                new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+                ## make sure not in the local optima
+                new_cost=self._cost(dict(zip(self.tunables.keys(),new_params)),ode_method=ode_method)
+                self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
+                self._aquired["cost"].append(new_cost)
+                self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+                self._best_cost=np.min(self._aquired["cost"])
+                print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
+                if i%self.save_every==0:
+                    self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
+                    with open(f"{str(self.history_file_path.absolute())}","wb") as file:
+                        pickle.dump(self.history,file)
+                if i>51:
+                    self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
+                    self._aquired["cost"]=self._aquired["cost"][-50:]   
+
+
+            return self.history
         
-        return self.history
+        else:
+            ray.init()
+            if not self._initialized:
+                costs=ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,ode_method=ode_method) for exp in self.train_data for pop in self._popuplation])
+                costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
+                self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
+            self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+            self._best_cost=np.min(self._aquired["cost"])
+            for i in range(self.n_steps):
+                loss=self._train_surrogate()
+                print(f"Training Loss: {loss}")
+                new_params=self._suggest_parameters()
+                new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+                new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+                
+                if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
+                    print("Local optima reached: Perturbing the best solution and continuing.")
+                    if perturbation_method=="random":
+                        new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
+                    elif perturbation_method=="estimate_gradient_directions":
+                        diff=self._aquired["parameters"]-self._best_tensor
+                        cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
+                        diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
+                        new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
+
+
+                    elif perturbation_method=="predict_pattern":
+                        pass
+                    
+                    
+                new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+                new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+                ## make sure not in the local optima
+                new_cost=np.sum(ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,ode_method=ode_method) for exp in self.train_data]))
+                self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
+                self._aquired["cost"].append(new_cost)
+                self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+                self._best_cost=np.min(self._aquired["cost"])
+                print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
+                if i%self.save_every==0:
+                    self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
+                    with open(f"{str(self.history_file_path.absolute())}","wb") as file:
+                        pickle.dump(self.history,file)
+                if i>51:
+                    self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
+                    self._aquired["cost"]=self._aquired["cost"][-50:]
+            
     
     def load_history_file(self,address:str)->None:
         with open(address,"rb") as f:
@@ -350,6 +402,51 @@ class NNSurrogateTuner:
         self.base_model.update_parameters(**{self.var_type:parameters})
         # self._aquired=info
         self._initialized=True
+    
+    def _calculate_distributed_costs(
+        self,
+        parameters:np.ndarray,
+        experiments:Iterable[core.Experiment],
+        ode_method:str="LSODA",
+        parallel_framework:str="ray")->np.ndarray:
+        
+        if parallel_framework=="ray":
+            costs=ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),p)),exp,ode_method=ode_method) for exp in experiments for p in parameters])
+        return np.array(costs)
+    
+@ray.remote
+def _single_cost_ray(base_model:adm.Model,
+                 parameters:dict,
+                 experiment:core.Experiment,
+                 var_type:str="model_parameters",
+                 ode_method:str="LSODA")->float:
+    base_model=base_model.copy()
+    ic=experiment.initial_concentrations.copy()
+    ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
+    base_model.update_parameters(**{var_type:parameters})
+    base_model.update_parameters(initial_conditions=ic)
+    base_model.base_parameters=experiment.base_parameters
+    base_model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
+    base_model.feed=experiment.feed
+    solution=base_model.solve_model(np.array(experiment.time),method=ode_method).y[[base_model.species.index(i) for i in experiment.variables],:]
+    return np.sum(np.square(solution.T-experiment.data))
+
+    
+def _single_cost(base_model:adm.Model,
+                    parameters:dict,
+                    experiment:core.Experiment,
+                    var_type:str="model_parameters",
+                    ode_method:str="LSODA")->float:
+        ic=experiment.initial_concentrations.copy()
+        ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
+        base_model.update_parameters(**{var_type:parameters})
+        base_model.update_parameters(initial_conditions=ic)
+        base_model.base_parameters=experiment.base_parameters
+        base_model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
+        base_model.feed=experiment.feed
+        solution=base_model.solve_model(np.array(experiment.time),method=ode_method).y[[base_model.species.index(i) for i in experiment.variables],:]
+        return np.sum(np.square(solution.T-experiment.data))
+    
 
             
     
@@ -481,50 +578,32 @@ def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validat
 
     
 if __name__ == "__main__":
-    pass
-    # with open(configs.Database().initial_conditions) as file:
-    #     initial_conditions=json.load(file)
-    # study=core.Experiment(
-    #     "test_study",
-    #     time=[0,1,2,3,4,5],
-    #     variables=[10,12],
-    #     data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
-    #     reference="test_reference"
+    import utils
+    # params=utils.load_multiple_json_files(configs.E_ADM_2_LOCAL)
+    # model=adm.Model(
+    # initial_conditions=params.initial_conditions,
+    # inlet_conditions=params.inlet_conditions,
+    # model_parameters=params.model_parameters,
+    # reactions=params.reactions,
+    # species=params.species,
+    # feed=adm.DEFAULT_FEED,
+    # base_parameters=params.base_parameters,
+    # control_state={},
+    # build_stoichiometric_matrix=adm.build_e_adm_2_stoichiometric_matrix,
+    # ode_system=adm.e_adm_2_ode_sys,
     # )
-    # with open(configs.Database().initial_conditions) as file:
-    #     initial_conditions=json.load(file)
-    
-    # with open(configs.Database().base_parameters) as file:
-    #     base_parameters=json.load(file)
-    
-    # with open(configs.Database().model_parameters) as file:
-    #     model_parameters=json.load(file)
-    
-    # with open(configs.Database().inlet_conditions) as file:
-    #     inlet_conditions=json.load(file)
-    
-    # with open(configs.Database().reactions) as file:
-    #     reactions=json.load(file)
-    
-    # with open(configs.Database().species) as file:
-    #     species=json.load(file)
+    # db=core.Database(configs.Database())
+    # exp=db.get_experiment_from_experiments_db("name","")[:3]
+    # tuner=NNSurrogateTuner(
+    #     base_model=model,
+    #     train_data=exp,
+    #     tuneables={"k_m_bu":(1e-3,1e-1),"k_m_ac":(1e-3,1e-1)},
+    #      history_file_path=pathlib.Path("./test_parallel.pkl"),
+    #         n_steps=100,
+    # )
+    # tuner.optimize(parallel=True)
 
-    # tuner=Tuner(
-    #     base_model=adm.Model(initial_conditions=initial_conditions,
-    #                          base_parameters=base_parameters,
-    #                          model_parameters=model_parameters,
-    #                         inlet_conditions=inlet_conditions,
-    #                         feed=adm.DEFAULT_FEED,
-    #                         reactions=reactions,
-    #                         species=species,
-    #                         ode_system=adm.modified_adm_ode_sys,
-    #                         build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
-    #                         name="test_model"),
-                        
-    #                 train_data=[study],
-    #                 tuneables={"Y_Me_h2":(0,1),},
-    #                 fitness_mode="equalized",
-    #                 var_type="model_parameters"
-    #          )
-    # hist=tuner.optimize(max_runs=2)
+    
+    
+    
    
