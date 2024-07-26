@@ -2,6 +2,7 @@ from openbox import Optimizer,ParallelOptimizer
 import core,configs
 from openbox import space as sp
 from adtoolbox.core import Experiment
+from adtoolbox import Main_Dir
 import pygad
 import adm
 import pandas as pd
@@ -20,6 +21,22 @@ import numba
 import ray
 import time
 import multiprocessing as mp
+import logging
+import os
+
+log_dir=os.path.join(Main_Dir,"logs",time.strftime("%Y-%m-%d-%H-%M-%S"))
+
+if not os.path.exists(os.path.join(Main_Dir,"logs")):
+    os.makedirs(os.path.join(Main_Dir,"logs"))
+
+logging.basicConfig(
+     filename=f"{log_dir}.log",
+     encoding="utf-8",
+     filemode="a",
+     format="{asctime} - {levelname} - {message}",
+     style="{",
+     datefmt="%Y-%m-%d %H:%M",
+ )
 NUM_CORES=mp.cpu_count()
 Validation=namedtuple("Validation",("r_squared","rmse"))
 
@@ -294,8 +311,10 @@ class NNSurrogateTuner:
         if not parallel:
             costs=[]
             if not self._initialized:
+                logging.info("Generating initial population:")
                 for num,pop in enumerate(self._popuplation):
                     costs.append(self._cost(dict(zip(self.tunables.keys(),pop)),ode_method=ode_method))
+                    logging.info(f"Initial population: {num+1}/{len(self._popuplation)}")
 
                 self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
             self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
@@ -394,9 +413,11 @@ class NNSurrogateTuner:
                 return self.history
             elif kwargs.get("parallel_framework","ray")=="native":
                 if not self._initialized:
+                    logging.info("Generating initial population:")
                     with mp.Pool(NUM_CORES) as pool:
                         costs=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
                         costs=[c.get() for c in costs]
+                        logging.info("All initial population costs calculated.")
                         costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
                         self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
                         self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
@@ -651,7 +672,7 @@ if __name__ == "__main__":
     exp=db.get_experiment_from_experiments_db("name","")[:3]
     tuner=NNSurrogateTuner(
         base_model=model,
-        train_data=exp,
+        train_data=exp[:3],
         tuneables={"k_m_bu":(1,100),"k_m_ac":(1,100)},
          history_file_path=pathlib.Path("./test_parallel.pkl"),
             n_steps=100,
