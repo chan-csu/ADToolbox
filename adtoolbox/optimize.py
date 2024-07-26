@@ -24,13 +24,15 @@ import multiprocessing as mp
 import logging
 import os
 
-log_dir=os.path.join(Main_Dir,"logs",time.strftime("%Y-%m-%d-%H-%M-%S"))
+start_time=time.strftime("%Y-%m-%d-%H-%M-%S")
+log_dir=os.path.join(Main_Dir,"logs",f"optimize_{start_time}")
 
 if not os.path.exists(os.path.join(Main_Dir,"logs")):
     os.makedirs(os.path.join(Main_Dir,"logs"))
 
 logging.basicConfig(
      filename=f"{log_dir}.log",
+     level=logging.INFO,
      encoding="utf-8",
      filemode="a",
      format="{asctime} - {levelname} - {message}",
@@ -424,13 +426,13 @@ class NNSurrogateTuner:
                         self._best_cost=np.min(self._aquired["cost"])
                         for i in range(self.n_steps):
                             loss=self._train_surrogate()
-                            print(f"Training Loss: {loss}")
+                            logging.info(f"Training Loss: {loss}")
                             new_params=self._suggest_parameters()
                             new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
                             new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
 
                             if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
-                                print("Local optima reached: Perturbing the best solution and continuing.")
+                                logging.info("Local optima reached: Perturbing the best solution and continuing.")
                                 if perturbation_method=="random":
                                     new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
                                 elif perturbation_method=="estimate_gradient_directions":
@@ -452,11 +454,12 @@ class NNSurrogateTuner:
                             self._aquired["cost"].append(new_cost)
                             self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
                             self._best_cost=np.min(self._aquired["cost"])
-                            print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
+                            logging.info(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
                             if i%self.save_every==0:
                                 self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
                                 with open(f"{str(self.history_file_path.absolute())}","wb") as file:
                                     pickle.dump(self.history,file)
+                                logging.info(f"optimization results saved to {self.history_file_path.absolute()}")
                             if i>51:
                                 self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
                                 self._aquired["cost"]=self._aquired["cost"][-50:]
