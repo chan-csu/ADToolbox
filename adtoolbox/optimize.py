@@ -414,55 +414,53 @@ class NNSurrogateTuner:
                         self._aquired["cost"]=self._aquired["cost"][-50:]
                 return self.history
             elif kwargs.get("parallel_framework","ray")=="native":
-                if not self._initialized:
-                    logging.info("Generating initial population:")
-                    with mp.Pool(NUM_CORES) as pool:
+                with mp.Pool(NUM_CORES) as pool:
+                    if not self._initialized:
+                        logging.info("Generating initial population:")
                         costs=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
                         costs=[c.get() for c in costs]
                         logging.info("All initial population costs calculated.")
                         costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
                         self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
+                    
+                    self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+                    self._best_cost=np.min(self._aquired["cost"])
+                    for i in range(self.n_steps):
+                        loss=self._train_surrogate()
+                        logging.info(f"Training Loss: {loss}")
+                        new_params=self._suggest_parameters()
+                        new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+                        new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+                        if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
+                            logging.info("Local optima reached: Perturbing the best solution and continuing.")
+                            if perturbation_method=="random":
+                                new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
+                            elif perturbation_method=="estimate_gradient_directions":
+                                diff=self._aquired["parameters"]-self._best_tensor
+                                cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
+                                diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
+                                new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
+                    
+                    
+                    
+                        new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
+                        new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+                        ## make sure not in the local optima
+                        new_cost=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data]
+                        new_cost=np.sum([c.get() for c in new_cost])
+                        self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
+                        self._aquired["cost"].append(new_cost)
                         self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
                         self._best_cost=np.min(self._aquired["cost"])
-                        for i in range(self.n_steps):
-                            loss=self._train_surrogate()
-                            logging.info(f"Training Loss: {loss}")
-                            new_params=self._suggest_parameters()
-                            new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                            new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-
-                            if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
-                                logging.info("Local optima reached: Perturbing the best solution and continuing.")
-                                if perturbation_method=="random":
-                                    new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
-                                elif perturbation_method=="estimate_gradient_directions":
-                                    diff=self._aquired["parameters"]-self._best_tensor
-                                    cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
-                                    diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
-                                    new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
-
-                        
-                        
-                        
-                            new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                            new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-                            ## make sure not in the local optima
-        
-                            new_cost=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data]
-                            new_cost=np.sum([c.get() for c in new_cost])
-                            self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
-                            self._aquired["cost"].append(new_cost)
-                            self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                            self._best_cost=np.min(self._aquired["cost"])
-                            logging.info(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
-                            if i%self.save_every==0:
-                                self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
-                                with open(f"{str(self.history_file_path.absolute())}","wb") as file:
-                                    pickle.dump(self.history,file)
-                                logging.info(f"optimization results saved to {self.history_file_path.absolute()}")
-                            if i>51:
-                                self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
-                                self._aquired["cost"]=self._aquired["cost"][-50:]
+                        logging.info(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
+                        if i%self.save_every==0:
+                            self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
+                            with open(f"{str(self.history_file_path.absolute())}","wb") as file:
+                                pickle.dump(self.history,file)
+                            logging.info(f"optimization results saved to {self.history_file_path.absolute()}")
+                        if i>51:
+                            self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
+                            self._aquired["cost"]=self._aquired["cost"][-50:]
                 return self.history
             else:
                 raise ValueError("Parallel framework not supported.")
