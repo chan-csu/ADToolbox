@@ -15,7 +15,7 @@ class AD_LSTM:
     ):
         pass
 
-AD_Dense:
+class AD_Dense:
     
     def __init__(
         initial_conditions:dict,
