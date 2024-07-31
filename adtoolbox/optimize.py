@@ -41,7 +41,6 @@ logging.basicConfig(
  )
 NUM_CORES=mp.cpu_count()
 Validation=namedtuple("Validation",("r_squared","rmse"))
-
         
 class BBTuner:
     """
@@ -413,18 +412,19 @@ class NNSurrogateTuner:
                         self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
                         self._aquired["cost"]=self._aquired["cost"][-50:]
                 return self.history
+            
             elif kwargs.get("parallel_framework","ray")=="native":
-                with mp.Pool(NUM_CORES) as pool:
-                    if not self._initialized:
-                        logging.info("Generating initial population:")
-                        costs=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
-                        costs=[c.get() for c in costs]
-                        logging.info("All initial population costs calculated.")
-                        costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
-                        self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
+                if not self._initialized:
+                    logging.info("Generating initial population:")
+                    with mp.Pool(NUM_CORES) as pool:
+                        costs=[pool.apply(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
+                    logging.info("All initial population costs calculated.")
+                    costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
+                    self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
                     
-                    self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                    self._best_cost=np.min(self._aquired["cost"])
+                self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
+                self._best_cost=np.min(self._aquired["cost"])
+                with mp.Pool(NUM_CORES) as pool:
                     for i in range(self.n_steps):
                         loss=self._train_surrogate()
                         logging.info(f"Training Loss: {loss}")
@@ -446,8 +446,7 @@ class NNSurrogateTuner:
                         new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
                         new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
                         ## make sure not in the local optima
-                        new_cost=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data]
-                        new_cost=np.sum([c.get() for c in new_cost])
+                        new_cost=np.sum([pool.apply(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data])
                         self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
                         self._aquired["cost"].append(new_cost)
                         self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
