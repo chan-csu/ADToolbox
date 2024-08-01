@@ -417,7 +417,8 @@ class NNSurrogateTuner:
                 if not self._initialized:
                     logging.info("Generating initial population:")
                     with mp.Pool(NUM_CORES) as pool:
-                        costs=[pool.apply(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
+                        costs=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
+                        costs=[c.get() for c in costs]
                     logging.info("All initial population costs calculated.")
                     costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
                     self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
@@ -446,7 +447,8 @@ class NNSurrogateTuner:
                         new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
                         new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
                         ## make sure not in the local optima
-                        new_cost=np.sum([pool.apply(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data])
+                        new_cost=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data]
+                        new_cost=np.sum([c.get() for c in new_cost])
                         self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
                         self._aquired["cost"].append(new_cost)
                         self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
