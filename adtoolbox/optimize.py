@@ -553,8 +553,8 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
     
     if isinstance(data,Iterable):
         
-        if plot:
-            fig=go.Figure()
+
+        fig=go.Figure()
         ic=pd.concat([pd.DataFrame(i.initial_concentrations,index=[0]) for  i in data ]).mean().to_dict()
         
         ic.update({k:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
@@ -604,7 +604,9 @@ def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment
             for idx,extra in enumerate(show_extra_states):
                 fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=extra,mode="lines",line=dict(
                     color=pallet[idx+len(data[0].variables)])))
-        fig.show(renderer="svg")
+        if plot:
+            fig.show(renderer="svg")
+
 
     else:
   
