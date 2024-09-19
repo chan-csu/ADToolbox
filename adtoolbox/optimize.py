@@ -23,7 +23,7 @@ import time
 import multiprocessing as mp
 import logging
 import os
-
+from functools import lru_cache
 start_time=time.strftime("%Y-%m-%d-%H-%M-%S")
 log_dir=os.path.join(Main_Dir,"logs",f"optimize_{start_time}")
 
@@ -253,6 +253,7 @@ class NNSurrogateTuner:
     
     def _generate_initial_population(self):
         self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
+    @lru_cache(maxsize=50)
     def _cost(self, parameters: dict,ode_method:str)->float:
         """
         This function is called by openbox to evaluate a configuration.
@@ -314,7 +315,7 @@ class NNSurrogateTuner:
             if not self._initialized:
                 logging.info("Generating initial population:")
                 for num,pop in enumerate(self._popuplation):
-                    costs.append(self._cost(dict(zip(self.tunables.keys(),pop)),ode_method=ode_method))
+                    costs.append(self._cost(tuple(pop),ode_method=ode_method))
                     logging.info(f"Initial population: {num+1}/{len(self._popuplation)}")
 
                 self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
@@ -347,7 +348,7 @@ class NNSurrogateTuner:
                 new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
                 new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
                 ## make sure not in the local optima
-                new_cost=self._cost(dict(zip(self.tunables.keys(),new_params)),ode_method=ode_method)
+                new_cost=self._cost(tuple(new_params),ode_method=ode_method)
                 self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
                 self._aquired["cost"].append(new_cost)
                 self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
