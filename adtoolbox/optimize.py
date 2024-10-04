@@ -502,6 +502,8 @@ def _single_cost_ray(base_model:adm.Model,
     base_model=base_model.copy()
     ic=experiment.initial_concentrations.copy()
     ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
+    for k,v in model.initial_conditions.items():
+        ic[k]=parameters.get(k,v)
     base_model.update_parameters(**{var_type:parameters})
     base_model.update_parameters(initial_conditions=ic)
     base_model.base_parameters=experiment.base_parameters
@@ -518,6 +520,8 @@ def _single_cost(base_model:adm.Model,
                     ode_method:str="LSODA")->float:
         ic=experiment.initial_concentrations.copy()
         ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
+        for k,v in model.initial_conditions.items():
+            ic[k]=parameters.get(k,v)
         base_model.update_parameters(**{var_type:parameters})
         base_model.update_parameters(initial_conditions=ic)
         base_model.base_parameters=experiment.base_parameters
