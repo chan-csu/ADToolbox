@@ -213,8 +213,6 @@ class NNSurrogateTuner:
              )->None:
 
         self.base_model = base_model
-        if set(tuneables.keys())-set(base_model.__getattribute__(var_type).keys()):
-            raise ValueError("Tuneable parameters not in model parameters.")
         self.tunables = tuneables
         self.train_data = train_data
         self.fitness_mode = fitness_mode
@@ -649,8 +647,8 @@ def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validat
         formatted_data=validate_model(model,study)[0]
         model_,data_=formatted_data["model"],formatted_data["data"]
         for column in model_.columns:
-            x.append(model_[column])
-            y.append(data_[column])
+            x.extend(model_[column])
+            y.extend(data_[column])
     x=np.array(x)
     y=np.array(y)
     return Validation(r_squared=1-(np.sum(np.square(y-x))/np.sum(np.square(y-np.mean(y)))),rmse=np.sqrt(np.sum(np.square(y-x))))
