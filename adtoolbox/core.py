@@ -1014,7 +1014,8 @@ class Database:
                 self.remove_experiment_from_experiments_db("name",exp.name)
             
         else:
-            raise ValueError("Experiment already exists in the database!")
+            if self.get_experiment_from_experiments_db("name",experiment.name):
+                raise ValueError("Experiment already exists in the database!")
         
         with open(self.config.studies_local["experimental_data_db"],"r") as f:
             experiments_db=json.load(f)
