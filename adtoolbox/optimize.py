@@ -1,10 +1,7 @@
-from openbox import Optimizer,ParallelOptimizer
 import core,configs
-from openbox import space as sp
 from adtoolbox.core import Experiment
 from adtoolbox import Main_Dir
-import pygad
-import adm
+from adtoolbox import adm
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass
@@ -17,7 +14,6 @@ import torch
 import pickle
 import pathlib
 from collections import namedtuple
-import numba
 import ray
 import time
 import multiprocessing as mp
@@ -70,11 +66,12 @@ class BBTuner:
         self.kwargs = kwargs
         self.parallel=parallel
     
-    def _get_space(self)->sp.Space:
+    def _get_space(self):
         """
         This function creates the search space for openbox.
         :return: The search space.
         """
+        from openbox import space as sp
         space = sp.Space()
         space.add_variables([sp.Real(name, low, high,default_value=(high+low)/2) for name, (low, high) in self.tunables.items()])
         return space
@@ -107,6 +104,7 @@ class BBTuner:
         kwargs: Additional arguments to pass to openbox.
         :return: The best configuration.
         """
+        from openbox import Optimizer,ParallelOptimizer
         if self.parallel:
             opt=ParallelOptimizer(
                 self.cost,
@@ -151,7 +149,7 @@ class GATuner:
         self.var_type = var_type
         self.kwargs = kwargs
         
-    def _get_space(self)->sp.Space:
+    def _get_space(self):
         """
         Returns the search space for pyGAD.
         """
@@ -186,6 +184,7 @@ class GATuner:
         kwargs: Additional arguments to pass to openbox.
         :return: The best configuration.
         """
+        import pygad
         opt=pygad.GA(
                      fitness_func=self.fitness,
                      num_genes=len(self.tunables),
@@ -195,6 +194,7 @@ class GATuner:
         opt.run()
         
         return opt
+
 
 class NNSurrogateTuner:
     def __init__(self,
@@ -500,11 +500,22 @@ def _single_cost_ray(base_model:adm.Model,
     base_model=base_model.copy()
     ic=experiment.initial_concentrations.copy()
     ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
-    for k,v in model.initial_conditions.items():
-        ic[k]=parameters.get(k,v)
-    base_model.update_parameters(**{var_type:parameters})
+    
+    for k,v in base_model._ic.items():
+        if k in parameters:
+            ic[k]=parameters[k]
+    
+    for k,v in base_model.model_parameters.items():
+        if k in parameters:
+            base_model.model_parameters[k]=parameters[k]
+            
+    
     base_model.update_parameters(initial_conditions=ic)
-    base_model.base_parameters=experiment.base_parameters
+    
+    for k,v in base_model.base_parameters.items():
+        if k in parameters:
+            base_model.base_parameters[k]=parameters[k]
+            
     base_model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
     base_model.feed=experiment.feed
     solution=base_model.solve_model(np.array(experiment.time),method=ode_method).y[[base_model.species.index(i) for i in experiment.variables],:]
@@ -516,9 +527,10 @@ def _single_cost(base_model:adm.Model,
                     experiment:core.Experiment,
                     var_type:str="model_parameters",
                     ode_method:str="LSODA")->float:
+    
         ic=experiment.initial_concentrations.copy()
         ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
-        for k,v in model.initial_conditions.items():
+        for k,v in base_model.initial_conditions.items():
             ic[k]=parameters.get(k,v)
         base_model.update_parameters(**{var_type:parameters})
         base_model.update_parameters(initial_conditions=ic)

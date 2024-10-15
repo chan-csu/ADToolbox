@@ -1,4 +1,15 @@
 [[package]]
+name = "aiosignal"
+version = "1.3.1"
+description = "aiosignal: a list of registered asynchronous callbacks"
+category = "main"
+optional = true
+python-versions = ">=3.7"
+
+[package.dependencies]
+frozenlist = ">=1.1.0"
+
+[[package]]
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
@@ -10,7 +21,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 name = "attrs"
 version = "21.4.0"
 description = "Classes Without Boilerplate"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -78,38 +89,12 @@ python-versions = "*"
 test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
 
 [[package]]
-name = "configspace"
-version = "0.4.21"
-description = "Creation and manipulation of parameter configuration spaces for automated algorithm configuration and hyperparameter tuning."
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-cython = "*"
-numpy = "*"
-pyparsing = "*"
-scipy = "*"
-
-[package.extras]
-docs = ["sphinx", "sphinx-gallery", "sphinx-bootstrap-theme", "numpydoc"]
-test = ["pytest (>=4.6)", "mypy", "pre-commit", "pytest-cov"]
-
-[[package]]
 name = "cycler"
 version = "0.11.0"
 description = "Composable style cycles"
 category = "main"
 optional = false
 python-versions = ">=3.6"
-
-[[package]]
-name = "cython"
-version = "0.29.32"
-description = "The Cython compiler for writing C extensions for the Python language."
-category = "main"
-optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "dash"
@@ -181,30 +166,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "dill"
-version = "0.3.5.1"
-description = "serialize all of python"
+name = "filelock"
+version = "3.16.1"
+description = "A platform independent file lock."
 category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
+optional = true
+python-versions = ">=3.8"
 
 [package.extras]
-graph = ["objgraph (>=1.7.2)"]
-
-[[package]]
-name = "emcee"
-version = "3.1.3"
-description = "The Python ensemble sampling toolkit for MCMC"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-numpy = "*"
-
-[package.extras]
-extras = ["h5py", "scipy"]
-tests = ["pytest", "pytest-cov", "coverage"]
+docs = ["furo (>=2024.8.6)", "sphinx-autodoc-typehints (>=2.4.1)", "sphinx (>=8.0.2)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.6.1)", "diff-cover (>=9.2)", "pytest-asyncio (>=0.24)", "pytest-cov (>=5)", "pytest-mock (>=3.14)", "pytest-timeout (>=2.3.1)", "pytest (>=8.3.3)", "virtualenv (>=20.26.4)"]
+typing = ["typing-extensions (>=4.12.2)"]
 
 [[package]]
 name = "flask"
@@ -260,6 +232,50 @@ unicode = ["unicodedata2 (>=14.0.0)"]
 woff = ["zopfli (>=0.1.4)", "brotlicffi (>=0.8.0)", "brotli (>=1.0.1)"]
 
 [[package]]
+name = "frozenlist"
+version = "1.4.1"
+description = "A list-like structure which implements collections.abc.MutableSequence"
+category = "main"
+optional = true
+python-versions = ">=3.8"
+
+[[package]]
+name = "fsspec"
+version = "2024.9.0"
+description = "File-system specification"
+category = "main"
+optional = true
+python-versions = ">=3.8"
+
+[package.extras]
+abfs = ["adlfs"]
+adl = ["adlfs"]
+arrow = ["pyarrow (>=1)"]
+dask = ["dask", "distributed"]
+dev = ["pre-commit", "ruff"]
+doc = ["numpydoc", "sphinx", "sphinx-design", "sphinx-rtd-theme", "yarl"]
+dropbox = ["dropbox", "dropboxdrivefs", "requests"]
+full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
+fuse = ["fusepy"]
+gcs = ["gcsfs"]
+git = ["pygit2"]
+github = ["requests"]
+gs = ["gcsfs"]
+gui = ["panel"]
+hdfs = ["pyarrow (>=1)"]
+http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)"]
+libarchive = ["libarchive-c"]
+oci = ["ocifs"]
+s3 = ["s3fs"]
+sftp = ["paramiko"]
+smb = ["smbprotocol"]
+ssh = ["paramiko"]
+test = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "numpy", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "requests"]
+test-downstream = ["aiobotocore (>=2.5.4,<3.0.0)", "dask-expr", "dask", "moto[server] (>4,<5)", "pytest-timeout", "xarray"]
+test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard"]
+tqdm = ["tqdm"]
+
+[[package]]
 name = "idna"
 version = "3.3"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -306,12 +322,20 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
-name = "joblib"
-version = "1.2.0"
-description = "Lightweight pipelining with Python functions"
+name = "jsonschema"
+version = "4.17.3"
+description = "An implementation of JSON Schema validation for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
+
+[package.dependencies]
+attrs = ">=17.4.0"
+pyrsistent = ">=0.14.0,<0.17.0 || >0.17.0,<0.17.1 || >0.17.1,<0.17.2 || >0.17.2"
+
+[package.extras]
+format = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-validator", "rfc3987", "uri-template", "webcolors (>=1.11)"]
+format-nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-validator", "rfc3986-validator (>0.1.0)", "uri-template", "webcolors (>=1.11)"]
 
 [[package]]
 name = "kiwisolver"
@@ -369,6 +393,29 @@ develop = ["pytest (>=4.6)", "pycodestyle", "pytest-cov", "codecov", "wheel"]
 tests = ["pytest (>=4.6)"]
 
 [[package]]
+name = "msgpack"
+version = "1.1.0"
+description = "MessagePack serializer"
+category = "main"
+optional = true
+python-versions = ">=3.8"
+
+[[package]]
+name = "networkx"
+version = "3.2.1"
+description = "Python package for creating and manipulating graphs and networks"
+category = "main"
+optional = true
+python-versions = ">=3.9"
+
+[package.extras]
+default = ["numpy (>=1.22)", "scipy (>=1.9,!=1.11.0,!=1.11.1)", "matplotlib (>=3.5)", "pandas (>=1.4)"]
+developer = ["changelist (==0.4)", "pre-commit (>=3.2)", "mypy (>=1.1)", "rtoml"]
+doc = ["sphinx (>=7)", "pydata-sphinx-theme (>=0.14)", "sphinx-gallery (>=0.14)", "numpydoc (>=1.6)", "pillow (>=9.4)", "nb2plots (>=0.7)", "texext (>=0.6.7)", "nbconvert (<7.9)"]
+extra = ["lxml (>=4.6)", "pygraphviz (>=1.11)", "pydot (>=1.4.2)", "sympy (>=1.10)"]
+test = ["pytest (>=7.2)", "pytest-cov (>=4.0)"]
+
+[[package]]
 name = "numpy"
 version = "1.22.4"
 description = "NumPy is the fundamental package for array computing with Python."
@@ -377,34 +424,111 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
-name = "openbox"
-version = "0.7.17"
-description = "Efficient and generalized blackbox optimization (BBO) system"
+name = "nvidia-cublas-cu12"
+version = "12.1.3.1"
+description = "CUBLAS native runtime libraries"
 category = "main"
-optional = false
-python-versions = ">=3.6.0"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-cuda-cupti-cu12"
+version = "12.1.105"
+description = "CUDA profiling tools runtime libs."
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-cuda-nvrtc-cu12"
+version = "12.1.105"
+description = "NVRTC native runtime libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-cuda-runtime-cu12"
+version = "12.1.105"
+description = "CUDA Runtime native Libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-cudnn-cu12"
+version = "9.1.0.70"
+description = "cuDNN runtime libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
 
 [package.dependencies]
-ConfigSpace = ">=0.4.20,<0.5"
-cython = "*"
-dill = "*"
-emcee = "*"
-matplotlib = "*"
-numpy = ">=1.7.1"
-pandas = "*"
-platypus-opt = "1.0.4"
-psutil = "*"
-pyyaml = "*"
-requests = "*"
-scikit-learn = ">=0.21.3"
-scikit-optimize = ">=0.8"
-scipy = ">=0.18.1"
-statsmodels = "*"
-terminaltables = "*"
-tqdm = "*"
+nvidia-cublas-cu12 = "*"
 
-[package.extras]
-dev = ["dill", "cython", "psutil", "setuptools", "requests", "statsmodels", "pyyaml", "emcee", "tqdm", "terminaltables", "matplotlib", "pandas", "numpy (>=1.7.1)", "scipy (>=0.18.1)", "platypus-opt (==1.0.4)", "scikit-optimize (>=0.8)", "ConfigSpace (>=0.4.20,<0.5)", "scikit-learn (>=0.21.3)"]
+[[package]]
+name = "nvidia-cufft-cu12"
+version = "11.0.2.54"
+description = "CUFFT native runtime libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-curand-cu12"
+version = "10.3.2.106"
+description = "CURAND native runtime libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-cusolver-cu12"
+version = "11.4.5.107"
+description = "CUDA solver native runtime libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[package.dependencies]
+nvidia-cublas-cu12 = "*"
+nvidia-cusparse-cu12 = "*"
+nvidia-nvjitlink-cu12 = "*"
+
+[[package]]
+name = "nvidia-cusparse-cu12"
+version = "12.1.0.106"
+description = "CUSPARSE native runtime libraries"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[package.dependencies]
+nvidia-nvjitlink-cu12 = "*"
+
+[[package]]
+name = "nvidia-nccl-cu12"
+version = "2.20.5"
+description = "NVIDIA Collective Communication Library (NCCL) Runtime"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-nvjitlink-cu12"
+version = "12.6.77"
+description = "Nvidia JIT LTO Library"
+category = "main"
+optional = true
+python-versions = ">=3"
+
+[[package]]
+name = "nvidia-nvtx-cu12"
+version = "12.1.105"
+description = "NVIDIA Tools Extension"
+category = "main"
+optional = true
+python-versions = ">=3"
 
 [[package]]
 name = "packaging"
@@ -439,21 +563,6 @@ pytz = ">=2020.1"
 test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
 
 [[package]]
-name = "patsy"
-version = "0.5.2"
-description = "A Python package for describing statistical models and for building design matrices."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-numpy = ">=1.4"
-six = "*"
-
-[package.extras]
-test = ["pytest", "pytest-cov", "scipy"]
-
-[[package]]
 name = "pillow"
 version = "9.1.1"
 description = "Python Imaging Library (Fork)"
@@ -464,17 +573,6 @@ python-versions = ">=3.7"
 [package.extras]
 docs = ["olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-issues (>=3.0.1)", "sphinx-removed-in", "sphinx-rtd-theme (>=1.0)", "sphinxext-opengraph"]
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
-
-[[package]]
-name = "platypus-opt"
-version = "1.0.4"
-description = "Multiobjective optimization in Python"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = "*"
 
 [[package]]
 name = "plotly"
@@ -531,15 +629,12 @@ xlsxwriter = ["xlsxwriter"]
 all = ["polars"]
 
 [[package]]
-name = "psutil"
-version = "5.9.2"
-description = "Cross-platform lib for process and system monitoring in Python."
+name = "protobuf"
+version = "5.28.2"
+description = ""
 category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.extras]
-test = ["ipaddress", "mock", "enum34", "pywin32", "wmi"]
+optional = true
+python-versions = ">=3.8"
 
 [[package]]
 name = "py"
@@ -548,17 +643,6 @@ description = "library with cross-python path, ini-parsing, io, code, log facili
 category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[[package]]
-name = "pyaml"
-version = "21.10.1"
-description = "PyYAML-based module to produce pretty and readable YAML-serialized data"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-PyYAML = "*"
 
 [[package]]
 name = "pygments"
@@ -578,6 +662,14 @@ python-versions = ">=3.6.8"
 
 [package.extras]
 diagrams = ["railroad-diagrams", "jinja2"]
+
+[[package]]
+name = "pyrsistent"
+version = "0.20.0"
+description = "Persistent/Functional/Immutable data structures"
+category = "main"
+optional = true
+python-versions = ">=3.8"
 
 [[package]]
 name = "pytest"
@@ -622,11 +714,47 @@ python-versions = "*"
 
 [[package]]
 name = "pyyaml"
-version = "6.0"
+version = "6.0.2"
 description = "YAML parser and emitter for Python"
 category = "main"
-optional = false
-python-versions = ">=3.6"
+optional = true
+python-versions = ">=3.8"
+
+[[package]]
+name = "ray"
+version = "2.37.0"
+description = "Ray provides a simple, universal API for building distributed applications."
+category = "main"
+optional = true
+python-versions = ">=3.9"
+
+[package.dependencies]
+aiosignal = "*"
+click = ">=7.0"
+filelock = "*"
+frozenlist = "*"
+jsonschema = "*"
+msgpack = ">=1.0.0,<2.0.0"
+packaging = "*"
+protobuf = ">=3.15.3,<3.19.5 || >3.19.5"
+pyyaml = "*"
+requests = "*"
+
+[package.extras]
+adag = ["cupy-cuda12x"]
+air = ["pandas", "uvicorn", "pydantic (<2.0.0 || >=2.5.0,<3)", "tensorboardX (>=1.9)", "aiohttp (>=3.7)", "numpy (>=1.20)", "virtualenv (>=20.0.24,!=20.21.1)", "aiohttp-cors", "pyarrow (>=6.0.1)", "opencensus", "smart-open", "fsspec", "py-spy (>=0.2.0)", "watchfiles", "starlette", "fastapi", "prometheus-client (>=0.7.1)", "pandas (>=1.3)", "requests", "colorful", "grpcio (>=1.32.0)", "grpcio (>=1.42.0)", "memray"]
+all = ["gymnasium (==0.28.1)", "pandas", "uvicorn", "pydantic (<2.0.0 || >=2.5.0,<3)", "tensorboardX (>=1.9)", "aiohttp (>=3.7)", "numpy (>=1.20)", "virtualenv (>=20.0.24,!=20.21.1)", "scikit-image", "aiohttp-cors", "opentelemetry-sdk", "pyyaml", "grpcio (!=1.56.0)", "pyarrow (>=6.0.1)", "opentelemetry-api", "dm-tree", "opencensus", "smart-open", "fsspec", "py-spy (>=0.2.0)", "scipy", "watchfiles", "starlette", "rich", "fastapi", "opentelemetry-exporter-otlp", "prometheus-client (>=0.7.1)", "pandas (>=1.3)", "typer", "lz4", "requests", "colorful", "grpcio (>=1.32.0)", "grpcio (>=1.42.0)", "cupy-cuda12x", "memray"]
+all-cpp = ["gymnasium (==0.28.1)", "pandas", "uvicorn", "pydantic (<2.0.0 || >=2.5.0,<3)", "tensorboardX (>=1.9)", "aiohttp (>=3.7)", "numpy (>=1.20)", "virtualenv (>=20.0.24,!=20.21.1)", "scikit-image", "aiohttp-cors", "opentelemetry-sdk", "pyyaml", "grpcio (!=1.56.0)", "pyarrow (>=6.0.1)", "opentelemetry-api", "dm-tree", "opencensus", "smart-open", "fsspec", "py-spy (>=0.2.0)", "scipy", "ray-cpp (==2.37.0)", "watchfiles", "starlette", "rich", "fastapi", "opentelemetry-exporter-otlp", "prometheus-client (>=0.7.1)", "pandas (>=1.3)", "typer", "lz4", "requests", "colorful", "grpcio (>=1.32.0)", "grpcio (>=1.42.0)", "cupy-cuda12x", "memray"]
+client = ["grpcio (!=1.56.0)"]
+cpp = ["ray-cpp (==2.37.0)"]
+data = ["numpy (>=1.20)", "pandas (>=1.3)", "pyarrow (>=6.0.1)", "fsspec"]
+default = ["aiohttp (>=3.7)", "aiohttp-cors", "colorful", "py-spy (>=0.2.0)", "requests", "opencensus", "pydantic (<2.0.0 || >=2.5.0,<3)", "prometheus-client (>=0.7.1)", "smart-open", "virtualenv (>=20.0.24,!=20.21.1)", "grpcio (>=1.32.0)", "grpcio (>=1.42.0)", "memray"]
+observability = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp"]
+rllib = ["pandas", "tensorboardX (>=1.9)", "requests", "pyarrow (>=6.0.1)", "fsspec", "dm-tree", "gymnasium (==0.28.1)", "lz4", "scikit-image", "pyyaml", "scipy", "typer", "rich"]
+serve = ["fastapi", "aiohttp (>=3.7)", "opencensus", "prometheus-client (>=0.7.1)", "smart-open", "virtualenv (>=20.0.24,!=20.21.1)", "py-spy (>=0.2.0)", "uvicorn", "requests", "colorful", "aiohttp-cors", "pydantic (<2.0.0 || >=2.5.0,<3)", "watchfiles", "starlette", "grpcio (>=1.32.0)", "grpcio (>=1.42.0)", "memray"]
+serve-grpc = ["fastapi", "aiohttp (>=3.7)", "opencensus", "prometheus-client (>=0.7.1)", "smart-open", "virtualenv (>=20.0.24,!=20.21.1)", "py-spy (>=0.2.0)", "uvicorn", "requests", "colorful", "aiohttp-cors", "pydantic (<2.0.0 || >=2.5.0,<3)", "watchfiles", "starlette", "grpcio (>=1.32.0)", "grpcio (>=1.42.0)", "memray"]
+train = ["pandas", "tensorboardX (>=1.9)", "requests", "pyarrow (>=6.0.1)", "fsspec"]
+tune = ["pandas", "tensorboardX (>=1.9)", "requests", "pyarrow (>=6.0.1)", "fsspec"]
 
 [[package]]
 name = "requests"
@@ -660,44 +788,6 @@ pygments = ">=2.6.0,<3.0.0"
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<8.0.0)"]
-
-[[package]]
-name = "scikit-learn"
-version = "1.1.2"
-description = "A set of python modules for machine learning and data mining"
-category = "main"
-optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-joblib = ">=1.0.0"
-numpy = ">=1.17.3"
-scipy = ">=1.3.2"
-threadpoolctl = ">=2.0.0"
-
-[package.extras]
-benchmark = ["matplotlib (>=3.1.2)", "pandas (>=1.0.5)", "memory-profiler (>=0.57.0)"]
-docs = ["matplotlib (>=3.1.2)", "scikit-image (>=0.16.2)", "pandas (>=1.0.5)", "seaborn (>=0.9.0)", "memory-profiler (>=0.57.0)", "sphinx (>=4.0.1)", "sphinx-gallery (>=0.7.0)", "numpydoc (>=1.2.0)", "Pillow (>=7.1.2)", "sphinx-prompt (>=1.3.0)", "sphinxext-opengraph (>=0.4.2)"]
-examples = ["matplotlib (>=3.1.2)", "scikit-image (>=0.16.2)", "pandas (>=1.0.5)", "seaborn (>=0.9.0)"]
-tests = ["matplotlib (>=3.1.2)", "scikit-image (>=0.16.2)", "pandas (>=1.0.5)", "pytest (>=5.0.1)", "pytest-cov (>=2.9.0)", "flake8 (>=3.8.2)", "black (>=22.3.0)", "mypy (>=0.961)", "pyamg (>=4.0.0)", "numpydoc (>=1.2.0)"]
-
-[[package]]
-name = "scikit-optimize"
-version = "0.9.0"
-description = "Sequential model-based optimization toolbox."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-joblib = ">=0.11"
-numpy = ">=1.13.3"
-pyaml = ">=16.9"
-scikit-learn = ">=0.20.0"
-scipy = ">=0.19.1"
-
-[package.extras]
-plots = ["matplotlib (>=2.0.0)"]
 
 [[package]]
 name = "scipy"
@@ -735,26 +825,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
-name = "statsmodels"
-version = "0.13.2"
-description = "Statistical computations and models for Python"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-numpy = ">=1.17"
-packaging = ">=21.3"
-pandas = ">=0.25"
-patsy = ">=0.5.2"
-scipy = ">=1.3"
-
-[package.extras]
-build = ["cython (>=0.29.26)"]
-develop = ["cython (>=0.29.26)"]
-docs = ["sphinx", "nbconvert", "jupyter-client", "ipykernel", "matplotlib", "nbformat", "numpydoc", "pandas-datareader"]
-
-[[package]]
 name = "sympy"
 version = "1.10.1"
 description = "Computer algebra system (CAS) in Python"
@@ -777,22 +847,6 @@ python-versions = ">=3.6"
 doc = ["reno", "sphinx", "tornado (>=4.5)"]
 
 [[package]]
-name = "terminaltables"
-version = "3.1.10"
-description = "Generate simple tables in terminals from a nested list of strings."
-category = "main"
-optional = false
-python-versions = ">=2.6"
-
-[[package]]
-name = "threadpoolctl"
-version = "3.1.0"
-description = "threadpoolctl"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -801,21 +855,60 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
-name = "tqdm"
-version = "4.64.1"
-description = "Fast, Extensible Progress Meter"
+name = "torch"
+version = "2.4.1"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 category = "main"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+optional = true
+python-versions = ">=3.8.0"
 
 [package.dependencies]
-colorama = {version = "*", markers = "platform_system == \"Windows\""}
+filelock = "*"
+fsspec = "*"
+jinja2 = "*"
+networkx = "*"
+nvidia-cublas-cu12 = {version = "12.1.3.1", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cuda-cupti-cu12 = {version = "12.1.105", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cuda-nvrtc-cu12 = {version = "12.1.105", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cuda-runtime-cu12 = {version = "12.1.105", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cudnn-cu12 = {version = "9.1.0.70", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cufft-cu12 = {version = "11.0.2.54", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-curand-cu12 = {version = "10.3.2.106", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cusolver-cu12 = {version = "11.4.5.107", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-cusparse-cu12 = {version = "12.1.0.106", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-nccl-cu12 = {version = "2.20.5", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+nvidia-nvtx-cu12 = {version = "12.1.105", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\""}
+sympy = "*"
+triton = {version = "3.0.0", markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and python_version < \"3.13\""}
+typing-extensions = ">=4.8.0"
 
 [package.extras]
-dev = ["py-make (>=0.1.0)", "twine", "wheel"]
-notebook = ["ipywidgets (>=6)"]
-slack = ["slack-sdk"]
-telegram = ["requests"]
+opt-einsum = ["opt-einsum (>=3.3)"]
+optree = ["optree (>=0.11.0)"]
+
+[[package]]
+name = "triton"
+version = "3.0.0"
+description = "A language and compiler for custom Deep Learning operations"
+category = "main"
+optional = true
+python-versions = "*"
+
+[package.dependencies]
+filelock = "*"
+
+[package.extras]
+build = ["cmake (>=3.20)", "lit"]
+tests = ["autopep8", "flake8", "isort", "numpy", "pytest", "scipy (>=1.7.1)", "llnl-hatchet"]
+tutorials = ["matplotlib", "pandas", "tabulate"]
+
+[[package]]
+name = "typing-extensions"
+version = "4.12.2"
+description = "Backported and Experimental Type Hints for Python 3.8+"
+category = "main"
+optional = true
+python-versions = ">=3.8"
 
 [[package]]
 name = "urllib3"
@@ -864,9 +957,10 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "5c6139798c09a031916a27a77b47cca2ef4aecf29b8f438f8493dd8e9b6ba8af"
+content-hash = "9493f57ceada917d97ce30ae7829878e5ee3ab26ca82a6f4d8f985d645fcb136"
 
 [metadata.files]
+aiosignal = []
 atomicwrites = []
 attrs = []
 brotli = []
@@ -875,63 +969,71 @@ charset-normalizer = []
 click = []
 colorama = []
 commonmark = []
-configspace = []
 cycler = []
-cython = []
 dash = []
 dash-bootstrap-components = []
 dash-core-components = []
 dash-escher = []
 dash-html-components = []
 dash-table = []
-dill = []
-emcee = []
+filelock = []
 flask = []
 flask-compress = []
 fonttools = []
+frozenlist = []
+fsspec = []
 idna = []
 importlib-metadata = []
 itsdangerous = []
 jinja2 = []
-joblib = []
+jsonschema = []
 kiwisolver = []
 markupsafe = []
 matplotlib = []
 more-itertools = []
 mpmath = []
+msgpack = []
+networkx = []
 numpy = []
-openbox = []
+nvidia-cublas-cu12 = []
+nvidia-cuda-cupti-cu12 = []
+nvidia-cuda-nvrtc-cu12 = []
+nvidia-cuda-runtime-cu12 = []
+nvidia-cudnn-cu12 = []
+nvidia-cufft-cu12 = []
+nvidia-curand-cu12 = []
+nvidia-cusolver-cu12 = []
+nvidia-cusparse-cu12 = []
+nvidia-nccl-cu12 = []
+nvidia-nvjitlink-cu12 = []
+nvidia-nvtx-cu12 = []
 packaging = []
 pandas = []
-patsy = []
 pillow = []
-platypus-opt = []
 plotly = []
 pluggy = []
 polars = []
-psutil = []
+protobuf = []
 py = []
-pyaml = []
 pygments = []
 pyparsing = []
+pyrsistent = []
 pytest = []
 python-dateutil = []
 pytz = []
 pyyaml = []
+ray = []
 requests = []
 rich = []
-scikit-learn = []
-scikit-optimize = []
 scipy = []
 setuptools-scm = []
 six = []
-statsmodels = []
 sympy = []
 tenacity = []
-terminaltables = []
-threadpoolctl = []
 tomli = []
-tqdm = []
+torch = []
+triton = []
+typing-extensions = []
 urllib3 = []
 wcwidth = []
 werkzeug = []
