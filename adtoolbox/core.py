@@ -2293,7 +2293,28 @@ class Metagenomics:
         if save_manifest:
             manifest.to_csv(os.path.join(manifest_dir,"manifest.tsv"),sep="\t",index=False)
         return qiime2_bash_str,manifest
+
+
+class Annotation:
     
+    def __init__(self,config:configs.Annotation):
+        self.config=config
+        
+    def annotate_with_metacyc_(
+                                alignment_file:str,
+                                )->dict[str,dict[str,str]]:
+        """"
+        This function annotates the genomes with the metabolic pathways using the metabolic pathways database.
+        Required Configs:
+            None
+        Args:
+            alignment_file (str): The path to the alignment file.
+        Returns:
+            dict: A dictionary containing the metabolic pathways  and their coverage in based on
+            the input alignment file.
+        """
+        pass
+        
 
 
 if __name__ == "__main__":
