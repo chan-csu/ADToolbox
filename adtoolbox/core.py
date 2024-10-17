@@ -2313,7 +2313,46 @@ class Annotation:
             dict: A dictionary containing the metabolic pathways  and their coverage in based on
             the input alignment file.
         """
-        pass
+
+    def get_coverage(alignment_file, protein_db_location, required_pathway ):
+        alignment_dataframe = pd.read_csv(alignment_file, sep='\t')
+        targets_column = alignment_dataframe["target"].str.split("|", expand=True)
+
+        target_dataframe = pd.DataFrame(targets_column)
+
+        grouped = target_dataframe.groupby(0)[[1, 2]].agg(lambda x: set(x))
+
+        grouped_len =   len(grouped.loc[required_pathway])
+        
+        
+        pathway_dict = {}
+
+        with open(protein_db_location, 'r') as file:
+            for line in file:
+                
+                if line.startswith('>'):
+                    
+                    header = line[1:].strip()
+                    pathway, reaction, _ = header.split('|')
+                    
+                    if pathway not in pathway_dict:
+                        pathway_dict[pathway] = set()
+                    
+                    pathway_dict[pathway].add(reaction)
+
+        
+        pathway_len = len(pathway_dict[pathway])
+        
+        
+        
+        d_coverage = grouped_len /pathway_len
+        
+        return d_coverage, pathway_dict[pathway]
+
+        
+        
+    print(get_coverage("sach.m8", "protein_db.fasta", '1CMET2-PWY')) 
+            # pass
         
 
 
