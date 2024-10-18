@@ -155,6 +155,7 @@ class Database:
 		adtoolbox_docker=ADTOOLBOX_CONTAINERS["docker_x86"],
     	protein_db=os.path.join(Main_Dir, "Database", 'Protein_DB.fasta'),
 		adm_microbial_groups_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
+		metacyc_protein_db:str=os.path.join(Main_Dir, "Database", 'metacyc_protein_db.fasta'),
         studies_remote=INTERNAL_LINKS,
         studies_local=STUDIES_LOCAL,
         check_sanity:bool=False
@@ -183,6 +184,7 @@ class Database:
 		self.adm_microbial_groups_mapping=adm_microbial_groups_mapping
 		self.studies_remote=studies_remote
 		self.studies_local=studies_local
+		self.metacyc_protein_db=metacyc_protein_db
 		self.protein_db_mmseqs=pathlib.Path(protein_db).parent.joinpath("protein_db_mmseqs")
 		if check_sanity:
 			self.check_adm_parameters()
@@ -256,7 +258,15 @@ class Metagenomics:
 		self.genomes_base_dir=genomes_base_dir
 		self.adm_mapping=adm_mapping
 		self.qiime2_p_trunc_len=qiime2_p_trunc_len
+class Annotation:
+	def __init__(self,
+                 metacyc_protein_db:str=Database().metacyc_protein_db
+                 
+                 ):
 		
+		self.metacyc_protein_db=metacyc_protein_db
+  
+  
 class Documentation:
     def __init__(self,
                  readme=os.path.join(PKG_DATA,"README.md")):
