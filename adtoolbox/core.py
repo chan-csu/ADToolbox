@@ -2300,7 +2300,7 @@ class Annotation:
     def __init__(self,config:configs.Annotation):
         self.config=config
         
-    def annotate_with_metacyc_(
+    def annotate_with_metacyc_(self,
                                 alignment_file:str,
                                 )->dict[str,dict[str,str]]:
         """"
@@ -2313,46 +2313,29 @@ class Annotation:
             dict: A dictionary containing the metabolic pathways  and their coverage in based on
             the input alignment file.
         """
-
-    def get_coverage(alignment_file, protein_db_location, required_pathway ):
-        alignment_dataframe = pd.read_csv(alignment_file, sep='\t')
-        targets_column = alignment_dataframe["target"].str.split("|", expand=True)
-
-        target_dataframe = pd.DataFrame(targets_column)
-
-        grouped = target_dataframe.groupby(0)[[1, 2]].agg(lambda x: set(x))
-
-        grouped_len =   len(grouped.loc[required_pathway])
-        
-        
-        pathway_dict = {}
-
-        with open(protein_db_location, 'r') as file:
+        metacyc_full_dict={}
+        annotation_dict={}
+        with open(self.config.metacyc_protein_db, 'r') as file:
             for line in file:
-                
                 if line.startswith('>'):
-                    
                     header = line[1:].strip()
                     pathway, reaction, _ = header.split('|')
-                    
-                    if pathway not in pathway_dict:
-                        pathway_dict[pathway] = set()
-                    
-                    pathway_dict[pathway].add(reaction)
+                    if pathway not in metacyc_full_dict:
+                        metacyc_full_dict[pathway] = set()
+                    metacyc_full_dict[pathway].add(reaction)
+        alignment_table=pd.read_table(alignment_file,sep='\t')
+        targets_df = pd.DataFrame(alignment_table["target"].str.split("|", expand=True))
+        grouped = targets_df.groupby(0)[[1, 2]].agg(lambda x: set(x))
+        for pathway in grouped.index:
+            annotation_dict.setdefault(pathway,{})["reactions"]=grouped.loc[pathway][1]
+            annotation_dict.setdefault(pathway,{})["coverage"]=len(grouped.loc[pathway][1])/len(metacyc_full_dict[pathway])
+            annotation_dict.setdefault(pathway,{})["all_reactions"]=metacyc_full_dict[pathway]
+            
+        return annotation_dict
+        
 
         
-        pathway_len = len(pathway_dict[pathway])
         
-        
-        
-        d_coverage = grouped_len /pathway_len
-        
-        return d_coverage, pathway_dict[pathway]
-
-        
-        
-    print(get_coverage("sach.m8", "protein_db.fasta", '1CMET2-PWY')) 
-            # pass
         
 
 
