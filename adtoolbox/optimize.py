@@ -251,6 +251,7 @@ class NNSurrogateTuner:
     
     def _generate_initial_population(self):
         self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
+    
     @lru_cache(maxsize=50)
     def _cost(self, parameters: dict,ode_method:str)->float:
         """
@@ -265,9 +266,20 @@ class NNSurrogateTuner:
                 ic=experiment.initial_concentrations.copy()
                 ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
                 _model= self.base_model.copy()
-                _model.update_parameters(**{self.var_type:parameters})
+
+                for k,v in _model.initial_conditions.items():
+                    if k in parameters:
+                        ic[k]=parameters.get(k,v)
+                
+                for k,v in _model.model_parameters.items():
+                    if k in parameters:
+                        _model.model_parameters[k]=parameters.get(k,v)
+                
+                for k,v in _model.base_parameters.items():
+                    if k in parameters:
+                        _model.base_parameters[k]=parameters.get(k,v)
+                
                 _model.update_parameters(initial_conditions=ic)
-                _model.base_parameters=experiment.base_parameters
                 _model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
                 _model.feed=experiment.feed
 
