@@ -251,8 +251,7 @@ class NNSurrogateTuner:
     
     def _generate_initial_population(self):
         self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
-    
-    @lru_cache(maxsize=50)
+
     def _cost(self, parameters: dict,ode_method:str)->float:
         """
         This function is called by openbox to evaluate a configuration.
@@ -267,7 +266,7 @@ class NNSurrogateTuner:
                 ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
                 _model= self.base_model.copy()
 
-                for k,v in _model.initial_conditions.items():
+                for k,v in _model._ic.items():
                     if k in parameters:
                         ic[k]=parameters.get(k,v)
                 
@@ -319,7 +318,7 @@ class NNSurrogateTuner:
             self._optimizer_model.zero_grad()
         return loss.detach().numpy()
 
-    def optimize(self, perturbation_method:str="random",ode_method="LSODA",parallel:bool=False, **kwargs)->dict:
+    def optimize(self, perturbation_method:str="random",ode_method="BDF",parallel:bool=False, **kwargs)->dict:
         if not parallel:
             costs=[]
             if not self._initialized:
@@ -377,8 +376,16 @@ class NNSurrogateTuner:
         
         else:
             if kwargs.get("parallel_framework","ray")=="ray":
+                ray.init()
+                self.base_model_id = ray.put(self.base_model)
+                self.train_data_ids = [ray.put(exp) for exp in self.train_data]
+                self.tunables_id = ray.put(self.tunables)
                 if not self._initialized:
-                    costs=ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,ode_method=ode_method) for exp in self.train_data for pop in self._popuplation])
+                    logging.info("Generating initial population:")
+                    costs=ray.get([_single_cost_ray.remote(self.base_model_id,
+                                                           dict(zip(self.tunables.keys(),pop)),
+                                                           exp_id,
+                                                           ode_method=ode_method) for exp_id in self.train_data_ids for pop in self._popuplation])
                     costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
                     self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
                 self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
@@ -496,20 +503,23 @@ class NNSurrogateTuner:
         self,
         parameters:np.ndarray,
         experiments:Iterable[core.Experiment],
-        ode_method:str="LSODA",
+        ode_method:str="BDF",
         parallel_framework:str="ray")->np.ndarray:
         
         if parallel_framework=="ray":
             costs=ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),p)),exp,ode_method=ode_method) for exp in experiments for p in parameters])
         return np.array(costs)
     
-@ray.remote
+@ray.remote(num_cpus=NUM_CORES)
 def _single_cost_ray(base_model:adm.Model,
                  parameters:dict,
                  experiment:core.Experiment,
-                 var_type:str="model_parameters",
-                 ode_method:str="LSODA")->float:
+                 ode_method:str="BDF")->float:
+    """
+    This function is called by ray to calculate the cost of a configuration.
+    """
     base_model=base_model.copy()
+
     ic=experiment.initial_concentrations.copy()
     ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
     
