@@ -421,7 +421,7 @@ class NNSurrogateTuner:
                     self._aquired["cost"].append(new_cost)
                     self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
                     self._best_cost=np.min(self._aquired["cost"])
-                    print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
+                    logging.info(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
                     if i%self.save_every==0:
                         self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
                         with open(f"{str(self.history_file_path.absolute())}","wb") as file:
