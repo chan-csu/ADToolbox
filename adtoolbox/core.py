@@ -1838,7 +1838,8 @@ class Metagenomics:
         
         return  bash_script,alignment_file
 
-    def align_short_reads_to_protein_db(self,query_seq:str,
+    def align_short_reads_to_protein_db(self,
+                                        query_seq:str,
                                         alignment_file_name:str,
                                         container:str="None",
                                         )->tuple[str,str]:
@@ -2098,18 +2099,17 @@ class Metagenomics:
     
         """   
         if container=="None":
-            prefetch_script=f"""#!/bin/bash\nprefetch {accession} -O {target_dir} --max-size 100000000\n"""
+            prefetch_script=f"""prefetch {accession} -O {target_dir} --max-size 100000000\n"""
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
             sra_file=acc_folder/(accession+".sra")
-            fasterq_dump_script+=f"\nfasterq-dump {sra_file} -O {acc_folder} --split-files --temp {acc_folder}"
-            fasterq_dump_script+=f"\nrm {sra_file}"
-            
+            fasterq_dump_script+=f"fasterq-dump {sra_file} -O {acc_folder} --split-files --temp {acc_folder}\n"
+            fasterq_dump_script+=f"rm {sra_file}"
             prefetch_script+=fasterq_dump_script
  
         
         elif container=="docker":
-            prefetch_script=f""""""
+            prefetch_script=""""""
             prefetch_script+=f"docker run -v {target_dir}:{target_dir} {self.config.adtoolbox_docker} prefetch {accession} -O {target_dir} --max-size 100000000\n"
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
@@ -2119,7 +2119,7 @@ class Metagenomics:
             prefetch_script+=fasterq_dump_script
         
         elif container=="singularity":
-            prefetch_script=f""""""
+            prefetch_script=""""""
             prefetch_script+=f"singularity exec {self.config.adtoolbox_singularity} prefetch {accession} -O {target_dir} --max-size 100000000\n"
             acc_folder=pathlib.Path(target_dir)/accession
             fasterq_dump_script=""
@@ -2281,10 +2281,10 @@ class Metagenomics:
             for idx,line in enumerate(qiime2_bash_str):
                 line=line.lstrip()
                 if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"singularity exec --bind  {str(seqs)}:{str(seqs)},$PWD:$PWD,{str(Path(self.config.qiime_classifier_db))}:{str(Path(self.config.qiime_classifier_db))},$SINGULARITY_TMPDIR:/tmp  {self.config.qiime2_singularity_image} " +line
+                    qiime2_bash_str[idx]=f"singularity exec --bind  {str(workings_dir)}:{str(workings_dir)},$PWD:$PWD,{str(Path(self.config.qiime_classifier_db))}:{str(Path(self.config.qiime_classifier_db))},$SINGULARITY_TMPDIR:/tmp  {self.config.qiime2_singularity_image} " +line
             qiime2_bash_str="\n".join(qiime2_bash_str)
             qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(seqs))
+            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
             qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(Path(self.config.qiime_classifier_db)))
  
         else:

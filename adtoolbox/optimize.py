@@ -1,4 +1,4 @@
-import core,configs
+from adtoolbox import core,configs
 from adtoolbox.core import Experiment
 from adtoolbox import Main_Dir
 from adtoolbox import adm

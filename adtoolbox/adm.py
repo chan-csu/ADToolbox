@@ -1806,6 +1806,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     """
     c[c<0]=0
     c[model.species.index('S_H_ion')]=0.000001
+    v = np.zeros((len(model.reactions), 1))
     if model.switch == "DAE":
         
         c[model.species.index('S_va_ion')]=model.model_parameters['K_a_va']/(model.model_parameters['K_a_va']+c[model.species.index('S_H_ion')])*c[model.species.index('S_va')]
@@ -1822,8 +1823,8 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     else: 
         v[model.reactions.index('Acid Base Equilibrium (Va)')] = model.model_parameters['k_A_B_va'] * \
             (c[model.species.index('S_va_ion')] * (model.model_parameters['K_a_va'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_va'] * c[model.species.index('S_va')])
-    
+            model.model_parameters['K_a_va'] * c[model.species.index('S_va')])
+            
         v[model.reactions.index('Acid Base Equilibrium (Bu)')] = model.model_parameters['k_A_B_bu'] * \
             (c[model.species.index('S_bu_ion')] * (model.model_parameters['K_a_bu'] + c[model.species.index('S_H_ion')]) -
              model.model_parameters['K_a_bu'] * c[model.species.index('S_bu')])
@@ -1920,7 +1921,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     I15 = 1
     I16 = 1
 
-    v = np.zeros((len(model.reactions), 1))
+
 
     v[model.reactions.index(
         'TSS_Disintegration')] = model.model_parameters["k_dis_TSS"]*c[model.species.index('TSS')]
@@ -2120,6 +2121,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
             dCdt[model.species.index(state)]=0
     model.info["Fluxes"]=v
     return dCdt[:, 0]
+
 
 
 
