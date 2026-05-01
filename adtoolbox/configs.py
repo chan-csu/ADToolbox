@@ -192,7 +192,7 @@ class Database:
 	def check_adm_parameters(self):
 		branches=all([pathlib.Path(x).parent==pathlib.Path(self.adm_parameters["model_parameters"]).parent for x in self.adm_parameters.values()])
 		if not branches:
-			warnings.warn(f"The ADM parameters are not in the same directory!")
+			warnings.warn("The ADM parameters are not in the same directory!")
 
 class Metagenomics:
 	"""	

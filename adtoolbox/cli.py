@@ -447,7 +447,7 @@ def main():
             reactions=adm_reactions, 
             species=adm_species, 
             ode_system=adm.adm1_ode_sys, 
-            build_stoichiometric_matrix=adm.build_adm1_stoiciometric_matrix,
+            build_stoichiometric_matrix=adm.build_adm1_stoichiometric_matrix,
             name="ADM1",
             switch="DAE")
         sol = ADM1.solve_model(t_eval=np.linspace(0,30, 10000))
