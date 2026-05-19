@@ -1,0 +1,14 @@
+name	carbohydrates	lipids	proteins	tss	si	xi	reference
+Foodwaste_for_16s_analysis	50.1	21.5	20.5	30	47	22.5	https://doi.org/10.1021/acssuschemeng.2c04080|http://dx.doi.org/10.1016/B978-0-12-819148-4.00002-6|https://doi.org/10.1016/j.biortech.2015.02.034
+Cellulosic Medium	100	0	0	100	0	0	https://doi.org/10.1016/j.biortech.2020.124532
+Slurry	20.89552239	10.64676617	68.45771144	32.5	0	3	https://doi.org/10.1016/j.dib.2020.105212
+Greases	29.52952953	64.06406406	6.406406406	26.5138154	0	11	https://doi.org/10.1016/j.dib.2020.105213
+I Sludge	54.9	26	19.1	1.624548736	0	3	https://doi.org/10.1016/j.dib.2020.105214
+II Sludge	40.2	13.7	46.1	39.61054967	0	8	https://doi.org/10.1016/j.dib.2020.105215
+Vinasses	61.4	15.2	23.4	25.35866615	0	37	https://doi.org/10.1016/j.dib.2020.105216
+Biowaste	40.45954046	40.15984016	19.38061938	43.65626267	0	3	https://doi.org/10.1016/j.dib.2020.105217
+Feed-residues	72.1	9.6	18.3	21.93664077	0	27	https://doi.org/10.1016/j.dib.2020.105218
+Silage	85.11488511	7.092907093	7.792207792	3.306120086	0	17	https://doi.org/10.1016/j.dib.2020.105219
+Horse-feed	72	10.7	17.3	60.45772409	0	28	https://doi.org/10.1016/j.dib.2020.105220
+Manure	79.1	4.7	16.2	3.382641978	0	29	https://doi.org/10.1016/j.dib.2020.105221
+Grape-marc	63.26326326	22.52252252	14.21421421	98.86189538	0	60	https://doi.org/10.1016/j.dib.2020.105222

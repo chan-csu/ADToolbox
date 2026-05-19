@@ -23,7 +23,6 @@ import gzip
 import configs
 from rich.progress import track,Progress
 import rich
-from adtoolbox import Main_Dir
 from typing import Iterable
 from typing import Union
 from dataclasses import dataclass
@@ -463,8 +462,8 @@ class Database:
         >>> assert type(db)==Database and type(db.config)==configs.Database
 
     '''
-    def __init__(self, config:configs.Database=configs.Database())->None:
-        self.config = config
+    def __init__(self, config:configs.Database|None=None)->None:
+        self.config = config or configs.Database()
 
 
     def initialize_protein_db(self)->None:
@@ -2345,8 +2344,6 @@ if __name__ == "__main__":
 
     
     
-
-
 
 
 

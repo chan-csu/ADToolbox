@@ -5,13 +5,15 @@ description = "A tool for modeling and optimization of anaerobic digestion proce
 authors = ["ParsaGhadermazi <54489047+ParsaGhadermazi@users.noreply.github.com>"]
 readme= "README.md"
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.11"
 dash = "^2.4.1"
 numpy = "^1.22.4"
-pandas = "^1.4.2"
-plotly = "^5.8.0"
+pandas = "^2.2.0"
+plotly = ">=5.8.0"
+nbformat = ">=4.2.0"
 requests = "^2.27.1"
 rich = "^12.4.4"
+click = "^8.1.7"
 scipy = "^1.8.1"
 sympy = "^1.10.1"
 matplotlib = "^3.5.2"

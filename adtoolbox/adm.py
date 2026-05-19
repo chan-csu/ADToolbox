@@ -16,7 +16,7 @@ from core import Feed
 import pandas as pd
 import dash_bootstrap_components as dbc
 import utils
-from adtoolbox import Main_Dir,PKG_DATA
+from adtoolbox import PKG_DATA
 import dash_escher
 import configs
 import time
@@ -35,12 +35,23 @@ DEFAULT_FEED=Feed(name="Default Feed",
                     si=30,
                     xi=50,
                     tss=80)
-RT = SeedDB(config=configs.Database())
-
 class _Fake_Sol:
     def __init__(self, y,t):
         self.y = y
         self.t=t
+
+
+def _require_model_parameters(model_parameters: dict, required: list[str], model_name: str) -> None:
+    missing = sorted(set(required) - set(model_parameters))
+    if missing:
+        raise ValueError(
+            f"{model_name} model_parameters is missing required keys: {', '.join(missing)}"
+        )
+
+
+def _monod_limitation(concentration: float, half_saturation: float, eps: float = 10**-9) -> float:
+    return concentration / (half_saturation + concentration + eps)
+
 
 class Model:
 
@@ -918,6 +929,15 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
     Returns:
         np.ndarray: Returns an matrix of stochiometic values.
     """
+    _require_model_parameters(
+        model_parameters,
+        [
+            'Y_su', 'Y_aa', 'Y_fa', 'Y_ac_et', 'Y_ac_lac', 'Y_pro_et',
+            'Y_pro_lac', 'Y_bu_et', 'Y_bu_lac', 'Y_va', 'Y_cap', 'Y_bu',
+            'Y_Me_ac', 'Y_Me_CO2', 'Y_ac_et_ox', 'Y_pro_lac_ox',
+        ],
+        "eADM2",
+    )
     S = np.zeros((len(species), len(reactions)))
     S[list(map(species.index, ["TSS", "X_ch", "X_pr", "X_li", "X_I"])),
       reactions.index('TSS_Disintegration')] = [-1,feed.ch_tss, feed.prot_tss, feed.lip_tss, feed.xi_tss]
@@ -1025,7 +1045,7 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                      Y_ac_lac]
     
     Y_pro_et=0 if nitrogen_limited else model_parameters['Y_pro_et']
-    Y_pro_lac=0 if nitrogen_limited else model_parameters['Y_pro_et']
+    Y_pro_lac=0 if nitrogen_limited else model_parameters['Y_pro_lac']
     
     f_IC_pro_et = -(-model_parameters['C_pro'] +
                     model_parameters['f_et_pro']*model_parameters['C_et'] +
@@ -1104,20 +1124,22 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
                                                   (1 - Y_cap),
                                                   Y_cap]
         
-    Y_cap=0 if nitrogen_limited else model_parameters['Y_bu']
+    Y_bu=0 if nitrogen_limited else model_parameters['Y_bu']
     S[list(map(species.index, ["S_bu", "S_ac", "X_VFA_deg"])),
         reactions.index('Uptake of butyrate')] = [-1,
-                                                  (1 - Y_cap),
-                                                  Y_cap]
+                                                  (1 - Y_bu),
+                                                  Y_bu]
         
         
     
     Y_Me_ac=0 if nitrogen_limited else model_parameters["Y_Me_ac"]
-    f_IC_Me_ach2 =0
+    f_IC_Me_ach2 = -(model_parameters['f_ac_h2']*model_parameters['C_ac'] +
+                     (1 - Y_Me_ac)*model_parameters['C_ch4'] +
+                     Y_Me_ac*model_parameters['C_bac'])
     S[list(map(species.index, ["S_gas_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC', 'S_IN'])),
         reactions.index('Methanogenessis from acetate and h2')] = [-1,
                                                                    model_parameters['f_ac_h2'],
-                                                                   (1 +model_parameters['f_ac_h2']- Y_Me_ac),
+                                                                   (1 - Y_Me_ac),
                                                                    Y_Me_ac,
                                                                    f_IC_Me_ach2,
                                                                     -Y_Me_ac *model_parameters['N_bac']
@@ -1208,11 +1230,11 @@ def build_e_adm_2_stoichiometric_matrix(base_parameters: dict,
         reactions.index('Acid Base Equilibrium (In)')] = [-1, 1]  # I don't think this is right، should look at the reaction in ADM1
 
     S[list(map(species.index, ["S_h2", "S_gas_h2"])),
-        reactions.index('Gas Transfer H2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+        reactions.index('Gas Transfer H2')] = [-1, base_parameters['V_liq']/base_parameters['V_gas']]
     S[list(map(species.index, ["S_ch4", "S_gas_ch4"])),
-        reactions.index('Gas Transfer CH4')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+        reactions.index('Gas Transfer CH4')] = [-1, base_parameters['V_liq']/base_parameters['V_gas']]
     S[list(map(species.index, ["S_co2", "S_gas_co2"])),
-        reactions.index('Gas Transfer CO2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+        reactions.index('Gas Transfer CO2')] = [-1, base_parameters['V_liq']/base_parameters['V_gas']]
     
     return S
 
@@ -1236,6 +1258,17 @@ def build_e_adm_stoiciometric_matrix(base_parameters: dict,
     Returns:
         np.ndarray: Returns an matrix of stochiometic values.
     """
+    _require_model_parameters(
+        model_parameters,
+        [
+            'Y_su_et', 'Y_su_lac', 'Y_su_ac', 'Y_su_pro',
+            'Y_aa_lac', 'Y_aa_ac', 'Y_aa_pro', 'Y_fa',
+            'Y_ac_et', 'Y_ac_lac', 'Y_pro_et', 'Y_pro_lac',
+            'Y_bu_et', 'Y_bu_lac', 'Y_va', 'Y_cap', 'Y_bu',
+            'Y_h2_ac', 'Y_h2_CO2', 'Y_ac_et_ox', 'Y_pro_lac_ox',
+        ],
+        "eADM",
+    )
     S = np.zeros((len(species), len(reactions)))
     S[list(map(species.index, ["TSS", "X_ch", "X_pr", "X_li", "X_I"])),
       reactions.index('TSS_Disintegration')] = [-1,feed.ch_tss, feed.prot_tss, feed.lip_tss,feed.xi_tss]
@@ -1406,17 +1439,17 @@ def build_e_adm_stoiciometric_matrix(base_parameters: dict,
                                                         model_parameters['Y_chain_lac_pro']]
 
     Y_bu_et=0 if nitrogen_limited else model_parameters['Y_bu_et']
-    Y_pro_lac=0 if nitrogen_limited else model_parameters['Y_pro_lac']
+    Y_bu_lac=0 if nitrogen_limited else model_parameters['Y_bu_lac']
     
     f_IC_bu_et = -((-1-(1-Y_bu_et) * model_parameters['f_et_bu'])*model_parameters['C_bu'] +
                    (1-Y_bu_et)*model_parameters['f_et_bu']*model_parameters['C_et'] +
                    (1-Y_bu_et)*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
                    (1-Y_bu_et)*model_parameters['C_bac'])
 
-    f_IC_bu_lac = -((-1-(1-Y_pro_lac) * model_parameters['f_lac_bu'])*model_parameters['C_bu'] +
-                    (1-Y_pro_lac)*model_parameters['f_lac_bu']*model_parameters['C_lac'] +
-                    (1-Y_pro_lac)*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
-                    (1-Y_pro_lac)*model_parameters['C_bac'])
+    f_IC_bu_lac = -((-1-(1-Y_bu_lac) * model_parameters['f_lac_bu'])*model_parameters['C_bu'] +
+                    (1-Y_bu_lac)*model_parameters['f_lac_bu']*model_parameters['C_lac'] +
+                    (1-Y_bu_lac)*model_parameters['f_cap_bu']*model_parameters['C_cap'] +
+                    (1-Y_bu_lac)*model_parameters['C_bac'])
 
     S[list(map(species.index, ["S_bu", "S_et", "S_cap", "S_IC", "S_IN", "S_h2", "X_chain_et"])),
         reactions.index('Uptake of butyrate_et')] = [-1-(1-Y_bu_et) * model_parameters['f_et_bu'],
@@ -1428,13 +1461,13 @@ def build_e_adm_stoiciometric_matrix(base_parameters: dict,
                                                      Y_bu_et]
 
     S[list(map(species.index, ["S_bu", "S_lac", "S_cap", "S_IC", "S_IN", "S_h2", "X_chain_lac"])),
-        reactions.index('Uptake of butyrate_lac')] = [-1-(1-Y_pro_lac) * model_parameters['f_lac_bu'],
-                                                      (1-Y_pro_lac) * model_parameters['f_lac_bu'],
-                                                      (1-Y_pro_lac) * model_parameters['f_cap_bu'],
+        reactions.index('Uptake of butyrate_lac')] = [-1-(1-Y_bu_lac) * model_parameters['f_lac_bu'],
+                                                      (1-Y_bu_lac) * model_parameters['f_lac_bu'],
+                                                      (1-Y_bu_lac) * model_parameters['f_cap_bu'],
                                                       f_IC_bu_lac,
-                                                      -Y_pro_lac * model_parameters['N_bac'],
-                                                      (1-Y_pro_lac)*(1-model_parameters['f_cap_bu']),
-                                                      Y_pro_lac]
+                                                      -Y_bu_lac * model_parameters['N_bac'],
+                                                      (1-Y_bu_lac)*(1-model_parameters['f_cap_bu']),
+                                                      Y_bu_lac]
 
     Y_va=0 if nitrogen_limited else model_parameters['Y_va']
     Y_cap=0 if nitrogen_limited else model_parameters['Y_cap']
@@ -1550,11 +1583,11 @@ def build_e_adm_stoiciometric_matrix(base_parameters: dict,
         reactions.index('Acid Base Equilibrium (In)')] = [-1, 1]  # I don't think this is right، should look at the reaction in ADM1
 
     S[list(map(species.index, ["S_h2", "S_gas_h2"])),
-        reactions.index('Gas Transfer H2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+        reactions.index('Gas Transfer H2')] = [-1, base_parameters['V_liq']/base_parameters['V_gas']]
     S[list(map(species.index, ["S_ch4", "S_gas_ch4"])),
-        reactions.index('Gas Transfer CH4')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+        reactions.index('Gas Transfer CH4')] = [-1, base_parameters['V_liq']/base_parameters['V_gas']]
     S[list(map(species.index, ["S_co2", "S_gas_co2"])),
-        reactions.index('Gas Transfer CO2')] = [-base_parameters['V_liq']/base_parameters['V_gas'], 1]
+        reactions.index('Gas Transfer CO2')] = [-1, base_parameters['V_liq']/base_parameters['V_gas']]
     return S
 
 
@@ -1612,7 +1645,10 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     I_pH_h2 = (model.model_parameters['K_pH_h2']**model.model_parameters['n_h2'])/(
         c[model.species.index('S_H_ion')] ** model.model_parameters['n_h2'] + model.model_parameters['K_pH_h2']**model.model_parameters['n_h2'])
     
-    I_IN_lim = 1 / (1+(c[model.species.index('S_IN')] / (model.model_parameters['K_S_IN']+10**-9)))
+    I_IN_lim = _monod_limitation(
+        c[model.species.index('S_IN')],
+        model.model_parameters['K_S_IN'],
+    )
     
     I_h2_fa = 1 /  (1+(c[model.species.index('S_h2')] /(model.model_parameters['K_I_h2_fa']+10**-9)))
 
@@ -1750,7 +1786,7 @@ def e_adm_2_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
          model.model_parameters['K_a_co2'] * c[model.species.index('S_IC')])
     v[model.reactions.index('Acid Base Equilibrium (In)')] = model.model_parameters['k_A_B_IN'] * \
         (c[model.species.index('S_nh3')] * (model.model_parameters['K_a_IN'] + c[model.species.index('S_H_ion')]) -
-         model.model_parameters['K_a_IN'] * c[model.species.index('S_IC')])
+         model.model_parameters['K_a_IN'] * c[model.species.index('S_IN')])
 
     
     p_gas_h2 = c[model.species.index('S_gas_h2')] * model.base_parameters["R"] * model.base_parameters["T_op"] / 16
@@ -1867,7 +1903,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     
         v[model.reactions.index('Acid Base Equilibrium (In)')] = model.model_parameters['k_A_B_IN'] * \
             (c[model.species.index('S_nh3')] * (model.model_parameters['K_a_IN'] + c[model.species.index('S_H_ion')]) -
-             model.model_parameters['K_a_IN'] * c[model.species.index('S_IC')])
+             model.model_parameters['K_a_IN'] * c[model.species.index('S_IN')])
     
     c[model.species.index('S_nh4_ion')] = c[model.species.index(
         'S_IN')] - c[model.species.index('S_nh3')]
@@ -1912,30 +1948,18 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     I_h2_oxidation=(1/(1+(c[model.species.index('S_h2')] /
                 (model.model_parameters['K_I_h2_ox']+10**-9))))
 
-    # I5 = (I_pH_aa * I_IN_lim)
-    # I6 = I5.copy()
-    # I7 = (I_pH_aa * I_IN_lim * I_h2_fa)
-    # I8 = (I_pH_aa * I_IN_lim * I_h2_c4)
-    # I9 = I8.copy()
-    # I10 = (I_pH_pro * I_IN_lim * I_h2_pro)
-    # I11 = (I_pH_ac * I_IN_lim * I_nh3)
-    # I12 = (I_pH_h2 * I_IN_lim)
-    # I13 = (I_pH_cap * I_IN_lim * I_h2_c4)
-    # I14 = (I_pH_bu * I_IN_lim * I_h2_c4)
-    # I15 = (I_pH_va * I_IN_lim * I_h2_c4)
-    # I16 = I_IN_lim * I_nh3*I_pH_aa*I_h2_oxidation
-    I5  = 1
-    I6  = 1
-    I7  = 1
-    I8  = 1
-    I9  = 1 #one
-    I10 = 1
-    I11 = 1
-    I12 = 1
-    I13 = 1
-    I14 = 1
-    I15 = 1
-    I16 = 1
+    I5 = max(0, I_pH_aa * I_IN_lim)
+    I6 = max(0, I5)
+    I7 = max(0, I_pH_aa * I_IN_lim * I_h2_fa)
+    I8 = max(0, I_pH_aa * I_IN_lim * I_h2_c4)
+    I9 = max(0, I8)
+    I10 = max(0, I_pH_pro * I_IN_lim * I_h2_pro)
+    I11 = max(0, I_pH_ac * I_IN_lim * I_nh3)
+    I12 = max(0, I_pH_h2 * I_IN_lim)
+    I13 = max(0, I_pH_cap * I_IN_lim * I_h2_c4)
+    I14 = max(0, I_pH_bu * I_IN_lim * I_h2_c4)
+    I15 = max(0, I_pH_va * I_IN_lim * I_h2_c4)
+    I16 = max(0, I_IN_lim * I_nh3 * I_pH_aa * I_h2_oxidation)
 
 
 
