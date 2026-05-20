@@ -1,342 +1,246 @@
-# ADToolbox Commandline Interface
+# ADToolbox Command Line Interface
 
--------------
-## Initialization
-After installing ADToolbox, you can access all commands and their brief explanations by:
+The ADToolbox command line interface is installed as `adtoolbox`.
 
-```
+```bash
 adtoolbox --help
-
-```
-The CLI does not initialize or store a global base directory. Commands that need a file or directory ask for it directly or accept it as an option.
-
--------------
-## ADToolbox Modules
-
-This toolbox is comprised of different modules:
-
-1. Database Module
-
-2. Metagenomics Module
-
-3. ADM Module
-
-4. Documentations Module
-
--------------
-### 1. Database Module
-
-Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:
-
-```
-ADToolbox Database --help
-──────────────────────────── ADToolBox ────────────────────────────
-usage: ADToolBox Database [-h]
-                          {initialize-feed-db,add-feed,sh
-ow-feed-db,initialize-metagenomics-studies-db,add-metagen
-omics-study,initialize-protein-db,add-protein,download-re
-action-db,download-seed-reaction-db,build-protein-db,down
-load-protein-db,download-amplicon-to-genome-dbs,download-
-all-databases}
-                          ...
-
-positional arguments:
-  {initialize-feed-db,add-feed,show-feed-db,initialize-me
-tagenomics-studies-db,add-metagenomics-study,initialize-p
-rotein-db,add-protein,download-reaction-db,download-seed-
-reaction-db,build-protein-db,download-protein-db,download
--amplicon-to-genome-dbs,download-all-databases}
-                        Database commands:
-    initialize-feed-db  Initialize the Feed DB
-    add-feed            Add a feed to the feed database
-    show-feed-db        Shows the feed database
-    initialize-metagenomics-studies-db
-                        Initialize the Metagenomics Studies DB
-    add-metagenomics-study
-                        Add a metagenomics study to the Kbase
-    initialize-protein-db
-                        Generates the protein database for ADToolbox
-    add-protein         Add a protein to the protein database           
-    download-reaction-db
-                        Downloads the reaction database in CSV
-                        format
-    download-seed-reaction-db
-                        Downloads the seed reaction database in
-                        JSON format
-    build-protein-db    Generates the protein database for
-                        ADToolbox
-    download-protein-db
-                        Downloads the protein database in fasta
-                        format; You can alternatively build it
-                        from reaction database.
-    download-amplicon-to-genome-dbs
-                        downloads amplicon to genome databases
-    download-all-databases
-                        downloads all databases that are required by ADToolbox at once
-    
-options:
-  -h, --help            show this help message and exit
-```
-
-We will now go over these commands one by one:
-
-- initialize-feed-db: This will create an empty feed database at the database path you provide. You can run this command by:
-
-```
-ADToolbox Database initialize-feed-db
-
-```
-
-- add-feed: This will add feed data to the database. Such data includes: the name of the feed (-n, --name), carbohydrate content of the feed in a percentage (-c, --carbohydrates), protein content of the feed in a percecntage (-p, --proteins), lipid content of the feed in a percentage (-l, --lipids), total suspended solid content of the feed in a percentage (-t, --tss), soluable inert content of feed in a percentage (-s, --si), particulate inert content of feed in a percentage (-x, --xi), and a reference where numbers came from (-r, --reference).  This command is run by:
-
-```
-ADToolbox Database add-feed
-
-```
-An example of this would look like:
-
-```
-ADToolbox Database add-feed -n "test feed" -c 20 -p 20 -l 20 -t 20 -s 20 -x 20 -r "test reference"
-
-```
-
-- show-feed-db: As the name implies, this will show the user the feed database along with any values they have added to it, in the command window. This command is run by:
-
-```
-ADToolbox Database show-feed-db
-
-```
-- initialize-metagenomics-studies-db: This will create an empty TSV file at the studies database path you provide. You can run this command by:
-
-```
-ADToolbox Database initialize-metagenomics-studies-db
-
-```
-- add-metagenomics-study: This command will add a metagenomics study to the Kbase and will require the study name (-n,--name), study type (-t, --type), microbiome where the metagenomics study belongs to (-m, --microbiome), SRA accession ID for the sample (-s, --sample_accesion), SRA accession ID for the project (-p, --study_accesion), and comments on the study of interest (-c, --comments). This command is run by:
-
-```
-ADToolbox Database add-metagenomics-study
-
-```
-An example of this would look like:
-
-```
-ADToolbox Database add-metagenomics-study  -n test_study -t 16s -m "anaerobic digestion"  -s 11111111 -c "this is just a test" -p 222222
-
-```
-- initialize-protein-db: This will create an empty protein database at the protein database path you provide. You can run this command by:
-
-```
-ADToolbox Database initialize-protein-db
-
+adtoolbox --version
 ```
-- add-protein: As the name implies, this will add information about a protein to the empty protein database. Information about such protein includes its UniProt ID (-i, --uniprot-id), and the name attached to the protein which is usually the EC number (-n, --name). You can run this command by:
 
-```
-ADToolbox Database add-protein
-
-```
-An example of this would look like:
-
-```
-ADToolbox Database add-protein -i ATEST1 -n 1.1.1.1
-
-```
-
-*NOTE*: Skip the following download commands if you have already downloaded the required databases.
-```
-
-- download-reaction-db: As the name implies, this will download the ADToolbox reaction database. This is required for many important modules of the toolbox
-
-```
-ADToolbox Database download-reaction-db
+The CLI does not create or store a global project directory. Commands that need files or directories accept those paths directly. If a required path is omitted, the command prompts for it.
 
+## Modules
 
-```
-
-- download-protein-db: Downloads the protein database in fasta format; You can alternatively build it from reaction database if you have downloaded it; Check below.
-
-```
-
-ADToolbox Database download-protein-db
-
-```
+| Module | Purpose |
+| --- | --- |
+| `Database` | Initialize, edit, download, and build ADToolbox databases. |
+| `Metagenomics` | Download genomes or SRA data and align genomes to protein databases. |
+| `ADM` | Run ADM1 and e-ADM models. |
+| `Documentations` | Print package documentation in the terminal. |
 
-- build-protein-db: Generates the protein database for ADToolbox from the reaction database:
+Every command supports `-h` and `--help`.
 
+```bash
+adtoolbox Database --help
+adtoolbox ADM adm1 --help
 ```
 
-ADToolbox Database build-protein-db
+## Database
 
-```
+Database commands work with explicit file paths. The path can point to a local database you already maintain, a reference file copied from `reference_data`, or a new file you want ADToolbox to create.
 
-- download-amplicon-to-genome-dbs: If you need to use the 16s mapping to the protein database and ADM, you will need to download the required databases using this command:
+| Command | Required path option | Purpose |
+| --- | --- | --- |
+| `initialize-feed-db` | `--feed-db` | Create an empty feed TSV. |
+| `add-feed` | `--feed-db` | Add one feed row to a feed TSV. |
+| `show-feed-db` | `--feed-db` | Print the feed TSV, optionally filtered by feed name. |
+| `download-feed-db` | `--feed-db` | Download the reference feed TSV. |
+| `initialize-metagenomics-studies-db` | `--studies-db` | Create an empty metagenomics studies TSV. |
+| `add-metagenomics-study` | `--studies-db` | Add one metagenomics study row. |
+| `initialize-protein-db` | `--protein-db` | Create an empty protein FASTA database. |
+| `add-protein` | `--protein-db` | Add one protein FASTA entry. |
+| `download-reaction-db` | `--reaction-db` | Download reaction metadata as CSV. |
+| `download-seed-reaction-db` | `--seed-reaction-db`, `--seed-compound-db` | Download SEED reaction and compound JSON files. |
+| `build-protein-db` | `--reaction-db`, `--protein-db` | Build a protein FASTA database from reaction metadata. |
+| `download-protein-db` | `--protein-db` | Download the reference protein FASTA database. |
+| `download-amplicon-to-genome-dbs` | `--output-dir` | Download amplicon-to-genome mapping databases. |
+| `download-all-databases` | `--output-dir` | Download the standard ADToolbox database bundle. |
 
+Examples:
 
-```
+```bash
+adtoolbox Database initialize-feed-db --feed-db ./database/feed_db.tsv
 
-ADToolbox Database download-amplicon-to-genome-dbs
+adtoolbox Database add-feed \
+  --feed-db ./database/feed_db.tsv \
+  --name "food waste" \
+  --carbohydrates 42 \
+  --proteins 20 \
+  --lipids 18 \
+  --tss 80 \
+  --si 5 \
+  --xi 15 \
+  --reference "example reference"
 
+adtoolbox Database show-feed-db --feed-db ./database/feed_db.tsv
+adtoolbox Database show-feed-db --feed-db ./database/feed_db.tsv --filter "food waste"
 ```
 
-- download-seed-reaction-db: This will download the SEED reaction database in JSON format.
+To download the full reference database bundle:
 
-```
-ADToolbox Database download-seed-reaction-db
-
-```
+```bash
+adtoolbox Database download-all-databases --output-dir ./database
 ```
--------------
-### 2. Metagenomics Module
 
-Metagenomics module of ADToolbox is designed to input metagenomics data into consideration when designing an AD process.
+To build a protein database from reaction metadata:
 
-You can observe all the functionalities by:
-
+```bash
+adtoolbox Database build-protein-db \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --protein-db ./database/Protein_DB.fasta
 ```
 
-ADToolbox Metagenomics --help   
-
-──────────────────────────── ADToolBox ────────────────────────────
-usage: ADToolBox Metagenomics [-h]
-                              {download_from_sra}
-                              ...
-
-positional arguments:
-  {download_from_sra,download_genome}
-    download_from_sra   This module provides a command line interface to download
-                        metagenomics data from SRA
-    download_genome     This module provides a command line interface to download
-                        genomes from NCBI      
-    align-genome        Align genomes to the protein database
-                        of ADToolbox, or any other fasta with
-                        protein sequences
-    align-multiple-genomes
-                        Align multiple Genomes to the protein
-                        database of ADToolbox, or any other
-                        fasta with protein sequences                                           
-    find-representative-genomes
-                        Finds representative genomes from the
-                        repseqs fasta file
-options:
-  -h, --help            show this help message and exit
+## Metagenomics
 
-```
-- download_from_sra: This command takes a sample accesion ID (-s, --sample_accesion) for a sample, downloads it, and places it into a directory provided by the you (-o, --output-dir). It also requires you to state a container you are using. If you are downloading locally, put "None". Otherwise, you can use the containers docker or singularity. You can run this command by:
+Metagenomics commands also take explicit inputs and output directories.
 
-```
-ADToolbox Metagenomics download_from_sra
+| Command | Purpose |
+| --- | --- |
+| `download_from_sra` | Download reads from SRA by sample accession. |
+| `download_genome` | Download a genome from NCBI by genome accession. |
+| `align-genome` | Align one genome to a protein FASTA database. |
+| `align-multiple-genomes` | Align multiple genomes listed in a JSON manifest. |
+| `find-representative-genomes` | Find representative genomes from a repseqs FASTA file. |
 
-```
-An example of this command would look like:
+Use `--container None` for local execution, or `--container docker` / `--container singularity` when running through a container backend.
 
-```
-ADToolbox Metagenomics download_from_sra -s SRR28403133 -o OUTPUT/DIRECTORY/PATHNAME -c None
+Examples:
 
-```
-- download_genome: This command requires you to provide a NCBI accesion ID for a genome (-g, --genome_accesion), and output directory (-o,--output-dir), and a container (-c, --container). It will then take the NCBI accesion ID for a genome and download it in the directory provided by you. If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. You can run this command by: 
+```bash
+adtoolbox Metagenomics download_from_sra \
+  --sample-accession SRR28403133 \
+  --output-dir ./metagenomics/sra \
+  --container None
 
-```
-ADToolbox Metagenomics download_genome
+adtoolbox Metagenomics download_genome \
+  --genome-accession GCA_021152825.1 \
+  --output-dir ./metagenomics/genomes \
+  --container None
 
+adtoolbox Metagenomics align-genome \
+  --name GCA_021152825_1 \
+  --input-file ./metagenomics/genomes/GCA_021152825.1.fna \
+  --output-dir ./metagenomics/alignment \
+  --protein-db ./database/Protein_DB.fasta \
+  --container None
 ```
-An example of this command would look like:
 
-```
-ADToolbox Metagenomics download_genome -g GCA021152825.1 -o OUTPUT/DIRECTORY/PATHNAME -c None
+For multiple genomes, the input JSON maps genome names to input files:
 
+```json
+{
+  "genome_1": "./genomes/genome_1.fna",
+  "genome_2": "./genomes/genome_2.fna"
+}
 ```
-- align-genome: This command requires that you to give a name for the genome (-n,--name),the address of the JSON file that includes information about the genome to be aligned (-i,--input-file), and output directory to store alignment results (-o,--output-dir), a container to use for the alignment (-c,--container), and the directory containing the protein database to be used for the alignment (-d, --protein-db-dir).  If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. Overall, this command takes a genome and aligns it to a protein sequence. You can run this command by: 
 
-```
-ADToolBox Metagenomics align-genome
+Run the batch alignment with:
 
+```bash
+adtoolbox Metagenomics align-multiple-genomes \
+  --input-file ./metagenomics/genomes.json \
+  --output-dir ./metagenomics/alignment \
+  --protein-db ./database/Protein_DB.fasta \
+  --container None
 ```
-An example of this code would look like:
 
-```
-ADToolbox Metagenomics align-genome -n "test genome" -i INPUT/PATHNAME/OF/GENOME -o OUTPUT/PATHNAME/DIRECTORY -c None -d PATHNAME/OF/PROTEIN
+## ADM
 
-```
-- align-multiple-genomes: This command allows you to align multiple genomes to the protein database of ADToolbox, or any other fasta file with protein sequences. It requires to user to input the address to a JSON file that holds the information about the genomes (-i,--input-file), an output directory to store the alignment results (-o,--output-dir), a container to use for the alignment (-c,--container), and the directory containing the protein database to be used for alignment (-d,--protein-db-dir). If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. This command can be run by: 
+The ADM CLI currently exposes two model families:
 
-```
-ADToolbox Metagenomics align-multiple-genomes
+| Command | Model key | Purpose |
+| --- | --- | --- |
+| `adm1` | `adm1` | Run the original ADM1 model. |
+| `e-adm` | `e_adm` | Run the extended e-ADM model. |
 
-```
-An example of this command looks like:
+The recommended input format is one consolidated model JSON file keyed by model name. The repository includes a reference example at `reference_data/models.json`.
 
+```bash
+adtoolbox ADM adm1 --models-json reference_data/models.json --report csv
+adtoolbox ADM e-adm --models-json reference_data/models.json --report csv
 ```
-ADToolbox Metagenomics align-multiple-genomes -i PATHNAME/TO/FILE/OF/GENOMES -o OUTPUT/DIRECTORY -c None -d DIRECTORY/OF/PROTEIN/DATABSE
 
-```
-- find-represenative-genomes: This command maps represenative amplicon sequences to a representative genome in GTDB database. It requires the user to provide the address to the repseqs fasta file (-i,--input-file), the directory of the output file (-o, --output-dir), a container used for the alignment (-c,--container), and the format of the output file which can be json or csv (-f,--format). Something optional that you can provide is the similarity cutoff for clustering; though, the default is 0.97 (-s,--similarity). If you are downloading locally, put "None" as your container option. Otherwise, you can use the containers docker or singularity. You can run this code by:
+When `--report csv` is used, the CLI asks where to save the output CSV. When `--report dash` is used, or when `--report` is omitted, the CLI opens the interactive Dash visualization.
 
-```
-ADToolbox Metagenomics find-representative-genomes
+The e-ADM command can also accept a control-state JSON file:
 
+```bash
+adtoolbox ADM e-adm \
+  --models-json reference_data/models.json \
+  --control-states ./control_states.json \
+  --report csv
 ```
-An example of this code will look like: 
 
-```
-ADToolbox Metagenomics find-representative-genomes -i PATHNAME/TO/REPSEQS/FASTA/FILE -o PATHNAME/TO/OUTPUT/DIRECTORY -c None -f csv
+If `--control-states` is omitted, e-ADM uses:
 
+```json
+{
+  "S_H_ion": 3.162277660168379e-7
+}
 ```
 
--------------------------------
-### 3. ADM Module
+The consolidated model JSON has this structure:
 
-ADM module provides the CLI entry points for the active ADToolbox anaerobic digestion models: ADM1 and e-ADM. In order to find out about all the functionalities in this module, you can run:
-
+```json
+{
+  "adm1": {
+    "model_parameters": {},
+    "base_parameters": {},
+    "initial_conditions": {},
+    "inlet_conditions": {},
+    "reactions": {},
+    "species": {}
+  },
+  "e_adm": {
+    "model_parameters": {},
+    "base_parameters": {},
+    "initial_conditions": {},
+    "inlet_conditions": {},
+    "reactions": {},
+    "species": {}
+  }
+}
 ```
-
-adtoolbox ADM --help
 
-Usage: adtoolbox ADM [OPTIONS] COMMAND [ARGS]...
+For compatibility with older database layouts, each ADM command can still load six separate JSON files:
 
-  Run and visualize ADToolbox ADM models.
+| Option | Contents |
+| --- | --- |
+| `--model-parameters` | Kinetic and model-specific parameters. |
+| `--base-parameters` | Shared physical and biochemical constants. |
+| `--initial-conditions` | Initial state values. |
+| `--inlet-conditions` | Influent state values. |
+| `--reactions` | Reaction names and ordering. |
+| `--species` | Species names and ordering. |
 
-Commands:
-  adm1   Original ADM1 model.
-  e-adm  eADM model.
+You can pass those files directly:
 
+```bash
+adtoolbox ADM adm1 \
+  --model-parameters ./ADM_Parameters/adm1_model_parameters.json \
+  --base-parameters ./ADM_Parameters/adm1_base_parameters.json \
+  --initial-conditions ./ADM_Parameters/adm1_initial_conditions.json \
+  --inlet-conditions ./ADM_Parameters/adm1_inlet_conditions.json \
+  --reactions ./ADM_Parameters/adm1_reactions.json \
+  --species ./ADM_Parameters/adm1_species.json \
+  --report csv
 ```
 
-- `adm1`: run the original ADM1 model with parameters from a directory or from explicit JSON file paths.
+Or pass a directory containing consistently named files:
 
+```bash
+adtoolbox ADM adm1 --parameters-dir ./ADM_Parameters --report csv
+adtoolbox ADM e-adm --parameters-dir ./ADM_Parameters --report csv
 ```
-adtoolbox ADM adm1 --parameters-dir /path/to/ADToolbox/adm1 --report csv
-```
 
-- `e-adm`: run the current e-ADM model.
+For `e-adm`, the CLI first looks for `e_adm_*.json` files and then falls back to the legacy `e_adm_2_*.json` file names.
 
-```
-adtoolbox ADM e-adm --parameters-dir /path/to/ADToolbox/e_adm --report csv
-```
+## Documentation
 
-Both commands accept the same parameter file options:
+Print the package README in the terminal:
 
+```bash
+adtoolbox Documentations --show
 ```
---parameters-dir
---models-json
---model-parameters
---base-parameters
---initial-conditions
---inlet-conditions
---reactions
---species
---metagenome-report
---report
-```
-
-The preferred input is `--models-json`, a single JSON file containing all ADM models keyed by model name. The e-ADM command also accepts `--control-states`, which should point to a JSON object of states that should be held constant. If you choose `dash` for your report, the CLI opens the interactive Dash interface. If you choose `csv`, it writes concentration profiles over time.
 
--------------
-### 4. Documentations Module
+## Reference Data
 
-You can view the documentaion in your CLI using rich's markdown render. You can do this by:
+This repository includes clean reference JSON files that mirror the current database shape:
 
-```
-ADToolbox Documentations --show 
+| File | Contents |
+| --- | --- |
+| `reference_data/models.json` | ADM1 and e-ADM requirements keyed by model name. |
+| `reference_data/feeds.json` | Feed entries keyed by normalized feed name. |
+| `reference_data/experiments.json` | Experiment entries keyed by normalized experiment name. |
 
-```
+These files are meant as portable examples and test fixtures. Production runs can point the CLI at any equivalent local files.

@@ -161,7 +161,7 @@ def initialize_feed_db(feed_db):
 
 @database.command(name="add-feed", help="Add a feed to the feed database.")
 @click.option("--feed-db", help="Path to the feed database TSV.")
-@click.option("-n", "--name", help="Name of the feed to be added to the database.")
+@click.option("-n", "--name", required=True, help="Name of the feed to be added to the database.")
 @click.option("-c", "--carbohydrates", required=True, type=float, help="Carbohydrate content in percent.")
 @click.option("-p", "--proteins", required=True, type=float, help="Protein content in percent.")
 @click.option("-l", "--lipids", required=True, type=float, help="Lipid content in percent.")
@@ -191,7 +191,7 @@ def show_feed_db(feed_db, feed_filter):
     feed_db = _prompt_path(feed_db, "Feed database TSV path", exists=True, file_okay=True, dir_okay=False)
     db = _database(feed_db=feed_db)
     if feed_filter:
-        feeds = db.get_feed_from_feed_db(field_name="name", field_value=feed_filter)
+        feeds = db.get_feed_from_feed_db(field_name="name", query=feed_filter)
     else:
         feeds = db.get_feed_from_feed_db(field_name="name", query="")
     _print_feed_table(feeds)
@@ -234,11 +234,11 @@ def initialize_protein_db(protein_db):
 
 @database.command(name="add-protein", help="Add a protein to the protein database.")
 @click.option("--protein-db", help="Path to the protein FASTA database.")
-@click.option("-i", "--uniport-id", required=True, help="Uniport ID of the protein.")
+@click.option("-i", "--uniprot-id", "--uniport-id", required=True, help="UniProt ID of the protein.")
 @click.option("-n", "--name", required=True, help="Name attached to the protein, usually an EC number.")
-def add_protein(protein_db, uniport_id, name):
+def add_protein(protein_db, uniprot_id, name):
     protein_db = _prompt_path(protein_db, "Protein database FASTA path", file_okay=True, dir_okay=False, writable=True)
-    _database(protein_db=protein_db).add_protein_to_protein_db(protein_id=uniport_id, header_tail=name)
+    _database(protein_db=protein_db).add_protein_to_protein_db(protein_id=uniprot_id, header_tail=name)
 
 
 @database.command(name="download-reaction-db", help="Download the reaction database in CSV format.")
