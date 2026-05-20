@@ -321,6 +321,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#other-keyed-database-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Keyed Database Files
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -637,6 +646,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#other-keyed-database-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Keyed Database Files
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -870,9 +888,51 @@
 </tr>
 </tbody>
 </table>
-<p>The CLI and public API use only the names ADM1 and e-ADM. Older e-ADM parameter files with the previous internal prefix are still accepted by the CLI as a compatibility fallback, but new projects should use the <code>e_adm</code> prefix.</p>
+<p>The CLI and public API use only the names ADM1 and e-ADM. The preferred parameter format is one <code>models.json</code> file containing all models, keyed by model name.</p>
 <h2 id="model-inputs">Model Inputs</h2>
-<p>Each model is loaded from six JSON files. The CLI can receive either a directory containing the files or explicit paths for individual files.</p>
+<p>The canonical model input is a single JSON file with one top-level key per model:</p>
+<pre><code class="language-json">{
+  &quot;adm1&quot;: {
+    &quot;species&quot;: [],
+    &quot;reactions&quot;: [],
+    &quot;model_parameters&quot;: {},
+    &quot;base_parameters&quot;: {},
+    &quot;initial_conditions&quot;: {},
+    &quot;inlet_conditions&quot;: {}
+  },
+  &quot;e_adm&quot;: {
+    &quot;species&quot;: [],
+    &quot;reactions&quot;: [],
+    &quot;model_parameters&quot;: {},
+    &quot;base_parameters&quot;: {},
+    &quot;initial_conditions&quot;: {},
+    &quot;inlet_conditions&quot;: {}
+  }
+}
+</code></pre>
+<p>The first layer is always the model key. The second layer is the complete model payload used to instantiate <code>adm.Model</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Top-level key</th>
+<th>Public model</th>
+<th>CLI command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adm1</code></td>
+<td>ADM1</td>
+<td><code>adtoolbox ADM adm1 --models-json models.json</code></td>
+</tr>
+<tr>
+<td><code>e_adm</code></td>
+<td>e-ADM</td>
+<td><code>adtoolbox ADM e-adm --models-json models.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>The older six-file layout is still supported as a compatibility path, either by passing <code>--parameters-dir</code> or by passing each file explicitly.</p>
 <table>
 <thead>
 <tr>
@@ -931,6 +991,11 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>--models-json</code></td>
+<td>ADM1, e-ADM</td>
+<td>Preferred input. JSON file containing all models keyed by model name.</td>
+</tr>
 <tr>
 <td><code>--parameters-dir</code></td>
 <td>ADM1, e-ADM</td>
@@ -1057,6 +1122,30 @@
 </tr>
 </tbody>
 </table>
+<h3 id="other-keyed-database-files">Other Keyed Database Files</h3>
+<p>The same first-layer-key pattern should be used for other structured databases. For example, feeds can live in one <code>feeds.json</code> file:</p>
+<pre><code class="language-json">{
+  &quot;food_waste&quot;: {
+    &quot;name&quot;: &quot;food_waste&quot;,
+    &quot;carbohydrates&quot;: 10,
+    &quot;proteins&quot;: 20,
+    &quot;lipids&quot;: 20,
+    &quot;si&quot;: 30,
+    &quot;xi&quot;: 50,
+    &quot;tss&quot;: 80
+  },
+  &quot;manure&quot;: {
+    &quot;name&quot;: &quot;manure&quot;,
+    &quot;carbohydrates&quot;: 5,
+    &quot;proteins&quot;: 15,
+    &quot;lipids&quot;: 5,
+    &quot;si&quot;: 20,
+    &quot;xi&quot;: 55,
+    &quot;tss&quot;: 70
+  }
+}
+</code></pre>
+<p>That keeps the rule consistent: one file per database type, one top-level key per named item.</p>
 <h2 id="model-outputs">Model Outputs</h2>
 <table>
 <thead>
@@ -1910,9 +1999,9 @@ S[X_su, Uptake of sugars] = Y_su
 <h3 id="e-adm-species">e-ADM Species</h3>
 <p><code>S_su</code>, <code>S_aa</code>, <code>S_fa</code>, <code>S_va</code>, <code>S_bu</code>, <code>S_pro</code>, <code>S_et</code>, <code>S_lac</code>, <code>S_cap</code>, <code>S_ac</code>, <code>S_h2</code>, <code>S_ch4</code>, <code>S_IC</code>, <code>S_IN</code>, <code>S_I</code>, <code>TSS</code>, <code>TDS</code>, <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, <code>X_su</code>, <code>X_aa</code>, <code>X_ac_et</code>, <code>X_ac_lac</code>, <code>X_fa</code>, <code>X_VFA_deg</code>, <code>X_et</code>, <code>X_lac</code>, <code>X_chain_et</code>, <code>X_chain_lac</code>, <code>X_Me_ac</code>, <code>X_Me_CO2</code>, <code>X_I</code>, <code>S_cation</code>, <code>S_anion</code>, <code>S_H_ion</code>, <code>S_va_ion</code>, <code>S_bu_ion</code>, <code>S_pro_ion</code>, <code>S_cap_ion</code>, <code>S_lac_ion</code>, <code>S_ac_ion</code>, <code>S_hco3_ion</code>, <code>S_co2</code>, <code>S_nh3</code>, <code>S_nh4_ion</code>, <code>S_gas_h2</code>, <code>S_gas_ch4</code>, <code>S_gas_co2</code></p>
 <h2 id="minimal-cli-run">Minimal CLI Run</h2>
-<pre><code class="language-bash">adtoolbox ADM adm1 --parameters-dir /path/to/ADToolbox/adm1 --report csv
+<pre><code class="language-bash">adtoolbox ADM adm1 --models-json /path/to/ADToolbox/models.json --report csv
 </code></pre>
-<pre><code class="language-bash">adtoolbox ADM e-adm --parameters-dir /path/to/ADToolbox/e_adm --report csv
+<pre><code class="language-bash">adtoolbox ADM e-adm --models-json /path/to/ADToolbox/models.json --report csv
 </code></pre>
 
 

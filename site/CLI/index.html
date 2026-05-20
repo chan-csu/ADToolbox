@@ -797,6 +797,7 @@ Commands:
 </code></pre>
 <p>Both commands accept the same parameter file options:</p>
 <pre><code>--parameters-dir
+--models-json
 --model-parameters
 --base-parameters
 --initial-conditions
@@ -806,7 +807,7 @@ Commands:
 --metagenome-report
 --report
 </code></pre>
-<p>The e-ADM command also accepts <code>--control-states</code>, which should point to a JSON object of states that should be held constant. If you choose <code>dash</code> for your report, the CLI opens the interactive Dash interface. If you choose <code>csv</code>, it writes concentration profiles over time.</p>
+<p>The preferred input is <code>--models-json</code>, a single JSON file containing all ADM models keyed by model name. The e-ADM command also accepts <code>--control-states</code>, which should point to a JSON object of states that should be held constant. If you choose <code>dash</code> for your report, the CLI opens the interactive Dash interface. If you choose <code>csv</code>, it writes concentration profiles over time.</p>
 <hr />
 <h3 id="4-documentations-module">4. Documentations Module</h3>
 <p>You can view the documentaion in your CLI using rich's markdown render. You can do this by:</p>

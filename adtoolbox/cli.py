@@ -79,6 +79,23 @@ def _resolve_model_paths(parameters_dir, prefix, legacy_prefixes=(), **overrides
     return resolved
 
 
+def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, legacy_prefixes=(), **paths):
+    if models_json:
+        models_json = _prompt_path(models_json, "ADM models JSON", exists=True, file_okay=True, dir_okay=False)
+        try:
+            return utils.load_model_json(models_json, model_key)
+        except (KeyError, TypeError) as exc:
+            raise click.ClickException(str(exc)) from exc
+
+    paths = _resolve_model_paths(
+        parameters_dir,
+        prefix,
+        legacy_prefixes=legacy_prefixes,
+        **paths,
+    )
+    return utils.load_multiple_json_files(paths)._asdict()
+
+
 def _load_json(path):
     with open(path) as f:
         return json.load(f)
@@ -400,6 +417,7 @@ def adm_group():
 def _adm_options(command):
     command = click.option("--report", help="Report output: dash or csv.")(command)
     command = click.option("--metagenome-report", help="JSON metagenome report for the model.")(command)
+    command = click.option("--models-json", help="JSON file containing all ADM models keyed by model name.")(command)
     command = click.option("--species", help="JSON species file.")(command)
     command = click.option("--reactions", help="JSON reactions file.")(command)
     command = click.option("--inlet-conditions", help="JSON inlet conditions file.")(command)
@@ -420,12 +438,15 @@ def adm1(
     inlet_conditions,
     reactions,
     species,
+    models_json,
     metagenome_report,
     report,
 ):
-    paths = _resolve_model_paths(
-        parameters_dir,
+    params = _load_model_payload(
+        models_json,
         "adm1",
+        parameters_dir=parameters_dir,
+        prefix="adm1",
         model_parameters=model_parameters,
         base_parameters=base_parameters,
         initial_conditions=initial_conditions,
@@ -437,13 +458,13 @@ def adm1(
         _load_json(metagenome_report)
 
     model = adm.Model(
-        model_parameters=_load_json(paths["model_parameters"]),
-        base_parameters=_load_json(paths["base_parameters"]),
-        initial_conditions=_load_json(paths["initial_conditions"]),
-        inlet_conditions=_load_json(paths["inlet_conditions"]),
+        model_parameters=params["model_parameters"],
+        base_parameters=params["base_parameters"],
+        initial_conditions=params["initial_conditions"],
+        inlet_conditions=params["inlet_conditions"],
         feed=adm.DEFAULT_FEED,
-        reactions=_load_json(paths["reactions"]),
-        species=_load_json(paths["species"]),
+        reactions=params["reactions"],
+        species=params["species"],
         ode_system=adm.adm1_ode_sys,
         build_stoichiometric_matrix=adm.build_adm1_stoichiometric_matrix,
         name="ADM1",
@@ -464,13 +485,16 @@ def e_adm(
     inlet_conditions,
     reactions,
     species,
+    models_json,
     metagenome_report,
     report,
     control_states,
 ):
-    paths = _resolve_model_paths(
-        parameters_dir,
+    params = _load_model_payload(
+        models_json,
         "e_adm",
+        parameters_dir=parameters_dir,
+        prefix="e_adm",
         legacy_prefixes=("e_adm_2",),
         model_parameters=model_parameters,
         base_parameters=base_parameters,
@@ -479,7 +503,6 @@ def e_adm(
         reactions=reactions,
         species=species,
     )
-    params = utils.load_multiple_json_files(paths)
 
     if metagenome_report:
         _load_json(metagenome_report)
@@ -489,13 +512,13 @@ def e_adm(
         control_state.update(_load_json(control_states))
 
     model = adm.Model(
-        model_parameters=params.model_parameters,
-        base_parameters=params.base_parameters,
-        initial_conditions=params.initial_conditions,
-        inlet_conditions=params.inlet_conditions,
+        model_parameters=params["model_parameters"],
+        base_parameters=params["base_parameters"],
+        initial_conditions=params["initial_conditions"],
+        inlet_conditions=params["inlet_conditions"],
         feed=adm.DEFAULT_FEED,
-        reactions=params.reactions,
-        species=params.species,
+        reactions=params["reactions"],
+        species=params["species"],
         ode_system=adm.e_adm_ode_sys,
         build_stoichiometric_matrix=adm.build_e_adm_stoichiometric_matrix,
         control_state=control_state,

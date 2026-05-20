@@ -2595,7 +2595,9 @@ metag_object=core.Metagenomics(metag_conf)
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Database</span><span class="p">:</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Database</span><span class="p">:</span>
     <span class="s2">&quot;Configuration for core.Database functionality.&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -2609,6 +2611,7 @@ metag_object=core.Metagenomics(metag_conf)
         <span class="n">csv_reaction_db</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feed_db</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">amplicon_to_genome_db</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">adm_models</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cazy_links</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">EXTERNAL_LINKS</span><span class="p">[</span><span class="s2">&quot;cazy_links&quot;</span><span class="p">],</span>
         <span class="n">amplicon_to_genome_urls</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">EXTERNAL_LINKS</span><span class="p">[</span><span class="s2">&quot;amplicon2genome&quot;</span><span class="p">],</span>
         <span class="n">adm_parameters_urls</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">E_ADM_REMOTE</span><span class="p">,</span>
@@ -2640,6 +2643,7 @@ metag_object=core.Metagenomics(metag_conf)
         <span class="bp">self</span><span class="o">.</span><span class="n">csv_reaction_db</span> <span class="o">=</span> <span class="n">_norm</span><span class="p">(</span><span class="n">csv_reaction_db</span> <span class="ow">or</span> <span class="n">_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_dir</span><span class="p">,</span> <span class="s2">&quot;Reaction_Metadata.csv&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">feed_db</span> <span class="o">=</span> <span class="n">_norm</span><span class="p">(</span><span class="n">feed_db</span> <span class="ow">or</span> <span class="n">_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_dir</span><span class="p">,</span> <span class="s2">&quot;feed_db.tsv&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">amplicon_to_genome_db</span> <span class="o">=</span> <span class="n">_norm</span><span class="p">(</span><span class="n">amplicon_to_genome_db</span> <span class="ow">or</span> <span class="n">_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_dir</span><span class="p">,</span> <span class="s2">&quot;Amplicon2GenomeDBs&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adm_models</span> <span class="o">=</span> <span class="n">_norm</span><span class="p">(</span><span class="n">adm_models</span> <span class="ow">or</span> <span class="n">_join</span><span class="p">(</span><span class="n">adm_parameters_dir</span><span class="p">,</span> <span class="s2">&quot;models.json&quot;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cazy_links</span> <span class="o">=</span> <span class="n">cazy_links</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">amplicon_to_genome_urls</span> <span class="o">=</span> <span class="n">amplicon_to_genome_urls</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adm_parameters_urls</span> <span class="o">=</span> <span class="n">adm_parameters_urls</span>
@@ -2730,9 +2734,7 @@ metag_object=core.Metagenomics(metag_conf)
 
               <details class="quote">
                 <summary>Source code in <code>adtoolbox/configs.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">203</span>
 <span class="normal">204</span>
 <span class="normal">205</span>
 <span class="normal">206</span>
@@ -2799,7 +2801,9 @@ metag_object=core.Metagenomics(metag_conf)
 <span class="normal">267</span>
 <span class="normal">268</span>
 <span class="normal">269</span>
-<span class="normal">270</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Metagenomics</span><span class="p">:</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Metagenomics</span><span class="p">:</span>
     <span class="s2">&quot;Configuration for core.Metagenomics functionality.&quot;</span>
 
     <span class="n">gtdb_dir</span> <span class="o">=</span> <span class="s2">&quot;ssu_all*.fna&quot;</span>
@@ -2913,9 +2917,7 @@ metag_object=core.Metagenomics(metag_conf)
 
               <details class="quote">
                 <summary>Source code in <code>adtoolbox/configs.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">301</span>
 <span class="normal">302</span>
 <span class="normal">303</span>
 <span class="normal">304</span>
@@ -2945,7 +2947,9 @@ metag_object=core.Metagenomics(metag_conf)
 <span class="normal">328</span>
 <span class="normal">329</span>
 <span class="normal">330</span>
-<span class="normal">331</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Utils</span><span class="p">:</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Utils</span><span class="p">:</span>
     <span class="s2">&quot;Configuration for utility helpers.&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>

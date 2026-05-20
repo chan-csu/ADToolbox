@@ -394,6 +394,40 @@ def load_multiple_json_files(json_files:dict[str,str])->dict:
     jsons_tuple=jsons_tuple(**jsons)
     return jsons_tuple
 
+
+def load_json_entry(json_file: str, entry_key: str, required_keys: Iterable[str] | None = None) -> dict:
+    """Load one top-level entry from a keyed JSON file."""
+    with open(json_file, "r") as f:
+        entries = json.load(f)
+
+    if entry_key not in entries:
+        available = ", ".join(sorted(entries))
+        raise KeyError(f"{entry_key!r} was not found in {json_file}. Available keys: {available}")
+
+    entry = entries[entry_key]
+    if not isinstance(entry, dict):
+        raise TypeError(f"{entry_key!r} in {json_file} must be a JSON object")
+
+    if required_keys:
+        missing = sorted(set(required_keys) - set(entry))
+        if missing:
+            raise KeyError(f"{entry_key!r} in {json_file} is missing required keys: {', '.join(missing)}")
+
+    return entry
+
+
+def load_model_json(json_file: str, model_key: str) -> dict:
+    """Load one ADM model from a JSON file containing all models."""
+    required_keys = [
+        "model_parameters",
+        "base_parameters",
+        "initial_conditions",
+        "inlet_conditions",
+        "reactions",
+        "species",
+    ]
+    return load_json_entry(json_file, model_key, required_keys=required_keys)
+
 def needs_repair(func):
     def to_be_repaired(*args,**kwargs):
         warn("This function is not optimized yet or have issues in running. Please use it with caution.")

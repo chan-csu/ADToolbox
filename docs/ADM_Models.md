@@ -7,11 +7,41 @@ ADToolbox exposes two anaerobic digestion models:
 | `adtoolbox ADM adm1` | ADM1 | `adm1` | `adm.build_adm1_stoichiometric_matrix` | `adm.adm1_ode_sys` |
 | `adtoolbox ADM e-adm` | e-ADM | `e_adm` | `adm.build_e_adm_stoichiometric_matrix` | `adm.e_adm_ode_sys` |
 
-The CLI and public API use only the names ADM1 and e-ADM. Older e-ADM parameter files with the previous internal prefix are still accepted by the CLI as a compatibility fallback, but new projects should use the `e_adm` prefix.
+The CLI and public API use only the names ADM1 and e-ADM. The preferred parameter format is one `models.json` file containing all models, keyed by model name.
 
 ## Model Inputs
 
-Each model is loaded from six JSON files. The CLI can receive either a directory containing the files or explicit paths for individual files.
+The canonical model input is a single JSON file with one top-level key per model:
+
+```json
+{
+  "adm1": {
+    "species": [],
+    "reactions": [],
+    "model_parameters": {},
+    "base_parameters": {},
+    "initial_conditions": {},
+    "inlet_conditions": {}
+  },
+  "e_adm": {
+    "species": [],
+    "reactions": [],
+    "model_parameters": {},
+    "base_parameters": {},
+    "initial_conditions": {},
+    "inlet_conditions": {}
+  }
+}
+```
+
+The first layer is always the model key. The second layer is the complete model payload used to instantiate `adm.Model`.
+
+| Top-level key | Public model | CLI command |
+| --- | --- | --- |
+| `adm1` | ADM1 | `adtoolbox ADM adm1 --models-json models.json` |
+| `e_adm` | e-ADM | `adtoolbox ADM e-adm --models-json models.json` |
+
+The older six-file layout is still supported as a compatibility path, either by passing `--parameters-dir` or by passing each file explicitly.
 
 | Input file | ADM1 name | e-ADM name | Description |
 | --- | --- | --- | --- |
@@ -26,6 +56,7 @@ The CLI also accepts:
 
 | Option | Applies to | Description |
 | --- | --- | --- |
+| `--models-json` | ADM1, e-ADM | Preferred input. JSON file containing all models keyed by model name. |
 | `--parameters-dir` | ADM1, e-ADM | Directory containing the six JSON files for the selected model. |
 | `--model-parameters`, `--base-parameters`, `--initial-conditions`, `--inlet-conditions`, `--reactions`, `--species` | ADM1, e-ADM | Override individual JSON file paths. |
 | `--report` | ADM1, e-ADM | Output mode. Use `csv` to write a report or `dash` to open the interactive app. If omitted, the model is solved without creating an output view. |
@@ -53,6 +84,35 @@ The CLI also accepts:
 | `base_parameters` | object with reactor constants | Must include `q_in`, `V_liq`, `V_gas`, `R`, `T_op`, `T_base`, `P_atm`, and `K_W`. | Controls hydraulic dilution, gas headspace scaling, and gas partial pressures. |
 | `model_parameters` | object with kinetic, yield, fraction, acid/base, inhibition, and gas-transfer constants | Must include all keys referenced by e-ADM rates and stoichiometry, including `Y_su`, `Y_aa`, `Y_fa`, `Y_ac_et`, `Y_ac_lac`, `Y_pro_et`, `Y_pro_lac`, `Y_bu_et`, `Y_bu_lac`, `Y_va`, `Y_cap`, `Y_bu`, `Y_Me_ac`, `Y_Me_CO2`, `Y_ac_et_ox`, and `Y_pro_lac_ox`. | Controls reaction rates, stoichiometric coefficients, inhibition factors, acid/base rates, and gas transfer. |
 | `control_state` | optional object | Keys must be valid species names. | Overrides initial conditions and forces selected derivatives to zero. The CLI sets `S_H_ion = 10^-6.5` by default for e-ADM. |
+
+### Other Keyed Database Files
+
+The same first-layer-key pattern should be used for other structured databases. For example, feeds can live in one `feeds.json` file:
+
+```json
+{
+  "food_waste": {
+    "name": "food_waste",
+    "carbohydrates": 10,
+    "proteins": 20,
+    "lipids": 20,
+    "si": 30,
+    "xi": 50,
+    "tss": 80
+  },
+  "manure": {
+    "name": "manure",
+    "carbohydrates": 5,
+    "proteins": 15,
+    "lipids": 5,
+    "si": 20,
+    "xi": 55,
+    "tss": 70
+  }
+}
+```
+
+That keeps the rule consistent: one file per database type, one top-level key per named item.
 
 ## Model Outputs
 
@@ -445,9 +505,9 @@ S[X_su, Uptake of sugars] = Y_su
 ## Minimal CLI Run
 
 ```bash
-adtoolbox ADM adm1 --parameters-dir /path/to/ADToolbox/adm1 --report csv
+adtoolbox ADM adm1 --models-json /path/to/ADToolbox/models.json --report csv
 ```
 
 ```bash
-adtoolbox ADM e-adm --parameters-dir /path/to/ADToolbox/e_adm --report csv
+adtoolbox ADM e-adm --models-json /path/to/ADToolbox/models.json --report csv
 ```

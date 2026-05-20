@@ -318,6 +318,7 @@ Both commands accept the same parameter file options:
 
 ```
 --parameters-dir
+--models-json
 --model-parameters
 --base-parameters
 --initial-conditions
@@ -328,7 +329,7 @@ Both commands accept the same parameter file options:
 --report
 ```
 
-The e-ADM command also accepts `--control-states`, which should point to a JSON object of states that should be held constant. If you choose `dash` for your report, the CLI opens the interactive Dash interface. If you choose `csv`, it writes concentration profiles over time.
+The preferred input is `--models-json`, a single JSON file containing all ADM models keyed by model name. The e-ADM command also accepts `--control-states`, which should point to a JSON object of states that should be held constant. If you choose `dash` for your report, the CLI opens the interactive Dash interface. If you choose `csv`, it writes concentration profiles over time.
 
 -------------
 ### 4. Documentations Module

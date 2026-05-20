@@ -119,6 +119,7 @@ class Database:
         csv_reaction_db: str | None = None,
         feed_db: str | None = None,
         amplicon_to_genome_db: str | None = None,
+        adm_models: str | None = None,
         cazy_links: list[str] = EXTERNAL_LINKS["cazy_links"],
         amplicon_to_genome_urls: dict = EXTERNAL_LINKS["amplicon2genome"],
         adm_parameters_urls: dict = E_ADM_REMOTE,
@@ -150,6 +151,7 @@ class Database:
         self.csv_reaction_db = _norm(csv_reaction_db or _join(self.database_dir, "Reaction_Metadata.csv"))
         self.feed_db = _norm(feed_db or _join(self.database_dir, "feed_db.tsv"))
         self.amplicon_to_genome_db = _norm(amplicon_to_genome_db or _join(self.database_dir, "Amplicon2GenomeDBs"))
+        self.adm_models = _norm(adm_models or _join(adm_parameters_dir, "models.json"))
         self.cazy_links = cazy_links
         self.amplicon_to_genome_urls = amplicon_to_genome_urls
         self.adm_parameters_urls = adm_parameters_urls

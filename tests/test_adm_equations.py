@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from adtoolbox import adm
+from adtoolbox import adm, utils
 
 
 DATABASE_ROOT = Path("/Users/parsaghadermarzi/Desktop/Academics/Projects/Database/ADToolbox")
@@ -88,6 +88,17 @@ def test_monod_limitation_increases_with_substrate():
     high = adm._monod_limitation(1.0, half_saturation)
 
     assert 0 < low < high < 1
+
+
+def test_all_models_json_loads_model_by_key(tmp_path):
+    params = _load_parameter_set("adm1", "adm1")
+    models_json = tmp_path / "models.json"
+    models_json.write_text(json.dumps({"adm1": params, "e_adm": {"species": []}}))
+
+    loaded = utils.load_model_json(str(models_json), "adm1")
+
+    assert loaded["species"] == params["species"]
+    assert loaded["reactions"] == params["reactions"]
 
 
 def test_e_adm_nitrogen_acid_base_rate_uses_s_in_not_s_ic():
