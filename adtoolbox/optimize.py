@@ -696,7 +696,7 @@ def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validat
     
 if __name__ == "__main__":
     import utils
-    params=utils.load_multiple_json_files(configs.E_ADM_2_LOCAL)
+    params=utils.load_multiple_json_files(configs.E_ADM_LOCAL)
     model=adm.Model(
     initial_conditions=params.initial_conditions,
     inlet_conditions=params.inlet_conditions,
@@ -706,8 +706,8 @@ if __name__ == "__main__":
     feed=adm.DEFAULT_FEED,
     base_parameters=params.base_parameters,
     control_state={},
-    build_stoichiometric_matrix=adm.build_e_adm_2_stoichiometric_matrix,
-    ode_system=adm.e_adm_2_ode_sys,
+    build_stoichiometric_matrix=adm.build_e_adm_stoichiometric_matrix,
+    ode_system=adm.e_adm_ode_sys,
     )
     db=core.Database(configs.Database())
     exp=db.get_experiment_from_experiments_db("name","")[:3]

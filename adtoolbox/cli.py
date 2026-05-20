@@ -55,13 +55,22 @@ def _model_paths_from_dir(parameters_dir, prefix):
     }
 
 
-def _resolve_model_paths(parameters_dir, prefix, **overrides):
+def _resolve_model_paths(parameters_dir, prefix, legacy_prefixes=(), **overrides):
     if parameters_dir:
         parameters_dir = _prompt_path(parameters_dir, "ADM parameter directory", exists=True, file_okay=False, dir_okay=True)
     elif not any(overrides.values()):
         parameters_dir = _prompt_path(None, "ADM parameter directory", exists=True, file_okay=False, dir_okay=True)
 
     paths = _model_paths_from_dir(parameters_dir, prefix) if parameters_dir else {}
+    if parameters_dir and legacy_prefixes:
+        for key, path in list(paths.items()):
+            if os.path.exists(path):
+                continue
+            for legacy_prefix in legacy_prefixes:
+                legacy_path = _model_paths_from_dir(parameters_dir, legacy_prefix)[key]
+                if os.path.exists(legacy_path):
+                    paths[key] = legacy_path
+                    break
     resolved = {}
     for key, value in overrides.items():
         resolved[key] = value or paths.get(key)
@@ -461,7 +470,8 @@ def e_adm(
 ):
     paths = _resolve_model_paths(
         parameters_dir,
-        "e_adm_2",
+        "e_adm",
+        legacy_prefixes=("e_adm_2",),
         model_parameters=model_parameters,
         base_parameters=base_parameters,
         initial_conditions=initial_conditions,
@@ -486,10 +496,10 @@ def e_adm(
         feed=adm.DEFAULT_FEED,
         reactions=params.reactions,
         species=params.species,
-        ode_system=adm.e_adm_2_ode_sys,
-        build_stoichiometric_matrix=adm.build_e_adm_2_stoichiometric_matrix,
+        ode_system=adm.e_adm_ode_sys,
+        build_stoichiometric_matrix=adm.build_e_adm_stoichiometric_matrix,
         control_state=control_state,
-        name="Modified_ADM1",
+        name="e-ADM",
         switch="DAE",
     )
     solution = model.solve_model(t_eval=np.linspace(0, 30, 10000), method="BDF")

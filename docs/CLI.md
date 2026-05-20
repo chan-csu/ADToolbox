@@ -2,79 +2,29 @@
 
 -------------
 ## Initialization
-First, we need to initialize the CLI:
-After installing ADToolbox, type and execute the following in your terminal to initialize the base directory for ADToolbox files:
+After installing ADToolbox, you can access all commands and their brief explanations by:
 
 ```
-ADToolbox
+adtoolbox --help
 
 ```
-You should see the following if you are running this for the first time:
-
-```
-No Base Directory Found: 
-Where do you want to store your ADToolbox Data?:
-
-```
-Type the **absolute path** directory of interest. Don't worry if you mess this part up. You can change this later as well. you can type '.' for now and change this later.
-
-You can access all the commands along with their brief explanation by:
-
-```
-ADToolbox --help
-
-```
+The CLI does not initialize or store a global base directory. Commands that need a file or directory ask for it directly or accept it as an option.
 
 -------------
 ## ADToolbox Modules
 
 This toolbox is comprised of different modules:
 
-1. Configs Module
+1. Database Module
 
-2. Database Module
+2. Metagenomics Module
 
-3. Metagenomics Module
+3. ADM Module
 
-4. ADM Module
-
-5. Documentations Module
+4. Documentations Module
 
 -------------
-### 1. Configs Module
-
-After installation, the base working directory must be specified:
-
-```
-ADToolbox Configs --help
-
-────────────────────────────────── ADToolBox───────────────────────────────────
-
-usage: ADToolBox Configs [-h] [-s SET_BASE_DIR] [-g] [--get-base-dir]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -s SET_BASE_DIR, --set-base-dir SET_BASE_DIR
-                        Set the base directory for ADToolBox to work with
-  -g, --get-base-dir    Get the current base directory for ADToolBox
-
-
-```
-This will give you a list of all functionalities that are related to the configurations of the toolbox. Here we go one by one in the correct order:
-
-- set-base-dir:  The first configuration command will allow you to set the base directory for ADToolbox to work. This could be an existing folder somewhere in your files or a directory that you are willing to create. If the directory does not already exit, it will be automatically created after this command. For example if I want to set the base directory to be ADToolbox directory on my desktop the command would be, in MacOS, something like this:
-
-```
-
-ADToolbox Configs --set-base-dir ~/Desktop/ADToolbox
-
-```
-
-Anything that you will do from now on, will be saved in this directory.
-
-
--------------
-### 2. Database Module
+### 1. Database Module
 
 Any database that is used by ADToolbox can be modified from this module. Type the following in your commandline to find all of the database module's commands:
 
@@ -130,7 +80,7 @@ options:
 
 We will now go over these commands one by one:
 
-- initialize-feed-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future feed information that you add. You can run this command  by:
+- initialize-feed-db: This will create an empty feed database at the database path you provide. You can run this command by:
 
 ```
 ADToolbox Database initialize-feed-db
@@ -156,7 +106,7 @@ ADToolbox Database add-feed -n "test feed" -c 20 -p 20 -l 20 -t 20 -s 20 -x 20 -
 ADToolbox Database show-feed-db
 
 ```
-- initialize-metagenomics-studies-db: This will create an empty TSV file in the Database sub-directory in your base directory that will hold all the future information about various metagenomics studies that you add. You can run this command  by:
+- initialize-metagenomics-studies-db: This will create an empty TSV file at the studies database path you provide. You can run this command by:
 
 ```
 ADToolbox Database initialize-metagenomics-studies-db
@@ -174,7 +124,7 @@ An example of this would look like:
 ADToolbox Database add-metagenomics-study  -n test_study -t 16s -m "anaerobic digestion"  -s 11111111 -c "this is just a test" -p 222222
 
 ```
-- initialize-protein-db: This will create an empty JSON file in the Database sub-directory in your base directory that will hold all the future protein information that you add. You can run this command  by:
+- initialize-protein-db: This will create an empty protein database at the protein database path you provide. You can run this command by:
 
 ```
 ADToolbox Database initialize-protein-db
@@ -193,7 +143,7 @@ ADToolbox Database add-protein -i ATEST1 -n 1.1.1.1
 
 ```
 
-*NOTE*: Skip the following download commands if you have run ```ADToolbox Configs download-all-databases```
+*NOTE*: Skip the following download commands if you have already downloaded the required databases.
 ```
 
 - download-reaction-db: As the name implies, this will download the ADToolbox reaction database. This is required for many important modules of the toolbox
@@ -237,7 +187,7 @@ ADToolbox Database download-seed-reaction-db
 ```
 ```
 -------------
-### 3. Metagenomics Module
+### 2. Metagenomics Module
 
 Metagenomics module of ADToolbox is designed to input metagenomics data into consideration when designing an AD process.
 
@@ -334,135 +284,54 @@ ADToolbox Metagenomics find-representative-genomes -i PATHNAME/TO/REPSEQS/FASTA/
 ```
 
 -------------------------------
-### 4. ADM Module
+### 3. ADM Module
 
-ADM module provides all the tools needed to run instances of ADM Model. This includes the original ADM, Batstone et al., and the Modified-ADM suggested by the Authors of ADToolbox. In order to find out about all the functionalities in this module, you can run:
-
-```
-
-ADToolbox ADM --help
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox ADM [-h] {original-adm1,modified-adm,show-escher-map} ...
-
-positional arguments:
-  {original-adm1,modified-adm,show-escher-map}
-                        Available ADM Commands:
-    original-adm1       Original ADM1:
-    modified-adm        Modified ADM:
-
-options:
-  -h, --help            show this help message and exit
+ADM module provides the CLI entry points for the active ADToolbox anaerobic digestion models: ADM1 and e-ADM. In order to find out about all the functionalities in this module, you can run:
 
 ```
 
-- original-adm1: If you want to run the original ADM, batstone et al, in your browser you can run this command with the required parameters in JSON format:
+adtoolbox ADM --help
 
-```
-ADToolbox ADM original-adm1 --help
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox ADM original-adm1 [-h] [--model-parameters MODEL_PARAMETERS]
-                                   [--base-parameters BASE_PARAMETERS]
-                                   [--initial-conditions INITIAL_CONDITIONS]
-                                   [--inlet-conditions INLET_CONDITIONS]
-                                   [--reactions REACTIONS] [--species SPECIES]
-                                   [--metagenome-report METAGENOME_REPORT]
-                                   [--report REPORT]
+Usage: adtoolbox ADM [OPTIONS] COMMAND [ARGS]...
 
-options:
-  -h, --help            show this help message and exit
-  --model-parameters MODEL_PARAMETERS
-                        Model parameters for ADM 1
-  --base-parameters BASE_PARAMETERS
-                        Provide json file with base parameters for original
-                        ADM1
-  --initial-conditions INITIAL_CONDITIONS
-                        Provide json file with initial conditions for original
-                        ADM1
-  --inlet-conditions INLET_CONDITIONS
-                        Provide json file with inlet conditions for original
-                        ADM1
-  --reactions REACTIONS
-                        Provide json file with reactions for original ADM1
-  --species SPECIES     Provide json file with species for original ADM1
-  --metagenome-report METAGENOME_REPORT
-                        Provide json file with metagenome report for original
-                        ADM1
-  --report REPORT       Describe how to report the results of original ADM1.
-                        Current options are: 'dash' and 'csv'
+  Run and visualize ADToolbox ADM models.
 
+Commands:
+  adm1   Original ADM1 model.
+  e-adm  eADM model.
 
 ```
 
-Every argument is optional, and their role is clear from the comments in front of them, So we just provide a full example of this command:
-
-
-```
-ADToolbox ADM original-adm1 \
---model-parameters ~/Desktop/Model_Parameters.json \
---base-parameters ~/Desktop/Base_Parameters.json \
---initial-conditions ~/Desktop/Initial_Conditions.json \
---inlet-conditions ~/Desktop/Inlet-Conditions.json \
---reactions ~/Desktop/Reactions.json
---species  ~/Desktop/Species.json
---metagenome-report ~/Desktop/ADM_Mapping_Report.json
---repor dash
+- `adm1`: run the original ADM1 model with parameters from a directory or from explicit JSON file paths.
 
 ```
-**NOTE** if you choose dash for your report, the CLI will prompt you to open your browser in the instructed address, if you choose csv, it will generate a CSV file that includes concentration profiles simulated over time.
-
----------------
-
-- modified-adm: This command is exactly similar to the previous one, except that it requires parameters taylored for modified ADM:
-
+adtoolbox ADM adm1 --parameters-dir /path/to/ADToolbox/adm1 --report csv
 ```
 
-ADToolbox ADM modified-adm --help 
-────────────────────────────────── ADToolBox ───────────────────────────────────
-usage: ADToolBox ADM modified-adm [-h] [--model-parameters MODEL_PARAMETERS]
-                                  [--base-parameters BASE_PARAMETERS]
-                                  [--initial-conditions INITIAL_CONDITIONS]
-                                  [--inlet-conditions INLET_CONDITIONS]
-                                  [--reactions REACTIONS] [--species SPECIES]
-                                  [--metagenome-report METAGENOME_REPORT]
-                                  [--report REPORT]
-
-options:
-  -h, --help            show this help message and exit
-  --model-parameters MODEL_PARAMETERS
-                        Model parameters for Modified ADM
-  --base-parameters BASE_PARAMETERS
-                        Provide json file with base parameters for modified
-                        ADM
-  --initial-conditions INITIAL_CONDITIONS
-                        Provide json file with initial conditions for modified
-                        ADM
-  --inlet-conditions INLET_CONDITIONS
-                        Provide json file with inlet conditions for modified
-                        ADM
-  --reactions REACTIONS
-                        Provide json file with reactions for modified ADM
-  --species SPECIES     Provide json file with species for modified ADM
-  --metagenome-report METAGENOME_REPORT
-                        Provide json file with metagenome report for modified
-                        ADM
-  --report REPORT       Describe how to report the results of modified ADM.
-                        Current options are: 'dash' and 'csv'
+- `e-adm`: run the current e-ADM model.
 
 ```
+adtoolbox ADM e-adm --parameters-dir /path/to/ADToolbox/e_adm --report csv
+```
 
-The usage is exactly the same as the original-adm
-
--------------------------
-
-- show-escher-map: This command will prompt you to open an escher map for the modified-adm model in your browser with the instructed address:
+Both commands accept the same parameter file options:
 
 ```
-ADToolbox ADM show-escher-map
-
+--parameters-dir
+--model-parameters
+--base-parameters
+--initial-conditions
+--inlet-conditions
+--reactions
+--species
+--metagenome-report
+--report
 ```
+
+The e-ADM command also accepts `--control-states`, which should point to a JSON object of states that should be held constant. If you choose `dash` for your report, the CLI opens the interactive Dash interface. If you choose `csv`, it writes concentration profiles over time.
 
 -------------
-### 5. Documentations Module
+### 4. Documentations Module
 
 You can view the documentaion in your CLI using rich's markdown render. You can do this by:
 

@@ -61,22 +61,9 @@ def test_adm1_methane_is_produced_by_acetate_and_hydrogen_uptake():
     assert producers == {"Uptake of acetate", "Uptake of Hydrogen"}
 
 
-def test_e_adm_builder_reports_missing_parameter_set_keys():
-    params = _load_parameter_set("e_adm", "e_adm")
-
-    with pytest.raises(ValueError, match="Y_su_ac"):
-        adm.build_e_adm_stoichiometric_matrix(
-            params["base_parameters"],
-            params["model_parameters"],
-            params["reactions"],
-            params["species"],
-            adm.DEFAULT_FEED,
-        )
-
-
-def test_e_adm2_methanogenesis_produces_methane_and_gas_transfer_uses_adm1_scaling():
+def test_e_adm_methanogenesis_produces_methane_and_gas_transfer_uses_adm1_scaling():
     params = _load_parameter_set("e_adm_2", "e_adm_2")
-    S = adm.build_e_adm_2_stoichiometric_matrix(
+    S = adm.build_e_adm_stoichiometric_matrix(
         params["base_parameters"],
         params["model_parameters"],
         params["reactions"],
@@ -103,12 +90,12 @@ def test_monod_limitation_increases_with_substrate():
     assert 0 < low < high < 1
 
 
-def test_e_adm2_nitrogen_acid_base_rate_uses_s_in_not_s_ic():
+def test_e_adm_nitrogen_acid_base_rate_uses_s_in_not_s_ic():
     params = _load_parameter_set("e_adm_2", "e_adm_2")
     model = _model_from_params(
         params,
-        adm.e_adm_2_ode_sys,
-        adm.build_e_adm_2_stoichiometric_matrix,
+        adm.e_adm_ode_sys,
+        adm.build_e_adm_stoichiometric_matrix,
     )
     model.info = {"Fluxes": []}
     model._be_time = time.time()
@@ -119,7 +106,7 @@ def test_e_adm2_nitrogen_acid_base_rate_uses_s_in_not_s_ic():
     c[model.species.index("S_H_ion")] = 1e-7
     h_at_flux_calculation = c[model.species.index("S_H_ion")]
 
-    adm.e_adm_2_ode_sys(0, c, model)
+    adm.e_adm_ode_sys(0, c, model)
     flux = model.info["Fluxes"][model.reactions.index("Acid Base Equilibrium (In)"), 0]
     expected = model.model_parameters["k_A_B_IN"] * (
         c[model.species.index("S_nh3")]
