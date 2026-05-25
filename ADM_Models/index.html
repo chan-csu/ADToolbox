@@ -1,0 +1,2061 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../API/">
+      
+      
+        <link rel="next" href="../modeling.html">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>ADM Models - ADToolbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adm-models" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ADToolbox" class="md-header__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ADToolbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADM Models
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ADToolbox" class="md-nav__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ADToolbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome to ADToolbox
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Commandline Interface
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    ADM Models
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADM Models
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#model-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Inputs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Model Inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adm1-input-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Input Contract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-input-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Input Contract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-keyed-database-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Keyed Database Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Outputs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Model Outputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output Shapes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mathematical-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mathematical Setup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaction-rate-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reaction Rate Forms
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reaction Rate Forms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#acidbase-equations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Acid/Base Equations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inhibition-equations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inhibition Equations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adm1-reactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Reactions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ADM1 Reactions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adm1-stoichiometric-coefficients" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Stoichiometric Coefficients
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adm1-inhibition-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Inhibition Factors
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-adm-reactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Reactions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="e-ADM Reactions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-stoichiometric-coefficients" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Stoichiometric Coefficients
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-inhibition-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Inhibition Factors
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methane-producing-reactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methane-Producing Reactions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#state-vectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      State Vectors
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="State Vectors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adm1-species" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Species
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-species" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Species
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimal-cli-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimal CLI Run
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modeling.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Modeling Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parameter_tuning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Parameter Tuning Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Metagenomics_Pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Metagenomics Pipelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#model-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Inputs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Model Inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adm1-input-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Input Contract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-input-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Input Contract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-keyed-database-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Keyed Database Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Outputs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Model Outputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output Shapes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mathematical-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mathematical Setup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaction-rate-forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reaction Rate Forms
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reaction Rate Forms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#acidbase-equations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Acid/Base Equations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inhibition-equations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inhibition Equations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adm1-reactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Reactions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ADM1 Reactions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adm1-stoichiometric-coefficients" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Stoichiometric Coefficients
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adm1-inhibition-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Inhibition Factors
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-adm-reactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Reactions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="e-ADM Reactions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-stoichiometric-coefficients" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Stoichiometric Coefficients
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-inhibition-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Inhibition Factors
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methane-producing-reactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methane-Producing Reactions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#state-vectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      State Vectors
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="State Vectors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adm1-species" class="md-nav__link">
+    <span class="md-ellipsis">
+      ADM1 Species
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-adm-species" class="md-nav__link">
+    <span class="md-ellipsis">
+      e-ADM Species
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimal-cli-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimal CLI Run
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="adm-models">ADM Models</h1>
+<p>ADToolbox exposes two anaerobic digestion models:</p>
+<table>
+<thead>
+<tr>
+<th>CLI command</th>
+<th>Model</th>
+<th>Parameter folder</th>
+<th>Stoichiometric builder</th>
+<th>ODE system</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adtoolbox ADM adm1</code></td>
+<td>ADM1</td>
+<td><code>adm1</code></td>
+<td><code>adm.build_adm1_stoichiometric_matrix</code></td>
+<td><code>adm.adm1_ode_sys</code></td>
+</tr>
+<tr>
+<td><code>adtoolbox ADM e-adm</code></td>
+<td>e-ADM</td>
+<td><code>e_adm</code></td>
+<td><code>adm.build_e_adm_stoichiometric_matrix</code></td>
+<td><code>adm.e_adm_ode_sys</code></td>
+</tr>
+</tbody>
+</table>
+<p>The CLI and public API use only the names ADM1 and e-ADM. The preferred parameter format is one <code>models.json</code> file containing all models, keyed by model name.</p>
+<h2 id="model-inputs">Model Inputs</h2>
+<p>The canonical model input is a single JSON file with one top-level key per model:</p>
+<pre><code class="language-json">{
+  &quot;adm1&quot;: {
+    &quot;species&quot;: [],
+    &quot;reactions&quot;: [],
+    &quot;model_parameters&quot;: {},
+    &quot;base_parameters&quot;: {},
+    &quot;initial_conditions&quot;: {},
+    &quot;inlet_conditions&quot;: {}
+  },
+  &quot;e_adm&quot;: {
+    &quot;species&quot;: [],
+    &quot;reactions&quot;: [],
+    &quot;model_parameters&quot;: {},
+    &quot;base_parameters&quot;: {},
+    &quot;initial_conditions&quot;: {},
+    &quot;inlet_conditions&quot;: {}
+  }
+}
+</code></pre>
+<p>The first layer is always the model key. The second layer is the complete model payload used to instantiate <code>adm.Model</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Top-level key</th>
+<th>Public model</th>
+<th>CLI command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adm1</code></td>
+<td>ADM1</td>
+<td><code>adtoolbox ADM adm1 --models-json models.json</code></td>
+</tr>
+<tr>
+<td><code>e_adm</code></td>
+<td>e-ADM</td>
+<td><code>adtoolbox ADM e-adm --models-json models.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>The older six-file layout is still supported as a compatibility path, either by passing <code>--parameters-dir</code> or by passing each file explicitly.</p>
+<table>
+<thead>
+<tr>
+<th>Input file</th>
+<th>ADM1 name</th>
+<th>e-ADM name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model parameters</td>
+<td><code>adm1_model_parameters.json</code></td>
+<td><code>e_adm_model_parameters.json</code></td>
+<td>Kinetic, equilibrium, inhibition, gas transfer, and yield parameters used in reaction rates and acid/base calculations.</td>
+</tr>
+<tr>
+<td>Base parameters</td>
+<td><code>adm1_base_parameters.json</code></td>
+<td><code>e_adm_base_parameters.json</code></td>
+<td>Reactor-level constants such as liquid volume, gas volume, influent flow, gas transfer constants, pressure, temperature, and gas constants.</td>
+</tr>
+<tr>
+<td>Initial conditions</td>
+<td><code>adm1_initial_conditions.json</code></td>
+<td><code>e_adm_initial_conditions.json</code></td>
+<td>Initial concentration of every model state. Keys must match the species list.</td>
+</tr>
+<tr>
+<td>Inlet conditions</td>
+<td><code>adm1_inlet_conditions.json</code></td>
+<td><code>e_adm_inlet_conditions.json</code></td>
+<td>Influent concentration of every model state, using the same species names with <code>_in</code> appended.</td>
+</tr>
+<tr>
+<td>Reactions</td>
+<td><code>adm1_reactions.json</code></td>
+<td><code>e_adm_reactions.json</code></td>
+<td>Ordered reaction names. This order defines the columns of the stoichiometric matrix and the reaction-rate vector.</td>
+</tr>
+<tr>
+<td>Species</td>
+<td><code>adm1_species.json</code></td>
+<td><code>e_adm_species.json</code></td>
+<td>Ordered state names. This order defines the rows of the stoichiometric matrix and the concentration vector.</td>
+</tr>
+</tbody>
+</table>
+<p>The CLI also accepts:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Applies to</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--models-json</code></td>
+<td>ADM1, e-ADM</td>
+<td>Preferred input. JSON file containing all models keyed by model name.</td>
+</tr>
+<tr>
+<td><code>--parameters-dir</code></td>
+<td>ADM1, e-ADM</td>
+<td>Directory containing the six JSON files for the selected model.</td>
+</tr>
+<tr>
+<td><code>--model-parameters</code>, <code>--base-parameters</code>, <code>--initial-conditions</code>, <code>--inlet-conditions</code>, <code>--reactions</code>, <code>--species</code></td>
+<td>ADM1, e-ADM</td>
+<td>Override individual JSON file paths.</td>
+</tr>
+<tr>
+<td><code>--report</code></td>
+<td>ADM1, e-ADM</td>
+<td>Output mode. Use <code>csv</code> to write a report or <code>dash</code> to open the interactive app. If omitted, the model is solved without creating an output view.</td>
+</tr>
+<tr>
+<td><code>--control-states</code></td>
+<td>e-ADM</td>
+<td>JSON object of states to hold constant. By default, e-ADM holds <code>S_H_ion</code> at <code>10^-6.5</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="adm1-input-contract">ADM1 Input Contract</h3>
+<table>
+<thead>
+<tr>
+<th>Input object</th>
+<th>Required shape</th>
+<th>Required naming rule</th>
+<th>How it is used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>species</code></td>
+<td>list of 38 strings</td>
+<td>Names must match every key in <code>initial_conditions</code>; each inlet key must be <code>species_name + "_in"</code>.</td>
+<td>Defines the order of the state vector <code>c</code>.</td>
+</tr>
+<tr>
+<td><code>reactions</code></td>
+<td>list of 28 strings</td>
+<td>Names must match the reaction names used in <code>build_adm1_stoichiometric_matrix</code> and <code>adm1_ode_sys</code>.</td>
+<td>Defines the order of the reaction vector <code>v</code> and the columns of <code>S</code>.</td>
+</tr>
+<tr>
+<td><code>initial_conditions</code></td>
+<td>object with 38 numeric values</td>
+<td>Keys are exactly the ADM1 species names.</td>
+<td>Converted to <code>y0</code>, the initial state passed to <code>solve_ivp</code>.</td>
+</tr>
+<tr>
+<td><code>inlet_conditions</code></td>
+<td>object with 38 numeric values</td>
+<td>Keys are exactly the ADM1 species names with <code>_in</code> appended.</td>
+<td>Converted to <code>c_in</code>, used in the liquid and gas flow terms.</td>
+</tr>
+<tr>
+<td><code>base_parameters</code></td>
+<td>object with reactor constants</td>
+<td>Must include <code>q_in</code>, <code>V_liq</code>, <code>V_gas</code>, <code>R</code>, <code>T_op</code>, <code>T_base</code>, <code>P_atm</code>, and <code>K_W</code> or equivalent water-equilibrium value used by the model.</td>
+<td>Controls hydraulic dilution, gas headspace scaling, and gas partial pressures.</td>
+</tr>
+<tr>
+<td><code>model_parameters</code></td>
+<td>object with kinetic, yield, fraction, acid/base, inhibition, and gas-transfer constants</td>
+<td>Must include all keys referenced by ADM1 rates and stoichiometry, such as <code>k_dis</code>, <code>k_hyd_*</code>, <code>k_m_*</code>, <code>K_S_*</code>, <code>Y_*</code>, <code>f_*</code>, <code>C_*</code>, <code>N_*</code>, <code>K_a_*</code>, <code>K_pH_*</code>, <code>K_I_*</code>, <code>k_L_a</code>, <code>K_H_*</code>, and <code>k_p</code>.</td>
+<td>Controls reaction rates, stoichiometric coefficients, inhibition factors, acid/base rates, and gas transfer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="e-adm-input-contract">e-ADM Input Contract</h3>
+<table>
+<thead>
+<tr>
+<th>Input object</th>
+<th>Required shape</th>
+<th>Required naming rule</th>
+<th>How it is used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>species</code></td>
+<td>list of 49 strings</td>
+<td>Names must match every key in <code>initial_conditions</code>; each inlet key must be <code>species_name + "_in"</code>.</td>
+<td>Defines the order of the state vector <code>c</code>.</td>
+</tr>
+<tr>
+<td><code>reactions</code></td>
+<td>list of 45 strings</td>
+<td>Names must match the reaction names used in <code>build_e_adm_stoichiometric_matrix</code> and <code>e_adm_ode_sys</code>.</td>
+<td>Defines the order of the reaction vector <code>v</code> and the columns of <code>S</code>.</td>
+</tr>
+<tr>
+<td><code>initial_conditions</code></td>
+<td>object with 49 numeric values</td>
+<td>Keys are exactly the e-ADM species names.</td>
+<td>Converted to <code>y0</code>, after applying any <code>control_state</code> overrides.</td>
+</tr>
+<tr>
+<td><code>inlet_conditions</code></td>
+<td>object with 49 numeric values</td>
+<td>Keys are exactly the e-ADM species names with <code>_in</code> appended.</td>
+<td>Converted to <code>c_in</code>, used in the liquid and gas flow terms.</td>
+</tr>
+<tr>
+<td><code>base_parameters</code></td>
+<td>object with reactor constants</td>
+<td>Must include <code>q_in</code>, <code>V_liq</code>, <code>V_gas</code>, <code>R</code>, <code>T_op</code>, <code>T_base</code>, <code>P_atm</code>, and <code>K_W</code>.</td>
+<td>Controls hydraulic dilution, gas headspace scaling, and gas partial pressures.</td>
+</tr>
+<tr>
+<td><code>model_parameters</code></td>
+<td>object with kinetic, yield, fraction, acid/base, inhibition, and gas-transfer constants</td>
+<td>Must include all keys referenced by e-ADM rates and stoichiometry, including <code>Y_su</code>, <code>Y_aa</code>, <code>Y_fa</code>, <code>Y_ac_et</code>, <code>Y_ac_lac</code>, <code>Y_pro_et</code>, <code>Y_pro_lac</code>, <code>Y_bu_et</code>, <code>Y_bu_lac</code>, <code>Y_va</code>, <code>Y_cap</code>, <code>Y_bu</code>, <code>Y_Me_ac</code>, <code>Y_Me_CO2</code>, <code>Y_ac_et_ox</code>, and <code>Y_pro_lac_ox</code>.</td>
+<td>Controls reaction rates, stoichiometric coefficients, inhibition factors, acid/base rates, and gas transfer.</td>
+</tr>
+<tr>
+<td><code>control_state</code></td>
+<td>optional object</td>
+<td>Keys must be valid species names.</td>
+<td>Overrides initial conditions and forces selected derivatives to zero. The CLI sets <code>S_H_ion = 10^-6.5</code> by default for e-ADM.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="other-keyed-database-files">Other Keyed Database Files</h3>
+<p>The same first-layer-key pattern should be used for other structured databases. For example, feeds can live in one <code>feeds.json</code> file:</p>
+<pre><code class="language-json">{
+  &quot;food_waste&quot;: {
+    &quot;name&quot;: &quot;food_waste&quot;,
+    &quot;carbohydrates&quot;: 10,
+    &quot;proteins&quot;: 20,
+    &quot;lipids&quot;: 20,
+    &quot;si&quot;: 30,
+    &quot;xi&quot;: 50,
+    &quot;tss&quot;: 80
+  },
+  &quot;manure&quot;: {
+    &quot;name&quot;: &quot;manure&quot;,
+    &quot;carbohydrates&quot;: 5,
+    &quot;proteins&quot;: 15,
+    &quot;lipids&quot;: 5,
+    &quot;si&quot;: 20,
+    &quot;xi&quot;: 55,
+    &quot;tss&quot;: 70
+  }
+}
+</code></pre>
+<p>That keeps the rule consistent: one file per database type, one top-level key per named item.</p>
+<h2 id="model-outputs">Model Outputs</h2>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Concentration trajectories</td>
+<td><code>Model.solve_model(...)</code></td>
+<td>Returns a SciPy <code>OdeResult</code>. <code>sol.t</code> contains time points and <code>sol.y</code> contains species concentrations ordered exactly like <code>model.species</code>.</td>
+</tr>
+<tr>
+<td>CSV report</td>
+<td><code>--report csv</code> or <code>Model.csv_report(...)</code></td>
+<td>Writes <code>&lt;model.name&gt;_Report.csv</code>. Rows are species and columns are simulated time points.</td>
+</tr>
+<tr>
+<td>Interactive dashboard</td>
+<td><code>--report dash</code> or <code>Model.dash_app(...)</code></td>
+<td>Opens a Dash app with concentration plots and model tables.</td>
+</tr>
+<tr>
+<td>Reaction fluxes</td>
+<td><code>model.info["Fluxes"]</code></td>
+<td>The most recent reaction-rate vector <code>v</code>, ordered exactly like <code>model.reactions</code>.</td>
+</tr>
+<tr>
+<td>Stoichiometric matrix</td>
+<td><code>model.s</code></td>
+<td>Matrix <code>S</code> with shape <code>number_of_species x number_of_reactions</code>. Entry <code>S[i, j]</code> is the coefficient for species <code>i</code> in reaction <code>j</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>ADM1 has 38 species and 28 reactions. e-ADM has 49 species and 45 reactions.</p>
+<h3 id="output-shapes">Output Shapes</h3>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>ADM1 shape</th>
+<th>e-ADM shape</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sol.t</code></td>
+<td><code>(n_time_points,)</code></td>
+<td><code>(n_time_points,)</code></td>
+<td>Time is in days in the default examples. The CLI uses <code>np.linspace(0, 30, 10000)</code>.</td>
+</tr>
+<tr>
+<td><code>sol.y</code></td>
+<td><code>(38, n_time_points)</code></td>
+<td><code>(49, n_time_points)</code></td>
+<td>Rows follow <code>model.species</code>; columns follow <code>sol.t</code>.</td>
+</tr>
+<tr>
+<td><code>model.s</code></td>
+<td><code>(38, 28)</code></td>
+<td><code>(49, 45)</code></td>
+<td>Rows follow species; columns follow reactions.</td>
+</tr>
+<tr>
+<td><code>model.info["Fluxes"]</code></td>
+<td><code>(28, 1)</code></td>
+<td><code>(45, 1)</code></td>
+<td>Stores the most recent flux calculation from the ODE function.</td>
+</tr>
+<tr>
+<td>CSV report</td>
+<td>38 rows plus header</td>
+<td>49 rows plus header</td>
+<td>The first column is the species index. Remaining columns are simulated time points.</td>
+</tr>
+</tbody>
+</table>
+<p>The solver returns a fallback solution filled with <code>1e10</code> if integration fails. That is a failure sentinel, not a physical concentration.</p>
+<h2 id="mathematical-setup">Mathematical Setup</h2>
+<p>The JSON files describe the state names, reaction names, and parameter values. The Python model converts them into a dynamic system by building a stoichiometric matrix and evaluating reaction rates at every time step.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Formula</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Species vector</td>
+<td><code>c(t) = [c_1(t), ..., c_n(t)]^T</code></td>
+<td>Concentrations are ordered by the species JSON file.</td>
+</tr>
+<tr>
+<td>Reaction-rate vector</td>
+<td><code>v(c, theta) = [v_1, ..., v_m]^T</code></td>
+<td>Fluxes are ordered by the reactions JSON file and are calculated from concentrations and parameters.</td>
+</tr>
+<tr>
+<td>Stoichiometric matrix</td>
+<td><code>S in R^(n x m)</code></td>
+<td>Rows are species, columns are reactions. <code>S[i, j]</code> converts reaction <code>j</code> into the concentration change of species <code>i</code>.</td>
+</tr>
+<tr>
+<td>Reaction contribution</td>
+<td><code>r(c, theta) = S v(c, theta)</code></td>
+<td>Net production or consumption of every species from biochemical, acid/base, and gas-transfer reactions.</td>
+</tr>
+<tr>
+<td>Liquid flow contribution</td>
+<td><code>(q_in / V_liq) * (c_in - c)</code></td>
+<td>Continuous stirred tank dilution or influent loading for liquid-phase states.</td>
+</tr>
+<tr>
+<td>Gas flow contribution</td>
+<td><code>(q_gas / V_gas) * (c_gas,in - c_gas)</code></td>
+<td>Headspace gas outflow for gas states.</td>
+</tr>
+<tr>
+<td>Gas flow rate</td>
+<td><code>q_gas = max(0, k_p * (P_gas - P_atm))</code></td>
+<td>Gas leaves only when calculated gas pressure exceeds atmospheric pressure.</td>
+</tr>
+<tr>
+<td>Final derivative</td>
+<td><code>dc/dt = S v(c, theta) + flow terms</code></td>
+<td>This is the vector returned to <code>scipy.integrate.solve_ivp</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The implemented derivative can be written as:</p>
+<pre><code class="language-text">c = current state vector
+c_in = inlet state vector
+S = stoichiometric matrix
+v = reaction-rate vector
+
+r = S @ v
+
+for liquid states:
+    dc_liq/dt = r_liq + (q_in / V_liq) * (c_in,liq - c_liq)
+
+for gas states:
+    dc_gas/dt = r_gas + (q_gas / V_gas) * (c_in,gas - c_gas)
+</code></pre>
+<p>The gas states are the final three species in both models:</p>
+<pre><code class="language-text">S_gas_h2, S_gas_ch4, S_gas_co2
+</code></pre>
+<p>The gas pressure and gas outflow equations are:</p>
+<pre><code class="language-text">p_gas_h2  = S_gas_h2  * R * T_op / 16
+p_gas_ch4 = S_gas_ch4 * R * T_op / 64
+p_gas_co2 = S_gas_co2 * R * T_op
+p_gas_h2o = 0.0313 * exp(5290 * (1 / T_base - 1 / T_op))
+
+P_gas = p_gas_h2 + p_gas_ch4 + p_gas_co2 + p_gas_h2o
+q_gas = max(0, k_p * (P_gas - P_atm))
+</code></pre>
+<p>For any reaction <code>j</code>, the instantaneous contribution to species <code>i</code> is:</p>
+<pre><code class="language-text">dc_i/dt from reaction j = S[i, j] * v_j
+</code></pre>
+<p>This is why reaction and species names are used to build <code>S</code>: the equations are much easier to audit than when the matrix is filled with positional numbers.</p>
+<h2 id="reaction-rate-forms">Reaction Rate Forms</h2>
+<table>
+<thead>
+<tr>
+<th>Reaction type</th>
+<th>Formula pattern</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>First-order conversion</td>
+<td><code>v_j = k * X</code></td>
+<td>Disintegration, hydrolysis, and decay reactions.</td>
+</tr>
+<tr>
+<td>Single-substrate uptake</td>
+<td><code>v_j = k_m * S_a / (K_S + S_a) * X * I</code></td>
+<td>Sugar, amino acid, LCFA, acetate, hydrogen, ethanol, lactate, and VFA uptake reactions.</td>
+</tr>
+<tr>
+<td>Competitive ADM1 C4 uptake</td>
+<td><code>v_j = k_m * S_a / (K_S + S_a) * X_c4 * S_a / (S_va + S_bu + eps) * I</code></td>
+<td>ADM1 valerate and butyrate uptake.</td>
+</tr>
+<tr>
+<td>Two-substrate uptake</td>
+<td><code>v_j = k_m * S_a * S_b / (K_a * S_a + K_b * S_b + S_a * S_b + eps) * X * I</code></td>
+<td>e-ADM syntrophic reactions that require paired substrates.</td>
+</tr>
+<tr>
+<td>Inhibition or limitation</td>
+<td><code>I = product(I_pH, I_H2, I_NH3, I_IN, ...)</code></td>
+<td>Multiplies uptake rates to suppress a reaction under limiting or inhibitory conditions.</td>
+</tr>
+<tr>
+<td>Acid/base kinetic form</td>
+<td><code>v_AB = k_AB * (S_ion * (K_a + S_H) - K_a * S_total)</code></td>
+<td>Kinetic acid/base reactions when the state is not solved algebraically.</td>
+</tr>
+<tr>
+<td>DAE acid/base update</td>
+<td><code>S_ion = K_a / (K_a + S_H) * S_total</code></td>
+<td>Algebraic speciation used when <code>model.switch == "DAE"</code>.</td>
+</tr>
+<tr>
+<td>Gas transfer</td>
+<td><code>v_gas = k_La * (S_liq - H * p_gas)</code></td>
+<td>Transfer between dissolved gas states and headspace gas states.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="acidbase-equations">Acid/Base Equations</h3>
+<p>ADM1 and e-ADM both calculate kinetic acid/base rates, then set selected acid/base derivatives to zero in DAE mode. The kinetic form is:</p>
+<pre><code class="language-text">v_AB,acid = k_A_B,acid * (S_ion * (K_a,acid + S_H) - K_a,acid * S_total)
+</code></pre>
+<p>For carbonate and inorganic nitrogen:</p>
+<pre><code class="language-text">v_AB,co2 = k_A_B_co2 * (S_hco3_ion * (K_a_co2 + S_H) - K_a_co2 * S_IC)
+v_AB,IN  = k_A_B_IN  * (S_nh3      * (K_a_IN  + S_H) - K_a_IN  * S_IN)
+</code></pre>
+<p>In DAE mode, ionized species are updated algebraically. e-ADM explicitly updates:</p>
+<pre><code class="language-text">S_va_ion  = K_a_va  / (K_a_va  + S_H) * S_va
+S_bu_ion  = K_a_bu  / (K_a_bu  + S_H) * S_bu
+S_pro_ion = K_a_pro / (K_a_pro + S_H) * S_pro
+S_cap_ion = K_a_cap / (K_a_cap + S_H) * S_cap
+S_ac_ion  = K_a_ac  / (K_a_ac  + S_H) * S_ac
+S_lac_ion = K_a_lac / (K_a_lac + S_H) * S_lac
+S_hco3_ion = S_IC - S_co2
+</code></pre>
+<p>Hydrogen ion concentration is calculated from electroneutrality unless it is controlled:</p>
+<pre><code class="language-text">S_H = -phi / 2 + 0.5 * sqrt(phi^2 + 4 * K_w)
+</code></pre>
+<p>When <code>S_H_ion</code> is included in <code>control_state</code>, the controlled value is used and <code>dS_H_ion/dt = 0</code>.</p>
+<h3 id="inhibition-equations">Inhibition Equations</h3>
+<p>The pH inhibition terms use Hill-type functions:</p>
+<pre><code class="language-text">I_pH_x = K_pH_x^n_x / (S_H^n_x + K_pH_x^n_x)
+</code></pre>
+<p>Nitrogen limitation is a Monod term:</p>
+<pre><code class="language-text">I_IN_lim = S_IN / (K_S_IN + S_IN + eps)
+</code></pre>
+<p>Hydrogen and ammonia inhibition terms use:</p>
+<pre><code class="language-text">I_h2_x = 1 / (1 + S_h2 / (K_I_h2_x + eps))
+I_nh3  = 1 / (1 + S_nh3 / (K_I_nh3 + eps))
+</code></pre>
+<p>ADM1 uses the same conceptual forms, with its original <code>I_IN_lim = 1 / (1 + K_S_IN / S_IN)</code> expression.</p>
+<h2 id="adm1-reactions">ADM1 Reactions</h2>
+<p>The ADM1 reactions follow the Batstone ADM1 structure: disintegration, hydrolysis, soluble-substrate uptake, biomass decay, acid/base speciation, and gas transfer.</p>
+<h3 id="adm1-stoichiometric-coefficients">ADM1 Stoichiometric Coefficients</h3>
+<p>ADM1 uses yield coefficients <code>Y_*</code>, product fractions <code>f_*</code>, carbon contents <code>C_*</code>, and nitrogen contents <code>N_*</code> to fill <code>S</code>. Nitrogen limitation sets selected yields to zero before <code>S</code> is built.</p>
+<p>For the main carbon-balance terms:</p>
+<pre><code class="language-text">Y_su = 0 if nitrogen_limited else Y_su
+Y_aa = 0 if nitrogen_limited else Y_aa
+Y_fa = 0 if nitrogen_limited else Y_fa
+
+s_1  = -C_xc + f_sI_xc*C_sI + f_ch_xc*C_ch + f_pr_xc*C_pr + f_li_xc*C_li + f_xI_xc*C_xI
+s_2  = -C_ch + C_su
+s_3  = -C_pr + C_aa
+s_4  = -C_li + (1 - f_fa_li)*C_su + f_fa_li*C_fa
+s_5  = -C_su + (1 - Y_su)*(f_bu_su*C_bu + f_pro_su*C_pro + f_ac_su*C_ac) + Y_su*C_bac
+s_6  = -C_aa + (1 - Y_aa)*(f_va_aa*C_va + f_bu_aa*C_bu + f_pro_aa*C_pro + f_ac_aa*C_ac) + Y_aa*C_bac
+s_7  = -C_fa + (1 - Y_fa)*0.7*C_ac + Y_fa*C_bac
+s_8  = -C_va + (1 - Y_c4)*0.54*C_pro + (1 - Y_c4)*0.31*C_ac + Y_c4*C_bac
+s_9  = -C_bu + (1 - Y_c4)*0.8*C_ac + Y_c4*C_bac
+s_10 = -C_pro + (1 - Y_pro)*0.57*C_ac + Y_pro*C_bac
+s_11 = -C_ac + (1 - Y_ac)*C_ch4 + Y_ac*C_bac
+s_12 = (1 - Y_h2)*C_ch4 + Y_h2*C_bac
+s_13 = -C_bac + C_xc
+</code></pre>
+<p>These terms are inserted into the <code>S_IC</code> row with negative signs for conversion reactions and positive return through decay. For example:</p>
+<pre><code class="language-text">S[S_IC, Uptake of sugars] = -s_5
+S[S_IC, Uptake of acetate] = -s_11
+S[S_IC, Decay of Xsu] = -s_13
+</code></pre>
+<p>Nitrogen stoichiometry follows the same pattern:</p>
+<pre><code class="language-text">S[S_IN, Uptake of sugars] = -Y_su * N_bac
+S[S_IN, Uptake of amino acids] = N_aa - Y_aa * N_bac
+S[S_IN, Uptake of acetate] = -Y_ac * N_bac
+S[S_IN, Decay of Xsu] = N_bac - N_xc
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Reaction</th>
+<th>Rate expression</th>
+<th>Main conversion represented in <code>S</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Disintegration</code></td>
+<td><code>k_dis * X_xc</code></td>
+<td>Composite particulate matter <code>X_xc</code> is split into carbohydrates <code>X_ch</code>, proteins <code>X_pr</code>, lipids <code>X_li</code>, soluble inert <code>S_I</code>, particulate inert <code>X_I</code>, inorganic carbon <code>S_IC</code>, and inorganic nitrogen <code>S_IN</code>.</td>
+</tr>
+<tr>
+<td><code>Hydrolysis carbohydrates</code></td>
+<td><code>k_hyd_ch * X_ch</code></td>
+<td>Particulate carbohydrates become soluble sugars <code>S_su</code>, with carbon correction through <code>S_IC</code>.</td>
+</tr>
+<tr>
+<td><code>Hydrolysis of proteins</code></td>
+<td><code>k_hyd_pr * X_pr</code></td>
+<td>Particulate proteins become amino acids <code>S_aa</code>, with carbon correction through <code>S_IC</code>.</td>
+</tr>
+<tr>
+<td><code>Hydrolysis of lipids</code></td>
+<td><code>k_hyd_li * X_li</code></td>
+<td>Lipids split into LCFA <code>S_fa</code> and sugars <code>S_su</code>, with carbon correction through <code>S_IC</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of sugars</code></td>
+<td><code>k_m_su * S_su / (K_S_su + S_su) * X_su * I5</code></td>
+<td>Sugars are consumed to grow <code>X_su</code> and produce butyrate <code>S_bu</code>, propionate <code>S_pro</code>, acetate <code>S_ac</code>, hydrogen <code>S_h2</code>, inorganic carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of amino acids</code></td>
+<td><code>k_m_aa * S_aa / (K_S_aa + S_aa) * X_aa * I6</code></td>
+<td>Amino acids are consumed to grow <code>X_aa</code> and produce valerate <code>S_va</code>, butyrate, propionate, acetate, hydrogen, inorganic carbon, and inorganic nitrogen.</td>
+</tr>
+<tr>
+<td><code>Uptake of LCFA</code></td>
+<td><code>k_m_fa * S_fa / (K_S_fa + S_fa) * X_fa * I7</code></td>
+<td>LCFA are consumed to grow <code>X_fa</code> and produce acetate, hydrogen, inorganic carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of valerate</code></td>
+<td><code>k_m_c4 * S_va / (K_S_c4 + S_va) * X_c4 * S_va / (S_va + S_bu + eps) * I8</code></td>
+<td>Valerate is consumed by <code>X_c4</code>, producing propionate, acetate, hydrogen, biomass, carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of butyrate</code></td>
+<td><code>k_m_c4 * S_bu / (K_S_c4 + S_bu) * X_c4 * S_bu / (S_bu + S_va + eps) * I9</code></td>
+<td>Butyrate is consumed by <code>X_c4</code>, producing acetate, hydrogen, biomass, carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of propionate</code></td>
+<td><code>k_m_pr * S_pro / (K_S_pro + S_pro) * X_pro * I10</code></td>
+<td>Propionate is consumed to grow <code>X_pro</code> and produce acetate, hydrogen, carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of acetate</code></td>
+<td><code>k_m_ac * S_ac / (K_S_ac + S_ac) * X_ac * I11</code></td>
+<td>Acetate is consumed by acetoclastic methanogens, producing methane <code>S_ch4</code>, <code>X_ac</code>, carbon correction, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of Hydrogen</code></td>
+<td><code>k_m_h2 * S_h2 / (K_S_h2 + S_h2) * X_h2 * I12</code></td>
+<td>Hydrogen is consumed by hydrogenotrophic methanogens, producing methane <code>S_ch4</code>, <code>X_h2</code>, carbon correction, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Decay of Xsu</code></td>
+<td><code>k_dec_X_su * X_su</code></td>
+<td>Sugar degraders decay back to composite particulate matter <code>X_xc</code>, with carbon and nitrogen returned through <code>S_IC</code> and <code>S_IN</code>.</td>
+</tr>
+<tr>
+<td><code>Decay of Xaa</code></td>
+<td><code>k_dec_X_aa * X_aa</code></td>
+<td>Amino acid degraders decay to <code>X_xc</code>, with carbon and nitrogen returned.</td>
+</tr>
+<tr>
+<td><code>Decay of Xfa</code></td>
+<td><code>k_dec_X_fa * X_fa</code></td>
+<td>LCFA degraders decay to <code>X_xc</code>, with carbon and nitrogen returned.</td>
+</tr>
+<tr>
+<td><code>Decay of Xc4</code></td>
+<td><code>k_dec_X_c4 * X_c4</code></td>
+<td>C4 degraders decay to <code>X_xc</code>, with carbon and nitrogen returned.</td>
+</tr>
+<tr>
+<td><code>Decay of Xpro</code></td>
+<td><code>k_dec_X_pro * X_pro</code></td>
+<td>Propionate degraders decay to <code>X_xc</code>, with carbon and nitrogen returned.</td>
+</tr>
+<tr>
+<td><code>Decay of Xac</code></td>
+<td><code>k_dec_X_ac * X_ac</code></td>
+<td>Acetoclastic methanogens decay to <code>X_xc</code>, with carbon and nitrogen returned.</td>
+</tr>
+<tr>
+<td><code>Decay of Xh2</code></td>
+<td><code>k_dec_X_h2 * X_h2</code></td>
+<td>Hydrogenotrophic methanogens decay to <code>X_xc</code>, with carbon and nitrogen returned.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Va)</code></td>
+<td><code>k_A_B_va * (S_va_ion * (K_a_va + S_H) - K_a_va * S_va)</code></td>
+<td>Valerate speciation between total valerate <code>S_va</code> and ionized valerate <code>S_va_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Bu)</code></td>
+<td><code>k_A_B_bu * (S_bu_ion * (K_a_bu + S_H) - K_a_bu * S_bu)</code></td>
+<td>Butyrate speciation between <code>S_bu</code> and <code>S_bu_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Pro)</code></td>
+<td><code>k_A_B_pro * (S_pro_ion * (K_a_pro + S_H) - K_a_pro * S_pro)</code></td>
+<td>Propionate speciation between <code>S_pro</code> and <code>S_pro_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Ac)</code></td>
+<td><code>k_A_B_ac * (S_ac_ion * (K_a_ac + S_H) - K_a_ac * S_ac)</code></td>
+<td>Acetate speciation between <code>S_ac</code> and <code>S_ac_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (CO2)</code></td>
+<td><code>k_A_B_co2 * (S_hco3_ion * (K_a_co2 + S_H) - K_a_co2 * S_IC)</code></td>
+<td>Carbonate speciation through bicarbonate <code>S_hco3_ion</code> and inorganic carbon <code>S_IC</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (In)</code></td>
+<td><code>k_A_B_IN * (S_nh3 * (K_a_IN + S_H) - K_a_IN * S_IN)</code></td>
+<td>Nitrogen speciation between ammonia <code>S_nh3</code>, ammonium <code>S_nh4_ion</code>, and total inorganic nitrogen <code>S_IN</code>.</td>
+</tr>
+<tr>
+<td><code>Gas Transfer H2</code></td>
+<td><code>k_L_a * (S_h2 - 16 * K_H_h2 * p_gas_h2)</code></td>
+<td>Dissolved hydrogen leaves the liquid and enters <code>S_gas_h2</code> with <code>V_liq / V_gas</code> scaling.</td>
+</tr>
+<tr>
+<td><code>Gas Transfer CH4</code></td>
+<td><code>k_L_a * (S_ch4 - 64 * K_H_ch4 * p_gas_ch4)</code></td>
+<td>Dissolved methane leaves the liquid and enters <code>S_gas_ch4</code> with <code>V_liq / V_gas</code> scaling.</td>
+</tr>
+<tr>
+<td><code>Gas Transfer CO2</code></td>
+<td><code>k_L_a * (S_co2 - K_H_co2 * p_gas_co2)</code></td>
+<td>Dissolved carbon dioxide leaves the liquid and enters <code>S_gas_co2</code> with <code>V_liq / V_gas</code> scaling.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="adm1-inhibition-factors">ADM1 Inhibition Factors</h3>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Formula pattern</th>
+<th>Applied to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>I5</code></td>
+<td><code>I_pH_aa * I_IN_lim</code></td>
+<td>Sugar uptake.</td>
+</tr>
+<tr>
+<td><code>I6</code></td>
+<td><code>I5</code></td>
+<td>Amino acid uptake.</td>
+</tr>
+<tr>
+<td><code>I7</code></td>
+<td><code>I_pH_aa * I_IN_lim * I_h2_fa</code></td>
+<td>LCFA uptake.</td>
+</tr>
+<tr>
+<td><code>I8</code>, <code>I9</code></td>
+<td><code>I_pH_aa * I_IN_lim * I_h2_c4</code></td>
+<td>Valerate and butyrate uptake.</td>
+</tr>
+<tr>
+<td><code>I10</code></td>
+<td><code>I_pH_aa * I_IN_lim * I_h2_pro</code></td>
+<td>Propionate uptake.</td>
+</tr>
+<tr>
+<td><code>I11</code></td>
+<td><code>I_pH_ac * I_IN_lim * I_nh3</code></td>
+<td>Acetate uptake.</td>
+</tr>
+<tr>
+<td><code>I12</code></td>
+<td><code>I_pH_h2 * I_IN_lim</code></td>
+<td>Hydrogen uptake.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="e-adm-reactions">e-ADM Reactions</h2>
+<p>e-ADM keeps the same dynamic structure but expands the soluble fermentation network. It separates ethanol-linked and lactate-linked routes, adds caproate, lactate, ethanol, explicit TSS/TDS disintegration, and two methanogenesis routes.</p>
+<h3 id="e-adm-stoichiometric-coefficients">e-ADM Stoichiometric Coefficients</h3>
+<p>e-ADM uses the same matrix logic as ADM1, but most soluble conversions are written as explicit product fractions plus a carbon-balance residual. Selected yields are set to zero under nitrogen limitation.</p>
+<p>For sugar, amino acid, and LCFA uptake:</p>
+<pre><code class="language-text">Y_su = 0 if nitrogen_limited else Y_su
+Y_aa = 0 if nitrogen_limited else Y_aa
+Y_fa = 0 if nitrogen_limited else Y_fa
+
+f_ac_su = 1 - f_pro_su - f_et_su - f_lac_su
+f_ac_aa = 1 - f_pro_aa - f_et_aa - f_lac_aa
+f_ac_fa = 1 - f_pro_fa - f_et_fa - f_lac_fa
+
+f_IC_su = -(-C_su + (1-Y_su)*f_pro_su*C_pro + (1-Y_su)*f_et_su*C_et
+              + (1-Y_su)*f_lac_su*C_lac + (1-Y_su)*f_ac_su*C_ac + Y_su*C_bac)
+
+f_IC_aa = -(-C_aa + (1-Y_aa)*f_pro_aa*C_pro + (1-Y_aa)*f_et_aa*C_et
+              + (1-Y_aa)*f_lac_aa*C_lac + (1-Y_aa)*f_ac_aa*C_ac + Y_aa*C_bac)
+
+f_IC_fa = -(-C_fa + (1-Y_fa)*f_pro_fa*C_pro + (1-Y_fa)*f_et_fa*C_et
+              + (1-Y_fa)*f_lac_fa*C_lac + (1-Y_fa)*f_ac_fa*C_ac + Y_fa*C_bac)
+</code></pre>
+<p>For chain elongation and VFA conversion, e-ADM uses paired substrate routes:</p>
+<pre><code class="language-text">f_IC_ac_et  = -(-C_ac  + f_et_ac*C_et  + (1-f_et_ac-Y_ac_et)*f_bu_ac*C_bu  + Y_ac_et*C_bac)
+f_IC_ac_lac = -(-C_ac  + f_lac_ac*C_lac + (1-f_lac_ac-Y_ac_lac)*f_bu_ac*C_bu + Y_ac_lac*C_bac)
+
+f_IC_pro_et  = -(-C_pro + f_et_pro*C_et  + (1-f_et_pro-Y_pro_et)*f_va_pro*C_va  + Y_pro_et*C_bac)
+f_IC_pro_lac = -(-C_pro + f_lac_pro*C_lac + (1-f_lac_pro-Y_pro_lac)*f_va_pro*C_va + Y_pro_lac*C_bac)
+
+f_IC_bu_et  = -(-C_bu + f_et_bu*C_et  + (1-f_et_bu-Y_bu_et)*f_cap_bu*C_cap  + Y_bu_et*C_bac)
+f_IC_bu_lac = -(-C_bu + f_lac_bu*C_lac + (1-f_lac_bu-Y_bu_lac)*f_cap_bu*C_cap + Y_bu_lac*C_bac)
+</code></pre>
+<p>Methanogenesis and oxidation use:</p>
+<pre><code class="language-text">f_IC_Me_ach2 = -(f_ac_h2*C_ac + (1 - Y_Me_ac)*C_ch4 + Y_Me_ac*C_bac)
+f_IC_et_ox   = -(-C_et  + (1-Y_ac_et_ox)*C_bac + Y_ac_et_ox*C_ac)
+f_IC_lac_ox  = -(-C_lac + (1-Y_pro_lac_ox)*C_bac + Y_pro_lac_ox*C_pro)
+</code></pre>
+<p>The stoichiometric matrix then combines these residuals with explicit product coefficients. For example:</p>
+<pre><code class="language-text">S[S_su, Uptake of sugars] = -1
+S[S_pro, Uptake of sugars] = (1 - Y_su) * f_pro_su
+S[S_et, Uptake of sugars] = (1 - Y_su) * f_et_su
+S[S_lac, Uptake of sugars] = (1 - Y_su) * f_lac_su
+S[S_ac, Uptake of sugars] = (1 - Y_su) * f_ac_su
+S[S_IN, Uptake of sugars] = -Y_su * N_bac
+S[S_IC, Uptake of sugars] = f_IC_su
+S[X_su, Uptake of sugars] = Y_su
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Reaction</th>
+<th>Rate expression</th>
+<th>Main conversion represented in <code>S</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TSS_Disintegration</code></td>
+<td><code>k_dis_TSS * TSS</code></td>
+<td>Total suspended solids are split into <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, and inert particulate biomass <code>X_I</code> using feed fractions.</td>
+</tr>
+<tr>
+<td><code>TDS_Disintegration</code></td>
+<td><code>k_dis_TDS * TDS</code></td>
+<td>Total dissolved solids are split into <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, and soluble inert <code>S_I</code> using feed fractions.</td>
+</tr>
+<tr>
+<td><code>Hydrolysis carbohydrates</code></td>
+<td><code>k_hyd_ch * X_ch</code></td>
+<td>Particulate carbohydrate is hydrolyzed to soluble sugar <code>S_su</code>.</td>
+</tr>
+<tr>
+<td><code>Hydrolysis proteins</code></td>
+<td><code>k_hyd_pr * X_pr</code></td>
+<td>Particulate protein is hydrolyzed to amino acids <code>S_aa</code>.</td>
+</tr>
+<tr>
+<td><code>Hydrolysis lipids</code></td>
+<td><code>k_hyd_li * X_li</code></td>
+<td>Particulate lipids are hydrolyzed to LCFA <code>S_fa</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of sugars</code></td>
+<td><code>k_m_su * S_su / (K_S_su + S_su) * X_su * I5</code></td>
+<td>Sugars are consumed to grow <code>X_su</code> and form propionate, ethanol, lactate, acetate, carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of amino acids</code></td>
+<td><code>k_m_aa * S_aa / (K_S_aa + S_aa) * X_aa * I6</code></td>
+<td>Amino acids are consumed to grow <code>X_aa</code> and form propionate, ethanol, lactate, acetate, inorganic carbon, and inorganic nitrogen.</td>
+</tr>
+<tr>
+<td><code>Uptake of LCFA</code></td>
+<td><code>k_m_fa * S_fa / (K_S_fa + S_fa) * X_fa * I7</code></td>
+<td>LCFA are consumed to grow <code>X_fa</code> and form propionate, ethanol, lactate, acetate, carbon, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of acetate_et</code></td>
+<td><code>k_m_ac * S_ac * S_et / (K_S_ac*S_ac + K_S_ac_et*S_et + S_ac*S_et + eps) * X_ac_et * I11</code></td>
+<td>Acetate and ethanol are converted by <code>X_ac_et</code>, producing butyrate, hydrogen, carbon correction, and new biomass.</td>
+</tr>
+<tr>
+<td><code>Uptake of acetate_lac</code></td>
+<td><code>k_m_ac * S_ac * S_lac / (K_S_ac*S_ac + K_S_ac_lac*S_lac + S_ac*S_lac + eps) * X_ac_lac * I11</code></td>
+<td>Acetate and lactate are converted by <code>X_ac_lac</code>, producing butyrate, hydrogen, carbon correction, and new biomass.</td>
+</tr>
+<tr>
+<td><code>Uptake of propionate_et</code></td>
+<td><code>k_m_pro * S_pro * S_et / (K_S_pro*S_pro + K_S_pro_et*S_et + S_pro*S_et + eps) * X_chain_et * I10</code></td>
+<td>Propionate and ethanol are converted by chain-elongating biomass, producing valerate, hydrogen, carbon correction, and <code>X_chain_et</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of propionate_lac</code></td>
+<td><code>k_m_pro * S_pro * S_lac / (K_S_pro*S_pro + K_S_pro_lac*S_lac + S_pro*S_lac + eps) * X_chain_lac * I10</code></td>
+<td>Propionate and lactate are converted by chain-elongating biomass, producing valerate, hydrogen, carbon correction, and <code>X_chain_lac</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of butyrate_et</code></td>
+<td><code>k_m_bu * S_bu * S_et / (K_S_bu*S_bu + K_S_bu_et*S_et + S_bu*S_et + eps) * X_chain_et * I14</code></td>
+<td>Butyrate and ethanol are converted to caproate, hydrogen, carbon correction, and <code>X_chain_et</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of butyrate_lac</code></td>
+<td><code>k_m_bu * S_bu * S_lac / (K_S_bu*S_bu + K_S_bu_lac*S_lac + S_bu*S_lac + eps) * X_chain_lac * I14</code></td>
+<td>Butyrate and lactate are converted to caproate, hydrogen, carbon correction, and <code>X_chain_lac</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of valerate</code></td>
+<td><code>k_m_va * S_va / (K_S_va + S_va) * X_VFA_deg * I15</code></td>
+<td>Valerate is degraded to propionate and <code>X_VFA_deg</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of caproate</code></td>
+<td><code>k_m_cap * S_cap / (K_S_cap + S_cap) * X_VFA_deg * I13</code></td>
+<td>Caproate is degraded to acetate and <code>X_VFA_deg</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of butyrate</code></td>
+<td><code>k_m_bu_deg * S_bu / (K_S_bu + S_bu) * X_VFA_deg * I13</code></td>
+<td>Butyrate is degraded to acetate and <code>X_VFA_deg</code>.</td>
+</tr>
+<tr>
+<td><code>Methanogenessis from acetate and h2</code></td>
+<td><code>k_m_h2_Me_ac * S_gas_h2 * S_ac / (K_S_h2_Me_ac*S_gas_h2 + K_S_ac_Me*S_ac + S_ac*S_gas_h2 + eps) * X_Me_ac * I12</code></td>
+<td>Acetate and gas-phase hydrogen are converted to dissolved methane <code>S_ch4</code>, methanogenic biomass <code>X_Me_ac</code>, carbon correction, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Methanogenessis from CO2 and h2</code></td>
+<td><code>k_m_h2_Me_CO2 * S_gas_h2 * S_gas_co2 / (K_S_h2_Me_CO2*S_gas_h2 + K_S_CO2_Me*S_gas_co2 + S_gas_co2*S_gas_h2 + eps) * X_Me_CO2 * I12</code></td>
+<td>Gas-phase hydrogen and carbon dioxide are converted to gas-phase methane <code>S_gas_ch4</code>, <code>X_Me_CO2</code>, gas-phase carbon dioxide change, and nitrogen demand.</td>
+</tr>
+<tr>
+<td><code>Uptake of ethanol</code></td>
+<td><code>k_m_et * S_et / (K_S_et + S_et) * X_et * I16</code></td>
+<td>Ethanol is oxidized to acetate, inorganic carbon, and <code>X_et</code>.</td>
+</tr>
+<tr>
+<td><code>Uptake of lactate</code></td>
+<td><code>k_m_lac * S_lac / (K_S_lac + S_lac) * X_lac * I16</code></td>
+<td>Lactate is oxidized to propionate, inorganic carbon, and <code>X_lac</code>.</td>
+</tr>
+<tr>
+<td><code>Decay of Xsu</code></td>
+<td><code>k_dec_X_su * X_su</code></td>
+<td>Sugar degraders decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of Xaa</code></td>
+<td><code>k_dec_X_aa * X_aa</code></td>
+<td>Amino acid degraders decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of Xfa</code></td>
+<td><code>k_dec_X_fa * X_fa</code></td>
+<td>LCFA degraders decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of X_ac_et</code></td>
+<td><code>k_dec_X_ac * X_ac_et</code></td>
+<td>Acetate-ethanol consumers decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of X_ac_lac</code></td>
+<td><code>k_dec_X_ac * X_ac_lac</code></td>
+<td>Acetate-lactate consumers decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of Xpro</code></td>
+<td>Not currently assigned in <code>e_adm_ode_sys</code></td>
+<td>Listed in the reaction set but not given a rate in the current ODE block. If kept, it behaves as zero-flux unless populated elsewhere.</td>
+</tr>
+<tr>
+<td><code>Decay of X_chain_et</code></td>
+<td><code>k_dec_X_chain_et * X_chain_et</code></td>
+<td>Ethanol-linked chain elongators decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of X_chain_lac</code></td>
+<td><code>k_dec_X_chain_lac * X_chain_lac</code></td>
+<td>Lactate-linked chain elongators decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of X_VFA_deg</code></td>
+<td><code>k_dec_X_VFA_deg * X_VFA_deg</code></td>
+<td>VFA degraders decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of X_Me_ac</code></td>
+<td><code>k_dec_X_Me_ac * X_Me_ac</code></td>
+<td>Acetate/hydrogen methanogens decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of X_Me_CO2</code></td>
+<td><code>k_dec_X_Me_CO2 * X_Me_CO2</code></td>
+<td>CO2/hydrogen methanogens decay to TSS, returning biomass carbon and nitrogen.</td>
+</tr>
+<tr>
+<td><code>Decay of Xet</code></td>
+<td><code>k_dec_X_et * X_et</code></td>
+<td>Ethanol oxidizers decay. This rate is present in the ODE; the current stoichiometric builder should be checked if this flux is expected to affect states.</td>
+</tr>
+<tr>
+<td><code>Decay of Xlac</code></td>
+<td><code>k_dec_X_lac * X_lac</code></td>
+<td>Lactate oxidizers decay. This rate is present in the ODE; the current stoichiometric builder should be checked if this flux is expected to affect states.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Va)</code></td>
+<td><code>k_A_B_va * (S_va_ion * (K_a_va + S_H) - K_a_va * S_va)</code></td>
+<td>Valerate speciation between <code>S_va</code> and <code>S_va_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Bu)</code></td>
+<td><code>k_A_B_bu * (S_bu_ion * (K_a_bu + S_H) - K_a_bu * S_bu)</code></td>
+<td>Butyrate speciation between <code>S_bu</code> and <code>S_bu_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Pro)</code></td>
+<td><code>k_A_B_pro * (S_pro_ion * (K_a_pro + S_H) - K_a_pro * S_pro)</code></td>
+<td>Propionate speciation between <code>S_pro</code> and <code>S_pro_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Cap)</code></td>
+<td><code>k_A_B_cap * (S_cap_ion * (K_a_cap + S_H) - K_a_cap * S_cap)</code></td>
+<td>Caproate speciation between <code>S_cap</code> and <code>S_cap_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Lac)</code></td>
+<td><code>k_A_B_lac * (S_lac_ion * (K_a_lac + S_H) - K_a_lac * S_lac)</code></td>
+<td>Lactate speciation between <code>S_lac</code> and <code>S_lac_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (Ac)</code></td>
+<td><code>k_A_B_ac * (S_ac_ion * (K_a_ac + S_H) - K_a_ac * S_ac)</code></td>
+<td>Acetate speciation between <code>S_ac</code> and <code>S_ac_ion</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (CO2)</code></td>
+<td><code>k_A_B_co2 * (S_hco3_ion * (K_a_co2 + S_H) - K_a_co2 * S_IC)</code></td>
+<td>Carbonate speciation through bicarbonate <code>S_hco3_ion</code> and inorganic carbon <code>S_IC</code>.</td>
+</tr>
+<tr>
+<td><code>Acid Base Equilibrium (In)</code></td>
+<td><code>k_A_B_IN * (S_nh3 * (K_a_IN + S_H) - K_a_IN * S_IN)</code></td>
+<td>Nitrogen speciation between ammonia <code>S_nh3</code>, ammonium <code>S_nh4_ion</code>, and total inorganic nitrogen <code>S_IN</code>.</td>
+</tr>
+<tr>
+<td><code>Gas Transfer H2</code></td>
+<td><code>max(0, k_L_a * (S_h2 - 16 * K_H_h2 * p_gas_h2))</code></td>
+<td>Dissolved hydrogen leaves the liquid and enters <code>S_gas_h2</code> with <code>V_liq / V_gas</code> scaling.</td>
+</tr>
+<tr>
+<td><code>Gas Transfer CH4</code></td>
+<td><code>max(0, k_L_a * (S_ch4 - 64 * K_H_ch4 * p_gas_ch4))</code></td>
+<td>Dissolved methane leaves the liquid and enters <code>S_gas_ch4</code> with <code>V_liq / V_gas</code> scaling.</td>
+</tr>
+<tr>
+<td><code>Gas Transfer CO2</code></td>
+<td><code>max(0, k_L_a * (S_co2 - K_H_co2 * p_gas_co2))</code></td>
+<td>Dissolved carbon dioxide leaves the liquid and enters <code>S_gas_co2</code> with <code>V_liq / V_gas</code> scaling.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="e-adm-inhibition-factors">e-ADM Inhibition Factors</h3>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Formula pattern</th>
+<th>Applied to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>I5</code></td>
+<td><code>I_pH_aa * I_IN_lim</code></td>
+<td>Sugar uptake.</td>
+</tr>
+<tr>
+<td><code>I6</code></td>
+<td><code>I5</code></td>
+<td>Amino acid uptake.</td>
+</tr>
+<tr>
+<td><code>I7</code></td>
+<td><code>I_pH_aa * I_IN_lim * I_h2_fa</code></td>
+<td>LCFA uptake.</td>
+</tr>
+<tr>
+<td><code>I10</code></td>
+<td><code>I_pH_pro * I_IN_lim * I_h2_pro</code></td>
+<td>Propionate plus ethanol or lactate uptake.</td>
+</tr>
+<tr>
+<td><code>I11</code></td>
+<td><code>I_pH_ac * I_IN_lim * I_nh3</code></td>
+<td>Acetate plus ethanol or lactate uptake.</td>
+</tr>
+<tr>
+<td><code>I12</code></td>
+<td><code>I_pH_h2 * I_IN_lim</code></td>
+<td>Methanogenesis.</td>
+</tr>
+<tr>
+<td><code>I13</code></td>
+<td><code>I_pH_cap * I_IN_lim * I_h2_c4</code></td>
+<td>Caproate uptake and direct butyrate degradation.</td>
+</tr>
+<tr>
+<td><code>I14</code></td>
+<td><code>I_pH_bu * I_IN_lim * I_h2_c4</code></td>
+<td>Butyrate plus ethanol or lactate uptake.</td>
+</tr>
+<tr>
+<td><code>I15</code></td>
+<td><code>I_pH_va * I_IN_lim * I_h2_c4</code></td>
+<td>Valerate uptake.</td>
+</tr>
+<tr>
+<td><code>I16</code></td>
+<td><code>I_IN_lim * I_nh3 * I_pH_aa * I_h2_oxidation</code></td>
+<td>Ethanol and lactate oxidation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="methane-producing-reactions">Methane-Producing Reactions</h2>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Methane-producing reactions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADM1</td>
+<td><code>Uptake of acetate</code>, <code>Uptake of Hydrogen</code></td>
+</tr>
+<tr>
+<td>e-ADM</td>
+<td><code>Methanogenessis from acetate and h2</code>, <code>Methanogenessis from CO2 and h2</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>Gas Transfer CH4</code> does not create methane. It moves methane between dissolved <code>S_ch4</code> and gas-phase <code>S_gas_ch4</code>.</p>
+<h2 id="state-vectors">State Vectors</h2>
+<h3 id="adm1-species">ADM1 Species</h3>
+<p><code>S_su</code>, <code>S_aa</code>, <code>S_fa</code>, <code>S_va</code>, <code>S_bu</code>, <code>S_pro</code>, <code>S_ac</code>, <code>S_h2</code>, <code>S_ch4</code>, <code>S_IC</code>, <code>S_IN</code>, <code>S_I</code>, <code>X_xc</code>, <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, <code>X_su</code>, <code>X_aa</code>, <code>X_fa</code>, <code>X_c4</code>, <code>X_pro</code>, <code>X_ac</code>, <code>X_h2</code>, <code>X_I</code>, <code>S_cation</code>, <code>S_anion</code>, <code>S_H_ion</code>, <code>S_va_ion</code>, <code>S_bu_ion</code>, <code>S_pro_ion</code>, <code>S_ac_ion</code>, <code>S_hco3_ion</code>, <code>S_co2</code>, <code>S_nh3</code>, <code>S_nh4_ion</code>, <code>S_gas_h2</code>, <code>S_gas_ch4</code>, <code>S_gas_co2</code></p>
+<h3 id="e-adm-species">e-ADM Species</h3>
+<p><code>S_su</code>, <code>S_aa</code>, <code>S_fa</code>, <code>S_va</code>, <code>S_bu</code>, <code>S_pro</code>, <code>S_et</code>, <code>S_lac</code>, <code>S_cap</code>, <code>S_ac</code>, <code>S_h2</code>, <code>S_ch4</code>, <code>S_IC</code>, <code>S_IN</code>, <code>S_I</code>, <code>TSS</code>, <code>TDS</code>, <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, <code>X_su</code>, <code>X_aa</code>, <code>X_ac_et</code>, <code>X_ac_lac</code>, <code>X_fa</code>, <code>X_VFA_deg</code>, <code>X_et</code>, <code>X_lac</code>, <code>X_chain_et</code>, <code>X_chain_lac</code>, <code>X_Me_ac</code>, <code>X_Me_CO2</code>, <code>X_I</code>, <code>S_cation</code>, <code>S_anion</code>, <code>S_H_ion</code>, <code>S_va_ion</code>, <code>S_bu_ion</code>, <code>S_pro_ion</code>, <code>S_cap_ion</code>, <code>S_lac_ion</code>, <code>S_ac_ion</code>, <code>S_hco3_ion</code>, <code>S_co2</code>, <code>S_nh3</code>, <code>S_nh4_ion</code>, <code>S_gas_h2</code>, <code>S_gas_ch4</code>, <code>S_gas_co2</code></p>
+<h2 id="minimal-cli-run">Minimal CLI Run</h2>
+<pre><code class="language-bash">adtoolbox ADM adm1 --models-json /path/to/ADToolbox/models.json --report csv
+</code></pre>
+<pre><code class="language-bash">adtoolbox ADM e-adm --models-json /path/to/ADToolbox/models.json --report csv
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

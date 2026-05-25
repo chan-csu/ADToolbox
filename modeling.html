@@ -7777,7 +7777,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>You built your first model successfully! Now lets use a prebuilt ADM model to analyze. Here we will use e-adm2 which is an extended version of ADM1 that includes more details on VFA metabolism</p>
+<p>You built your first model successfully! Now lets use a prebuilt ADM model to analyze. Here we will use e-ADM which is an extended version of ADM1 that includes more details on VFA metabolism</p>
 </div>
 </div>
 </div>
@@ -7804,7 +7804,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">db</span><span class="o">=</span><span class="n">core</span><span class="o">.</span><span class="n">Database</span><span class="p">(</span><span class="n">configs</span><span class="o">.</span><span class="n">Database</span><span class="p">(</span><span class="n">adm_parameters_urls</span><span class="o">=</span><span class="n">configs</span><span class="o">.</span><span class="n">E_ADM_2_REMOTE</span><span class="p">,</span><span class="n">adm_parameters</span><span class="o">=</span><span class="n">configs</span><span class="o">.</span><span class="n">E_ADM_2_LOCAL</span><span class="p">))</span> <span class="c1">#To make sure the parameters are up to date</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">db</span><span class="o">=</span><span class="n">core</span><span class="o">.</span><span class="n">Database</span><span class="p">(</span><span class="n">configs</span><span class="o">.</span><span class="n">Database</span><span class="p">(</span><span class="n">adm_parameters_urls</span><span class="o">=</span><span class="n">configs</span><span class="o">.</span><span class="n">E_ADM_REMOTE</span><span class="p">,</span><span class="n">adm_parameters</span><span class="o">=</span><span class="n">configs</span><span class="o">.</span><span class="n">E_ADM_LOCAL</span><span class="p">))</span> <span class="c1">#To make sure the parameters are up to date</span>
 <span class="n">db</span><span class="o">.</span><span class="n">download_adm_parameters</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -7818,7 +7818,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>As an example, we want to compare gas production between three microbiomes explored in Ding et al. The data for this study is added to the database before (see Parameter Tuning notebook). First lets load the model parameters.The address to the parameter files are in E_ADM_2_LOCAL variable in the configs module and they are in json format. You can either load the files one by one or use a helper function like below:</p>
+<p>As an example, we want to compare gas production between three microbiomes explored in Ding et al. The data for this study is added to the database before (see Parameter Tuning notebook). First lets load the model parameters.The address to the parameter files are in E_ADM_LOCAL variable in the configs module and they are in json format. You can either load the files one by one or use a helper function like below:</p>
 </div>
 </div>
 </div>
@@ -7830,7 +7830,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">params</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">load_multiple_json_files</span><span class="p">(</span><span class="n">configs</span><span class="o">.</span><span class="n">E_ADM_2_LOCAL</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">params</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">load_multiple_json_files</span><span class="p">(</span><span class="n">configs</span><span class="o">.</span><span class="n">E_ADM_LOCAL</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7951,8 +7951,8 @@ a.anchor-link {
         <span class="n">inlet_conditions</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">inlet_conditions</span><span class="p">,</span>
         <span class="n">species</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">species</span><span class="p">,</span>
         <span class="n">reactions</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">reactions</span><span class="p">,</span>
-        <span class="n">build_stoichiometric_matrix</span><span class="o">=</span><span class="n">adm</span><span class="o">.</span><span class="n">build_e_adm_2_stoichiometric_matrix</span><span class="p">,</span>
-        <span class="n">ode_system</span><span class="o">=</span><span class="n">adm</span><span class="o">.</span><span class="n">e_adm_2_ode_sys</span><span class="p">,</span>
+        <span class="n">build_stoichiometric_matrix</span><span class="o">=</span><span class="n">adm</span><span class="o">.</span><span class="n">build_e_adm_stoichiometric_matrix</span><span class="p">,</span>
+        <span class="n">ode_system</span><span class="o">=</span><span class="n">adm</span><span class="o">.</span><span class="n">e_adm_ode_sys</span><span class="p">,</span>
         <span class="n">feed</span><span class="o">=</span><span class="n">feed</span><span class="p">,</span>
         <span class="n">control_state</span><span class="o">=</span><span class="p">{</span><span class="s1">'S_H_ion'</span><span class="p">:</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">6.5</span><span class="p">)},</span>
         <span class="p">)</span>
