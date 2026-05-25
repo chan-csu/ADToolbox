@@ -1,0 +1,132 @@
+{
+  "foodwaste_for_16s_analysis": {
+    "name": "Foodwaste_for_16s_analysis",
+    "carbohydrates": 50.1,
+    "lipids": 21.5,
+    "proteins": 20.5,
+    "tss": 30.0,
+    "si": 47.0,
+    "xi": 22.5,
+    "reference": "https://doi.org/10.1021/acssuschemeng.2c04080|http://dx.doi.org/10.1016/B978-0-12-819148-4.00002-6|https://doi.org/10.1016/j.biortech.2015.02.034"
+  },
+  "cellulosic_medium": {
+    "name": "Cellulosic Medium",
+    "carbohydrates": 100.0,
+    "lipids": 0.0,
+    "proteins": 0.0,
+    "tss": 100.0,
+    "si": 0.0,
+    "xi": 0.0,
+    "reference": "https://doi.org/10.1016/j.biortech.2020.124532"
+  },
+  "slurry": {
+    "name": "Slurry",
+    "carbohydrates": 20.89552239,
+    "lipids": 10.64676617,
+    "proteins": 68.45771144,
+    "tss": 32.5,
+    "si": 0.0,
+    "xi": 3.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105212"
+  },
+  "greases": {
+    "name": "Greases",
+    "carbohydrates": 29.52952953,
+    "lipids": 64.06406406,
+    "proteins": 6.406406406,
+    "tss": 26.5138154,
+    "si": 0.0,
+    "xi": 11.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105213"
+  },
+  "i_sludge": {
+    "name": "I Sludge",
+    "carbohydrates": 54.9,
+    "lipids": 26.0,
+    "proteins": 19.1,
+    "tss": 1.624548736,
+    "si": 0.0,
+    "xi": 3.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105214"
+  },
+  "ii_sludge": {
+    "name": "II Sludge",
+    "carbohydrates": 40.2,
+    "lipids": 13.7,
+    "proteins": 46.1,
+    "tss": 39.61054967,
+    "si": 0.0,
+    "xi": 8.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105215"
+  },
+  "vinasses": {
+    "name": "Vinasses",
+    "carbohydrates": 61.4,
+    "lipids": 15.2,
+    "proteins": 23.4,
+    "tss": 25.35866615,
+    "si": 0.0,
+    "xi": 37.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105216"
+  },
+  "biowaste": {
+    "name": "Biowaste",
+    "carbohydrates": 40.45954046,
+    "lipids": 40.15984016,
+    "proteins": 19.38061938,
+    "tss": 43.65626267,
+    "si": 0.0,
+    "xi": 3.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105217"
+  },
+  "feed_residues": {
+    "name": "Feed-residues",
+    "carbohydrates": 72.1,
+    "lipids": 9.6,
+    "proteins": 18.3,
+    "tss": 21.93664077,
+    "si": 0.0,
+    "xi": 27.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105218"
+  },
+  "silage": {
+    "name": "Silage",
+    "carbohydrates": 85.11488511,
+    "lipids": 7.092907093,
+    "proteins": 7.792207792,
+    "tss": 3.306120086,
+    "si": 0.0,
+    "xi": 17.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105219"
+  },
+  "horse_feed": {
+    "name": "Horse-feed",
+    "carbohydrates": 72.0,
+    "lipids": 10.7,
+    "proteins": 17.3,
+    "tss": 60.45772409,
+    "si": 0.0,
+    "xi": 28.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105220"
+  },
+  "manure": {
+    "name": "Manure",
+    "carbohydrates": 79.1,
+    "lipids": 4.7,
+    "proteins": 16.2,
+    "tss": 3.382641978,
+    "si": 0.0,
+    "xi": 29.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105221"
+  },
+  "grape_marc": {
+    "name": "Grape-marc",
+    "carbohydrates": 63.26326326,
+    "lipids": 22.52252252,
+    "proteins": 14.21421421,
+    "tss": 98.86189538,
+    "si": 0.0,
+    "xi": 60.0,
+    "reference": "https://doi.org/10.1016/j.dib.2020.105222"
+  }
+}

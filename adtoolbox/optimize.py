@@ -1,6 +1,5 @@
 from adtoolbox import core,configs
 from adtoolbox.core import Experiment
-from adtoolbox import Main_Dir
 from adtoolbox import adm
 import pandas as pd
 import numpy as np
@@ -21,10 +20,11 @@ import logging
 import os
 from functools import lru_cache
 start_time=time.strftime("%Y-%m-%d-%H-%M-%S")
-log_dir=os.path.join(Main_Dir,"logs",f"optimize_{start_time}")
+log_base_dir = os.path.join(os.getcwd(), "logs")
+log_dir=os.path.join(log_base_dir,f"optimize_{start_time}")
 
-if not os.path.exists(os.path.join(Main_Dir,"logs")):
-    os.makedirs(os.path.join(Main_Dir,"logs"))
+if not os.path.exists(log_base_dir):
+    os.makedirs(log_base_dir)
 
 logging.basicConfig(
      filename=f"{log_dir}.log",
@@ -696,7 +696,7 @@ def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validat
     
 if __name__ == "__main__":
     import utils
-    params=utils.load_multiple_json_files(configs.E_ADM_2_LOCAL)
+    params=utils.load_multiple_json_files(configs.E_ADM_LOCAL)
     model=adm.Model(
     initial_conditions=params.initial_conditions,
     inlet_conditions=params.inlet_conditions,
@@ -706,8 +706,8 @@ if __name__ == "__main__":
     feed=adm.DEFAULT_FEED,
     base_parameters=params.base_parameters,
     control_state={},
-    build_stoichiometric_matrix=adm.build_e_adm_2_stoichiometric_matrix,
-    ode_system=adm.e_adm_2_ode_sys,
+    build_stoichiometric_matrix=adm.build_e_adm_stoichiometric_matrix,
+    ode_system=adm.e_adm_ode_sys,
     )
     db=core.Database(configs.Database())
     exp=db.get_experiment_from_experiments_db("name","")[:3]

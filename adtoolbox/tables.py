@@ -3,7 +3,6 @@ TODO:
 - kbase class design
 """
 import os
-from __init__ import Main_Dir
 import rich
 import configs
 import dash
