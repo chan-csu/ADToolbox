@@ -139,7 +139,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_5_c_delong_beto": {
     "name": "A_35_F_5_C_Delong_BETO",
@@ -281,7 +281,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_7_a_delong_beto": {
     "name": "A_35_F_7_A_Delong_BETO",
@@ -423,7 +423,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_7_b_delong_beto": {
     "name": "A_35_F_7_B_Delong_BETO",
@@ -565,7 +565,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_7_c_delong_beto": {
     "name": "A_35_F_7_C_Delong_BETO",
@@ -707,7 +707,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_9_a_delong_beto": {
     "name": "A_35_F_9_A_Delong_BETO",
@@ -849,7 +849,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_9_b_delong_beto": {
     "name": "A_35_F_9_B_Delong_BETO",
@@ -991,7 +991,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_f_9_c_delong_beto": {
     "name": "A_35_F_9_C_Delong_BETO",
@@ -1133,7 +1133,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_m_5_b_delong_beto": {
     "name": "A_35_M_5_B_Delong_BETO",
@@ -1281,7 +1281,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_m_5_c_delong_beto": {
     "name": "A_35_M_5_C_Delong_BETO",
@@ -1429,7 +1429,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_m_7_a_delong_beto": {
     "name": "A_35_M_7_A_Delong_BETO",
@@ -1571,7 +1571,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_m_9_a_delong_beto": {
     "name": "A_35_M_9_A_Delong_BETO",
@@ -1719,7 +1719,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_m_9_b_delong_beto": {
     "name": "A_35_M_9_B_Delong_BETO",
@@ -1867,7 +1867,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_35_m_9_c_delong_beto": {
     "name": "A_35_M_9_C_Delong_BETO",
@@ -2015,7 +2015,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_f_7_a_delong_beto": {
     "name": "A_45_F_7_A_Delong_BETO",
@@ -2157,7 +2157,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_f_7_b_delong_beto": {
     "name": "A_45_F_7_B_Delong_BETO",
@@ -2299,7 +2299,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_f_7_c_delong_beto": {
     "name": "A_45_F_7_C_Delong_BETO",
@@ -2441,7 +2441,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_f_9_a_delong_beto": {
     "name": "A_45_F_9_A_Delong_BETO",
@@ -2583,7 +2583,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_f_9_b_delong_beto": {
     "name": "A_45_F_9_B_Delong_BETO",
@@ -2725,7 +2725,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_f_9_c_delong_beto": {
     "name": "A_45_F_9_C_Delong_BETO",
@@ -2867,7 +2867,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_m_5_c_delong_beto": {
     "name": "A_45_M_5_C_Delong_BETO",
@@ -3015,7 +3015,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_m_7_a_delong_beto": {
     "name": "A_45_M_7_A_Delong_BETO",
@@ -3151,7 +3151,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_m_7_b_delong_beto": {
     "name": "A_45_M_7_B_Delong_BETO",
@@ -3299,7 +3299,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "a_45_m_7_c_delong_beto": {
     "name": "A_45_M_7_C_Delong_BETO",
@@ -3441,7 +3441,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_5_a_delong_beto": {
     "name": "B_35_F_5_A_Delong_BETO",
@@ -3595,7 +3595,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_5_b_delong_beto": {
     "name": "B_35_F_5_B_Delong_BETO",
@@ -3749,7 +3749,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_5_c_delong_beto": {
     "name": "B_35_F_5_C_Delong_BETO",
@@ -3903,7 +3903,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_7_a_delong_beto": {
     "name": "B_35_F_7_A_Delong_BETO",
@@ -4051,7 +4051,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_7_b_delong_beto": {
     "name": "B_35_F_7_B_Delong_BETO",
@@ -4199,7 +4199,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_7_c_delong_beto": {
     "name": "B_35_F_7_C_Delong_BETO",
@@ -4353,7 +4353,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_9_a_delong_beto": {
     "name": "B_35_F_9_A_Delong_BETO",
@@ -4507,7 +4507,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_9_b_delong_beto": {
     "name": "B_35_F_9_B_Delong_BETO",
@@ -4661,7 +4661,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_f_9_c_delong_beto": {
     "name": "B_35_F_9_C_Delong_BETO",
@@ -4815,7 +4815,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_5_a_delong_beto": {
     "name": "B_35_M_5_A_Delong_BETO",
@@ -4957,7 +4957,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_5_b_delong_beto": {
     "name": "B_35_M_5_B_Delong_BETO",
@@ -5099,7 +5099,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_5_c_delong_beto": {
     "name": "B_35_M_5_C_Delong_BETO",
@@ -5235,7 +5235,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_7_a_delong_beto": {
     "name": "B_35_M_7_A_Delong_BETO",
@@ -5377,7 +5377,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_7_b_delong_beto": {
     "name": "B_35_M_7_B_Delong_BETO",
@@ -5513,7 +5513,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_7_c_delong_beto": {
     "name": "B_35_M_7_C_Delong_BETO",
@@ -5649,7 +5649,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_9_a_delong_beto": {
     "name": "B_35_M_9_A_Delong_BETO",
@@ -5791,7 +5791,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_35_m_9_c_delong_beto": {
     "name": "B_35_M_9_C_Delong_BETO",
@@ -5933,7 +5933,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_f_5_a_delong_beto": {
     "name": "B_45_F_5_A_Delong_BETO",
@@ -6087,7 +6087,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_f_7_b_delong_beto": {
     "name": "B_45_F_7_B_Delong_BETO",
@@ -6247,7 +6247,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_f_9_b_delong_beto": {
     "name": "B_45_F_9_B_Delong_BETO",
@@ -6401,7 +6401,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_m_5_a_delong_beto": {
     "name": "B_45_M_5_A_Delong_BETO",
@@ -6543,7 +6543,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_m_5_b_delong_beto": {
     "name": "B_45_M_5_B_Delong_BETO",
@@ -6685,7 +6685,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_m_5_c_delong_beto": {
     "name": "B_45_M_5_C_Delong_BETO",
@@ -6821,7 +6821,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_m_7_a_delong_beto": {
     "name": "B_45_M_7_A_Delong_BETO",
@@ -6957,7 +6957,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "b_45_m_9_a_delong_beto": {
     "name": "B_45_M_9_A_Delong_BETO",
@@ -7099,7 +7099,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_5_a_delong_beto": {
     "name": "T_55_F_5_A_Delong_BETO",
@@ -7247,7 +7247,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_5_b_delong_beto": {
     "name": "T_55_F_5_B_Delong_BETO",
@@ -7395,7 +7395,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_5_c_delong_beto": {
     "name": "T_55_F_5_C_Delong_BETO",
@@ -7543,7 +7543,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_7_a_delong_beto": {
     "name": "T_55_F_7_A_Delong_BETO",
@@ -7691,7 +7691,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_7_b_delong_beto": {
     "name": "T_55_F_7_B_Delong_BETO",
@@ -7845,7 +7845,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_9_a_delong_beto": {
     "name": "T_55_F_9_A_Delong_BETO",
@@ -7993,7 +7993,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_f_9_b_delong_beto": {
     "name": "T_55_F_9_B_Delong_BETO",
@@ -8147,7 +8147,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_5_a_delong_beto": {
     "name": "T_55_M_5_A_Delong_BETO",
@@ -8271,7 +8271,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_5_b_delong_beto": {
     "name": "T_55_M_5_B_Delong_BETO",
@@ -8419,7 +8419,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_5_c_delong_beto": {
     "name": "T_55_M_5_C_Delong_BETO",
@@ -8561,7 +8561,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_7_a_delong_beto": {
     "name": "T_55_M_7_A_Delong_BETO",
@@ -8691,7 +8691,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_7_b_delong_beto": {
     "name": "T_55_M_7_B_Delong_BETO",
@@ -8833,7 +8833,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_7_c_delong_beto": {
     "name": "T_55_M_7_C_Delong_BETO",
@@ -8963,7 +8963,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_9_b_delong_beto": {
     "name": "T_55_M_9_B_Delong_BETO",
@@ -9111,7 +9111,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "t_55_m_9_c_delong_beto": {
     "name": "T_55_M_9_C_Delong_BETO",
@@ -9259,7 +9259,7 @@
       "S_H_ion"
     ],
     "reference": "Delong_Lab_BETO_Experiment",
-    "model_name": "e_adm_2"
+    "model_name": "e_adm"
   },
   "fw_twas_rep_1": {
     "name": "fw_twas_rep_1",
