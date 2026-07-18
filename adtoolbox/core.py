@@ -317,12 +317,13 @@ class Metabolite:
             atoms = ["H", "C", "O"]
             mw = self.data['mass']+add_h*1+add_c*12+add_o*16
             for atom in atoms:
-                if re.search(atom+'\d*', self.data['formula']):
-                    if len(re.search(atom+'\d*', self.data['formula']).group()[1:]) == 0:
+                pattern = atom + r'\d*'
+                if re.search(pattern, self.data['formula']):
+                    if len(re.search(pattern, self.data['formula']).group()[1:]) == 0:
                         contents[atom] = 1
                     else:
                         contents[atom] = int(
-                            re.search(atom+'\d*', self.data['formula']).group()[1:])
+                            re.search(pattern, self.data['formula']).group()[1:])
                 else:
                     contents[atom] = 0
             contents['H']+=add_h
@@ -1577,6 +1578,13 @@ class Metagenomics:
         ### Load all the required files
         alignment_dir = str(pathlib.Path(os.path.join(output_dir,'Alignments')).absolute())
         match_table=str(pathlib.Path(os.path.join(output_dir,'matches.blast')))
+        if self.config.gtdb_dir_fasta is None:
+            raise FileNotFoundError(
+                "No GTDB/amplicon-to-genome FASTA was found. "
+                f"Looked under {self.config.amplicon2genome_db!r} for pattern {self.config.gtdb_dir!r}. "
+                "Pass --amplicon-to-genome-db to a directory containing an SSU FASTA, "
+                "or run `adtoolbox Database download-amplicon-to-genome-dbs` first."
+            )
         gtdb_dir_fasta=str(pathlib.Path(self.config.gtdb_dir_fasta))
         ### End Loading
         query=query_dir
@@ -2149,7 +2157,16 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         if backend == "local":
             if execute:
                 logger.info("Running local step %s", step_name)
-                subprocess.run(script, shell=True, check=True)
+                completed = subprocess.run(script, shell=True, capture_output=True, text=True)
+                if completed.stdout:
+                    logger.info(completed.stdout.strip())
+                if completed.stderr:
+                    logger.error(completed.stderr.strip())
+                if completed.returncode:
+                    message = completed.stderr.strip() or completed.stdout.strip() or f"Step exited with status {completed.returncode}"
+                    if len(message) > 1200:
+                        message = message[-1200:]
+                    raise RuntimeError(f"Step {step_name} failed. See {command_path}. Last output: {message}")
             else:
                 logger.info("Prepared local step %s at %s", step_name, command_path)
             return artifact
@@ -2694,18 +2711,63 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         sra_file = accession_dir / f"{accession}.sra"
         read_1 = accession_dir / f"{accession}_1.fastq"
         read_2 = accession_dir / f"{accession}_2.fastq"
-        commands = [
-            f"prefetch {self._quote(accession)} -O {self._quote(target_path)} --max-size 100000000",
-            f"fasterq-dump {self._quote(sra_file)} -O {self._quote(accession_dir)} --split-files --temp {self._quote(accession_dir)}",
-            f"rm -f {self._quote(sra_file)}",
-        ]
-        command = "\n".join(commands)
+        command = f"""set -e
+mkdir -p {self._quote(accession_dir)}
+if command -v prefetch >/dev/null 2>&1 && command -v fasterq-dump >/dev/null 2>&1; then
+  prefetch {self._quote(accession)} -O {self._quote(target_path)} --max-size 100000000
+  fasterq-dump {self._quote(sra_file)} -O {self._quote(accession_dir)} --split-3 --temp {self._quote(accession_dir)}
+  rm -f {self._quote(sra_file)}
+elif command -v curl >/dev/null 2>&1; then
+  ena_url="https://www.ebi.ac.uk/ena/portal/api/filereport?accession={self._quote(accession)}&result=read_run&fields=fastq_ftp&format=tsv&download=false"
+  fastq_ftp=$(curl -fsSL "$ena_url" | awk -F '\\t' 'NR==2 {{print $NF}}')
+  if [ -z "$fastq_ftp" ]; then
+    echo "Could not find ENA FASTQ URLs for {self._quote(accession)}" >&2
+    exit 1
+  fi
+  old_ifs=$IFS
+  IFS=';'
+  for ftp_path in $fastq_ftp; do
+    IFS=$old_ifs
+    file_name=$(basename "$ftp_path")
+    case "$ftp_path" in
+      ftp://*|https://*) download_url="$ftp_path" ;;
+      *) download_url="ftp://$ftp_path" ;;
+    esac
+    https_url=$(printf '%s' "$download_url" | sed 's#^ftp://#https://#')
+    echo "Downloading $file_name from ENA"
+    curl -fsSL --retry 3 --connect-timeout 30 "$https_url" -o {self._quote(str(accession_dir))}/"$file_name" || \
+      curl -fsSL --retry 3 --connect-timeout 30 "$download_url" -o {self._quote(str(accession_dir))}/"$file_name"
+    IFS=';'
+  done
+  IFS=$old_ifs
+else
+  echo "SRA download requires either prefetch/fasterq-dump from SRA Toolkit or curl for ENA FASTQ download." >&2
+  exit 127
+fi"""
         script = self._wrap_external_command(
             command,
             container=container,
             mounts=[target_path],
         )
         return script + "\n", {"read_1": str(read_1), "read_2": str(read_2)}
+
+    @staticmethod
+    def _resolved_sra_reads(accession: str, target_dir: str | os.PathLike, *, paired: bool) -> dict[str, str | None]:
+        accession_dir = pathlib.Path(target_dir) / accession
+        read_1_candidates = [accession_dir / f"{accession}_1.fastq", accession_dir / f"{accession}_1.fastq.gz"]
+        read_2_candidates = [accession_dir / f"{accession}_2.fastq", accession_dir / f"{accession}_2.fastq.gz"]
+        single_candidates = [accession_dir / f"{accession}.fastq", accession_dir / f"{accession}.fastq.gz"]
+        read_1 = next((path for path in read_1_candidates if path.exists()), None)
+        read_2 = next((path for path in read_2_candidates if path.exists()), None)
+        single = next((path for path in single_candidates if path.exists()), None)
+        if read_1 is not None and read_2 is not None:
+            return {"read_1": str(read_1), "read_2": str(read_2)}
+        if single is not None:
+            return {"read_1": str(single), "read_2": None}
+        if read_1 is not None and not paired:
+            return {"read_1": str(read_1), "read_2": None}
+        expected = ", ".join(str(path) for path in read_1_candidates + read_2_candidates + single_candidates)
+        raise FileNotFoundError(f"SRA download finished, but no FASTQ output was found. Expected {expected}")
 
     def run_sra_download_step(
         self,
@@ -2744,6 +2806,10 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             execute=execute,
             execution_profile=execution_profile,
         )
+        if execute:
+            reads = self._resolved_sra_reads(accession, target_dir, paired=paired)
+        elif not paired:
+            reads["read_2"] = None
         return {
             "sample_name": sample_name,
             "step": step_name,

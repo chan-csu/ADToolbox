@@ -190,6 +190,60 @@ def test_download_genome_uses_ncbi_https_layout(tmp_path):
     assert "rsync" not in script
 
 
+def test_align_to_gtdb_reports_missing_database(tmp_path):
+    config = configs.Metagenomics(amplicon2genome_db=tmp_path / "missing_gtdb")
+    metagenomics = core.Metagenomics(config)
+
+    try:
+        metagenomics.align_to_gtdb(tmp_path / "rep-seqs.fasta", tmp_path / "out")
+    except FileNotFoundError as exc:
+        assert "No GTDB/amplicon-to-genome FASTA was found" in str(exc)
+    else:
+        raise AssertionError("Expected missing GTDB database error")
+
+
+def test_sra_download_script_uses_split_3(tmp_path):
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    script, reads = metagenomics._sra_download_script(
+        accession="SRR14342342",
+        target_dir=tmp_path / "sra",
+    )
+
+    assert "--split-3" in script
+    assert "www.ebi.ac.uk/ena/portal/api/filereport" in script
+    assert "print $NF" in script
+    assert "print $1" not in script
+    assert "command -v prefetch" in script
+    assert "command -v curl" in script
+    assert "curl -fsSL --retry 3" in script
+    assert reads["read_1"].endswith("SRR14342342_1.fastq")
+    assert reads["read_2"].endswith("SRR14342342_2.fastq")
+
+
+def test_resolved_sra_reads_accepts_single_end_output(tmp_path):
+    accession_dir = tmp_path / "sra" / "SRR14342342"
+    accession_dir.mkdir(parents=True)
+    single = accession_dir / "SRR14342342.fastq"
+    single.write_text("@read_1\nACGT\n+\n!!!!\n")
+
+    reads = core.Metagenomics._resolved_sra_reads("SRR14342342", tmp_path / "sra", paired=True)
+
+    assert reads == {"read_1": str(single), "read_2": None}
+
+
+def test_resolved_sra_reads_accepts_gzipped_paired_output(tmp_path):
+    accession_dir = tmp_path / "sra" / "SRR14342342"
+    accession_dir.mkdir(parents=True)
+    read_1 = accession_dir / "SRR14342342_1.fastq.gz"
+    read_2 = accession_dir / "SRR14342342_2.fastq.gz"
+    read_1.write_text("")
+    read_2.write_text("")
+
+    reads = core.Metagenomics._resolved_sra_reads("SRR14342342", tmp_path / "sra", paired=True)
+
+    assert reads == {"read_1": str(read_1), "read_2": str(read_2)}
+
+
 def test_shotgun_reads_profile_writes_slurm_script(tmp_path):
     reads = tmp_path / "reads.fastq"
     reads.write_text("@read_1\nACGT\n+\n!!!!\n")

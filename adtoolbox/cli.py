@@ -487,6 +487,8 @@ def metagenomics_process(
         genome_alignments = _prompt_path(genome_alignments, "Genome alignments file/directory", exists=True, file_okay=True, dir_okay=True)
     if genomes_dir:
         genomes_dir = _prompt_path(genomes_dir, "Genome FASTA directory", exists=True, file_okay=False, dir_okay=True)
+    if amplicon_to_genome_db:
+        amplicon_to_genome_db = _prompt_path(amplicon_to_genome_db, "Amplicon-to-genome database directory", exists=True, file_okay=False, dir_okay=True)
     if gtdb_matches_dir:
         gtdb_matches_dir = _prompt_path(gtdb_matches_dir, "GTDB matches directory", exists=True, file_okay=False, dir_okay=True)
 
@@ -527,7 +529,7 @@ def metagenomics_process(
             normalize=normalize,
             execution_profile=execution_profile,
         )
-    except (FileNotFoundError, ValueError, KeyError) as exc:
+    except (FileNotFoundError, ValueError, KeyError, RuntimeError) as exc:
         raise click.ClickException(str(exc)) from exc
 
     rich.print(f"[green]Processed {len(result['samples'])} samples")
