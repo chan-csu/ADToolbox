@@ -1,0 +1,82 @@
+# Example execution profile for `adtoolbox Metagenomics process`.
+#
+# `backend` controls how generated external commands are handled:
+# - "local": run directly when --execute is used.
+# - "slurm": write sbatch files and submit them when --execute is used.
+# Without --execute, commands/scripts are written but not run or submitted.
+
+backend = "local"
+container = "None"
+
+[slurm]
+cpus = 8
+memory = "32G"
+time = "04:00:00"
+# partition = "general"
+# account = "my_account"
+# qos = "normal"
+# extra_sbatch = ["--mail-type=FAIL"]
+
+[steps.download_sra]
+backend = "slurm"
+container = "singularity"
+cpus = 4
+memory = "16G"
+time = "04:00:00"
+
+[steps.trim_reads]
+backend = "slurm"
+container = "singularity"
+cpus = 4
+memory = "8G"
+time = "01:00:00"
+
+[steps.trim_reads.settings]
+threads = 4
+minimum_length = 100
+error_rate = 0.1
+# quality_cutoff = "20,20"
+# forward_primer = "GTGYCAGCMGCCGCGGTAA"
+# reverse_primer = "GGACTACNVGGGTWTCTAAT"
+# adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+# adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+[steps.build_amplicon_features]
+backend = "slurm"
+container = "singularity"
+cpus = 8
+memory = "24G"
+time = "04:00:00"
+
+[steps.build_amplicon_features.settings]
+threads = 8
+identity = 0.97
+maxee = 1.0
+minimum_length = 100
+min_unique_size = 2
+chimera_filter = true
+
+[steps.align_to_gtdb]
+backend = "slurm"
+container = "singularity"
+cpus = 8
+memory = "32G"
+time = "04:00:00"
+
+[steps.align_to_gtdb.settings]
+vsearch_threads = 8
+vsearch_similarity = 0.97
+
+[steps.align_genome]
+backend = "slurm"
+container = "singularity"
+cpus = 12
+memory = "48G"
+time = "08:00:00"
+
+[steps.align_short_reads]
+backend = "slurm"
+container = "singularity"
+cpus = 24
+memory = "150G"
+time = "12:00:00"

@@ -35,7 +35,9 @@ pip install adtoolbox
 3. Use docker
 
 ```
-Not available yet
+docker build -t adtoolbox:local .
+docker run --rm adtoolbox:local adtoolbox --help
+docker run --rm -v "$PWD:/workspace" adtoolbox:local adtoolbox Metagenomics process --help
 
 ```
 
@@ -45,5 +47,4 @@ Not available yet
 My binder place holder 
 
 ```
-
 

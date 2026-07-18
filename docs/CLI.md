@@ -91,6 +91,7 @@ Metagenomics commands also take explicit inputs and output directories.
 | `align-genome` | Align one genome to a protein FASTA database. |
 | `align-multiple-genomes` | Align multiple genomes listed in a JSON manifest. |
 | `find-representative-genomes` | Find representative genomes from a repseqs FASTA file. |
+| `process` | Process a table of SRA accessions or local amplicon reads into model-ready e-ADM microbial COD allocations. |
 
 Use `--container None` for local execution, or `--container docker` / `--container singularity` when running through a container backend.
 
@@ -133,6 +134,145 @@ adtoolbox Metagenomics align-multiple-genomes \
   --protein-db ./database/Protein_DB.fasta \
   --container None
 ```
+
+### Processing Pipeline
+
+`process` is the table-driven pipeline for converting amplicon evidence into e-ADM microbial biomass/COD allocations. Each run creates one sample folder per table row under `--output-dir` containing:
+
+| File | Meaning |
+| --- | --- |
+| `cod_profile.csv` | Final normalized `X_*` allocation for the ADM model, as `sample`, `group`, `value`. |
+| `ec_counts.csv` | EC counts when the mode produces direct EC evidence, as `sample`, `ec`, `count`. |
+| `feature_abundances.csv` | Amplicon feature abundances, as `sample`, `feature_id`, `abundance`. |
+| `representative_genomes.csv` | GTDB mapping from feature IDs to representative genomes. |
+| `genome_abundances.csv` | Per-sample genome abundances after feature-to-genome aggregation. |
+| `genome_cods.csv` | Genome-level `X_*` profiles when genomes are involved, as `sample`, `genome_id`, `group`, `value`. |
+| `provenance.json` | Inputs, thresholds, databases, and artifacts used. |
+| `pipeline.log` | Step-by-step log for the sample. |
+
+By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run cutadapt, VSEARCH, and MMseqs commands.
+
+Execution behavior can be controlled with a TOML profile. The repository includes an example at `reference_data/metagenomics_pipeline.toml`.
+
+```toml
+backend = "local"
+container = "None"
+
+[steps.download_sra]
+backend = "slurm"
+container = "singularity"
+cpus = 4
+memory = "16G"
+time = "04:00:00"
+
+[steps.trim_reads]
+backend = "slurm"
+container = "singularity"
+cpus = 4
+memory = "8G"
+time = "01:00:00"
+
+[steps.trim_reads.settings]
+threads = 4
+minimum_length = 100
+error_rate = 0.1
+
+[steps.build_amplicon_features]
+backend = "slurm"
+container = "singularity"
+cpus = 8
+memory = "24G"
+time = "04:00:00"
+
+[steps.build_amplicon_features.settings]
+threads = 8
+identity = 0.97
+maxee = 1.0
+
+[steps.align_to_gtdb]
+backend = "slurm"
+container = "singularity"
+cpus = 8
+memory = "32G"
+time = "04:00:00"
+
+[steps.align_to_gtdb.settings]
+vsearch_threads = 8
+vsearch_similarity = 0.97
+
+[steps.align_genome]
+backend = "slurm"
+container = "singularity"
+cpus = 12
+memory = "48G"
+time = "08:00:00"
+
+[steps.align_short_reads]
+backend = "slurm"
+container = "singularity"
+cpus = 24
+memory = "150G"
+time = "12:00:00"
+```
+
+For SRA accessions, the input table must include `sample` and `accession` columns:
+
+```tsv
+sample	accession
+sample_01	SRR28403133
+sample_02	SRR28403134
+```
+
+Run with:
+
+```bash
+adtoolbox Metagenomics process \
+  --input ./metagenomics/sra_samples.tsv \
+  --input-type sra \
+  --output-dir ./metagenomics/process \
+  --sra-dir ./metagenomics/sra \
+  --forward-primer GTGYCAGCMGCCGCGGTAA \
+  --reverse-primer GGACTACNVGGGTWTCTAAT \
+  --amplicon-to-genome-db ./database/amplicon_to_genome \
+  --genomes-dir ./metagenomics/genomes \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+For local FASTQ/FASTQ.GZ files, the input table must include `sample`, `read_1`, and optionally `read_2`:
+
+```tsv
+sample	read_1	read_2
+sample_01	./fastq/sample_01_R1.fastq.gz	./fastq/sample_01_R2.fastq.gz
+sample_02	./fastq/sample_02_R1.fastq.gz	./fastq/sample_02_R2.fastq.gz
+```
+
+```bash
+adtoolbox Metagenomics process \
+  --input ./metagenomics/read_samples.tsv \
+  --input-type reads \
+  --output-dir ./metagenomics/process \
+  --forward-primer GTGYCAGCMGCCGCGGTAA \
+  --reverse-primer GGACTACNVGGGTWTCTAAT \
+  --amplicon-to-genome-db ./database/amplicon_to_genome \
+  --genomes-dir ./metagenomics/genomes \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+On Slurm, the safer pattern is staged execution:
+
+```bash
+adtoolbox Metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage download --output-dir ./metagenomics/process --sra-dir ./metagenomics/sra --execution-profile reference_data/metagenomics_pipeline.toml --execute
+adtoolbox Metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage preprocess --output-dir ./metagenomics/process --sra-dir ./metagenomics/sra --execution-profile reference_data/metagenomics_pipeline.toml --execute
+adtoolbox Metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage allocate --output-dir ./metagenomics/process --genomes-dir ./metagenomics/genomes --reaction-db ./database/Reaction_Metadata.csv --execution-profile reference_data/metagenomics_pipeline.toml --execute
+```
+
+Each batch run writes `batch_summary.json` under `--output-dir`.
 
 ## ADM
 

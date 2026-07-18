@@ -5,9 +5,11 @@ from collections import UserDict
 import pandas as pd
 import time
 import json
+import logging
 import numpy as np
 import re
 import requests
+import shlex
 from requests.adapters import HTTPAdapter
 import utils
 import configs
@@ -20,6 +22,7 @@ from collections import namedtuple
 import pathlib
 import asyncio
 import gzip
+import tomllib
 import configs
 from rich.progress import track,Progress
 import rich
@@ -1297,21 +1300,6 @@ class Database:
         if verbose:
             rich.print(f"[green]Feed database downloaded to {self.config.feed_db}")
     
-    def download_qiime_classifier_db(self,verbose:bool=True)->None:
-        r = requests.get(self.config.qiime_classifier_db_url, allow_redirects=True,stream=True)
-        block_size = 1024
-        total_size = int(r.headers.get('content-length', 0))
-        if not os.path.exists(Path(self.config.qiime_classifier_db).parent):
-            os.makedirs(Path(self.config.qiime_classifier_db).parent)
-        with open(self.config.qiime_classifier_db, 'wb') as f:
-            with Progress() as progress:
-                task = progress.add_task("Downloading the qiime's classifier database:", total=total_size)
-                for data in r.iter_content(block_size):
-                    progress.update(task, advance=len(data))
-                    f.write(data)
-        if verbose:
-            rich.print(f"[green]Qiime's classifier database downloaded to {self.config.qiime_classifier_db}")
-            
     def download_studies_database(self,verbose:bool=True)->None:
         """
         This function will download the required files for studies functionality.
@@ -1446,8 +1434,6 @@ class Database:
             - config.feed_db
             - config.amplicon_to_genome_db
             - config.amplicon_to_genome_urls
-            - config.qiime_classifier_db_url
-            - config.qiime_classifier_db
             - config.studies_db
             - config.studies_urls
             
@@ -1465,7 +1451,6 @@ class Database:
         self.download_feed_database(verbose=verbose)
         self.download_studies_database(verbose=verbose)
         self.download_amplicon_to_genome_db(verbose=verbose)
-        self.download_qiime_classifier_db(verbose=verbose)
         
 
 class Metagenomics:
@@ -1501,7 +1486,7 @@ class Metagenomics:
         mode:str='top_k',
         )->dict:
         """
-        This function needs three inputs from qiime:
+        This function needs three amplicon outputs:
         1. feature table: This is the abundance of each feature in each sample (TSV).
         2. taxonomy table: This is the taxonomy of each feature (TSV). 
         3. rep seqs: This is the representative sequence of each feature (fasta).
@@ -1663,13 +1648,36 @@ class Metagenomics:
         Args:
             save (bool, optional): Whether to save the json file or not. Defaults to True.
         """
-        matches = os.path.join(alignment_dir)
-        aligned=pd.read_table(matches,header=None,delimiter='\t')
-        aligned.drop_duplicates(0,inplace=True)
-        aligned[1]=aligned[1].apply(lambda x: ("_".join(x.split('_')[1:])).split("~")[0])
-        alignment_dict=dict(zip(aligned[0],aligned[1]))
+        aligned = pl.read_csv(
+            alignment_dir,
+            separator="\t",
+            has_header=False,
+            infer_schema_length=0,
+        )
+        if aligned.is_empty():
+            return {}
+        query_col, target_col = aligned.columns[:2]
+        aligned = (
+            aligned
+            .unique(subset=[query_col], keep="first")
+            .with_columns(
+                pl.col(target_col)
+                .map_elements(lambda value: ("_".join(str(value).split("_")[1:])).split("~")[0], return_dtype=pl.Utf8)
+                .alias("genome_id")
+            )
+        )
+        return dict(zip(aligned[query_col].to_list(), aligned["genome_id"].to_list()))
 
-        return alignment_dict
+    @staticmethod
+    def _ncbi_genome_path(identifier: str) -> tuple[str, str]:
+        accession = identifier.strip()
+        match = re.match(r"^(GC[AF])_?(\d+)(?:\.(\d+))?$", accession)
+        if not match:
+            raise ValueError(f"Genome accession must look like GCF_000146505.1 or GCA_937889405.1: {identifier}")
+        prefix, digits, version = match.groups()
+        normalized = f"{prefix}_{digits}.{version}" if version else f"{prefix}_{digits}"
+        chunks = "/".join(digits[i:i + 3] for i in range(0, len(digits), 3))
+        return normalized, f"{prefix}/{chunks}"
     
     
     def download_genome(self,identifier:str,output_dir:str,container:str="None")-> str:
@@ -1698,24 +1706,43 @@ class Metagenomics:
             str: The bash script that is used to download the genomes or to be used to download the genomes.
 
         """
-        base_ncbi_dir = 'rsync://ftp.ncbi.nlm.nih.gov/genomes/all/'
-        bash_script=""
-        identifier=identifier.replace("_","")
-        specific_ncbi_dir = identifier[0:3]+'/'+\
-                            identifier[3:6]+'/'+\
-                            identifier[6:9]+'/'+\
-                            identifier[9:].split('.')[0]
-            
-        genome_dir=pathlib.Path(output_dir)
-            
+        accession, accession_path = self._ncbi_genome_path(identifier)
+        genome_dir = pathlib.Path(output_dir)
+        base_url = f"https://ftp.ncbi.nlm.nih.gov/genomes/all/{accession_path}"
+        script_body = f"""set -euo pipefail
+mkdir -p {shlex.quote(str(genome_dir))}
+base_url={shlex.quote(base_url)}
+accession={shlex.quote(accession)}
+out_dir={shlex.quote(str(genome_dir))}
+assembly_dir=$(curl -fsSL "$base_url/" | sed -n 's/.*href="\\([^"]*'${{accession}}'[^"]*\\/\\)".*/\\1/p' | head -n 1)
+if [ -z "$assembly_dir" ]; then
+  echo "Could not find assembly directory for $accession under $base_url" >&2
+  exit 1
+fi
+assembly_name=${{assembly_dir%/}}
+mkdir -p "$out_dir/$assembly_name"
+genome_file=$(curl -fsSL "$base_url/$assembly_dir" | sed -n 's/.*href="\\([^"]*_genomic\\.fna\\.gz\\)".*/\\1/p' | head -n 1)
+if [ -z "$genome_file" ]; then
+  echo "Could not find genomic FASTA for $accession under $base_url/$assembly_dir" >&2
+  exit 1
+fi
+curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$genome_file"
+"""
+
         if container=="None":
-            bash_script+=('rsync -avz --progress '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
-            
-        if container=="docker":
-            bash_script+=('docker run -v '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_docker} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
-            
-        if container=="singularity":
-            bash_script+=('singularity exec -B '+str(genome_dir.parent)+':'+str(genome_dir.parent)+ f' {self.config.adtoolbox_singularity} rsync -avz --progress '+' '+base_ncbi_dir+specific_ncbi_dir+' '+str(genome_dir))
+            bash_script = script_body
+        elif container=="docker":
+            bash_script = (
+                f"docker run -v {shlex.quote(str(genome_dir))}:{shlex.quote(str(genome_dir))} "
+                f"{self.config.adtoolbox_docker} bash -lc {shlex.quote(script_body)}"
+            )
+        elif container=="singularity":
+            bash_script = (
+                f"singularity exec -B {shlex.quote(str(genome_dir))}:{shlex.quote(str(genome_dir))} "
+                f"{self.config.adtoolbox_singularity} bash -lc {shlex.quote(script_body)}"
+            )
+        else:
+            raise ValueError("container must be one of: None, docker, singularity")
         
         return bash_script,
     
@@ -1753,15 +1780,46 @@ class Metagenomics:
         Returns:
             dict[str,str]: A dictionary containing the address of the genomes that are downloaded or to be downloaded.
         """
-        base_dir = pathlib.Path(base_dir)
-        genome_info = {}
-        for genome_dir in base_dir.iterdir():
-            if genome_dir.is_dir():
-                candids=list(genome_dir.rglob(f'*{endpattern}'))
-                for candid in candids:
-                    if all([i in candid.name for i in filters["INCLUDE"]]) and all([i not in candid.name for i in filters["EXCLUDE"]]):
-                        genome_info[candid.name.replace("_genomic.fna.gz","")]=str(candid.absolute())           
-        return genome_info
+        genome_df = self.extract_genome_info_df(base_dir, endpattern=endpattern, filters=filters)
+        return dict(zip(genome_df["genome_id"].to_list(), genome_df["path"].to_list()))
+
+    def extract_genome_info_df(
+            self,
+            base_dir: str,
+            endpattern: str = "genomic.fna.gz",
+            filters: dict | None = None,
+            ) -> pl.DataFrame:
+        filters = filters or {"INCLUDE": [], "EXCLUDE": ["cds", "rna", "protein"]}
+        base_path = pathlib.Path(base_dir)
+        records = []
+        if not base_path.exists():
+            return pl.DataFrame(schema={
+                "genome_id": pl.Utf8,
+                "assembly_accession": pl.Utf8,
+                "assembly_name": pl.Utf8,
+                "path": pl.Utf8,
+            })
+        for candidate in sorted(base_path.rglob(f"*{endpattern}")):
+            name = candidate.name
+            if not all(text in name for text in filters.get("INCLUDE", [])):
+                continue
+            if any(text in name for text in filters.get("EXCLUDE", [])):
+                continue
+            genome_id = name.replace("_genomic.fna.gz", "").replace("_genomic.fna", "")
+            accession_match = re.match(r"^(GC[AF]_\d+\.\d+)", genome_id)
+            assembly_accession = accession_match.group(1) if accession_match else genome_id
+            records.append({
+                "genome_id": genome_id,
+                "assembly_accession": assembly_accession,
+                "assembly_name": candidate.parent.name,
+                "path": str(candidate.resolve()),
+            })
+        return pl.DataFrame(records, schema={
+            "genome_id": pl.Utf8,
+            "assembly_accession": pl.Utf8,
+            "assembly_name": pl.Utf8,
+            "path": pl.Utf8,
+        })
      
     def align_genome_to_protein_db(
             self,
@@ -1933,10 +1991,13 @@ class Metagenomics:
         .filter((pl.col("evalue") < self.config.e_value)&(pl.col("bits") >self.config.bit_score))
         .with_columns((pl.col("target").str.split_exact("|",1).struct[1].alias("EC")))
         .unique(["query","EC"],keep="first")
-        .groupby("EC")
-        .count()
-        ).collect(streaming=True)
-        return pd.DataFrame(df.to_dicts()).set_index("EC").to_dict()["count"]
+        .group_by("EC")
+        .len()
+        ).collect()
+        records = df.to_dicts()
+        if not records:
+            return {}
+        return {str(row["EC"]): int(row["len"]) for row in records}
     
     def get_cod_from_ec_counts(self,ec_counts:dict)->dict:
         r"""This function takes a json file that comtains ec counts and converts it to ADM microbial agents counts.
@@ -1978,6 +2039,1489 @@ class Metagenomics:
         for k,v in self.config.adm_mapping.items():
             adm_microbial_agents[v]=adm_reactions_agents[k]
         return adm_microbial_agents
+
+    def _sample_pipeline_logger(self, sample_name: str, output_dir: str | os.PathLike, verbose: bool = True) -> logging.Logger:
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        logger = logging.getLogger(f"adtoolbox.metagenomics.{sample_name}")
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
+        logger.handlers.clear()
+
+        formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        file_handler = logging.FileHandler(output_path / "pipeline.log")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+        if verbose:
+            stream_handler = logging.StreamHandler()
+            stream_handler.setFormatter(formatter)
+            logger.addHandler(stream_handler)
+        return logger
+
+    @staticmethod
+    def _load_execution_profile(profile: str | os.PathLike | dict | None) -> dict:
+        default_profile = {
+            "backend": "local",
+            "container": "None",
+            "slurm": {},
+            "steps": {},
+        }
+        if profile is None:
+            return default_profile
+        if isinstance(profile, (str, os.PathLike)):
+            with open(profile, "rb") as f:
+                loaded_profile = tomllib.load(f)
+        else:
+            loaded_profile = dict(profile)
+
+        merged = dict(default_profile)
+        merged.update({key: value for key, value in loaded_profile.items() if key not in {"slurm", "steps"}})
+        merged["slurm"] = {**default_profile["slurm"], **loaded_profile.get("slurm", {})}
+        merged["steps"] = loaded_profile.get("steps", {})
+        return merged
+
+    @staticmethod
+    def _step_settings(execution_profile: dict, step_name: str) -> dict:
+        return execution_profile.get("steps", {}).get(step_name, {})
+
+    def _step_container(self, execution_profile: dict, step_name: str, fallback: str) -> str:
+        step_settings = self._step_settings(execution_profile, step_name)
+        return str(step_settings.get("container", execution_profile.get("container", fallback)))
+
+    @staticmethod
+    def _slurm_script(
+        command: str,
+        *,
+        job_name: str,
+        log_file: str | os.PathLike,
+        global_slurm: dict,
+        step_settings: dict,
+    ) -> str:
+        cpus = step_settings.get("cpus", global_slurm.get("cpus", 1))
+        memory = step_settings.get("memory", global_slurm.get("memory", "8G"))
+        wall_time = step_settings.get("time", global_slurm.get("time", "01:00:00"))
+        partition = step_settings.get("partition", global_slurm.get("partition"))
+        account = step_settings.get("account", global_slurm.get("account"))
+        qos = step_settings.get("qos", global_slurm.get("qos"))
+
+        lines = [
+            "#!/bin/bash",
+            f"#SBATCH --job-name={job_name}",
+            f"#SBATCH --cpus-per-task={cpus}",
+            f"#SBATCH --mem={memory}",
+            f"#SBATCH --time={wall_time}",
+            f"#SBATCH --output={log_file}",
+        ]
+        if partition:
+            lines.append(f"#SBATCH --partition={partition}")
+        if account:
+            lines.append(f"#SBATCH --account={account}")
+        if qos:
+            lines.append(f"#SBATCH --qos={qos}")
+        for option in step_settings.get("extra_sbatch", global_slurm.get("extra_sbatch", [])):
+            lines.append(f"#SBATCH {option}")
+        lines.extend(["", "set -euo pipefail", command.strip(), ""])
+        return "\n".join(lines)
+
+    def _execute_step(
+        self,
+        script: str,
+        *,
+        step_name: str,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        logger: logging.Logger,
+        execute: bool,
+        execution_profile: dict,
+    ) -> dict:
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        step_settings = self._step_settings(execution_profile, step_name)
+        backend = str(step_settings.get("backend", execution_profile.get("backend", "local"))).lower()
+        command_path = output_path / f"{step_name}.sh"
+        command_path.write_text("#!/bin/bash\nset -euo pipefail\n" + script.strip() + "\n")
+
+        artifact = {
+            "backend": backend,
+            "command": str(command_path),
+            "executed": execute,
+        }
+        if backend == "local":
+            if execute:
+                logger.info("Running local step %s", step_name)
+                subprocess.run(script, shell=True, check=True)
+            else:
+                logger.info("Prepared local step %s at %s", step_name, command_path)
+            return artifact
+
+        if backend == "slurm":
+            slurm_dir = output_path / "slurm"
+            slurm_dir.mkdir(parents=True, exist_ok=True)
+            job_name = str(step_settings.get("job_name", f"adtoolbox_{sample_name}_{step_name}"))
+            sbatch_path = slurm_dir / f"{step_name}.sbatch"
+            slurm_log = slurm_dir / f"{step_name}.%j.out"
+            sbatch_path.write_text(
+                self._slurm_script(
+                    script,
+                    job_name=job_name,
+                    log_file=slurm_log,
+                    global_slurm=execution_profile.get("slurm", {}),
+                    step_settings=step_settings,
+                )
+            )
+            artifact["sbatch"] = str(sbatch_path)
+            if execute:
+                logger.info("Submitting Slurm step %s with sbatch %s", step_name, sbatch_path)
+                completed = subprocess.run(["sbatch", str(sbatch_path)], check=True, capture_output=True, text=True)
+                artifact["submission"] = completed.stdout.strip()
+            else:
+                logger.info("Prepared Slurm step %s at %s", step_name, sbatch_path)
+            return artifact
+
+        raise ValueError("Execution backend must be local or slurm")
+
+    def _apply_step_config_settings(self, execution_profile: dict, step_name: str) -> dict:
+        old_values = {}
+        for key, value in self._step_settings(execution_profile, step_name).get("settings", {}).items():
+            if hasattr(self.config, key):
+                old_values[key] = getattr(self.config, key)
+                setattr(self.config, key, value)
+        return old_values
+
+    def _restore_config_settings(self, old_values: dict) -> None:
+        for key, value in old_values.items():
+            setattr(self.config, key, value)
+
+    @staticmethod
+    def _quote(value: str | os.PathLike) -> str:
+        return shlex.quote(str(value))
+
+    def _container_image(self, container: str) -> str:
+        if container == "docker":
+            return self.config.adtoolbox_docker
+        if container == "singularity":
+            return self.config.adtoolbox_singularity
+        return ""
+
+    def _wrap_external_command(
+        self,
+        command: str,
+        *,
+        container: str,
+        mounts: Iterable[str | os.PathLike],
+    ) -> str:
+        container = str(container)
+        if container == "None":
+            return command
+
+        mount_dirs = []
+        for mount in mounts:
+            if mount is None:
+                continue
+            path = pathlib.Path(mount)
+            mount_dir = path if path.suffix == "" else path.parent
+            mount_dirs.append(str(mount_dir.absolute()))
+        mount_dirs = sorted(set(mount_dirs))
+
+        if container == "docker":
+            mount_args = " ".join(f"-v {self._quote(path)}:{self._quote(path)}" for path in mount_dirs)
+            return f"docker run {mount_args} {self._container_image(container)} sh -lc {self._quote(command)}"
+        if container == "singularity":
+            bind_args = " ".join(f"-B {self._quote(path)}:{self._quote(path)}" for path in mount_dirs)
+            return f"singularity exec {bind_args} {self._container_image(container)} sh -lc {self._quote(command)}"
+        raise ValueError("container must be one of: None, docker, singularity")
+
+    @staticmethod
+    def _write_json(path: str | os.PathLike, payload: dict) -> str:
+        path = pathlib.Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(payload, f, indent=2, sort_keys=True, default=str)
+        return str(path)
+
+    @staticmethod
+    def _write_tall_mapping(
+        path: str | os.PathLike,
+        mapping: dict,
+        *,
+        sample_name: str,
+        key_name: str,
+        value_name: str,
+        value_dtype: pl.DataType = pl.Float64,
+    ) -> str:
+        rows = [
+            {"sample": sample_name, key_name: str(key), value_name: value}
+            for key, value in mapping.items()
+        ]
+        frame = pl.DataFrame(
+            rows,
+            schema={"sample": pl.Utf8, key_name: pl.Utf8, value_name: value_dtype},
+        )
+        path = pathlib.Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frame.write_csv(path)
+        return str(path)
+
+    @staticmethod
+    def _write_tall_nested_profile(
+        path: str | os.PathLike,
+        nested: dict[str, dict[str, float]],
+        *,
+        sample_name: str,
+        entity_name: str,
+    ) -> str:
+        rows = [
+            {"sample": sample_name, entity_name: str(entity), "group": str(group), "value": float(value)}
+            for entity, profile in nested.items()
+            for group, value in profile.items()
+        ]
+        frame = pl.DataFrame(
+            rows,
+            schema={"sample": pl.Utf8, entity_name: pl.Utf8, "group": pl.Utf8, "value": pl.Float64},
+        )
+        path = pathlib.Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frame.write_csv(path)
+        return str(path)
+
+    @staticmethod
+    def _read_json_or_table(path: str | os.PathLike) -> dict:
+        path = pathlib.Path(path)
+        if path.suffix.lower() == ".json":
+            with open(path) as f:
+                return json.load(f)
+
+        sep = "\t" if path.suffix.lower() in {".tsv", ".txt"} else ","
+        table = pl.read_csv(path, separator=sep, infer_schema_length=0)
+        if table.width < 2:
+            raise ValueError(f"{path} must contain at least two columns")
+        key_candidates = ["genome_id", "feature_id", "ec", "group", table.columns[0]]
+        value_candidates = ["abundance", "count", "value", table.columns[-1]]
+        key_col = next(column for column in key_candidates if column in table.columns)
+        value_col = next(column for column in value_candidates if column in table.columns)
+        return {
+            str(row[key_col]): float(row[value_col])
+            for row in table.select([key_col, value_col]).to_dicts()
+        }
+
+    @staticmethod
+    def _read_sample_manifest(path: str | os.PathLike) -> list[dict]:
+        path = pathlib.Path(path)
+        sep = "\t" if path.suffix.lower() in {".tsv", ".txt"} else ","
+        table = pl.read_csv(path, separator=sep, infer_schema_length=0).fill_null("")
+        return table.to_dicts()
+
+    @staticmethod
+    def _row_value(row: dict, *keys: str) -> str | None:
+        normalized = {str(key).lower(): value for key, value in row.items()}
+        for key in keys:
+            value = normalized.get(key.lower())
+            if value not in (None, ""):
+                return str(value)
+        return None
+
+    @staticmethod
+    def _row_bool(row: dict, key: str, default: bool = True) -> bool:
+        value = Metagenomics._row_value(row, key)
+        if value is None:
+            return default
+        return value.strip().lower() not in {"0", "false", "no", "single", "single-end"}
+
+    @staticmethod
+    def _normalize_profile(profile: dict[str, float], keys: Iterable[str]) -> dict[str, float]:
+        normalized = {key: float(profile.get(key, 0) or 0) for key in keys}
+        total = sum(value for value in normalized.values() if value > 0)
+        if total > 0:
+            normalized = {key: value / total for key, value in normalized.items()}
+        return normalized
+
+    def _reaction_column(self, reaction_db) -> str:
+        for column in ("e_adm_Reactions", "e_adm_reactions", "Modified_ADM_Reactions"):
+            if column in reaction_db.columns:
+                return column
+        raise ValueError("Reaction database must contain an e-ADM reaction mapping column")
+
+    def cod_from_ec_counts(self, ec_counts: dict[str, int | float], normalize: bool = True) -> dict[str, float]:
+        reaction_db = pl.read_csv(self.config.csv_reaction_db).drop_nulls("EC_Numbers")
+        reaction_column = self._reaction_column(reaction_db)
+        reaction_lookup = {
+            str(row["EC_Numbers"]): row[reaction_column]
+            for row in reaction_db.unique(subset=["EC_Numbers"], keep="first").select(["EC_Numbers", reaction_column]).to_dicts()
+        }
+        reaction_scores = {reaction: 0.0 for reaction in self.config.adm_mapping}
+
+        for ec, count in ec_counts.items():
+            mapped_reactions = reaction_lookup.get(str(ec))
+            if mapped_reactions in (None, ""):
+                continue
+            for reaction in str(mapped_reactions).split("|"):
+                reaction = reaction.strip()
+                if reaction in reaction_scores:
+                    reaction_scores[reaction] += float(count)
+
+        microbe_scores = {group: 0.0 for group in self.config.adm_mapping.values()}
+        for reaction, group in self.config.adm_mapping.items():
+            microbe_scores[group] += reaction_scores.get(reaction, 0.0)
+        return self._normalize_profile(microbe_scores, microbe_scores) if normalize else microbe_scores
+
+    def cod_from_alignment(self, alignment_file: str | os.PathLike, normalize: bool = True) -> dict[str, float]:
+        return self.cod_from_ec_counts(self.extract_ec_from_alignment(str(alignment_file)), normalize=normalize)
+
+    def _alignment_files_from_path(self, path: str | os.PathLike) -> dict[str, str]:
+        path = pathlib.Path(path)
+        if path.is_file() and path.suffix.lower() == ".json":
+            with open(path) as f:
+                return {str(key): str(value) for key, value in json.load(f).items()}
+        if path.is_file():
+            return {path.stem.replace("Alignment_Results_mmseq_", ""): str(path)}
+        if not path.exists():
+            raise FileNotFoundError(path)
+        alignments = {}
+        for alignment in sorted(path.glob("Alignment_Results_mmseq_*.tsv")):
+            name = alignment.stem.replace("Alignment_Results_mmseq_", "")
+            alignments[name] = str(alignment)
+            alignments.setdefault(name.split("~", 1)[0], str(alignment))
+        if not alignments:
+            raise FileNotFoundError(f"No Alignment_Results_mmseq_*.tsv files found in {path}")
+        return alignments
+
+    def _genome_files_from_dir(self, genomes_dir: str | os.PathLike) -> dict[str, str]:
+        genome_info = self.extract_genome_info(str(genomes_dir))
+        normalized = dict(genome_info)
+        for key, value in genome_info.items():
+            normalized.setdefault(key.replace("_genomic", ""), value)
+            normalized.setdefault(key.split("_genomic")[0], value)
+            accession_match = re.match(r"^(GC[AF]_\d+\.\d+)", key)
+            if accession_match:
+                normalized.setdefault(accession_match.group(1), value)
+        return normalized
+
+    def _run_shell_script(self, script: str, logger: logging.Logger, execute: bool) -> None:
+        if not execute:
+            logger.info("Prepared command: %s", script.strip())
+            return
+        logger.info("Running command: %s", script.strip())
+        subprocess.run(script, shell=True, check=True)
+
+    def _write_sample_repseqs(
+        self,
+        rep_seqs: str | os.PathLike,
+        feature_abundances: dict[str, float],
+        output_fasta: str | os.PathLike,
+    ) -> str:
+        sequences = {}
+        for header, sequence in fasta_to_dict(str(rep_seqs)).items():
+            feature_id = header.split(";", 1)[0].split(None, 1)[0]
+            sequences.setdefault(feature_id, sequence)
+        selected = {feature: sequences[feature] for feature in feature_abundances if feature in sequences}
+        if not selected:
+            raise ValueError("None of the selected feature IDs were found in the representative sequence FASTA")
+        utils.dict_to_fasta(selected, str(output_fasta))
+        return str(output_fasta)
+
+    def trim_amplicon_reads(
+        self,
+        *,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None,
+        output_dir: str | os.PathLike,
+        sample_name: str,
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
+        adapter_1: str | None = None,
+        adapter_2: str | None = None,
+        minimum_length: int = 100,
+        error_rate: float = 0.1,
+        quality_cutoff: str | int | None = None,
+        threads: int = 1,
+        container: str = "None",
+    ) -> tuple[str, dict[str, str | None]]:
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        trimmed_1 = output_path / f"{sample_name}_trimmed_R1.fastq.gz"
+        trimmed_2 = output_path / f"{sample_name}_trimmed_R2.fastq.gz" if read_2 else None
+
+        args = [
+            "cutadapt",
+            "-j",
+            str(threads),
+            "-e",
+            str(error_rate),
+            "-m",
+            str(minimum_length),
+        ]
+        if quality_cutoff is not None:
+            args.extend(["-q", str(quality_cutoff)])
+        if forward_primer:
+            args.extend(["-g", forward_primer])
+        if reverse_primer and read_2:
+            args.extend(["-G", reverse_primer])
+        if adapter_1:
+            args.extend(["-a", adapter_1])
+        if adapter_2 and read_2:
+            args.extend(["-A", adapter_2])
+
+        args.extend(["-o", str(trimmed_1)])
+        if read_2:
+            args.extend(["-p", str(trimmed_2)])
+        args.append(str(read_1))
+        if read_2:
+            args.append(str(read_2))
+
+        command = " ".join(self._quote(arg) for arg in args)
+        script = self._wrap_external_command(
+            command,
+            container=container,
+            mounts=[read_1, read_2, output_path],
+        )
+        return script + "\n", {"read_1": str(trimmed_1), "read_2": str(trimmed_2) if trimmed_2 else None}
+
+    def build_amplicon_features(
+        self,
+        *,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None,
+        output_dir: str | os.PathLike,
+        sample_name: str,
+        identity: float = 0.97,
+        maxee: float = 1.0,
+        minimum_length: int = 100,
+        min_unique_size: int = 2,
+        chimera_filter: bool = True,
+        threads: int = 1,
+        container: str = "None",
+    ) -> tuple[str, dict[str, str]]:
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        merged = output_path / f"{sample_name}_merged.fastq"
+        filtered = output_path / f"{sample_name}_filtered.fasta"
+        uniques = output_path / f"{sample_name}_uniques.fasta"
+        denoised = output_path / f"{sample_name}_denoised.fasta"
+        rep_seqs = output_path / "rep-seqs.fasta"
+        feature_table = output_path / "feature-table.tsv"
+        raw_feature_table = output_path / f"{sample_name}_vsearch_otutab.tsv"
+        derep_uc = output_path / f"{sample_name}_derep.uc"
+
+        commands = []
+        if read_2:
+            commands.append(
+                " ".join(
+                    self._quote(arg)
+                    for arg in [
+                        "vsearch",
+                        "--fastq_mergepairs",
+                        str(read_1),
+                        "--reverse",
+                        str(read_2),
+                        "--fastqout",
+                        str(merged),
+                        "--threads",
+                        str(threads),
+                    ]
+                )
+            )
+            fastq_input = merged
+        else:
+            fastq_input = pathlib.Path(read_1)
+
+        commands.append(
+            " ".join(
+                self._quote(arg)
+                for arg in [
+                    "vsearch",
+                    "--fastq_filter",
+                    str(fastq_input),
+                    "--fastq_maxee",
+                    str(maxee),
+                    "--fastq_minlen",
+                    str(minimum_length),
+                    "--fastaout",
+                    str(filtered),
+                ]
+            )
+        )
+        commands.append(
+            " ".join(
+                self._quote(arg)
+                for arg in [
+                    "vsearch",
+                    "--derep_fulllength",
+                    str(filtered),
+                    "--output",
+                    str(uniques),
+                    "--sizeout",
+                    "--minuniquesize",
+                    str(min_unique_size),
+                    "--uc",
+                    str(derep_uc),
+                ]
+            )
+        )
+        commands.append(
+            " ".join(
+                self._quote(arg)
+                for arg in [
+                    "vsearch",
+                    "--cluster_unoise",
+                    str(uniques),
+                    "--centroids",
+                    str(denoised),
+                    "--minsize",
+                    str(min_unique_size),
+                ]
+            )
+        )
+        if chimera_filter:
+            commands.append(
+                " ".join(
+                    self._quote(arg)
+                    for arg in [
+                        "vsearch",
+                        "--uchime3_denovo",
+                        str(denoised),
+                        "--nonchimeras",
+                        str(rep_seqs),
+                    ]
+                )
+            )
+        else:
+            commands.append(f"cp {self._quote(denoised)} {self._quote(rep_seqs)}")
+        commands.append(
+            " ".join(
+                self._quote(arg)
+                for arg in [
+                    "vsearch",
+                    "--usearch_global",
+                    str(filtered),
+                    "--db",
+                    str(rep_seqs),
+                    "--id",
+                    str(identity),
+                    "--otutabout",
+                    str(raw_feature_table),
+                    "--threads",
+                    str(threads),
+                ]
+            )
+        )
+        commands.append(
+            f"awk -v sample={self._quote(sample_name)} "
+            f"'BEGIN{{FS=OFS=\"\\t\"}} NR==1{{if (NF >= 2) $2=sample; print; next}} {{print}}' "
+            f"{self._quote(raw_feature_table)} > {self._quote(feature_table)}"
+        )
+
+        command = "\n".join(commands)
+        script = self._wrap_external_command(
+            command,
+            container=container,
+            mounts=[read_1, read_2, output_path],
+        )
+        return script + "\n", {"feature_table": str(feature_table), "rep_seqs": str(rep_seqs)}
+
+    def run_trim_reads_step(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None = None,
+        step_output_dir: str | os.PathLike | None = None,
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
+        adapter_1: str | None = None,
+        adapter_2: str | None = None,
+        minimum_length: int = 100,
+        error_rate: float = 0.1,
+        quality_cutoff: str | int | None = None,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Prepare or run the amplicon read trimming step for one sample."""
+        sample_dir = pathlib.Path(output_dir) / sample_name
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        step_output = pathlib.Path(step_output_dir) if step_output_dir else sample_dir / "amplicon_preprocess"
+        logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+
+        step_name = "trim_reads"
+        settings = self._step_settings(execution_profile, step_name).get("settings", {})
+        script, trimmed_reads = self.trim_amplicon_reads(
+            read_1=read_1,
+            read_2=read_2,
+            output_dir=step_output,
+            sample_name=sample_name,
+            forward_primer=settings.get("forward_primer", forward_primer),
+            reverse_primer=settings.get("reverse_primer", reverse_primer),
+            adapter_1=settings.get("adapter_1", adapter_1),
+            adapter_2=settings.get("adapter_2", adapter_2),
+            minimum_length=int(settings.get("minimum_length", minimum_length)),
+            error_rate=float(settings.get("error_rate", error_rate)),
+            quality_cutoff=settings.get("quality_cutoff", quality_cutoff),
+            threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
+            container=self._step_container(execution_profile, step_name, container),
+        )
+        artifact = self._execute_step(
+            script,
+            step_name=step_name,
+            sample_name=sample_name,
+            output_dir=sample_dir,
+            logger=logger,
+            execute=execute,
+            execution_profile=execution_profile,
+        )
+        return {
+            "sample_name": sample_name,
+            "step": step_name,
+            "output_dir": str(sample_dir),
+            "execute": execute,
+            "artifacts": {
+                step_name: artifact,
+                "trimmed_reads": trimmed_reads,
+            },
+        }
+
+    def _sra_download_script(
+        self,
+        *,
+        accession: str,
+        target_dir: str | os.PathLike,
+        container: str = "None",
+    ) -> tuple[str, dict[str, str]]:
+        target_path = pathlib.Path(target_dir)
+        accession_dir = target_path / accession
+        sra_file = accession_dir / f"{accession}.sra"
+        read_1 = accession_dir / f"{accession}_1.fastq"
+        read_2 = accession_dir / f"{accession}_2.fastq"
+        commands = [
+            f"prefetch {self._quote(accession)} -O {self._quote(target_path)} --max-size 100000000",
+            f"fasterq-dump {self._quote(sra_file)} -O {self._quote(accession_dir)} --split-files --temp {self._quote(accession_dir)}",
+            f"rm -f {self._quote(sra_file)}",
+        ]
+        command = "\n".join(commands)
+        script = self._wrap_external_command(
+            command,
+            container=container,
+            mounts=[target_path],
+        )
+        return script + "\n", {"read_1": str(read_1), "read_2": str(read_2)}
+
+    def run_sra_download_step(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        accession: str,
+        sra_dir: str | os.PathLike | None = None,
+        paired: bool = True,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Prepare or run an SRA download step for one sample."""
+        sample_dir = pathlib.Path(output_dir) / sample_name
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        target_dir = pathlib.Path(sra_dir) if sra_dir else pathlib.Path(output_dir) / "sra"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+        step_name = "download_sra"
+        script, reads = self._sra_download_script(
+            accession=accession,
+            target_dir=target_dir,
+            container=self._step_container(execution_profile, step_name, container),
+        )
+        if not paired:
+            reads["read_2"] = None
+        artifact = self._execute_step(
+            script,
+            step_name=step_name,
+            sample_name=sample_name,
+            output_dir=sample_dir,
+            logger=logger,
+            execute=execute,
+            execution_profile=execution_profile,
+        )
+        return {
+            "sample_name": sample_name,
+            "step": step_name,
+            "output_dir": str(sample_dir),
+            "execute": execute,
+            "artifacts": {
+                step_name: artifact,
+                "accession": accession,
+                "reads": reads,
+            },
+        }
+
+    def run_build_amplicon_features_step(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None = None,
+        step_output_dir: str | os.PathLike | None = None,
+        identity: float = 0.97,
+        maxee: float = 1.0,
+        minimum_length: int = 100,
+        min_unique_size: int = 2,
+        chimera_filter: bool = True,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Prepare or run the VSEARCH feature-table step for one sample."""
+        sample_dir = pathlib.Path(output_dir) / sample_name
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        step_output = pathlib.Path(step_output_dir) if step_output_dir else sample_dir / "amplicon_preprocess"
+        logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+
+        step_name = "build_amplicon_features"
+        settings = self._step_settings(execution_profile, step_name).get("settings", {})
+        script, feature_artifacts = self.build_amplicon_features(
+            read_1=read_1,
+            read_2=read_2,
+            output_dir=step_output,
+            sample_name=sample_name,
+            identity=float(settings.get("identity", identity)),
+            maxee=float(settings.get("maxee", maxee)),
+            minimum_length=int(settings.get("minimum_length", minimum_length)),
+            min_unique_size=int(settings.get("min_unique_size", min_unique_size)),
+            chimera_filter=bool(settings.get("chimera_filter", chimera_filter)),
+            threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
+            container=self._step_container(execution_profile, step_name, container),
+        )
+        artifact = self._execute_step(
+            script,
+            step_name=step_name,
+            sample_name=sample_name,
+            output_dir=sample_dir,
+            logger=logger,
+            execute=execute,
+            execution_profile=execution_profile,
+        )
+        return {
+            "sample_name": sample_name,
+            "step": step_name,
+            "output_dir": str(sample_dir),
+            "execute": execute,
+            "artifacts": {
+                step_name: artifact,
+                **feature_artifacts,
+            },
+        }
+
+    def run_short_read_alignment_step(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        reads: str | os.PathLike,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Prepare or run the MMseqs shotgun-read alignment step."""
+        sample_dir = pathlib.Path(output_dir) / sample_name
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+        step_name = "align_short_reads"
+        old_settings = self._apply_step_config_settings(execution_profile, step_name)
+        try:
+            script, alignment_path = self.align_short_reads_to_protein_db(
+                str(reads),
+                f"{sample_name}_mmseq",
+                container=self._step_container(execution_profile, step_name, container),
+            )
+        finally:
+            self._restore_config_settings(old_settings)
+        artifact = self._execute_step(
+            script,
+            step_name=step_name,
+            sample_name=sample_name,
+            output_dir=sample_dir,
+            logger=logger,
+            execute=execute,
+            execution_profile=execution_profile,
+        )
+        return {
+            "sample_name": sample_name,
+            "step": step_name,
+            "output_dir": str(sample_dir),
+            "execute": execute,
+            "artifacts": {
+                step_name: artifact,
+                "alignment_file": str(alignment_path),
+            },
+        }
+
+    def run_gtdb_alignment_step(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        query_fasta: str | os.PathLike,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Prepare or run the VSEARCH representative-sequence to GTDB step."""
+        sample_dir = pathlib.Path(output_dir) / sample_name
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+        step_name = "align_to_gtdb"
+        old_settings = self._apply_step_config_settings(execution_profile, step_name)
+        try:
+            script = self.align_to_gtdb(
+                str(query_fasta),
+                str(sample_dir),
+                container=self._step_container(execution_profile, step_name, container),
+            )[0]
+        finally:
+            self._restore_config_settings(old_settings)
+        artifact = self._execute_step(
+            script,
+            step_name=step_name,
+            sample_name=sample_name,
+            output_dir=sample_dir,
+            logger=logger,
+            execute=execute,
+            execution_profile=execution_profile,
+        )
+        return {
+            "sample_name": sample_name,
+            "step": step_name,
+            "output_dir": str(sample_dir),
+            "execute": execute,
+            "artifacts": {
+                step_name: artifact,
+                "matches": str(sample_dir / "matches.blast"),
+            },
+        }
+
+    def run_genome_alignment_step(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        genome_name: str,
+        genome_file: str | os.PathLike,
+        alignment_dir: str | os.PathLike | None = None,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Prepare or run one genome-to-protein-database MMseqs alignment step."""
+        sample_dir = pathlib.Path(output_dir) / sample_name
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        alignment_path = pathlib.Path(alignment_dir) if alignment_dir else sample_dir / "genome_alignments"
+        alignment_path.mkdir(parents=True, exist_ok=True)
+        logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+        profile_step_name = "align_genome"
+        step_name = f"align_genome_{genome_name}"
+        old_settings = self._apply_step_config_settings(execution_profile, profile_step_name)
+        try:
+            script, alignment = self.align_genome_to_protein_db(
+                str(genome_file),
+                str(alignment_path),
+                genome_name,
+                container=self._step_container(execution_profile, profile_step_name, container),
+            )
+        finally:
+            self._restore_config_settings(old_settings)
+        artifact = self._execute_step(
+            script,
+            step_name=step_name,
+            sample_name=sample_name,
+            output_dir=sample_dir,
+            logger=logger,
+            execute=execute,
+            execution_profile={
+                **execution_profile,
+                "steps": {
+                    **execution_profile.get("steps", {}),
+                    step_name: self._step_settings(execution_profile, profile_step_name),
+                },
+            },
+        )
+        return {
+            "sample_name": sample_name,
+            "step": step_name,
+            "output_dir": str(sample_dir),
+            "execute": execute,
+            "artifacts": {
+                step_name: artifact,
+                "alignment_file": str(alignment),
+            },
+        }
+
+    def preprocess_amplicon_sample(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None = None,
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
+        adapter_1: str | None = None,
+        adapter_2: str | None = None,
+        minimum_length: int = 100,
+        quality_cutoff: str | int | None = None,
+        quality_maxee: float = 1.0,
+        identity: float = 0.97,
+        min_unique_size: int = 2,
+        chimera_filter: bool = True,
+        container: str = "None",
+        execute: bool = False,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        output_path = pathlib.Path(output_dir) / sample_name
+        preprocess_path = output_path / "amplicon_preprocess"
+        preprocess_path.mkdir(parents=True, exist_ok=True)
+        logger = self._sample_pipeline_logger(sample_name, output_path, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+        result = {
+            "sample_name": sample_name,
+            "output_dir": str(output_path),
+            "execute": execute,
+            "artifacts": {},
+        }
+
+        trim_result = self.run_trim_reads_step(
+            sample_name=sample_name,
+            output_dir=output_dir,
+            read_1=read_1,
+            read_2=read_2,
+            step_output_dir=preprocess_path,
+            forward_primer=forward_primer,
+            reverse_primer=reverse_primer,
+            adapter_1=adapter_1,
+            adapter_2=adapter_2,
+            minimum_length=minimum_length,
+            quality_cutoff=quality_cutoff,
+            container=container,
+            execute=execute,
+            verbose=verbose,
+            execution_profile=execution_profile,
+        )
+        result["artifacts"].update(trim_result["artifacts"])
+        trimmed_reads = trim_result["artifacts"]["trimmed_reads"]
+
+        feature_result = self.run_build_amplicon_features_step(
+            sample_name=sample_name,
+            output_dir=output_dir,
+            read_1=trimmed_reads["read_1"],
+            read_2=trimmed_reads["read_2"],
+            step_output_dir=preprocess_path,
+            identity=identity,
+            maxee=quality_maxee,
+            minimum_length=minimum_length,
+            min_unique_size=min_unique_size,
+            chimera_filter=chimera_filter,
+            container=container,
+            execute=execute,
+            verbose=verbose,
+            execution_profile=execution_profile,
+        )
+        result["artifacts"].update(feature_result["artifacts"])
+        result["artifacts"]["preprocess_manifest"] = self._write_json(output_path / "preprocess_artifacts.json", result["artifacts"])
+        logger.info("Finished amplicon preprocessing: %s", sample_name)
+        return result
+
+    def aggregate_genome_cod(
+        self,
+        genome_cods: dict[str, dict[str, float]],
+        genome_abundances: dict[str, float],
+        normalize: bool = True,
+    ) -> dict[str, float]:
+        groups = set(self.config.adm_mapping.values())
+        aggregated = {group: 0.0 for group in groups}
+        abundance_total = sum(float(value) for value in genome_abundances.values() if float(value) > 0)
+        if abundance_total <= 0:
+            raise ValueError("Genome abundances must contain at least one positive value")
+
+        for genome, abundance in genome_abundances.items():
+            if genome not in genome_cods:
+                continue
+            weight = float(abundance) / abundance_total
+            for group, value in genome_cods[genome].items():
+                aggregated[group] = aggregated.get(group, 0.0) + float(value) * weight
+        return self._normalize_profile(aggregated, groups) if normalize else aggregated
+
+    def sample_to_cod(
+        self,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        *,
+        mode: str,
+        alignment_file: str | os.PathLike | None = None,
+        reads: str | os.PathLike | None = None,
+        read_1: str | os.PathLike | None = None,
+        read_2: str | os.PathLike | None = None,
+        genome_abundances: str | os.PathLike | dict[str, float] | None = None,
+        genome_alignments: str | os.PathLike | dict[str, str] | None = None,
+        genomes_dir: str | os.PathLike | None = None,
+        feature_table: str | os.PathLike | None = None,
+        rep_seqs: str | os.PathLike | None = None,
+        gtdb_matches: str | os.PathLike | None = None,
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
+        adapter_1: str | None = None,
+        adapter_2: str | None = None,
+        minimum_length: int = 100,
+        quality_cutoff: str | int | None = None,
+        quality_maxee: float = 1.0,
+        identity: float = 0.97,
+        min_unique_size: int = 2,
+        chimera_filter: bool = True,
+        top_k: int = -1,
+        container: str = "None",
+        execute: bool = False,
+        normalize: bool = True,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Run one metagenomics-to-eADM-COD pipeline for a single sample.
+
+        The method writes tall CSV tables for table-shaped artifacts,
+        plus ``provenance.json`` and ``pipeline.log`` under ``output_dir``.
+        """
+        output_path = pathlib.Path(output_dir) / sample_name
+        output_path.mkdir(parents=True, exist_ok=True)
+        logger = self._sample_pipeline_logger(sample_name, output_path, verbose=verbose)
+        execution_profile = self._load_execution_profile(execution_profile)
+        logger.info("Starting sample COD pipeline: sample=%s mode=%s", sample_name, mode)
+
+        result = {
+            "sample_name": sample_name,
+            "mode": mode,
+            "output_dir": str(output_path),
+            "execute": execute,
+            "artifacts": {},
+        }
+
+        if mode == "shotgun-alignment":
+            if alignment_file is None:
+                raise ValueError("alignment_file is required for shotgun-alignment mode")
+            logger.info("Converting shotgun alignment to EC counts and COD profile")
+            ec_counts = self.extract_ec_from_alignment(str(alignment_file))
+            cod_profile = self.cod_from_ec_counts(ec_counts, normalize=normalize)
+            result["artifacts"]["ec_counts"] = self._write_tall_mapping(output_path / "ec_counts.csv", ec_counts, sample_name=sample_name, key_name="ec", value_name="count", value_dtype=pl.Int64)
+            result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+
+        elif mode == "shotgun-reads":
+            if reads is None:
+                raise ValueError("reads is required for shotgun-reads mode")
+            logger.info("Aligning shotgun reads to protein database")
+            step_name = "align_short_reads"
+            old_settings = self._apply_step_config_settings(execution_profile, step_name)
+            try:
+                script, alignment_path = self.align_short_reads_to_protein_db(
+                    str(reads),
+                    f"{sample_name}_mmseq",
+                    container=self._step_container(execution_profile, step_name, container),
+                )
+            finally:
+                self._restore_config_settings(old_settings)
+            result["artifacts"][step_name] = self._execute_step(
+                script,
+                step_name=step_name,
+                sample_name=sample_name,
+                output_dir=output_path,
+                logger=logger,
+                execute=execute,
+                execution_profile=execution_profile,
+            )
+            if not pathlib.Path(alignment_path).exists():
+                logger.info("Alignment output is not available yet: %s", alignment_path)
+                cod_profile = {}
+            else:
+                ec_counts = self.extract_ec_from_alignment(str(alignment_path))
+                cod_profile = self.cod_from_ec_counts(ec_counts, normalize=normalize)
+                result["artifacts"]["ec_counts"] = self._write_tall_mapping(output_path / "ec_counts.csv", ec_counts, sample_name=sample_name, key_name="ec", value_name="count", value_dtype=pl.Int64)
+                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+
+        elif mode == "genome-alignments":
+            if genome_abundances is None or genome_alignments is None:
+                raise ValueError("genome_abundances and genome_alignments are required for genome-alignments mode")
+            abundances = genome_abundances if isinstance(genome_abundances, dict) else self._read_json_or_table(genome_abundances)
+            alignments = genome_alignments if isinstance(genome_alignments, dict) else self._alignment_files_from_path(genome_alignments)
+            logger.info("Converting %s genome alignments to genome-level COD profiles", len(alignments))
+            genome_cods = {
+                genome: self.cod_from_alignment(alignment, normalize=normalize)
+                for genome, alignment in alignments.items()
+                if genome in abundances
+            }
+            cod_profile = self.aggregate_genome_cod(genome_cods, abundances, normalize=normalize)
+            result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
+            result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+
+        elif mode == "amplicon-reads":
+            if read_1 is None:
+                raise ValueError("read_1 is required for amplicon-reads mode")
+            logger.info("Preprocessing amplicon reads before COD conversion")
+            preprocess_result = self.preprocess_amplicon_sample(
+                sample_name=sample_name,
+                output_dir=output_dir,
+                read_1=read_1,
+                read_2=read_2,
+                forward_primer=forward_primer,
+                reverse_primer=reverse_primer,
+                adapter_1=adapter_1,
+                adapter_2=adapter_2,
+                minimum_length=minimum_length,
+                quality_cutoff=quality_cutoff,
+                quality_maxee=quality_maxee,
+                identity=identity,
+                min_unique_size=min_unique_size,
+                chimera_filter=chimera_filter,
+                container=container,
+                execute=execute,
+                verbose=verbose,
+                execution_profile=execution_profile,
+            )
+            result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
+            feature_table = preprocess_result["artifacts"]["feature_table"]
+            rep_seqs = preprocess_result["artifacts"]["rep_seqs"]
+
+            if not pathlib.Path(feature_table).exists() or not pathlib.Path(rep_seqs).exists():
+                logger.info("Amplicon feature outputs are not available yet")
+                cod_profile = {}
+                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+            else:
+                downstream_result = self.sample_to_cod(
+                    sample_name=sample_name,
+                    output_dir=output_dir,
+                    mode="amplicon",
+                    genome_alignments=genome_alignments,
+                    genomes_dir=genomes_dir,
+                    feature_table=feature_table,
+                    rep_seqs=rep_seqs,
+                    gtdb_matches=gtdb_matches,
+                    top_k=top_k,
+                    container=container,
+                    execute=execute,
+                    normalize=normalize,
+                    verbose=verbose,
+                    execution_profile=execution_profile,
+                )
+                cod_profile = downstream_result["cod_profile"]
+                result["artifacts"].update(downstream_result["artifacts"])
+
+        elif mode == "amplicon":
+            if feature_table is None or rep_seqs is None:
+                raise ValueError("feature_table and rep_seqs are required for amplicon mode")
+            feature_abundances = self.extract_relative_abundances(str(feature_table), sample_names=[sample_name], top_k=top_k)[sample_name]
+            result["artifacts"]["feature_abundances"] = self._write_tall_mapping(output_path / "feature_abundances.csv", feature_abundances, sample_name=sample_name, key_name="feature_id", value_name="abundance")
+            sample_repseqs = self._write_sample_repseqs(rep_seqs, feature_abundances, output_path / "sample_repseqs.fasta")
+            result["artifacts"]["sample_repseqs"] = sample_repseqs
+
+            matches_path = pathlib.Path(gtdb_matches) if gtdb_matches else output_path / "matches.blast"
+            if gtdb_matches is None:
+                logger.info("Aligning sample representative sequences to GTDB")
+                step_name = "align_to_gtdb"
+                old_settings = self._apply_step_config_settings(execution_profile, step_name)
+                try:
+                    script = self.align_to_gtdb(
+                        sample_repseqs,
+                        str(output_path),
+                        container=self._step_container(execution_profile, step_name, container),
+                    )[0]
+                finally:
+                    self._restore_config_settings(old_settings)
+                result["artifacts"][step_name] = self._execute_step(
+                    script,
+                    step_name=step_name,
+                    sample_name=sample_name,
+                    output_dir=output_path,
+                    logger=logger,
+                    execute=execute,
+                    execution_profile=execution_profile,
+                )
+            if not matches_path.exists():
+                logger.info("GTDB matches are not available yet: %s", matches_path)
+                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", {}, sample_name=sample_name, key_name="group", value_name="value")
+                cod_profile = {}
+            else:
+                representative_genomes = self.get_genomes_from_gtdb_alignment(str(matches_path))
+                genome_abund = {}
+                for feature, abundance in feature_abundances.items():
+                    genome = representative_genomes.get(feature)
+                    if genome:
+                        genome_abund[genome] = genome_abund.get(genome, 0.0) + float(abundance)
+                result["artifacts"]["representative_genomes"] = self._write_tall_mapping(output_path / "representative_genomes.csv", representative_genomes, sample_name=sample_name, key_name="feature_id", value_name="genome_id", value_dtype=pl.Utf8)
+                result["artifacts"]["genome_abundances"] = self._write_tall_mapping(output_path / "genome_abundances.csv", genome_abund, sample_name=sample_name, key_name="genome_id", value_name="abundance")
+
+                if genome_alignments:
+                    alignments = genome_alignments if isinstance(genome_alignments, dict) else self._alignment_files_from_path(genome_alignments)
+                elif genomes_dir:
+                    genome_files = self._genome_files_from_dir(genomes_dir)
+                    alignments = {}
+                    commands = {}
+                    alignment_dir = output_path / "genome_alignments"
+                    alignment_dir.mkdir(parents=True, exist_ok=True)
+                    for genome in genome_abund:
+                        if genome not in genome_files:
+                            logger.info("No genome FASTA found for %s", genome)
+                            continue
+                        step_name = f"align_genome_{genome}"
+                        profile_step_name = "align_genome"
+                        old_settings = self._apply_step_config_settings(execution_profile, profile_step_name)
+                        try:
+                            script, alignment = self.align_genome_to_protein_db(
+                                genome_files[genome],
+                                str(alignment_dir),
+                                genome,
+                                container=self._step_container(execution_profile, profile_step_name, container),
+                            )
+                        finally:
+                            self._restore_config_settings(old_settings)
+                        commands[genome] = script
+                        result["artifacts"][step_name] = self._execute_step(
+                            script,
+                            step_name=step_name,
+                            sample_name=sample_name,
+                            output_dir=output_path,
+                            logger=logger,
+                            execute=execute,
+                            execution_profile={
+                                **execution_profile,
+                                "steps": {
+                                    **execution_profile.get("steps", {}),
+                                    step_name: self._step_settings(execution_profile, profile_step_name),
+                                },
+                            },
+                        )
+                        alignments[genome] = alignment
+                    result["artifacts"]["genome_alignment_scripts"] = self._write_json(output_path / "genome_alignment_commands.json", commands)
+                else:
+                    raise ValueError("amplicon mode requires genome_alignments or genomes_dir after GTDB matching")
+
+                genome_cods = {
+                    genome: self.cod_from_alignment(alignment, normalize=normalize)
+                    for genome, alignment in alignments.items()
+                    if genome in genome_abund and pathlib.Path(alignment).exists()
+                }
+                cod_profile = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=normalize) if genome_cods else {}
+                result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
+                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+
+        else:
+            raise ValueError("mode must be one of: shotgun-alignment, shotgun-reads, genome-alignments, amplicon, amplicon-reads")
+
+        result["cod_profile"] = cod_profile
+        result["artifacts"]["provenance"] = self._write_json(
+            output_path / "provenance.json",
+            {
+                "sample_name": sample_name,
+                "mode": mode,
+                "execute": execute,
+                "container": container,
+                "normalize": normalize,
+                "reaction_db": self.config.csv_reaction_db,
+                "protein_db": self.config.protein_db,
+                "bit_score": self.config.bit_score,
+                "e_value": self.config.e_value,
+                "artifacts": result["artifacts"],
+            },
+        )
+        logger.info("Finished sample COD pipeline: %s", sample_name)
+        return result
+
+    def batch_sample_to_cod(
+        self,
+        *,
+        manifest: str | os.PathLike,
+        output_dir: str | os.PathLike,
+        input_type: str | None = None,
+        sra_dir: str | os.PathLike | None = None,
+        stage: str = "all",
+        amplicon_to_genome_db: str | os.PathLike | None = None,
+        genome_alignments: str | os.PathLike | dict[str, str] | None = None,
+        genomes_dir: str | os.PathLike | None = None,
+        gtdb_matches_dir: str | os.PathLike | None = None,
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
+        adapter_1: str | None = None,
+        adapter_2: str | None = None,
+        minimum_length: int = 100,
+        quality_cutoff: str | int | None = None,
+        quality_maxee: float = 1.0,
+        identity: float = 0.97,
+        min_unique_size: int = 2,
+        chimera_filter: bool = True,
+        top_k: int = -1,
+        container: str = "None",
+        execute: bool = False,
+        normalize: bool = True,
+        verbose: bool = True,
+        execution_profile: str | os.PathLike | dict | None = None,
+    ) -> dict:
+        """Run a manifest-driven batch of amplicon samples to COD artifacts.
+
+        Manifest rows may provide either an SRA ``accession`` or FASTQ paths
+        in ``read_1``/``read_2``. The ``stage`` argument can be ``download``,
+        ``preprocess``, ``cod``, or ``all``.
+        """
+        if stage not in {"download", "preprocess", "cod", "all"}:
+            raise ValueError("stage must be one of: download, preprocess, cod, all")
+        if input_type not in {None, "sra", "reads"}:
+            raise ValueError("input_type must be 'sra' or 'reads'")
+        if amplicon_to_genome_db is not None:
+            self.config.amplicon2genome_db = str(amplicon_to_genome_db)
+            matches = list(pathlib.Path(amplicon_to_genome_db).rglob(self.config.gtdb_dir))
+            self.config.gtdb_dir_fasta = str(matches[0]) if matches else self.config.gtdb_dir_fasta
+
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        rows = self._read_sample_manifest(manifest)
+        results = {
+            "manifest": str(manifest),
+            "output_dir": str(output_path),
+            "stage": stage,
+            "execute": execute,
+            "samples": {},
+        }
+
+        for row in rows:
+            accession = self._row_value(row, "accession", "sra", "run")
+            read_1 = self._row_value(row, "read_1", "read1", "forward", "fastq_1", "fastq1")
+            read_2 = self._row_value(row, "read_2", "read2", "reverse", "fastq_2", "fastq2")
+            if input_type == "sra" and not accession:
+                raise ValueError(f"Sample row {row} needs an accession when input_type='sra'")
+            if input_type == "reads" and not read_1:
+                raise ValueError(f"Sample row {row} needs read_1 when input_type='reads'")
+            sample_name = self._row_value(row, "sample_name", "sample", "name")
+            if sample_name is None:
+                if accession:
+                    sample_name = accession
+                elif read_1:
+                    sample_name = pathlib.Path(read_1).name.split(".")[0]
+                else:
+                    raise ValueError("Each manifest row must include sample/sample_name, accession, or read_1")
+            paired = self._row_bool(row, "paired", default=read_2 is not None or accession is not None)
+            sample_result = {"input": dict(row), "artifacts": {}}
+
+            if accession and not read_1 and stage in {"download", "preprocess", "all"}:
+                download_result = self.run_sra_download_step(
+                    sample_name=sample_name,
+                    output_dir=output_path,
+                    accession=accession,
+                    sra_dir=sra_dir,
+                    paired=paired,
+                    container=container,
+                    execute=execute,
+                    verbose=verbose,
+                    execution_profile=execution_profile,
+                )
+                sample_result["artifacts"]["download"] = download_result["artifacts"]
+                read_1 = download_result["artifacts"]["reads"]["read_1"]
+                read_2 = download_result["artifacts"]["reads"]["read_2"]
+
+            if stage == "download":
+                results["samples"][sample_name] = sample_result
+                continue
+
+            if stage in {"preprocess", "all"} and not read_1:
+                raise ValueError(f"Sample {sample_name} needs read_1 or an accession")
+
+            if stage == "preprocess":
+                preprocess_result = self.preprocess_amplicon_sample(
+                    sample_name=sample_name,
+                    output_dir=output_path,
+                    read_1=read_1,
+                    read_2=read_2,
+                    forward_primer=forward_primer,
+                    reverse_primer=reverse_primer,
+                    adapter_1=adapter_1,
+                    adapter_2=adapter_2,
+                    minimum_length=minimum_length,
+                    quality_cutoff=quality_cutoff,
+                    quality_maxee=quality_maxee,
+                    identity=identity,
+                    min_unique_size=min_unique_size,
+                    chimera_filter=chimera_filter,
+                    container=container,
+                    execute=execute,
+                    verbose=verbose,
+                    execution_profile=execution_profile,
+                )
+                sample_result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
+                results["samples"][sample_name] = sample_result
+                continue
+
+            sample_dir = output_path / sample_name
+            feature_table = self._row_value(row, "feature_table", "feature-table") or str(sample_dir / "amplicon_preprocess" / "feature-table.tsv")
+            rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences") or str(sample_dir / "amplicon_preprocess" / "rep-seqs.fasta")
+            row_gtdb_matches = self._row_value(row, "gtdb_matches", "matches")
+            if row_gtdb_matches is None and gtdb_matches_dir is not None:
+                candidate = pathlib.Path(gtdb_matches_dir) / sample_name / "matches.blast"
+                if candidate.exists():
+                    row_gtdb_matches = str(candidate)
+
+            if stage == "cod":
+                cod_result = self.sample_to_cod(
+                    sample_name=sample_name,
+                    output_dir=output_path,
+                    mode="amplicon",
+                    genome_alignments=genome_alignments,
+                    genomes_dir=genomes_dir,
+                    feature_table=feature_table,
+                    rep_seqs=rep_seqs,
+                    gtdb_matches=row_gtdb_matches,
+                    top_k=top_k,
+                    container=container,
+                    execute=execute,
+                    normalize=normalize,
+                    verbose=verbose,
+                    execution_profile=execution_profile,
+                )
+            else:
+                cod_result = self.sample_to_cod(
+                    sample_name=sample_name,
+                    output_dir=output_path,
+                    mode="amplicon-reads",
+                    read_1=read_1,
+                    read_2=read_2,
+                    genome_alignments=genome_alignments,
+                    genomes_dir=genomes_dir,
+                    gtdb_matches=row_gtdb_matches,
+                    forward_primer=forward_primer,
+                    reverse_primer=reverse_primer,
+                    adapter_1=adapter_1,
+                    adapter_2=adapter_2,
+                    minimum_length=minimum_length,
+                    quality_cutoff=quality_cutoff,
+                    quality_maxee=quality_maxee,
+                    identity=identity,
+                    min_unique_size=min_unique_size,
+                    chimera_filter=chimera_filter,
+                    top_k=top_k,
+                    container=container,
+                    execute=execute,
+                    normalize=normalize,
+                    verbose=verbose,
+                    execution_profile=execution_profile,
+                )
+            sample_result["artifacts"]["cod"] = cod_result["artifacts"]
+            sample_result["cod_profile"] = cod_result.get("cod_profile", {})
+            results["samples"][sample_name] = sample_result
+
+        results["summary"] = self._write_json(output_path / "batch_summary.json", results)
+        return results
     
     def calculate_group_abundances(self,elements_feature_abundances:dict[str,dict],rel_abund:dict[str,dict])->dict[str,dict[str,float]]:
         """
@@ -2006,7 +3550,8 @@ class Metagenomics:
     def extract_relative_abundances(self,feature_table_dir:str,sample_names:Union[list[str],None]=None,top_k:int=-1)->dict:
         
         r"""
-        This method extracts the relative abundances of the features in each sample from the feature table. The feature table must follow the qiime2 feature-table format.
+        This method extracts the relative abundances of the features in each sample from a TSV feature table.
+        VSEARCH OTU tables and exported BIOM-style TSV tables are both supported.
         NOTE: The final feature abundances sum to 1 for each sample.
         Required Configs:
             None
@@ -2018,14 +3563,42 @@ class Metagenomics:
         Returns:
             dict: A dictionary containing the relative abundances of the features in each sample.
         """
-        feature_table = pd.read_table(feature_table_dir,sep='\t',skiprows=1)
+        with open(feature_table_dir) as f:
+            first_line = f.readline()
+        skiprows = 1 if first_line.startswith("#") and not first_line.startswith("#OTU ID") else 0
+        feature_table = pl.read_csv(
+            feature_table_dir,
+            separator="\t",
+            skip_rows=skiprows,
+            infer_schema_length=0,
+        )
+        if "#OTU ID" not in feature_table.columns:
+            raise ValueError("Feature table must contain a '#OTU ID' column")
         if sample_names is None:
-            sample_names = feature_table.columns[1:]
+            sample_names = [column for column in feature_table.columns if column != "#OTU ID"]
         relative_abundances={sample:[] for sample in sample_names}
         if top_k == -1:
-            top_k = feature_table.shape[0]
+            top_k = feature_table.height
         for sample in sample_names:
-            relative_abundances[sample]=(feature_table.sort_values(sample,ascending=False).head(top_k)[sample]/(feature_table.sort_values(sample,ascending=False).head(top_k)[sample].sum())).to_dict()
+            if sample not in feature_table.columns:
+                raise ValueError(f"Sample {sample} not found in feature table")
+            top_features = (
+                feature_table
+                .select([
+                    pl.col("#OTU ID").cast(pl.Utf8).alias("feature_id"),
+                    pl.col(sample).cast(pl.Float64, strict=False).fill_null(0.0).alias("abundance"),
+                ])
+                .sort("abundance", descending=True)
+                .head(top_k)
+            )
+            total = top_features["abundance"].sum()
+            if not total:
+                relative_abundances[sample] = {}
+                continue
+            relative_abundances[sample] = {
+                row["feature_id"]: float(row["abundance"]) / float(total)
+                for row in top_features.to_dicts()
+            }
         return relative_abundances
     
     def assign_ec_to_genome(self,alignment_file:str)->dict:
@@ -2165,135 +3738,6 @@ class Metagenomics:
                     
         return bash_script,
     
-    def run_qiime2_from_sra(self,
-                            read_1:str,
-                            read_2:str|None,
-                            sample_name:str|None=None,
-                            manifest_dir:str|None=None,
-                            workings_dir:str|None=None,
-                            save_manifest:bool=True,
-                            container:str='None',
-                            **kwargs) -> tuple[str,str]:
-        """
-        This method uses the input fastq files to run qiime2. The method uses the qiime2 template scripts that are provided in pkg_data module.
-        The method also creates a manifest file for qiime2. The manifest file is created based on the input fastq files.
-        Required Configs:
-            config.qiime2_single_end_bash_str: The path to the qiime2 bash script for single end reads.
-            ---------
-            config.qiime2_paired_end_bash_str: The path to the qiime2 bash script for paired end reads.
-            ---------
-            config.qiime_classifier_db: The path to the qiime2 classifier database.
-            ---------
-            config.qiime2_docker_image: The name of the docker image to be used by ADToolbox (Only if using Docker as container).
-            ---------
-            config.qiime2_singularity_image: The name of the singularity image to be used by ADToolbox (Only if using Singularity as container).
-            ---------
-        Args:
-            read_1 (str): directory of the forward reads file
-            read_2 (str): directory of the reverse reads file. This is provided only if the reads are paired end. If this is not the case,
-            sample_name (str, optional): The name of the sample. If None, the name of the sample will be the name of the directory where the fastq files are located. Defaults to None.
-            manifest_dir (str, optional): The directory where the manifest file will be saved. If None, the manifest file will be saved in the same directory as the fastq files. Defaults to None.
-            workings_dir (str, optional): The directory where the qiime2 outputs will be saved. If None, the outputs will be saved in the same directory as the fastq files. Defaults to None.
-            container (str, optional): If you want to run the qiime2 commands in a container, specify the container name here. Defaults to 'None'.
-        Returns:
-            qiime2_bash_str (str): The bash script that will be used to run qiime2 in python string format
-            manifest (dict): The manifest file that will be used to run qiime2 in python dictionary format
-    
- 
-        """
-        
-        if sample_name is None:
-            sample_name=str(pathlib.Path(read_1).parent.name)
-        if manifest_dir is None:
-            manifest_dir=pathlib.Path(read_1).parent
-        else:
-            manifest_dir=pathlib.Path(manifest_dir)
- 
-        if workings_dir is None:
-            workings_dir=pathlib.Path(read_1).parent
-        else:
-            workings_dir=pathlib.Path(workings_dir)
-        
-    
-        manifest_single={'sample-id':[],'absolute-filepath':[]}
-        manifest_paired={'sample-id':[],'forward-absolute-filepath':[],'reverse-absolute-filepath':[]}  
-        if read_2 is not None:
-            manifest_paired['sample-id'].append(sample_name)
-            manifest_paired['forward-absolute-filepath'].append(read_1)
-            manifest_paired['reverse-absolute-filepath'].append(read_2)
-            paired_end=True
-        else:
-            manifest_single['sample-id'].append(sample_name)
-            manifest_single['absolute-filepath'].append(read_1)
-            paired_end=False
-                    
-        manifest=pd.DataFrame(manifest_single) if not paired_end else pd.DataFrame(manifest_paired)
-  
-        if paired_end:
-            with open(self.config.qiime2_paired_end_bash_str,"r") as f:
-                qiime2_bash_str=f.read()
-        else:
-            with open(self.config.qiime2_single_end_bash_str,"r") as f:
-                qiime2_bash_str=f.read()
-        if kwargs.get("p_trunc_len",None) is not None:
-            if not paired_end:
-                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len>",str(kwargs.get("p_trunc_len")[0]))
-            else:
-                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-f>",str(kwargs.get("p_trunc_len")[0]))
-                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-r>",str(kwargs.get("p_trunc_len")[1]))
-        else:
-            if not paired_end:
-                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len>",self.config.qiime2_p_trunc_len[0])
-            else:
-                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-f>",self.config.qiime2_p_trunc_len[0])
-                qiime2_bash_str=qiime2_bash_str.replace("<p-trunc-len-r>",self.config.qiime2_p_trunc_len[1])
- 
-        if container=="None":
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(self.config.qiime_classifier_db))
-            
-        
-        elif container=="docker":
-            qiime2_bash_str=qiime2_bash_str.splitlines()
-            for idx,line in enumerate(qiime2_bash_str):
-                line=line.lstrip()
-                if line.startswith("qiime") or line.startswith("biom"):
-                    if not paired_end:
-                        pec=""
-                    else:
-                        pec="-v "+read_2+":"+read_2+" "
-                    qiime2_bash_str[idx]=f"docker run --env TMPDIR=/data/tmp -v {str(manifest_dir)}:{str(manifest_dir)} -v {read_1}:{read_1} -v {read_2}:{read_2} {pec} -v {self.config.qiime_classifier_db}:{self.config.qiime_classifier_db} -w /data  {self.config.qiime2_docker_image}"+" "+line
-            qiime2_bash_str="\n".join(qiime2_bash_str)
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",os.path.join(str(manifest_dir),"manifest.tsv"))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",self.config.qiime_classifier_db)
-            if not paired_end:
-                manifest['absolute-filepath']=[x for x in manifest['absolute-filepath']]
-            
-            else:
-                manifest['forward-absolute-filepath']=[x for x in manifest['forward-absolute-filepath']]
-                manifest['reverse-absolute-filepath']=[x for x in manifest['reverse-absolute-filepath']]
-        
-        elif container=="singularity":
-            qiime2_bash_str=qiime2_bash_str.splitlines()
-            for idx,line in enumerate(qiime2_bash_str):
-                line=line.lstrip()
-                if line.startswith("qiime") or line.startswith("biom"):
-                    qiime2_bash_str[idx]=f"singularity exec --bind  {str(workings_dir)}:{str(workings_dir)},$PWD:$PWD,{str(Path(self.config.qiime_classifier_db))}:{str(Path(self.config.qiime_classifier_db))},$SINGULARITY_TMPDIR:/tmp  {self.config.qiime2_singularity_image} " +line
-            qiime2_bash_str="\n".join(qiime2_bash_str)
-            qiime2_bash_str=qiime2_bash_str.replace("<manifest>",str(manifest_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<qiime2_work_dir>",str(workings_dir))
-            qiime2_bash_str=qiime2_bash_str.replace("<classifier>",str(Path(self.config.qiime_classifier_db)))
- 
-        else:
-            raise ValueError("Container must be None, singularity or docker")
-        
-        if save_manifest:
-            manifest.to_csv(os.path.join(manifest_dir,"manifest.tsv"),sep="\t",index=False)
-        return qiime2_bash_str,manifest
-
-
 class Annotation:
     
     def __init__(self,config:configs.Annotation):
@@ -2344,8 +3788,3 @@ if __name__ == "__main__":
 
     
     
-
-
-
-
-

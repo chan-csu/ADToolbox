@@ -58,7 +58,6 @@ INTERNAL_LINKS = {
     "protein_db_url": "https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Protein_DB.fasta",
     "adtoolbox_rxn_db_url": "https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Reaction_Metadata.csv",
     "feed_db_url": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/feed_db.tsv",
-    "qiime_classifier_db_url": "https://data.qiime2.org/2022.11/common/silva-138-99-515-806-nb-classifier.qza",
     "metagenomics_studies": "https://github.com/ParsaGhadermazi/Database/raw/main/ADToolbox/Kbase/metagenomics_studies.tsv",
     "experimental_data_db": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/experimental_data_references.json",
 }
@@ -129,8 +128,6 @@ class Database:
         protein_db_url: str = INTERNAL_LINKS["protein_db_url"],
         adtoolbox_rxn_db_url: str = INTERNAL_LINKS["adtoolbox_rxn_db_url"],
         feed_db_url: str = INTERNAL_LINKS["feed_db_url"],
-        qiime_classifier_db: str | None = None,
-        qiime_classifier_db_url: str = INTERNAL_LINKS["qiime_classifier_db_url"],
         adtoolbox_singularity: str = ADTOOLBOX_CONTAINERS["singularity_x86"],
         adtoolbox_docker: str = ADTOOLBOX_CONTAINERS["docker_x86"],
         protein_db: str | None = None,
@@ -162,8 +159,6 @@ class Database:
         self.protein_db_url = protein_db_url
         self.adtoolbox_rxn_db_url = adtoolbox_rxn_db_url
         self.feed_db_url = feed_db_url
-        self.qiime_classifier_db = _norm(qiime_classifier_db or _join(self.database_dir, "qiime2_classifier_db", "qiime2_classifier_db.qza"))
-        self.qiime_classifier_db_url = qiime_classifier_db_url
         self.adtoolbox_singularity = adtoolbox_singularity
         self.adtoolbox_docker = adtoolbox_docker
         self.protein_db = _norm(protein_db or _join(self.database_dir, "Protein_DB.fasta"))
@@ -203,7 +198,7 @@ class Database:
 class Metagenomics:
     "Configuration for core.Metagenomics functionality."
 
-    gtdb_dir = "ssu_all*.fna"
+    gtdb_dir = "*ssu*.fna"
 
     def __init__(
         self,
@@ -216,7 +211,6 @@ class Metagenomics:
         genomes_base_dir: str | None = None,
         align_to_gtdb_outputs_dir: str | None = None,
         amplicon2genome_db: str | None = None,
-        qiime_outputs_dir: str | None = None,
         genome_alignment_script: str | None = None,
         vsearch_threads: int = 4,
         rsync_download_dir: str | None = None,
@@ -227,15 +221,9 @@ class Metagenomics:
         sra: str | None = None,
         bit_score=40,
         e_value=10**-5,
-        qiime2_docker_image="quay.io/qiime2/core:2022.2",
-        qiime2_singularity_image="docker://quay.io/qiime2/core:2022.2",
-        qiime2_paired_end_bash_str=os.path.join(PKG_DATA, "qiime_template_paired.txt"),
-        qiime2_single_end_bash_str=os.path.join(PKG_DATA, "qiime_template_single.txt"),
-        qiime_classifier_db: str | None = None,
         protein_db: str | None = None,
         protein_db_mmseqs: str | None = None,
         adm_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
-        qiime2_p_trunc_len: tuple[int, int] = ("250", "250"),
     ):
         self.metagenomics_dir = _norm(metagenomics_dir)
         database = database or Database(database_dir=database_dir or self.metagenomics_dir)
@@ -245,7 +233,6 @@ class Metagenomics:
         self.genomes_base_dir = genomes_base_dir or _join(self.metagenomics_dir, "Genomes")
         self.align_to_gtdb_outputs_dir = align_to_gtdb_outputs_dir or self.genomes_base_dir
         self.amplicon2genome_db = amplicon2genome_db or database.amplicon_to_genome_db
-        self.qiime_outputs_dir = qiime_outputs_dir or _join(self.metagenomics_dir, "QIIME_Outputs")
         self.protein_db = protein_db or database.protein_db
         self.protein_db_mmseqs = protein_db_mmseqs or database.protein_db_mmseqs
         self.seed_rxn_db = database.reaction_db
@@ -255,21 +242,15 @@ class Metagenomics:
         self.vsearch_threads = vsearch_threads
         self.csv_reaction_db = csv_reaction_db or database.csv_reaction_db
         self.sra = sra or _join(self.metagenomics_dir, "SRA")
-        self.qiime2_singularity_image = qiime2_singularity_image
-        self.qiime2_docker_image = qiime2_docker_image
-        self.qiime2_paired_end_bash_str = qiime2_paired_end_bash_str
-        self.qiime2_single_end_bash_str = qiime2_single_end_bash_str
-        self.qiime_classifier_db = qiime_classifier_db or database.qiime_classifier_db
         self.gtdb_dir_fasta = None
         matches = list(pathlib.Path(self.amplicon2genome_db).rglob(Metagenomics.gtdb_dir))
         if matches:
             self.gtdb_dir_fasta = str(matches[0])
-        self.genome_alignment_script = genome_alignment_script or _join(self.qiime_outputs_dir, "genome_alignment_script.sh")
+        self.genome_alignment_script = genome_alignment_script or _join(self.metagenomics_dir, "genome_alignment_script.sh")
         self.adtoolbox_singularity = adtoolbox_singularity
         self.adtoolbox_docker = adtoolbox_docker
         self.rsync_download_dir = rsync_download_dir or _join(self.genomes_base_dir, "rsync_download.sh")
         self.adm_mapping = adm_mapping
-        self.qiime2_p_trunc_len = qiime2_p_trunc_len
 
 
 class Annotation:
@@ -306,8 +287,6 @@ class Utils:
         utils_dir: str | os.PathLike = ".",
         *,
         slurm_template: str = os.path.join(PKG_DATA, "slurm_template.txt"),
-        docker_template_qiime: str | None = None,
-        singularity_template_qiime: str | None = None,
         slurm_executer: str = "",
         slurm_wall_time: str = "24:00:00",
         slurm_job_name: str = "ADToolbox",
@@ -320,8 +299,6 @@ class Utils:
     ) -> None:
         self.utils_dir = _norm(utils_dir)
         self.slurm_template = slurm_template
-        self.docker_template_qiime = docker_template_qiime
-        self.singularity_template_qiime = singularity_template_qiime
         self.slurm_executer = slurm_executer
         self.slurm_wall_time = slurm_wall_time
         self.slurm_job_name = slurm_job_name

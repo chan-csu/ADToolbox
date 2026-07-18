@@ -396,7 +396,9 @@ pip install -e .
 <ol>
 <li>Use docker</li>
 </ol>
-<pre><code>Not available yet
+<pre><code>docker build -t adtoolbox:local .
+docker run --rm adtoolbox:local adtoolbox --help
+docker run --rm -v &quot;$PWD:/workspace&quot; adtoolbox:local adtoolbox Metagenomics process --help
 
 </code></pre>
 <ol>
