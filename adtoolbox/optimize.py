@@ -115,10 +115,12 @@ class Optimizer(ABC):
 
     @property
     def parameter_names(self) -> list[str]:
+        """Optimized parameter names, in the order used by parameter vectors."""
         return list(self.search_space)
 
     @property
     def bounds(self) -> np.ndarray:
+        """Search-space bounds as an ``(n_parameters, 2)`` array of lower/upper pairs."""
         return np.array(
             [[spec.lower, spec.upper] for spec in self.search_space.values()],
             dtype=float,
@@ -126,6 +128,7 @@ class Optimizer(ABC):
 
     @property
     def best_record(self) -> OptimizationRecord | None:
+        """The lowest-cost record seen so far, or None if nothing has been evaluated."""
         if not self.history:
             return None
         return min(self.history, key=lambda record: record.cost)
@@ -190,17 +193,21 @@ class Optimizer(ABC):
         return dict(zip(self.parameter_names, vector.tolist()))
 
     def parameters_to_vector(self, parameters: Mapping[str, float]) -> np.ndarray:
+        """Convert a parameter mapping into a vector ordered by `parameter_names`."""
         parameters = self._coerce_parameters(parameters)
         return np.array([parameters[name] for name in self.parameter_names], dtype=float)
 
     def vector_to_parameters(self, vector: Sequence[float] | np.ndarray) -> dict[str, float]:
+        """Convert a parameter vector back into a name-to-value mapping."""
         return self._coerce_parameters(vector)
 
     def clip_vector(self, vector: Sequence[float] | np.ndarray) -> np.ndarray:
+        """Clip a parameter vector element-wise into the search-space bounds."""
         values = np.asarray(vector, dtype=float).reshape(-1)
         return np.clip(values, self.bounds[:, 0], self.bounds[:, 1])
 
     def default_vector(self) -> np.ndarray:
+        """Parameter vector of each spec's default, or its bound midpoint if unset."""
         return np.array(
             [
                 spec.default if spec.default is not None else (spec.lower + spec.upper) / 2
@@ -210,6 +217,7 @@ class Optimizer(ABC):
         )
 
     def random_vector(self) -> np.ndarray:
+        """Draw a uniformly random parameter vector from within the bounds."""
         return self.rng.uniform(self.bounds[:, 0], self.bounds[:, 1])
 
     def prepare_model(
@@ -217,6 +225,21 @@ class Optimizer(ABC):
         parameters: Mapping[str, float] | Sequence[float] | np.ndarray,
         experiment: core.Experiment | None = None,
     ) -> adm.Model:
+        """Copy the base model and apply candidate parameters.
+
+        When an experiment is given, its feed, base parameters, and initial
+        concentrations are applied as well, the initial value of every measured
+        variable is set to its observed value at time zero, and any state listed
+        in the experiment's `constants` is pinned as a control state.
+
+        Args:
+            parameters: Candidate values, as a mapping or a vector.
+            experiment: Optional experiment whose conditions should be applied.
+
+        Returns:
+            adm.Model: A new model instance ready to solve. The base model is
+                never mutated.
+        """
         model = self.base_model.copy()
         self._apply_parameters(model, self._coerce_parameters(parameters))
         if experiment is not None:
@@ -261,6 +284,19 @@ class Optimizer(ABC):
             model.update_parameters(**clean_updates)
 
     def evaluate(self, parameters: Mapping[str, float] | Sequence[float] | np.ndarray) -> float:
+        """Score one parameter set against every training experiment.
+
+        Each experiment is simulated at its own measurement time points and
+        compared to the observed data. Calling this directly does not add to
+        the optimizer history.
+
+        Args:
+            parameters: Candidate values, as a mapping or a vector.
+
+        Returns:
+            float: Sum of squared residuals across all experiments, time
+                points, and measured variables. Lower is better.
+        """
         parameters = self._coerce_parameters(parameters)
         total = 0.0
         for experiment in self.train_data:
@@ -290,6 +326,20 @@ class Optimizer(ABC):
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> OptimizationRecord:
+        """Append an evaluated point to the history.
+
+        If the cost improves on the current best, `best_cost`,
+        `optimized_parameters`, and `optimized_model` are updated.
+
+        Args:
+            parameters: The evaluated values, as a mapping or a vector.
+            cost: The objective value for those parameters.
+            metadata: Optional free-form annotations, such as which backend
+                produced the point.
+
+        Returns:
+            OptimizationRecord: The record that was appended.
+        """
         record = OptimizationRecord(
             step=len(self.history),
             parameters=self._coerce_parameters(parameters),
@@ -304,12 +354,14 @@ class Optimizer(ABC):
         return record
 
     def clear_history(self) -> None:
+        """Discard all recorded evaluations and the current best result."""
         self.history.clear()
         self.optimized_parameters = None
         self.optimized_model = None
         self.best_cost = None
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize the search space, best result, and full history to a dict."""
         return {
             "optimizer": self.__class__.__name__,
             "parameter_target": self.parameter_target,
@@ -325,6 +377,14 @@ class Optimizer(ABC):
         }
 
     def save(self, path: str | pathlib.Path) -> pathlib.Path:
+        """Write the optimizer state to a JSON file, creating parent directories.
+
+        Args:
+            path: Destination file path.
+
+        Returns:
+            pathlib.Path: The path that was written.
+        """
         path = pathlib.Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as handle:
@@ -332,6 +392,22 @@ class Optimizer(ABC):
         return path
 
     def load(self, path: str | pathlib.Path) -> "Optimizer":
+        """Restore optimizer state by replaying a saved history.
+
+        The current history is cleared first, so `best_cost`,
+        `optimized_parameters`, and `optimized_model` end up reflecting the
+        saved run.
+
+        Args:
+            path: A JSON file previously written by `save`.
+
+        Returns:
+            Optimizer: This optimizer, to allow chaining.
+
+        Raises:
+            ValueError: If the saved parameter names do not match this
+                optimizer's search space.
+        """
         path = pathlib.Path(path)
         with path.open(encoding="utf-8") as handle:
             payload = json.load(handle)

@@ -17,8 +17,15 @@ time = "04:00:00"
 # whose names start with `job_name_prefix` before submitting another job.
 # max_concurrent_jobs = 20
 # poll_seconds = 30
+# Rerun the same `adtoolbox metagenomics process` command to resume. ADToolbox
+# records stage state in workflow_state.json, skips cached outputs, and avoids
+# resubmitting active Slurm jobs.
+#
+# Retries are handled inside each submitted Slurm job, so sample submission can
+# continue up to max_concurrent_jobs instead of waiting for each job to finish.
 # retries = 1
 # retry_delay_seconds = 60
+# wait_for_completion = false
 # job_name_prefix = "adtoolbox_"
 # partition = "general"
 # account = "my_account"

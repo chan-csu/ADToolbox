@@ -8,6 +8,36 @@ ADToolbox converts metagenomics evidence into model-ready e-ADM microbial COD al
 
 Each sample row writes a dedicated output folder containing clean result CSVs, `pipeline.log`, and `provenance.json`. Generated command scripts, raw alignment files, VSEARCH intermediates, and other working files are kept under that sample's `scratch/` folder.
 
+Batch runs also write `workflow_state.json` and `workflow_events.jsonl` under `--output-dir`. These files make the command resumable: rerun the same command and ADToolbox skips cached outputs, avoids resubmitting active Slurm jobs, and advances samples whose upstream files are now present.
+
+```mermaid
+flowchart LR
+    subgraph dl["download"]
+        direction TB
+        A["Raw reads<br>SRA or local FASTQ"]
+    end
+
+    subgraph pp["preprocess"]
+        direction TB
+        B["Trimmed reads<br>fastp"]
+        C["Feature table and<br>representative sequences<br>VSEARCH"]
+        B --> C
+    end
+
+    subgraph al["allocate"]
+        direction TB
+        D["Representative genomes<br>VSEARCH vs GTDB"]
+        E["EC numbers<br>MMseqs2 vs protein DB"]
+        F["cod_profile.csv<br>reaction metadata"]
+        D --> E --> F
+    end
+
+    A --> B
+    C --> D
+```
+
+New to the pipeline? The [Quickstart](Quickstart.md#4-turn-amplicon-data-into-microbial-cod) has a shorter, worked example. This page is the complete reference.
+
 ## Amplicon Reads
 
 Raw amplicon reads are handled in three stages:
@@ -69,7 +99,7 @@ Use a TOML execution profile to choose local or Slurm execution per step. The re
 
 Container image selection is controlled by the top-level `image` key, for example `image = "docker://parsaghadermazi/adtoolbox:latest"`. Step-specific `image` values override the top-level image. If no image is provided, ADToolbox defaults to the packaged `parsaghadermazi/adtoolbox:latest` image for Docker and `docker://parsaghadermazi/adtoolbox:latest` for Apptainer/Singularity.
 
-Slurm retries are opt-in. Set `retries` under `[slurm]` for a global default, or under a specific `[steps.<name>]` table for one step. When retries are enabled, ADToolbox submits the job, monitors terminal state with `sacct`, and resubmits failed Slurm jobs until the retry limit is reached.
+Slurm retries are opt-in. Set `retries` under `[slurm]` for a global default, or under a specific `[steps.<name>]` table for one step. When retries are enabled, the submitted Slurm script retries the command inside the job before Slurm marks the job failed.
 
 Important step names are:
 
@@ -81,6 +111,22 @@ Important step names are:
 - `align_short_reads`
 
 Without `--execute`, ADToolbox writes scripts and Slurm files but does not run or submit them.
+
+Final COD files are only written when real upstream data exists. If a Slurm job is still running, or a GTDB match, genome FASTA, or genome alignment is missing, the sample is marked with a waiting status in the workflow state instead of producing a header-only `cod_profile.csv`.
+
+## Stages
+
+Both the CLI and the Python API can run one stage at a time. You can also use `--stage all` as a resumable advancement command on Slurm: each invocation submits or runs currently ready work, records what happened, and exits without pretending submitted jobs are already complete.
+
+| Stage | Does |
+| --- | --- |
+| `download` | Fetch reads from SRA. Skipped for local read tables. |
+| `preprocess` | Trim with fastp and build the feature table and representative sequences with VSEARCH. |
+| `allocate` (CLI) / `cod` (Python) | Map to GTDB, align to the protein database, and write the COD profile. |
+| `all` | Run every applicable stage in order. |
+
+!!! warning "The last stage has two names"
+    The CLI option is `--stage allocate`, but [`batch_sample_to_cod`](api-core.md#adtoolbox.core.Metagenomics.batch_sample_to_cod) expects `stage="cod"`. The CLI translates between them; passing `"allocate"` directly to the Python API raises `ValueError`.
 
 ## Python Step API
 
@@ -114,9 +160,43 @@ features = mg.run_build_amplicon_features_step(
 
 Available direct step methods:
 
-- `run_trim_reads_step`
-- `run_build_amplicon_features_step`
-- `run_sra_download_step`
-- `run_gtdb_alignment_step`
-- `run_genome_alignment_step`
-- `run_short_read_alignment_step`
+- [`run_trim_reads_step`](api-core.md#adtoolbox.core.Metagenomics.run_trim_reads_step)
+- [`run_build_amplicon_features_step`](api-core.md#adtoolbox.core.Metagenomics.run_build_amplicon_features_step)
+- [`run_sra_download_step`](api-core.md#adtoolbox.core.Metagenomics.run_sra_download_step)
+- [`run_gtdb_alignment_step`](api-core.md#adtoolbox.core.Metagenomics.run_gtdb_alignment_step)
+- [`run_genome_alignment_step`](api-core.md#adtoolbox.core.Metagenomics.run_genome_alignment_step)
+- [`run_short_read_alignment_step`](api-core.md#adtoolbox.core.Metagenomics.run_short_read_alignment_step)
+
+## Running the whole batch from Python
+
+The CLI is a thin wrapper around [`batch_sample_to_cod`](api-core.md#adtoolbox.core.Metagenomics.batch_sample_to_cod), which takes the same options as keyword arguments:
+
+```python
+from adtoolbox import configs, core
+
+mg = core.Metagenomics(
+    configs.Metagenomics("./metagenomics/process", database_dir="./database")
+)
+
+result = mg.batch_sample_to_cod(
+    manifest="./metagenomics/read_samples.tsv",
+    input_type="reads",
+    output_dir="./metagenomics/process",
+    stage="all",
+    amplicon_to_genome_db="./database/Amplicon2GenomeDBs",
+    genomes_dir="./metagenomics/genomes",
+    execution_profile="reference_data/metagenomics_pipeline.toml",
+    execute=True,
+)
+
+print(result["samples"])   # per-sample artifact paths
+print(result["summary"])   # path to batch_summary.json
+```
+
+For a single sample, [`sample_to_cod`](api-core.md#adtoolbox.core.Metagenomics.sample_to_cod) runs the same logic without the manifest.
+
+## See also
+
+- [CLI reference](CLI.md#processing-pipeline) — every `process` option and output file.
+- [`core.Metagenomics` API](api-core.md#adtoolbox.core.Metagenomics) — generated reference for all methods.
+- [Parameter tuning](Optimization.md) — what to do with the COD profile once you have it.

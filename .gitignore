@@ -4,3 +4,24 @@ __pycache__/
 */*/*_Configs.json
 */adtoolbox/pkg_data/ADToolbox_Configs.json
 adtoolbox/pkg_data/ADToolbox_Configs.json
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Documentation build output (deployed to gh-pages by CI)
+site/
+
+# Test and tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments
+.venv/
+venv/
+
+# OS and editor cruft
+.DS_Store
+.Rhistory

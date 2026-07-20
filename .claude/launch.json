@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "mkdocs", "serve", "-a", "127.0.0.1:8000"],
+      "port": 8000
+    },
+    {
+      "name": "adm-dashboard",
+      "runtimeExecutable": "adtoolbox",
+      "runtimeArgs": [
+        "adm",
+        "e-adm",
+        "--models-json",
+        "reference_data/models.json",
+        "--report",
+        "dash"
+      ],
+      "port": 8050
+    }
+  ]
+}

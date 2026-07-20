@@ -62,11 +62,10 @@ class Model:
         ode_system (Callable): a callable which outputs the ODE system compatible with Scipy.integrate.solve_ivp
         build_stoichiometric_matrix(Callable): a callable which builds the stoichiometric matrix
         control_state (dict, optional): a dictionary containing the states that are desired to be constant. Defaults to {}.
-
-        
-        
-    Returns:
-        Model: returns a model instance for downstream purposes.
+        name (str, optional): a name for the model. Defaults to "ADM".
+        switch (str, optional): whether acid/base states are solved algebraically ("DAE") or kinetically. Defaults to "DAE".
+        simulation_time (float, optional): default simulation duration in days. Defaults to 30.
+        time_limit (float, optional): wall-clock limit for a solve, or -1 for no limit. Defaults to -1.
     """
     def __init__(self, 
                  model_parameters: dict,
@@ -790,7 +789,7 @@ def adm1_ode_sys(t: float, c: np.ndarray, model:Model)-> np.ndarray:
         Args:
             t (float):a matrix of zeros to be filled
             c (np.ndarray): an array of concentrations to be filled
-            Model (Model): The an instance of Model to calculate ODE with
+            model (Model): An instance of Model to calculate the ODE with
 
         Returns:
             np.ndarray: The output is dCdt, the change of concentration with respect to time.
@@ -1254,7 +1253,7 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     Args:
         t (float):a matrix of zeros to be filled
         c (np.ndarray): an array of concentrations to be filled
-        Model (Model): The model to calculate ODE with
+        model (Model): An instance of Model to calculate the ODE with
 
     Returns:
         np.ndarray: The output is dCdt, the change of concentration with respect to time. 

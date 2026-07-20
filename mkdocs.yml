@@ -1,20 +1,155 @@
 site_name: ADToolbox
-
-
-
+site_description: >-
+  A Python toolbox for modeling, simulating, and optimizing anaerobic digestion —
+  from raw amplicon reads to calibrated ADM1 and e-ADM models.
+site_url: https://chan-csu.github.io/ADToolbox/
+repo_url: https://github.com/chan-csu/ADToolbox
+repo_name: chan-csu/ADToolbox
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; Chan Lab, Colorado State University
 
 theme:
-  name: "material"
+  name: material
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/molecule
+  favicon: assets/favicon.svg
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Follow system theme
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: light green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
 
-nav:
-  - index.md
-  - Installation: Installation.md
-  - Commandline Interface: CLI.md
-  - API: API.md
-  - ADM Models: ADM_Models.md
-  - Modeling Pipeline: modeling.html
-  - Parameter Tuning Pipeline: parameter_tuning.html
-  - Metagenomics Pipelines: Metagenomics_Pipeline.md
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/chan-csu/ADToolbox
+      name: ADToolbox on GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/adtoolbox/
+      name: ADToolbox on PyPI
+  generator: false
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Link to this section
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.snippets
+  - pymdownx.smartsymbols
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 plugins:
-  - mkdocstrings
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_section_style: table
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_signature_annotations: true
+            separate_signature: true
+            line_length: 88
+            members_order: source
+            filters:
+              - "!^_"
+            merge_init_into_class: true
+            show_source: true
+            show_if_no_docstring: true
+            heading_level: 3
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: Installation.md
+      - Quickstart: Quickstart.md
+  - Guides:
+      - Metagenomics Pipeline: Metagenomics_Pipeline.md
+      - ADM Models: ADM_Models.md
+      - Parameter Tuning: Optimization.md
+      - Example Notebooks: Notebooks.md
+      - "Walkthrough: Modeling": modeling.html
+      - "Walkthrough: Parameter Tuning": parameter_tuning.html
+  - CLI: CLI.md
+  - Python API:
+      - Overview: API.md
+      - configs: api-configs.md
+      - core: api-core.md
+      - adm: api-adm.md
+      - optimize: api-optimize.md
+      - utils: api-utils.md
+      - stats: api-stats.md

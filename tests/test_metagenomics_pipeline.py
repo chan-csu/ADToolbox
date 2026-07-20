@@ -333,25 +333,22 @@ def test_task_manager_adds_slurm_dependencies(tmp_path):
     assert "#SBATCH --dependency=afterok:12345" in sbatch.read_text()
 
 
-def test_slurm_step_retries_failed_job(monkeypatch, tmp_path):
+def test_slurm_step_retries_are_wrapped_inside_submitted_job(monkeypatch, tmp_path):
     profile = {
         "backend": "local",
         "container": "None",
         "slurm": {"poll_seconds": 1, "retry_delay_seconds": 1},
         "steps": {"child": {"backend": "slurm", "retries": 1}},
     }
-    submissions = iter(["Submitted batch job 100", "Submitted batch job 101"])
-    states = {"100": "FAILED", "101": "COMPLETED"}
+    submissions = []
 
     def fake_run(command, capture_output=True, text=True, **kwargs):
         if command[0] == "sbatch":
-            return subprocess.CompletedProcess(command, 0, stdout=next(submissions) + "\n", stderr="")
-        if command[0] == "sacct":
-            return subprocess.CompletedProcess(command, 0, stdout=states[command[2]] + "\n", stderr="")
+            submissions.append(command)
+            return subprocess.CompletedProcess(command, 0, stdout="Submitted batch job 100\n", stderr="")
         raise AssertionError(f"Unexpected command: {command}")
 
     monkeypatch.setattr(core.subprocess, "run", fake_run)
-    monkeypatch.setattr(core.time, "sleep", lambda seconds: None)
 
     metagenomics = core.Metagenomics(configs.Metagenomics())
     logger = metagenomics._sample_pipeline_logger("sample_task", tmp_path / "sample_task", verbose=False)
@@ -366,27 +363,30 @@ def test_slurm_step_retries_failed_job(monkeypatch, tmp_path):
     )
 
     events = (tmp_path / "sample_task" / "scratch" / "task_events.jsonl").read_text()
+    sbatch = (tmp_path / "sample_task" / "scratch" / "slurm" / "child.sbatch").read_text()
 
-    assert artifact["status"] == "completed"
-    assert artifact["job_id"] == "101"
-    assert artifact["attempts"][0]["state"] == "FAILED"
-    assert artifact["attempts"][1]["state"] == "COMPLETED"
-    assert '"event": "retrying"' in events
-    assert '"event": "completed"' in events
+    assert len(submissions) == 1
+    assert artifact["status"] == "submitted"
+    assert artifact["job_id"] == "100"
+    assert artifact["retries"] == 1
+    assert artifact["retry_mode"] == "slurm_job_wrapper"
+    assert "max_retries=1" in sbatch
+    assert "while true; do" in sbatch
+    assert "retrying in ${retry_delay_seconds}s" in sbatch
+    assert '"event": "submitted"' in events
 
 
-def test_slurm_step_raises_after_retry_exhausted(monkeypatch, tmp_path):
+def test_slurm_wait_for_completion_can_still_raise(monkeypatch, tmp_path):
     profile = {
         "backend": "local",
         "container": "None",
         "slurm": {"poll_seconds": 1, "retry_delay_seconds": 1},
-        "steps": {"child": {"backend": "slurm", "retries": 1}},
+        "steps": {"child": {"backend": "slurm", "wait_for_completion": True}},
     }
-    submissions = iter(["Submitted batch job 100", "Submitted batch job 101"])
 
     def fake_run(command, capture_output=True, text=True, **kwargs):
         if command[0] == "sbatch":
-            return subprocess.CompletedProcess(command, 0, stdout=next(submissions) + "\n", stderr="")
+            return subprocess.CompletedProcess(command, 0, stdout="Submitted batch job 100\n", stderr="")
         if command[0] == "sacct":
             return subprocess.CompletedProcess(command, 0, stdout="FAILED\n", stderr="")
         raise AssertionError(f"Unexpected command: {command}")
@@ -408,9 +408,9 @@ def test_slurm_step_raises_after_retry_exhausted(monkeypatch, tmp_path):
             execution_profile=profile,
         )
     except RuntimeError as exc:
-        assert "failed after 2 attempt" in str(exc)
+        assert "failed as FAILED" in str(exc)
     else:
-        raise AssertionError("Expected Slurm retry exhaustion to raise")
+        raise AssertionError("Expected Slurm wait_for_completion failure to raise")
 
 
 def test_amplicon_preprocessing_writes_trim_and_vsearch_steps(tmp_path):
@@ -560,3 +560,220 @@ def test_batch_sample_to_cod_accepts_sra_and_reads_tables(tmp_path):
     assert (tmp_path / "out" / "fastq_sample" / "scratch" / "trim_reads.sh").exists()
     assert sra_result["samples"]["sra_sample"]["artifacts"]["download"]["accession"] == "SRR000001"
     assert (tmp_path / "out" / "batch_summary.json").exists()
+
+
+def test_sra_download_slurm_submission_does_not_require_fastq_immediately(monkeypatch, tmp_path):
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {},
+        "steps": {"download_sra": {"backend": "slurm"}},
+    }
+
+    def fake_run(command, capture_output=True, text=True, **kwargs):
+        if command[0] == "sbatch":
+            return subprocess.CompletedProcess(command, 0, stdout="Submitted batch job 222\n", stderr="")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr(core.subprocess, "run", fake_run)
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    result = metagenomics.run_sra_download_step(
+        sample_name="sra_sample",
+        output_dir=tmp_path / "out",
+        accession="SRR000001",
+        sra_dir=tmp_path / "sra",
+        execute=True,
+        verbose=False,
+        execution_profile=profile,
+    )
+
+    artifact = result["artifacts"]["download_sra"]
+    reads = result["artifacts"]["reads"]
+
+    assert artifact["status"] == "submitted"
+    assert artifact["job_id"] == "222"
+    assert reads["read_1"] == str(tmp_path / "sra" / "SRR000001" / "SRR000001_1.fastq")
+    assert reads["read_2"] == str(tmp_path / "sra" / "SRR000001" / "SRR000001_2.fastq")
+
+
+def test_pending_slurm_amplicon_pipeline_does_not_write_empty_final_cod(monkeypatch, tmp_path):
+    read_1 = tmp_path / "sample_R1.fastq"
+    read_2 = tmp_path / "sample_R2.fastq"
+    read_1.write_text("@read_1\nACGTACGT\n+\n!!!!!!!!\n")
+    read_2.write_text("@read_1\nACGTACGT\n+\n!!!!!!!!\n")
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {},
+        "steps": {
+            "trim_reads": {"backend": "slurm"},
+            "build_amplicon_features": {"backend": "slurm"},
+        },
+    }
+
+    def fake_run(command, capture_output=True, text=True, **kwargs):
+        if command[0] == "sbatch":
+            return subprocess.CompletedProcess(command, 0, stdout="Submitted batch job 333\n", stderr="")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr(core.subprocess, "run", fake_run)
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    result = metagenomics.sample_to_cod(
+        sample_name="sample_pending",
+        output_dir=tmp_path / "out",
+        mode="amplicon-reads",
+        read_1=read_1,
+        read_2=read_2,
+        execute=True,
+        verbose=False,
+        execution_profile=profile,
+    )
+
+    assert result["status"] == "waiting_for_preprocess"
+    assert not (tmp_path / "out" / "sample_pending" / "cod_profile.csv").exists()
+
+
+def test_batch_workflow_records_state_and_does_not_resubmit_active_download(monkeypatch, tmp_path):
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text("sample\taccession\nsample_sra\tSRR000001\n")
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {},
+        "steps": {"download_sra": {"backend": "slurm"}},
+    }
+    submissions = []
+
+    def fake_run(command, capture_output=True, text=True, **kwargs):
+        if command[0] == "sbatch":
+            submissions.append(command)
+            return subprocess.CompletedProcess(command, 0, stdout="Submitted batch job 444\n", stderr="")
+        if command[0] in {"sacct", "squeue"}:
+            return subprocess.CompletedProcess(command, 0, stdout="RUNNING\n", stderr="")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr(core.subprocess, "run", fake_run)
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    first = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        input_type="sra",
+        output_dir=tmp_path / "out",
+        sra_dir=tmp_path / "sra",
+        stage="all",
+        execute=True,
+        verbose=False,
+        execution_profile=profile,
+    )
+    second = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        input_type="sra",
+        output_dir=tmp_path / "out",
+        sra_dir=tmp_path / "sra",
+        stage="all",
+        execute=True,
+        verbose=False,
+        execution_profile=profile,
+    )
+
+    state = json.loads((tmp_path / "out" / "workflow_state.json").read_text())
+
+    assert len(submissions) == 1
+    assert first["samples"]["sample_sra"]["status"] == "waiting_for_download"
+    assert second["samples"]["sample_sra"]["status"] == "waiting_for_download"
+    assert state["samples"]["sample_sra"]["stages"]["download_sra"]["job_id"] == "444"
+    assert (tmp_path / "out" / "workflow_events.jsonl").exists()
+
+
+def test_batch_workflow_resumes_from_cached_preprocess_without_resubmitting(tmp_path):
+    reaction_db = tmp_path / "reactions.csv"
+    pl.DataFrame(
+        [{"EC_Numbers": "1.1.1.1", "e_adm_Reactions": "Uptake of sugars"}]
+    ).write_csv(reaction_db)
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text(f"sample\tread_1\tgtdb_matches\nsample_ready\treads.fastq\t{tmp_path / 'missing_matches.blast'}\n")
+    preprocess = tmp_path / "out" / "sample_ready" / "scratch" / "amplicon_preprocess"
+    preprocess.mkdir(parents=True)
+    (preprocess / "feature-table.tsv").write_text("#OTU ID\tsample_ready\nasv_1\t10\n")
+    (preprocess / "rep-seqs.fasta").write_text(">asv_1\nACGT\n")
+
+    metagenomics = core.Metagenomics(configs.Metagenomics(csv_reaction_db=reaction_db))
+    result = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        input_type="reads",
+        output_dir=tmp_path / "out",
+        stage="all",
+        execute=False,
+        verbose=False,
+        genome_alignments=tmp_path / "missing_alignments",
+    )
+
+    stages = result["samples"]["sample_ready"]["stages"]
+
+    assert stages["preprocess"]["status"] == "completed"
+    assert result["samples"]["sample_ready"]["status"] == "waiting_for_gtdb_alignment"
+    assert not (tmp_path / "out" / "sample_ready" / "scratch" / "trim_reads.sh").exists()
+
+
+def test_batch_workflow_does_not_resubmit_active_gtdb_alignment(monkeypatch, tmp_path):
+    reaction_db = tmp_path / "reactions.csv"
+    pl.DataFrame(
+        [{"EC_Numbers": "1.1.1.1", "e_adm_Reactions": "Uptake of sugars"}]
+    ).write_csv(reaction_db)
+    gtdb = tmp_path / "gtdb.fa"
+    gtdb.write_text(">GB_GCA_000001.1~contig\nACGT\n")
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text("sample\tread_1\nsample_ready\treads.fastq\n")
+    preprocess = tmp_path / "out" / "sample_ready" / "scratch" / "amplicon_preprocess"
+    preprocess.mkdir(parents=True)
+    (preprocess / "feature-table.tsv").write_text("#OTU ID\tsample_ready\nasv_1\t10\n")
+    (preprocess / "rep-seqs.fasta").write_text(">asv_1\nACGT\n")
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {},
+        "steps": {"align_to_gtdb": {"backend": "slurm"}},
+    }
+    submissions = []
+
+    def fake_run(command, capture_output=True, text=True, **kwargs):
+        if command[0] == "sbatch":
+            submissions.append(command)
+            return subprocess.CompletedProcess(command, 0, stdout="Submitted batch job 777\n", stderr="")
+        if command[0] in {"sacct", "squeue"}:
+            return subprocess.CompletedProcess(command, 0, stdout="RUNNING\n", stderr="")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr(core.subprocess, "run", fake_run)
+
+    config = configs.Metagenomics(csv_reaction_db=reaction_db)
+    config.gtdb_dir_fasta = str(gtdb)
+    metagenomics = core.Metagenomics(config)
+    first = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        input_type="reads",
+        output_dir=tmp_path / "out",
+        stage="all",
+        execute=True,
+        verbose=False,
+        execution_profile=profile,
+        genome_alignments=tmp_path / "alignments",
+    )
+    second = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        input_type="reads",
+        output_dir=tmp_path / "out",
+        stage="all",
+        execute=True,
+        verbose=False,
+        execution_profile=profile,
+        genome_alignments=tmp_path / "alignments",
+    )
+    state = json.loads((tmp_path / "out" / "workflow_state.json").read_text())
+
+    assert len(submissions) == 1
+    assert first["samples"]["sample_ready"]["status"] == "waiting_for_gtdb_alignment"
+    assert second["samples"]["sample_ready"]["status"] == "waiting_for_gtdb_alignment"
+    assert state["samples"]["sample_ready"]["stages"]["align_to_gtdb"]["status"] == "submitted"

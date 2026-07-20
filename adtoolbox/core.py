@@ -243,6 +243,124 @@ class PipelineTaskManager:
             self.logger.info("Slurm job %s is %s; waiting %s seconds", job_id, state, poll_seconds)
             time.sleep(poll_seconds)
 
+
+class MetagenomicsWorkflowState:
+    """Persistent state and event log for resumable metagenomics batches."""
+
+    TERMINAL_SLURM_FAILURES = {
+        "FAILED",
+        "CANCELLED",
+        "TIMEOUT",
+        "OUT_OF_MEMORY",
+        "NODE_FAIL",
+        "PREEMPTED",
+        "BOOT_FAIL",
+        "DEADLINE",
+        "REVOKED",
+        "SPECIAL_EXIT",
+    }
+    ACTIVE_SLURM_STATES = {"PENDING", "RUNNING", "CONFIGURING", "COMPLETING", "SUSPENDED", "REQUEUED"}
+
+    def __init__(self, output_dir: str | os.PathLike):
+        self.output_dir = pathlib.Path(output_dir)
+        self.state_path = self.output_dir / "workflow_state.json"
+        self.events_path = self.output_dir / "workflow_events.jsonl"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.state = self._load()
+
+    def _load(self) -> dict:
+        if self.state_path.exists():
+            with open(self.state_path) as f:
+                state = json.load(f)
+            state.setdefault("version", 1)
+            state.setdefault("samples", {})
+            return state
+        return {"version": 1, "samples": {}}
+
+    def save(self) -> None:
+        with open(self.state_path, "w") as f:
+            json.dump(self.state, f, indent=2, sort_keys=True, default=str)
+
+    def sample(self, sample_name: str) -> dict:
+        sample = self.state["samples"].setdefault(sample_name, {"stages": {}})
+        sample.setdefault("stages", {})
+        return sample
+
+    def stage(self, sample_name: str, stage_name: str) -> dict:
+        return self.sample(sample_name)["stages"].setdefault(stage_name, {})
+
+    def record(
+        self,
+        sample_name: str,
+        stage_name: str,
+        status: str,
+        *,
+        artifact: dict | None = None,
+        message: str | None = None,
+        paths: dict | None = None,
+    ) -> dict:
+        previous = self.stage(sample_name, stage_name)
+        attempts = int(previous.get("attempts", 0))
+        if status == "submitted" and previous.get("job_id") != (artifact or {}).get("job_id"):
+            attempts += 1
+        entry = {
+            **previous,
+            "status": status,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "attempts": attempts,
+        }
+        if artifact:
+            entry["artifact"] = artifact
+            if artifact.get("job_id"):
+                entry["job_id"] = artifact["job_id"]
+            if artifact.get("sbatch"):
+                entry["sbatch"] = artifact["sbatch"]
+        if message:
+            entry["message"] = message
+        if paths:
+            entry["paths"] = paths
+        self.sample(sample_name)["stages"][stage_name] = entry
+        self._event(sample_name, stage_name, status, entry, message=message)
+        self.save()
+        return entry
+
+    def _event(self, sample_name: str, stage_name: str, status: str, entry: dict, *, message: str | None = None) -> None:
+        record = {
+            "time": datetime.now().isoformat(timespec="seconds"),
+            "sample": sample_name,
+            "stage": stage_name,
+            "status": status,
+            "attempts": entry.get("attempts", 0),
+            "job_id": entry.get("job_id"),
+            "message": message,
+        }
+        with open(self.events_path, "a") as f:
+            f.write(json.dumps(record, default=str, sort_keys=True) + "\n")
+
+    def active_submission(
+        self,
+        sample_name: str,
+        stage_name: str,
+        *,
+        slurm_checker: PipelineTaskManager | None = None,
+    ) -> bool:
+        entry = self.stage(sample_name, stage_name)
+        if entry.get("status") not in {"submitted", "running", "monitoring"}:
+            return False
+        job_id = entry.get("job_id")
+        if not job_id or slurm_checker is None:
+            return True
+        state = slurm_checker.slurm_job_state(str(job_id))
+        if state is None:
+            return True
+        if state == "COMPLETED":
+            self.record(sample_name, stage_name, "completed", message=f"Slurm job {job_id} completed")
+            return False
+        if state in self.TERMINAL_SLURM_FAILURES:
+            self.record(sample_name, stage_name, "failed", message=f"Slurm job {job_id} ended as {state}")
+            return False
+        return state in self.ACTIVE_SLURM_STATES
+
 @dataclass
 class Feed:
 
@@ -963,8 +1081,8 @@ class Database:
 
         Args:
             protein_id (str): The uniprot id of the protein.
-            header_tail (str): A text to append to the header of the entry in the database;
-            In ADToolbox it is better to use ec number for compatibility with downstream functions.
+            header_tail (str): A text to append to the header of the entry in the database.
+                In ADToolbox it is better to use ec number for compatibility with downstream functions.
         
     
         Examples:
@@ -1523,7 +1641,7 @@ class Database:
         This function will download the required files for studies functionality.
 
         Args:
-            verbode (bool, optional): Whether to print the progress or not. Defaults to True.
+            verbose (bool, optional): Whether to print the progress or not. Defaults to True.
         
         Examples:
             >>> import os
@@ -1721,7 +1839,7 @@ class Metagenomics:
         
         Args:
             sample_name (str): The name of the sample.
-            threshold (int, float): The threshold for the top k or the percentile.
+            treshold (int, float): The threshold for the top k or the percentile.
             mode (str, optional): Whether to find the top k features or features that form specific percentile of the community of the sample. Defaults to 'top_k'. Options: 'top_k', 'percentile'.
         
         Returns:
@@ -1884,7 +2002,7 @@ class Metagenomics:
             
     
         Args:
-            save (bool, optional): Whether to save the json file or not. Defaults to True.
+            alignment_dir (str): The path to the alignment file generated by align_to_gtdb.
         """
         aligned = pl.read_csv(
             alignment_dir,
@@ -1937,7 +2055,8 @@ class Metagenomics:
             >>> assert obj.download_genome(identifier=genome_identifier,output_dir= output)[0] == 'rsync -avz --progress rsync://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/937/889/405 '+output
 
         Args:
-            identifier list[str]: The list of identifiers for the genomes. It can be either refseq or genbank.
+            identifier (str): The identifier for the genome. It can be either refseq or genbank.
+            output_dir (str): The directory where the genome should be downloaded.
             container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
         
         Returns:
@@ -2380,6 +2499,9 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         partition = step_settings.get("partition", global_slurm.get("partition"))
         account = step_settings.get("account", global_slurm.get("account"))
         qos = step_settings.get("qos", global_slurm.get("qos"))
+        max_retries = int(step_settings.get("retries", global_slurm.get("retries", 0)))
+        retry_delay = int(step_settings.get("retry_delay_seconds", global_slurm.get("retry_delay_seconds", 60)))
+        requeue = PipelineTaskManager._truthy(step_settings.get("requeue", global_slurm.get("requeue", False)))
 
         lines = [
             "#!/bin/bash",
@@ -2395,12 +2517,51 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             lines.append(f"#SBATCH --account={account}")
         if qos:
             lines.append(f"#SBATCH --qos={qos}")
+        if requeue:
+            lines.append("#SBATCH --requeue")
         dependency_job_ids = list(dependency_job_ids or [])
         if dependency_job_ids:
             lines.append(f"#SBATCH --dependency=afterok:{':'.join(dependency_job_ids)}")
         for option in step_settings.get("extra_sbatch", global_slurm.get("extra_sbatch", [])):
             lines.append(f"#SBATCH {option}")
-        lines.extend(["", "set -euo pipefail", command.strip(), ""])
+
+        command_lines = command.strip().splitlines()
+        if max_retries > 0:
+            lines.extend(
+                [
+                    "",
+                    "set -uo pipefail",
+                    "attempt=0",
+                    f"max_retries={max_retries}",
+                    f"retry_delay_seconds={retry_delay}",
+                    "while true; do",
+                    '  echo "ADToolbox step attempt $((attempt + 1))/$((max_retries + 1))"',
+                    "  set +e",
+                    "  (",
+                ]
+            )
+            lines.extend([f"    {line}" for line in command_lines])
+            lines.extend(
+                [
+                    "  )",
+                    "  status=$?",
+                    "  set -e",
+                    '  if [ "$status" -eq 0 ]; then',
+                    "    exit 0",
+                    "  fi",
+                    '  if [ "$attempt" -ge "$max_retries" ]; then',
+                    '    echo "ADToolbox step failed after $((max_retries + 1)) attempt(s)" >&2',
+                    '    exit "$status"',
+                    "  fi",
+                    '  echo "ADToolbox step failed with status $status; retrying in ${retry_delay_seconds}s" >&2',
+                    "  attempt=$((attempt + 1))",
+                    '  sleep "$retry_delay_seconds"',
+                    "done",
+                    "",
+                ]
+            )
+        else:
+            lines.extend(["", "set -euo pipefail", command.strip(), ""])
         return "\n".join(lines)
 
     def _execute_step(
@@ -2505,68 +2666,42 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                 wait_for_completion = manager._truthy(
                     step_settings.get("wait_for_completion", slurm_settings.get("wait_for_completion", False))
                 )
-                monitor_job = wait_for_completion or max_retries > 0
                 poll_seconds = int(step_settings.get("poll_seconds", slurm_settings.get("poll_seconds", 30)))
-                retry_delay = int(step_settings.get("retry_delay_seconds", slurm_settings.get("retry_delay_seconds", 60)))
-                attempts = []
+                logger.info("Submitting Slurm step %s with sbatch %s", step_name, sbatch_path)
+                submission, job_id = manager.submit_slurm_job(
+                    sbatch_path=sbatch_path,
+                    task=task,
+                    job_name_prefix=job_prefix,
+                    attempt=0,
+                )
+                artifact["status"] = "submitted"
+                artifact["submission"] = submission
+                artifact["job_id"] = job_id
+                artifact["retries"] = max_retries
+                artifact["retry_mode"] = "slurm_job_wrapper" if max_retries > 0 else "none"
 
-                for attempt in range(max_retries + 1):
-                    logger.info("Submitting Slurm step %s attempt %s with sbatch %s", step_name, attempt + 1, sbatch_path)
-                    submission, job_id = manager.submit_slurm_job(
-                        sbatch_path=sbatch_path,
-                        task=task,
-                        job_name_prefix=job_prefix,
-                        attempt=attempt,
-                    )
-                    attempt_record = {"attempt": attempt, "submission": submission, "job_id": job_id}
-                    attempts.append(attempt_record)
-                    artifact["status"] = "submitted"
-                    artifact["submission"] = submission
-                    artifact["job_id"] = job_id
-                    artifact["attempts"] = attempts
-                    artifact["retries"] = max_retries
-
-                    if not monitor_job:
-                        break
-                    if not job_id:
-                        task.status = "submitted"
-                        manager.record("monitor_skipped", task, attempt=attempt, reason="missing_job_id")
-                        logger.warning("Could not parse Slurm job id for %s; retry monitor is disabled for this step", step_name)
-                        break
-
+                if wait_for_completion and job_id:
                     task.status = "monitoring"
                     artifact["status"] = "monitoring"
-                    manager.record("monitoring", task, attempt=attempt)
+                    manager.record("monitoring", task, attempt=0)
                     state = manager.wait_for_slurm_terminal_state(job_id, poll_seconds)
-                    attempt_record["state"] = state
                     artifact["slurm_state"] = state
                     if state == "COMPLETED":
                         task.status = "completed"
                         artifact["status"] = "completed"
-                        manager.record("completed", task, attempt=attempt, slurm_state=state)
-                        break
-                    if state is None:
+                        manager.record("completed", task, attempt=0, slurm_state=state)
+                    elif state is None:
                         task.status = "submitted"
                         artifact["status"] = "submitted"
-                        manager.record("monitor_unknown", task, attempt=attempt)
-                        break
-                    task.status = "failed"
-                    artifact["status"] = "failed"
-                    manager.record("failed", task, attempt=attempt, slurm_state=state)
-                    if attempt >= max_retries:
-                        raise RuntimeError(
-                            f"Slurm step {step_name} failed after {attempt + 1} attempt(s); "
-                            f"last job {job_id} ended as {state}. See {sbatch_path}."
-                        )
-                    logger.warning(
-                        "Slurm step %s job %s ended as %s; retrying in %s seconds",
-                        step_name,
-                        job_id,
-                        state,
-                        retry_delay,
-                    )
-                    manager.record("retrying", task, attempt=attempt, slurm_state=state, retry_delay_seconds=retry_delay)
-                    time.sleep(retry_delay)
+                        manager.record("monitor_unknown", task, attempt=0)
+                    else:
+                        task.status = "failed"
+                        artifact["status"] = "failed"
+                        manager.record("failed", task, attempt=0, slurm_state=state)
+                        raise RuntimeError(f"Slurm step {step_name} failed as {state}. See {sbatch_path}.")
+                elif wait_for_completion and not job_id:
+                    manager.record("monitor_skipped", task, attempt=0, reason="missing_job_id")
+                    logger.warning("Could not parse Slurm job id for %s; wait_for_completion is disabled for this step", step_name)
             else:
                 logger.info("Prepared Slurm step %s at %s", step_name, sbatch_path)
                 manager.record("prepared_slurm", task)
@@ -3208,7 +3343,7 @@ fi"""
             execution_profile=execution_profile,
             dependencies=dependencies,
         )
-        if execute:
+        if execute and artifact["status"] in {"completed", "running"}:
             reads = self._resolved_sra_reads(accession, target_dir, paired=paired)
         elif not paired:
             reads["read_2"] = None
@@ -3634,6 +3769,7 @@ fi"""
             if not pathlib.Path(alignment_path).exists():
                 logger.info("Alignment output is not available yet: %s", alignment_path)
                 cod_profile = {}
+                result["status"] = "waiting_for_alignment"
             else:
                 ec_counts = self.extract_ec_from_alignment(str(alignment_path))
                 cod_profile = self.cod_from_ec_counts(ec_counts, normalize=normalize)
@@ -3687,7 +3823,6 @@ fi"""
             if not pathlib.Path(feature_table).exists() or not pathlib.Path(rep_seqs).exists():
                 logger.info("Amplicon feature outputs are not available yet")
                 cod_profile = {}
-                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
                 result["status"] = "waiting_for_preprocess"
             else:
                 downstream_dependencies = [preprocess_result["artifacts"]["build_amplicon_features"]]
@@ -3746,8 +3881,8 @@ fi"""
                 )
             if not matches_path.exists():
                 logger.info("GTDB matches are not available yet: %s", matches_path)
-                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", {}, sample_name=sample_name, key_name="group", value_name="value")
                 cod_profile = {}
+                result["status"] = "waiting_for_gtdb_alignment"
             else:
                 representative_genomes = self.get_genomes_from_gtdb_alignment(str(matches_path))
                 genome_abund = {}
@@ -3766,6 +3901,7 @@ fi"""
                     commands = {}
                     alignment_dir = scratch_path / "genome_alignments"
                     alignment_dir.mkdir(parents=True, exist_ok=True)
+                    missing_genome_fastas = []
                     genome_alignment_dependencies = (
                         [result["artifacts"]["align_to_gtdb"]]
                         if result["artifacts"].get("align_to_gtdb")
@@ -3774,6 +3910,7 @@ fi"""
                     for genome in genome_abund:
                         if genome not in genome_files:
                             logger.info("No genome FASTA found for %s", genome)
+                            missing_genome_fastas.append(genome)
                             continue
                         step_name = f"align_genome_{genome}"
                         profile_step_name = "align_genome"
@@ -3808,6 +3945,8 @@ fi"""
                         )
                         alignments[genome] = alignment
                     result["artifacts"]["genome_alignment_scripts"] = self._write_json(scratch_path / "genome_alignment_commands.json", commands)
+                    if missing_genome_fastas:
+                        result["artifacts"]["missing_genome_fastas"] = missing_genome_fastas
                 else:
                     raise ValueError("amplicon mode requires genome_alignments or genomes_dir after GTDB matching")
 
@@ -3816,9 +3955,30 @@ fi"""
                     for genome, alignment in alignments.items()
                     if genome in genome_abund and pathlib.Path(alignment).exists()
                 }
-                cod_profile = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=normalize) if genome_cods else {}
-                result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
-                result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+                missing_alignments = [
+                    genome
+                    for genome, alignment in alignments.items()
+                    if genome in genome_abund and not pathlib.Path(alignment).exists()
+                ]
+                if missing_alignments and not genome_cods:
+                    logger.info(
+                        "Genome alignment outputs are not available yet for %s genome(s)",
+                        len(missing_alignments),
+                    )
+                    cod_profile = {}
+                    result["status"] = "waiting_for_genome_alignment"
+                    result["artifacts"]["missing_genome_alignments"] = missing_alignments
+                elif result["artifacts"].get("missing_genome_fastas") and not genome_cods:
+                    logger.info(
+                        "Genome FASTA files are missing for %s genome(s)",
+                        len(result["artifacts"]["missing_genome_fastas"]),
+                    )
+                    cod_profile = {}
+                    result["status"] = "waiting_for_genome_fasta"
+                else:
+                    cod_profile = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=normalize) if genome_cods else {}
+                    result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
+                    result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         else:
             raise ValueError("mode must be one of: shotgun-alignment, shotgun-reads, genome-alignments, amplicon, amplicon-reads")
@@ -3839,7 +3999,10 @@ fi"""
                 "artifacts": result["artifacts"],
             },
         )
-        logger.info("Finished sample COD pipeline: %s", sample_name)
+        if result.get("status", "").startswith("waiting_for_"):
+            logger.info("Sample COD pipeline is waiting for submitted outputs: %s (%s)", sample_name, result["status"])
+        else:
+            logger.info("Finished sample COD pipeline: %s", sample_name)
         return result
 
     def batch_sample_to_cod(
@@ -3889,13 +4052,40 @@ fi"""
         output_path = pathlib.Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
         rows = self._read_sample_manifest(manifest)
+        workflow = MetagenomicsWorkflowState(output_path)
+        execution_profile_data = self._load_execution_profile(execution_profile)
         results = {
             "manifest": str(manifest),
             "output_dir": str(output_path),
             "stage": stage,
             "execute": execute,
+            "workflow_state": str(workflow.state_path),
+            "workflow_events": str(workflow.events_path),
             "samples": {},
         }
+
+        def _csv_has_rows(path: str | os.PathLike) -> bool:
+            path = pathlib.Path(path)
+            if not path.exists():
+                return False
+            try:
+                return pl.read_csv(path, infer_schema_length=0).height > 0
+            except Exception:
+                return False
+
+        def _artifact_status(artifacts: Iterable[dict]) -> str:
+            statuses = {
+                str(artifact.get("status", "prepared"))
+                for artifact in artifacts
+                if isinstance(artifact, dict)
+            }
+            if "failed" in statuses:
+                return "failed"
+            if statuses & {"submitted", "monitoring", "running"}:
+                return "submitted"
+            if statuses == {"completed"}:
+                return "completed"
+            return "prepared"
 
         for row in rows:
             accession = self._row_value(row, "accession", "sra", "run")
@@ -3914,63 +4104,157 @@ fi"""
                 else:
                     raise ValueError("Each manifest row must include sample/sample_name, accession, or read_1")
             paired = self._row_bool(row, "paired", default=read_2 is not None or accession is not None)
-            sample_result = {"input": dict(row), "artifacts": {}}
-            sample_dependencies = []
-
-            if accession and not read_1 and stage in {"download", "preprocess", "all"}:
-                download_result = self.run_sra_download_step(
-                    sample_name=sample_name,
-                    output_dir=output_path,
-                    accession=accession,
-                    sra_dir=sra_dir,
-                    paired=paired,
-                    container=container,
-                    execute=execute,
-                    verbose=verbose,
-                    execution_profile=execution_profile,
-                )
-                sample_result["artifacts"]["download"] = download_result["artifacts"]
-                read_1 = download_result["artifacts"]["reads"]["read_1"]
-                read_2 = download_result["artifacts"]["reads"]["read_2"]
-                sample_dependencies = [download_result["artifacts"]["download_sra"]]
-
-            if stage == "download":
-                results["samples"][sample_name] = sample_result
-                continue
-
-            if stage in {"preprocess", "all"} and not read_1:
-                raise ValueError(f"Sample {sample_name} needs read_1 or an accession")
-
-            if stage == "preprocess":
-                preprocess_result = self.preprocess_amplicon_sample(
-                    sample_name=sample_name,
-                    output_dir=output_path,
-                    read_1=read_1,
-                    read_2=read_2,
-                    forward_primer=forward_primer,
-                    reverse_primer=reverse_primer,
-                    adapter_1=adapter_1,
-                    adapter_2=adapter_2,
-                    minimum_length=minimum_length,
-                    quality_cutoff=quality_cutoff,
-                    quality_maxee=quality_maxee,
-                    identity=identity,
-                    min_unique_size=min_unique_size,
-                    chimera_filter=chimera_filter,
-                    container=container,
-                    execute=execute,
-                    verbose=verbose,
-                    execution_profile=execution_profile,
-                    dependencies=sample_dependencies,
-                )
-                sample_result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
-                results["samples"][sample_name] = sample_result
-                continue
-
             sample_dir = output_path / sample_name
             scratch_dir = sample_dir / "scratch"
-            feature_table = self._row_value(row, "feature_table", "feature-table") or str(scratch_dir / "amplicon_preprocess" / "feature-table.tsv")
-            rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences") or str(scratch_dir / "amplicon_preprocess" / "rep-seqs.fasta")
+            preprocess_dir = scratch_dir / "amplicon_preprocess"
+            feature_table = self._row_value(row, "feature_table", "feature-table") or str(preprocess_dir / "feature-table.tsv")
+            rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences") or str(preprocess_dir / "rep-seqs.fasta")
+            cod_profile_path = sample_dir / "cod_profile.csv"
+            sample_result = {"input": dict(row), "artifacts": {}, "stages": {}}
+            sample_dependencies: list[dict] = []
+            logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+            slurm_checker = PipelineTaskManager(
+                sample_name=sample_name,
+                output_dir=sample_dir,
+                execution_profile=execution_profile_data,
+                logger=logger,
+            )
+
+            def record_stage(stage_name: str, status_value: str, *, artifact: dict | None = None, message: str | None = None, paths: dict | None = None) -> dict:
+                entry = workflow.record(
+                    sample_name,
+                    stage_name,
+                    status_value,
+                    artifact=artifact,
+                    message=message,
+                    paths=paths,
+                )
+                sample_result["stages"][stage_name] = entry
+                return entry
+
+            def active(stage_name: str) -> bool:
+                return workflow.active_submission(sample_name, stage_name, slurm_checker=slurm_checker)
+
+            if accession and not read_1:
+                target_sra_dir = pathlib.Path(sra_dir) if sra_dir else output_path / "sra"
+                try:
+                    resolved_reads = self._resolved_sra_reads(accession, target_sra_dir, paired=paired)
+                    read_1 = resolved_reads["read_1"]
+                    read_2 = resolved_reads["read_2"]
+                    record_stage(
+                        "download_sra",
+                        "completed",
+                        message="cached FASTQ files found",
+                        paths=resolved_reads,
+                    )
+                except FileNotFoundError:
+                    pass
+
+            if accession and not read_1 and stage in {"download", "preprocess", "all"}:
+                if active("download_sra"):
+                    record_stage("download_sra", "submitted", message="download is already active")
+                    sample_result["status"] = "waiting_for_download"
+                    results["samples"][sample_name] = sample_result
+                    continue
+                else:
+                    download_result = self.run_sra_download_step(
+                        sample_name=sample_name,
+                        output_dir=output_path,
+                        accession=accession,
+                        sra_dir=sra_dir,
+                        paired=paired,
+                        container=container,
+                        execute=execute,
+                        verbose=verbose,
+                        execution_profile=execution_profile_data,
+                    )
+                    sample_result["artifacts"]["download"] = download_result["artifacts"]
+                    download_artifact = download_result["artifacts"]["download_sra"]
+                    read_1 = download_result["artifacts"]["reads"]["read_1"]
+                    read_2 = download_result["artifacts"]["reads"]["read_2"]
+                    sample_dependencies = [download_artifact]
+                    record_stage(
+                        "download_sra",
+                        download_artifact.get("status", "prepared"),
+                        artifact=download_artifact,
+                        paths=download_result["artifacts"]["reads"],
+                    )
+                    if download_artifact.get("status") in {"submitted", "prepared", "running", "monitoring"} and not pathlib.Path(read_1).exists():
+                        sample_result["status"] = "waiting_for_download"
+                        results["samples"][sample_name] = sample_result
+                        continue
+
+            if stage == "download":
+                sample_result.setdefault("status", "completed" if read_1 else "submitted")
+                results["samples"][sample_name] = sample_result
+                continue
+
+            preprocess_ready = pathlib.Path(feature_table).exists() and pathlib.Path(rep_seqs).exists()
+            if stage in {"preprocess", "all"}:
+                if preprocess_ready:
+                    record_stage(
+                        "preprocess",
+                        "completed",
+                        message="cached feature table and representative sequences found",
+                        paths={"feature_table": feature_table, "rep_seqs": rep_seqs},
+                    )
+                elif active("preprocess"):
+                    record_stage("preprocess", "submitted", message="preprocessing is already active")
+                    sample_result["status"] = "waiting_for_preprocess"
+                    results["samples"][sample_name] = sample_result
+                    continue
+                elif read_1 and (not execute or pathlib.Path(read_1).exists()):
+                    preprocess_result = self.preprocess_amplicon_sample(
+                        sample_name=sample_name,
+                        output_dir=output_path,
+                        read_1=read_1,
+                        read_2=read_2,
+                        forward_primer=forward_primer,
+                        reverse_primer=reverse_primer,
+                        adapter_1=adapter_1,
+                        adapter_2=adapter_2,
+                        minimum_length=minimum_length,
+                        quality_cutoff=quality_cutoff,
+                        quality_maxee=quality_maxee,
+                        identity=identity,
+                        min_unique_size=min_unique_size,
+                        chimera_filter=chimera_filter,
+                        container=container,
+                        execute=execute,
+                        verbose=verbose,
+                        execution_profile=execution_profile_data,
+                        dependencies=sample_dependencies,
+                    )
+                    sample_result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
+                    preprocess_artifacts = [
+                        preprocess_result["artifacts"].get("trim_reads"),
+                        preprocess_result["artifacts"].get("build_amplicon_features"),
+                    ]
+                    preprocess_status = _artifact_status(preprocess_artifacts)
+                    record_stage(
+                        "preprocess",
+                        preprocess_status,
+                        artifact={"steps": preprocess_artifacts},
+                        paths={"feature_table": feature_table, "rep_seqs": rep_seqs},
+                    )
+                    if not pathlib.Path(feature_table).exists() or not pathlib.Path(rep_seqs).exists():
+                        sample_result["status"] = "waiting_for_preprocess"
+                        results["samples"][sample_name] = sample_result
+                        continue
+                    preprocess_ready = True
+                else:
+                    if input_type == "reads":
+                        raise ValueError(f"Sample {sample_name} needs an existing read_1 file before preprocessing")
+                    record_stage("download_sra", "waiting", message="FASTQ files are not available yet")
+                    sample_result["status"] = "waiting_for_download"
+                    results["samples"][sample_name] = sample_result
+                    continue
+
+            if stage == "preprocess":
+                sample_result.setdefault("status", "completed" if preprocess_ready else "waiting_for_preprocess")
+                results["samples"][sample_name] = sample_result
+                continue
+
             row_gtdb_matches = self._row_value(row, "gtdb_matches", "matches")
             if row_gtdb_matches is None and gtdb_matches_dir is not None:
                 candidate = pathlib.Path(gtdb_matches_dir) / sample_name / "matches.blast"
@@ -3980,6 +4264,36 @@ fi"""
                 candidate = scratch_dir / "matches.blast"
                 if candidate.exists():
                     row_gtdb_matches = str(candidate)
+
+            if not pathlib.Path(feature_table).exists() or not pathlib.Path(rep_seqs).exists():
+                record_stage(
+                    "preprocess",
+                    "waiting",
+                    message="feature table or representative sequences are not available yet",
+                    paths={"feature_table": feature_table, "rep_seqs": rep_seqs},
+                )
+                sample_result["status"] = "waiting_for_preprocess"
+                results["samples"][sample_name] = sample_result
+                continue
+
+            if _csv_has_rows(cod_profile_path):
+                record_stage("cod", "completed", message="cached COD profile found", paths={"cod_profile": str(cod_profile_path)})
+                sample_result["status"] = "completed"
+                sample_result["artifacts"]["cod"] = {"cod_profile": str(cod_profile_path)}
+                results["samples"][sample_name] = sample_result
+                continue
+
+            if row_gtdb_matches is None and active("align_to_gtdb"):
+                record_stage("align_to_gtdb", "submitted", message="GTDB alignment is already active")
+                sample_result["status"] = "waiting_for_gtdb_alignment"
+                results["samples"][sample_name] = sample_result
+                continue
+
+            if row_gtdb_matches is not None and active("align_genome"):
+                record_stage("align_genome", "submitted", message="genome alignments are already active")
+                sample_result["status"] = "waiting_for_genome_alignment"
+                results["samples"][sample_name] = sample_result
+                continue
 
             if stage == "cod":
                 cod_result = self.sample_to_cod(
@@ -3996,39 +4310,62 @@ fi"""
                     execute=execute,
                     normalize=normalize,
                     verbose=verbose,
-                    execution_profile=execution_profile,
+                    execution_profile=execution_profile_data,
                     dependencies=sample_dependencies,
                 )
             else:
                 cod_result = self.sample_to_cod(
                     sample_name=sample_name,
                     output_dir=output_path,
-                    mode="amplicon-reads",
-                    read_1=read_1,
-                    read_2=read_2,
+                    mode="amplicon",
                     genome_alignments=genome_alignments,
                     genomes_dir=genomes_dir,
+                    feature_table=feature_table,
+                    rep_seqs=rep_seqs,
                     gtdb_matches=row_gtdb_matches,
-                    forward_primer=forward_primer,
-                    reverse_primer=reverse_primer,
-                    adapter_1=adapter_1,
-                    adapter_2=adapter_2,
-                    minimum_length=minimum_length,
-                    quality_cutoff=quality_cutoff,
-                    quality_maxee=quality_maxee,
-                    identity=identity,
-                    min_unique_size=min_unique_size,
-                    chimera_filter=chimera_filter,
                     top_k=top_k,
                     container=container,
                     execute=execute,
                     normalize=normalize,
                     verbose=verbose,
-                    execution_profile=execution_profile,
+                    execution_profile=execution_profile_data,
                     dependencies=sample_dependencies,
                 )
             sample_result["artifacts"]["cod"] = cod_result["artifacts"]
             sample_result["cod_profile"] = cod_result.get("cod_profile", {})
+            if cod_result["artifacts"].get("align_to_gtdb"):
+                gtdb_artifact = cod_result["artifacts"]["align_to_gtdb"]
+                record_stage(
+                    "align_to_gtdb",
+                    gtdb_artifact.get("status", "prepared"),
+                    artifact=gtdb_artifact,
+                    paths={"matches": str(scratch_dir / "matches.blast")},
+                )
+            genome_artifacts = [
+                artifact
+                for name, artifact in cod_result["artifacts"].items()
+                if str(name).startswith("align_genome_") and isinstance(artifact, dict)
+            ]
+            if genome_artifacts:
+                record_stage("align_genome", _artifact_status(genome_artifacts), artifact={"steps": genome_artifacts})
+            if cod_result.get("status"):
+                sample_result["status"] = cod_result["status"]
+                waiting_stage = {
+                    "waiting_for_gtdb_alignment": "align_to_gtdb",
+                    "waiting_for_genome_alignment": "align_genome",
+                    "waiting_for_genome_fasta": "genome_fasta",
+                }.get(cod_result["status"], "cod")
+                current_stage = workflow.stage(sample_name, waiting_stage)
+                if current_stage.get("status") in {"submitted", "running", "monitoring"}:
+                    sample_result["stages"][waiting_stage] = current_stage
+                else:
+                    record_stage(waiting_stage, "waiting", message=cod_result["status"])
+            elif _csv_has_rows(cod_profile_path):
+                sample_result["status"] = "completed"
+                record_stage("cod", "completed", paths={"cod_profile": str(cod_profile_path)})
+            else:
+                sample_result["status"] = "waiting_for_cod"
+                record_stage("cod", "waiting", message="COD profile was not produced")
             results["samples"][sample_name] = sample_result
 
         results["summary"] = self._write_json(output_path / "batch_summary.json", results)
