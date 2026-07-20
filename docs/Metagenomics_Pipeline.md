@@ -4,7 +4,7 @@ ADToolbox converts metagenomics evidence into model-ready e-ADM microbial COD al
 
 - SRA accession tables
 - local FASTQ/FASTQ.GZ read tables
-- raw amplicon reads processed with cutadapt and VSEARCH
+- raw amplicon reads processed with fastp and VSEARCH
 
 Each sample row writes a dedicated output folder containing clean result CSVs, `pipeline.log`, and `provenance.json`. Generated command scripts, raw alignment files, VSEARCH intermediates, and other working files are kept under that sample's `scratch/` folder.
 
@@ -12,7 +12,7 @@ Each sample row writes a dedicated output folder containing clean result CSVs, `
 
 Raw amplicon reads are handled in three stages:
 
-1. Trim primers/adapters and short reads with cutadapt.
+1. Trim adapters and short reads with fastp. Explicit adapters can be supplied, otherwise fastp auto-detects common adapters.
 2. Build a feature table and representative sequence FASTA with VSEARCH.
 3. Map representative sequences to GTDB, connect genomes to ADToolbox protein alignments, and aggregate the resulting e-ADM COD allocation.
 
@@ -39,8 +39,8 @@ adtoolbox Metagenomics process \
   --input ./metagenomics/read_samples.tsv \
   --input-type reads \
   --output-dir ./metagenomics/process \
-  --forward-primer GTGYCAGCMGCCGCGGTAA \
-  --reverse-primer GGACTACNVGGGTWTCTAAT \
+  --adapter-1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+  --adapter-2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
   --amplicon-to-genome-db ./database/amplicon_to_genome \
   --genomes-dir ./metagenomics/genomes \
   --reaction-db ./database/Reaction_Metadata.csv \

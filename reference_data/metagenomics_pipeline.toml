@@ -39,10 +39,7 @@ time = "01:00:00"
 [steps.trim_reads.settings]
 threads = 4
 minimum_length = 100
-error_rate = 0.1
-# quality_cutoff = "20,20"
-# forward_primer = "GTGYCAGCMGCCGCGGTAA"
-# reverse_primer = "GGACTACNVGGGTWTCTAAT"
+quality_cutoff = 20
 # adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
 # adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 

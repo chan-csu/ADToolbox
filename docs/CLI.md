@@ -151,7 +151,7 @@ adtoolbox Metagenomics align-multiple-genomes \
 | `pipeline.log` | Step-by-step log for the sample. |
 | `scratch/` | Intermediate files, generated scripts, GTDB matches, and genome alignment files. |
 
-By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run cutadapt, VSEARCH, and MMseqs commands.
+By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run fastp, VSEARCH, and MMseqs commands.
 
 Execution behavior can be controlled with a TOML profile. The repository includes an example at `reference_data/metagenomics_pipeline.toml`.
 
@@ -176,7 +176,9 @@ time = "01:00:00"
 [steps.trim_reads.settings]
 threads = 4
 minimum_length = 100
-error_rate = 0.1
+# Optional explicit adapters. When omitted, fastp auto-detects common adapters.
+# adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+# adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
 [steps.build_amplicon_features]
 backend = "slurm"
@@ -232,8 +234,8 @@ adtoolbox Metagenomics process \
   --input-type sra \
   --output-dir ./metagenomics/process \
   --sra-dir ./metagenomics/sra \
-  --forward-primer GTGYCAGCMGCCGCGGTAA \
-  --reverse-primer GGACTACNVGGGTWTCTAAT \
+  --adapter-1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+  --adapter-2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
   --amplicon-to-genome-db ./database/amplicon_to_genome \
   --genomes-dir ./metagenomics/genomes \
   --protein-db ./database/Protein_DB.fasta \
@@ -255,8 +257,8 @@ adtoolbox Metagenomics process \
   --input ./metagenomics/read_samples.tsv \
   --input-type reads \
   --output-dir ./metagenomics/process \
-  --forward-primer GTGYCAGCMGCCGCGGTAA \
-  --reverse-primer GGACTACNVGGGTWTCTAAT \
+  --adapter-1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+  --adapter-2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
   --amplicon-to-genome-db ./database/amplicon_to_genome \
   --genomes-dir ./metagenomics/genomes \
   --protein-db ./database/Protein_DB.fasta \

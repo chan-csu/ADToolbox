@@ -28,7 +28,6 @@ COPY --chown=$MAMBA_USER:$MAMBA_USER adtoolbox /tmp/adtoolbox/adtoolbox
 RUN micromamba install -y -n base -c conda-forge -c bioconda \
         python=3.11 \
         pip \
-        cutadapt \
         fastp \
         mmseqs2 \
         sra-tools \
@@ -40,7 +39,6 @@ RUN micromamba run -n base pip install --no-cache-dir /tmp/adtoolbox \
 
 USER root
 RUN ln -sf /opt/conda/bin/ADToolbox /usr/local/bin/ADToolbox \
-    && ln -sf /opt/conda/bin/cutadapt /usr/local/bin/cutadapt \
     && ln -sf /opt/conda/bin/fasterq-dump /usr/local/bin/fasterq-dump \
     && ln -sf /opt/conda/bin/fastp /usr/local/bin/fastp \
     && ln -sf /opt/conda/bin/mmseqs /usr/local/bin/mmseqs \

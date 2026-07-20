@@ -371,8 +371,6 @@ maxee = 0.5
         output_dir=tmp_path / "out",
         read_1=read_1,
         read_2=read_2,
-        forward_primer="GTGYCAGCMGCCGCGGTAA",
-        reverse_primer="GGACTACNVGGGTWTCTAAT",
         execution_profile=profile,
         execute=False,
         verbose=False,
@@ -386,8 +384,9 @@ maxee = 0.5
 
     assert result["artifacts"]["feature_table"].endswith("feature-table.tsv")
     assert "/scratch/amplicon_preprocess/" in result["artifacts"]["feature_table"]
-    assert "cutadapt" in trim_script.read_text()
-    assert "-m 80" in trim_script.read_text()
+    assert "fastp" in trim_script.read_text()
+    assert "--length_required 80" in trim_script.read_text()
+    assert "--detect_adapter_for_pe" in trim_script.read_text()
     assert "vsearch --cluster_unoise" in feature_script.read_text()
     assert "vsearch --uchime3_denovo" in feature_script.read_text()
     assert "--id 0.99" in feature_script.read_text()

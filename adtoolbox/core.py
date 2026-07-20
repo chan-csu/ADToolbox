@@ -2597,7 +2597,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         adapter_1: str | None = None,
         adapter_2: str | None = None,
         minimum_length: int = 100,
-        error_rate: float = 0.1,
         quality_cutoff: str | int | None = None,
         threads: int = 1,
         container: str = "None",
@@ -2607,32 +2606,42 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         trimmed_1 = output_path / f"{sample_name}_trimmed_R1.fastq.gz"
         trimmed_2 = output_path / f"{sample_name}_trimmed_R2.fastq.gz" if read_2 else None
 
-        args = [
-            "cutadapt",
-            "-j",
-            str(threads),
-            "-e",
-            str(error_rate),
-            "-m",
-            str(minimum_length),
-        ]
-        if quality_cutoff is not None:
-            args.extend(["-q", str(quality_cutoff)])
-        if forward_primer:
-            args.extend(["-g", forward_primer])
-        if reverse_primer and read_2:
-            args.extend(["-G", reverse_primer])
-        if adapter_1:
-            args.extend(["-a", adapter_1])
-        if adapter_2 and read_2:
-            args.extend(["-A", adapter_2])
+        adapter_1 = adapter_1 or forward_primer
+        adapter_2 = adapter_2 or reverse_primer
 
-        args.extend(["-o", str(trimmed_1)])
+        report_prefix = output_path / f"{sample_name}_fastp"
+        args = [
+            "fastp",
+            "-w",
+            str(threads),
+            "--length_required",
+            str(minimum_length),
+            "-i",
+            str(read_1),
+            "-o",
+            str(trimmed_1),
+            "--json",
+            str(report_prefix.with_suffix(".json")),
+            "--html",
+            str(report_prefix.with_suffix(".html")),
+        ]
         if read_2:
-            args.extend(["-p", str(trimmed_2)])
-        args.append(str(read_1))
-        if read_2:
-            args.append(str(read_2))
+            args.extend(
+                [
+                    "-I",
+                    str(read_2),
+                    "-O",
+                    str(trimmed_2),
+                ]
+            )
+            if not adapter_1 and not adapter_2:
+                args.append("--detect_adapter_for_pe")
+        if quality_cutoff is not None:
+            args.extend(["--qualified_quality_phred", str(quality_cutoff).split(",", 1)[0]])
+        if adapter_1:
+            args.extend(["--adapter_sequence", adapter_1])
+        if adapter_2 and read_2:
+            args.extend(["--adapter_sequence_r2", adapter_2])
 
         command = " ".join(self._quote(arg) for arg in args)
         script = self._wrap_external_command(
@@ -2797,7 +2806,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         adapter_1: str | None = None,
         adapter_2: str | None = None,
         minimum_length: int = 100,
-        error_rate: float = 0.1,
         quality_cutoff: str | int | None = None,
         container: str = "None",
         execute: bool = False,
@@ -2824,7 +2832,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             adapter_1=settings.get("adapter_1", adapter_1),
             adapter_2=settings.get("adapter_2", adapter_2),
             minimum_length=int(settings.get("minimum_length", minimum_length)),
-            error_rate=float(settings.get("error_rate", error_rate)),
             quality_cutoff=settings.get("quality_cutoff", quality_cutoff),
             threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
             container=self._step_container(execution_profile, step_name, container),

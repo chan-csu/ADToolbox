@@ -429,12 +429,10 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
 @click.option("--genome-alignments", help="Genome alignment JSON, one TSV file, or directory of Alignment_Results_mmseq_*.tsv files.")
 @click.option("--genomes-dir", help="Directory containing genome FASTA files when alignments are not precomputed.")
 @click.option("--gtdb-matches-dir", help="Directory containing per-sample matches.blast files.")
-@click.option("--forward-primer", help="Forward primer sequence for cutadapt.")
-@click.option("--reverse-primer", help="Reverse primer sequence for paired-end cutadapt.")
-@click.option("--adapter-1", help="Forward-read adapter sequence for cutadapt.")
-@click.option("--adapter-2", help="Reverse-read adapter sequence for paired-end cutadapt.")
+@click.option("--adapter-1", help="Forward-read adapter sequence for fastp. Omit to let fastp auto-detect.")
+@click.option("--adapter-2", help="Reverse-read adapter sequence for paired-end fastp. Omit to let fastp auto-detect.")
 @click.option("--minimum-length", default=100, show_default=True, type=int, help="Minimum amplicon read length after trimming/filtering.")
-@click.option("--quality-cutoff", help="Cutadapt quality cutoff, for example 20 or 20,20.")
+@click.option("--quality-cutoff", help="fastp qualified quality phred cutoff.")
 @click.option("--quality-maxee", default=1.0, show_default=True, type=float, help="VSEARCH expected-error filter.")
 @click.option("--identity", default=0.97, show_default=True, type=float, help="VSEARCH identity for assigning reads to denoised rep-seqs.")
 @click.option("--min-unique-size", default=2, show_default=True, type=int, help="Minimum dereplicated sequence size.")
@@ -459,8 +457,6 @@ def metagenomics_process(
     genome_alignments,
     genomes_dir,
     gtdb_matches_dir,
-    forward_primer,
-    reverse_primer,
     adapter_1,
     adapter_2,
     minimum_length,
@@ -513,8 +509,6 @@ def metagenomics_process(
             genome_alignments=genome_alignments,
             genomes_dir=genomes_dir,
             gtdb_matches_dir=gtdb_matches_dir,
-            forward_primer=forward_primer,
-            reverse_primer=reverse_primer,
             adapter_1=adapter_1,
             adapter_2=adapter_2,
             minimum_length=minimum_length,
