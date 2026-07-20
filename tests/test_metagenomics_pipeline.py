@@ -277,12 +277,59 @@ time = "06:00:00"
     )
 
     step = result["artifacts"]["align_short_reads"]
-    sbatch = tmp_path / "out" / "sample_c" / "slurm" / "align_short_reads.sbatch"
+    sbatch = tmp_path / "out" / "sample_c" / "scratch" / "slurm" / "align_short_reads.sbatch"
 
     assert step["backend"] == "slurm"
     assert step["sbatch"] == str(sbatch)
     assert "#SBATCH --cpus-per-task=16" in sbatch.read_text()
     assert "#SBATCH --mem=64G" in sbatch.read_text()
+
+
+def test_task_manager_writes_events_for_local_steps(tmp_path):
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    logger = metagenomics._sample_pipeline_logger("sample_task", tmp_path / "sample_task", verbose=False)
+    artifact = metagenomics._execute_step(
+        "echo hello",
+        step_name="hello",
+        sample_name="sample_task",
+        output_dir=tmp_path / "sample_task" / "scratch",
+        logger=logger,
+        execute=False,
+        execution_profile={"backend": "local", "container": "None", "slurm": {}, "steps": {}},
+    )
+
+    events = tmp_path / "sample_task" / "scratch" / "task_events.jsonl"
+
+    assert artifact["status"] == "prepared"
+    assert artifact["task_events"] == str(events)
+    assert '"event": "prepared"' in events.read_text()
+
+
+def test_task_manager_adds_slurm_dependencies(tmp_path):
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {},
+        "steps": {"child": {"backend": "slurm", "cpus": 2, "memory": "4G", "time": "00:30:00"}},
+    }
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    logger = metagenomics._sample_pipeline_logger("sample_task", tmp_path / "sample_task", verbose=False)
+    artifact = metagenomics._execute_step(
+        "echo child",
+        step_name="child",
+        sample_name="sample_task",
+        output_dir=tmp_path / "sample_task" / "scratch",
+        logger=logger,
+        execute=False,
+        execution_profile=profile,
+        dependencies=[{"step": "parent", "job_id": "12345"}],
+    )
+
+    sbatch = tmp_path / "sample_task" / "scratch" / "slurm" / "child.sbatch"
+
+    assert artifact["dependency_job_ids"] == ["12345"]
+    assert artifact["dependencies"] == ["parent"]
+    assert "#SBATCH --dependency=afterok:12345" in sbatch.read_text()
 
 
 def test_amplicon_preprocessing_writes_trim_and_vsearch_steps(tmp_path):
@@ -332,11 +379,13 @@ maxee = 0.5
     )
 
     sample_dir = tmp_path / "out" / "sample_d"
-    trim_script = sample_dir / "trim_reads.sh"
-    feature_script = sample_dir / "build_amplicon_features.sh"
-    trim_sbatch = sample_dir / "slurm" / "trim_reads.sbatch"
+    scratch_dir = sample_dir / "scratch"
+    trim_script = scratch_dir / "trim_reads.sh"
+    feature_script = scratch_dir / "build_amplicon_features.sh"
+    trim_sbatch = scratch_dir / "slurm" / "trim_reads.sbatch"
 
     assert result["artifacts"]["feature_table"].endswith("feature-table.tsv")
+    assert "/scratch/amplicon_preprocess/" in result["artifacts"]["feature_table"]
     assert "cutadapt" in trim_script.read_text()
     assert "-m 80" in trim_script.read_text()
     assert "vsearch --cluster_unoise" in feature_script.read_text()
@@ -428,6 +477,6 @@ def test_batch_sample_to_cod_accepts_sra_and_reads_tables(tmp_path):
     assert set(sra_result["samples"]) == {"sra_sample"}
     assert set(reads_result["samples"]) == {"fastq_sample"}
     assert (tmp_path / "out" / "sra_sample" / "download_sra.sh").exists()
-    assert (tmp_path / "out" / "fastq_sample" / "trim_reads.sh").exists()
+    assert (tmp_path / "out" / "fastq_sample" / "scratch" / "trim_reads.sh").exists()
     assert sra_result["samples"]["sra_sample"]["artifacts"]["download"]["accession"] == "SRR000001"
     assert (tmp_path / "out" / "batch_summary.json").exists()

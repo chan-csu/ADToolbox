@@ -137,7 +137,7 @@ adtoolbox Metagenomics align-multiple-genomes \
 
 ### Processing Pipeline
 
-`process` is the table-driven pipeline for converting amplicon evidence into e-ADM microbial biomass/COD allocations. Each run creates one sample folder per table row under `--output-dir` containing:
+`process` is the table-driven pipeline for converting amplicon evidence into e-ADM microbial biomass/COD allocations. Each run creates one sample folder per table row under `--output-dir`. Clean result files stay at the sample-folder root, while generated commands, raw alignments, VSEARCH intermediates, and other working files are written under `scratch/`.
 
 | File | Meaning |
 | --- | --- |
@@ -149,6 +149,7 @@ adtoolbox Metagenomics align-multiple-genomes \
 | `genome_cods.csv` | Genome-level `X_*` profiles when genomes are involved, as `sample`, `genome_id`, `group`, `value`. |
 | `provenance.json` | Inputs, thresholds, databases, and artifacts used. |
 | `pipeline.log` | Step-by-step log for the sample. |
+| `scratch/` | Intermediate files, generated scripts, GTDB matches, and genome alignment files. |
 
 By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run cutadapt, VSEARCH, and MMseqs commands.
 

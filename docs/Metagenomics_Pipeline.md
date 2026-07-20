@@ -6,7 +6,7 @@ ADToolbox converts metagenomics evidence into model-ready e-ADM microbial COD al
 - local FASTQ/FASTQ.GZ read tables
 - raw amplicon reads processed with cutadapt and VSEARCH
 
-Each sample row writes a dedicated output folder containing `pipeline.log`, generated command scripts, tall CSV table artifacts, and `provenance.json`.
+Each sample row writes a dedicated output folder containing clean result CSVs, `pipeline.log`, and `provenance.json`. Generated command scripts, raw alignment files, VSEARCH intermediates, and other working files are kept under that sample's `scratch/` folder.
 
 ## Amplicon Reads
 

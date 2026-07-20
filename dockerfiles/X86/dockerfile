@@ -5,6 +5,7 @@ LABEL org.opencontainers.image.description="ADToolbox with metagenomics pipeline
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/opt/conda/bin:${PATH}
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -23,7 +24,6 @@ USER $MAMBA_USER
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER pyproject.toml README.md /tmp/adtoolbox/
 COPY --chown=$MAMBA_USER:$MAMBA_USER adtoolbox /tmp/adtoolbox/adtoolbox
-COPY --chown=$MAMBA_USER:$MAMBA_USER reference_data /opt/adtoolbox/reference_data
 
 RUN micromamba install -y -n base -c conda-forge -c bioconda \
         python=3.11 \
@@ -40,6 +40,12 @@ RUN micromamba run -n base pip install --no-cache-dir /tmp/adtoolbox \
 
 USER root
 RUN ln -sf /opt/conda/bin/ADToolbox /usr/local/bin/ADToolbox \
+    && ln -sf /opt/conda/bin/cutadapt /usr/local/bin/cutadapt \
+    && ln -sf /opt/conda/bin/fasterq-dump /usr/local/bin/fasterq-dump \
+    && ln -sf /opt/conda/bin/fastp /usr/local/bin/fastp \
+    && ln -sf /opt/conda/bin/mmseqs /usr/local/bin/mmseqs \
+    && ln -sf /opt/conda/bin/prefetch /usr/local/bin/prefetch \
+    && ln -sf /opt/conda/bin/vsearch /usr/local/bin/vsearch \
     && printf '#!/usr/bin/env bash\nexec ADToolbox "$@"\n' > /usr/local/bin/adtoolbox \
     && chmod +x /usr/local/bin/adtoolbox
 

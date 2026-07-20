@@ -43,6 +43,101 @@ import polars as pl
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
 
+
+@dataclass
+class PipelineTask:
+    sample_name: str
+    step_name: str
+    backend: str
+    command: str
+    status: str
+    dependencies: list[str] = dataclasses.field(default_factory=list)
+    sbatch: str | None = None
+    job_id: str | None = None
+    submission: str | None = None
+
+
+class PipelineTaskManager:
+    """Small execution manager for local and Slurm pipeline tasks."""
+
+    def __init__(
+        self,
+        *,
+        sample_name: str,
+        output_dir: str | os.PathLike,
+        execution_profile: dict,
+        logger: logging.Logger,
+    ):
+        self.sample_name = sample_name
+        self.output_dir = pathlib.Path(output_dir)
+        self.execution_profile = execution_profile
+        self.logger = logger
+        self.events_path = self.output_dir / "task_events.jsonl"
+        self.events_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def record(self, event: str, task: PipelineTask, **payload) -> None:
+        record = {
+            "time": datetime.now().isoformat(timespec="seconds"),
+            "event": event,
+            "sample": task.sample_name,
+            "step": task.step_name,
+            "backend": task.backend,
+            "status": task.status,
+            "command": task.command,
+            "sbatch": task.sbatch,
+            "job_id": task.job_id,
+            "dependencies": task.dependencies,
+            **payload,
+        }
+        with open(self.events_path, "a") as f:
+            f.write(json.dumps(record, default=str, sort_keys=True) + "\n")
+
+    @staticmethod
+    def parse_slurm_job_id(submission: str) -> str | None:
+        match = re.search(r"\b(\d+)(?:\.\d+)?\b", submission or "")
+        return match.group(1) if match else None
+
+    @staticmethod
+    def dependency_job_ids(dependencies: Iterable[dict] | None) -> list[str]:
+        job_ids = []
+        for dependency in dependencies or []:
+            job_id = dependency.get("job_id") if isinstance(dependency, dict) else None
+            if job_id:
+                job_ids.append(str(job_id))
+        return job_ids
+
+    def wait_for_slurm_capacity(self, job_name_prefix: str) -> None:
+        global_slurm = self.execution_profile.get("slurm", {})
+        max_jobs = global_slurm.get("max_concurrent_jobs")
+        if not max_jobs:
+            return
+        max_jobs = int(max_jobs)
+        user = global_slurm.get("user") or os.environ.get("USER")
+        if not user:
+            return
+        while True:
+            completed = subprocess.run(
+                ["squeue", "-h", "-u", str(user), "-o", "%j"],
+                capture_output=True,
+                text=True,
+            )
+            if completed.returncode:
+                self.logger.warning("Could not query Slurm capacity with squeue; submitting without throttling")
+                return
+            active = [
+                name for name in completed.stdout.splitlines()
+                if name.startswith(job_name_prefix)
+            ]
+            if len(active) < max_jobs:
+                return
+            self.logger.info(
+                "Slurm capacity reached for %s: %s/%s active jobs; waiting",
+                job_name_prefix,
+                len(active),
+                max_jobs,
+            )
+            time.sleep(int(global_slurm.get("poll_seconds", 30)))
+
 @dataclass
 class Feed:
 
@@ -2104,6 +2199,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         log_file: str | os.PathLike,
         global_slurm: dict,
         step_settings: dict,
+        dependency_job_ids: Iterable[str] | None = None,
     ) -> str:
         cpus = step_settings.get("cpus", global_slurm.get("cpus", 1))
         memory = step_settings.get("memory", global_slurm.get("memory", "8G"))
@@ -2126,6 +2222,9 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             lines.append(f"#SBATCH --account={account}")
         if qos:
             lines.append(f"#SBATCH --qos={qos}")
+        dependency_job_ids = list(dependency_job_ids or [])
+        if dependency_job_ids:
+            lines.append(f"#SBATCH --dependency=afterok:{':'.join(dependency_job_ids)}")
         for option in step_settings.get("extra_sbatch", global_slurm.get("extra_sbatch", [])):
             lines.append(f"#SBATCH {option}")
         lines.extend(["", "set -euo pipefail", command.strip(), ""])
@@ -2141,6 +2240,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         logger: logging.Logger,
         execute: bool,
         execution_profile: dict,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         output_path = pathlib.Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -2148,15 +2248,44 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         backend = str(step_settings.get("backend", execution_profile.get("backend", "local"))).lower()
         command_path = output_path / f"{step_name}.sh"
         command_path.write_text("#!/bin/bash\nset -euo pipefail\n" + script.strip() + "\n")
+        manager = PipelineTaskManager(
+            sample_name=sample_name,
+            output_dir=output_path,
+            execution_profile=execution_profile,
+            logger=logger,
+        )
+        dependency_job_ids = manager.dependency_job_ids(dependencies)
+        dependency_steps = [
+            str(dependency.get("step", dependency.get("step_name", "")))
+            for dependency in dependencies or []
+            if isinstance(dependency, dict)
+        ]
+        task = PipelineTask(
+            sample_name=sample_name,
+            step_name=step_name,
+            backend=backend,
+            command=str(command_path),
+            status="prepared",
+            dependencies=dependency_job_ids,
+        )
 
         artifact = {
+            "step": step_name,
             "backend": backend,
             "command": str(command_path),
             "executed": execute,
+            "status": "prepared",
+            "dependencies": dependency_steps,
+            "dependency_job_ids": dependency_job_ids,
+            "task_events": str(manager.events_path),
         }
+        manager.record("prepared", task)
         if backend == "local":
             if execute:
                 logger.info("Running local step %s", step_name)
+                task.status = "running"
+                artifact["status"] = "running"
+                manager.record("running", task)
                 completed = subprocess.run(script, shell=True, capture_output=True, text=True)
                 if completed.stdout:
                     logger.info(completed.stdout.strip())
@@ -2166,7 +2295,13 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                     message = completed.stderr.strip() or completed.stdout.strip() or f"Step exited with status {completed.returncode}"
                     if len(message) > 1200:
                         message = message[-1200:]
+                    task.status = "failed"
+                    artifact["status"] = "failed"
+                    manager.record("failed", task, returncode=completed.returncode, message=message)
                     raise RuntimeError(f"Step {step_name} failed. See {command_path}. Last output: {message}")
+                task.status = "completed"
+                artifact["status"] = "completed"
+                manager.record("completed", task, returncode=completed.returncode)
             else:
                 logger.info("Prepared local step %s at %s", step_name, command_path)
             return artifact
@@ -2177,6 +2312,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             job_name = str(step_settings.get("job_name", f"adtoolbox_{sample_name}_{step_name}"))
             sbatch_path = slurm_dir / f"{step_name}.sbatch"
             slurm_log = slurm_dir / f"{step_name}.%j.out"
+            task.sbatch = str(sbatch_path)
             sbatch_path.write_text(
                 self._slurm_script(
                     script,
@@ -2184,15 +2320,28 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                     log_file=slurm_log,
                     global_slurm=execution_profile.get("slurm", {}),
                     step_settings=step_settings,
+                    dependency_job_ids=dependency_job_ids,
                 )
             )
             artifact["sbatch"] = str(sbatch_path)
+            artifact["job_name"] = job_name
             if execute:
+                job_prefix = str(execution_profile.get("slurm", {}).get("job_name_prefix", f"adtoolbox_{sample_name}"))
+                manager.wait_for_slurm_capacity(job_prefix)
                 logger.info("Submitting Slurm step %s with sbatch %s", step_name, sbatch_path)
                 completed = subprocess.run(["sbatch", str(sbatch_path)], check=True, capture_output=True, text=True)
-                artifact["submission"] = completed.stdout.strip()
+                submission = completed.stdout.strip()
+                job_id = manager.parse_slurm_job_id(submission)
+                task.status = "submitted"
+                task.submission = submission
+                task.job_id = job_id
+                artifact["status"] = "submitted"
+                artifact["submission"] = submission
+                artifact["job_id"] = job_id
+                manager.record("submitted", task, submission=submission)
             else:
                 logger.info("Prepared Slurm step %s at %s", step_name, sbatch_path)
+                manager.record("prepared_slurm", task)
             return artifact
 
         raise ValueError("Execution backend must be local or slurm")
@@ -2654,6 +2803,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         execute: bool = False,
         verbose: bool = True,
         execution_profile: str | os.PathLike | dict | None = None,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         """Prepare or run the amplicon read trimming step for one sample."""
         sample_dir = pathlib.Path(output_dir) / sample_name
@@ -2683,10 +2833,11 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             script,
             step_name=step_name,
             sample_name=sample_name,
-            output_dir=sample_dir,
+            output_dir=step_output.parent if step_output_dir else sample_dir,
             logger=logger,
             execute=execute,
             execution_profile=execution_profile,
+            dependencies=dependencies,
         )
         return {
             "sample_name": sample_name,
@@ -2781,6 +2932,7 @@ fi"""
         execute: bool = False,
         verbose: bool = True,
         execution_profile: str | os.PathLike | dict | None = None,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         """Prepare or run an SRA download step for one sample."""
         sample_dir = pathlib.Path(output_dir) / sample_name
@@ -2805,6 +2957,7 @@ fi"""
             logger=logger,
             execute=execute,
             execution_profile=execution_profile,
+            dependencies=dependencies,
         )
         if execute:
             reads = self._resolved_sra_reads(accession, target_dir, paired=paired)
@@ -2839,6 +2992,7 @@ fi"""
         execute: bool = False,
         verbose: bool = True,
         execution_profile: str | os.PathLike | dict | None = None,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         """Prepare or run the VSEARCH feature-table step for one sample."""
         sample_dir = pathlib.Path(output_dir) / sample_name
@@ -2866,10 +3020,11 @@ fi"""
             script,
             step_name=step_name,
             sample_name=sample_name,
-            output_dir=sample_dir,
+            output_dir=step_output.parent if step_output_dir else sample_dir,
             logger=logger,
             execute=execute,
             execution_profile=execution_profile,
+            dependencies=dependencies,
         )
         return {
             "sample_name": sample_name,
@@ -2892,6 +3047,7 @@ fi"""
         execute: bool = False,
         verbose: bool = True,
         execution_profile: str | os.PathLike | dict | None = None,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         """Prepare or run the MMseqs shotgun-read alignment step."""
         sample_dir = pathlib.Path(output_dir) / sample_name
@@ -3053,9 +3209,11 @@ fi"""
         execute: bool = False,
         verbose: bool = True,
         execution_profile: str | os.PathLike | dict | None = None,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         output_path = pathlib.Path(output_dir) / sample_name
-        preprocess_path = output_path / "amplicon_preprocess"
+        scratch_path = output_path / "scratch"
+        preprocess_path = scratch_path / "amplicon_preprocess"
         preprocess_path.mkdir(parents=True, exist_ok=True)
         logger = self._sample_pipeline_logger(sample_name, output_path, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
@@ -3082,6 +3240,7 @@ fi"""
             execute=execute,
             verbose=verbose,
             execution_profile=execution_profile,
+            dependencies=dependencies,
         )
         result["artifacts"].update(trim_result["artifacts"])
         trimmed_reads = trim_result["artifacts"]["trimmed_reads"]
@@ -3101,9 +3260,10 @@ fi"""
             execute=execute,
             verbose=verbose,
             execution_profile=execution_profile,
+            dependencies=[trim_result["artifacts"]["trim_reads"]],
         )
         result["artifacts"].update(feature_result["artifacts"])
-        result["artifacts"]["preprocess_manifest"] = self._write_json(output_path / "preprocess_artifacts.json", result["artifacts"])
+        result["artifacts"]["preprocess_manifest"] = self._write_json(scratch_path / "preprocess_artifacts.json", result["artifacts"])
         logger.info("Finished amplicon preprocessing: %s", sample_name)
         return result
 
@@ -3159,6 +3319,7 @@ fi"""
         normalize: bool = True,
         verbose: bool = True,
         execution_profile: str | os.PathLike | dict | None = None,
+        dependencies: Iterable[dict] | None = None,
     ) -> dict:
         """Run one metagenomics-to-eADM-COD pipeline for a single sample.
 
@@ -3167,6 +3328,8 @@ fi"""
         """
         output_path = pathlib.Path(output_dir) / sample_name
         output_path.mkdir(parents=True, exist_ok=True)
+        scratch_path = output_path / "scratch"
+        scratch_path.mkdir(parents=True, exist_ok=True)
         logger = self._sample_pipeline_logger(sample_name, output_path, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
         logger.info("Starting sample COD pipeline: sample=%s mode=%s", sample_name, mode)
@@ -3206,7 +3369,7 @@ fi"""
                 script,
                 step_name=step_name,
                 sample_name=sample_name,
-                output_dir=output_path,
+                output_dir=scratch_path,
                 logger=logger,
                 execute=execute,
                 execution_profile=execution_profile,
@@ -3258,6 +3421,7 @@ fi"""
                 execute=execute,
                 verbose=verbose,
                 execution_profile=execution_profile,
+                dependencies=dependencies,
             )
             result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
             feature_table = preprocess_result["artifacts"]["feature_table"]
@@ -3267,7 +3431,9 @@ fi"""
                 logger.info("Amplicon feature outputs are not available yet")
                 cod_profile = {}
                 result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
+                result["status"] = "waiting_for_preprocess"
             else:
+                downstream_dependencies = [preprocess_result["artifacts"]["build_amplicon_features"]]
                 downstream_result = self.sample_to_cod(
                     sample_name=sample_name,
                     output_dir=output_dir,
@@ -3283,6 +3449,7 @@ fi"""
                     normalize=normalize,
                     verbose=verbose,
                     execution_profile=execution_profile,
+                    dependencies=downstream_dependencies,
                 )
                 cod_profile = downstream_result["cod_profile"]
                 result["artifacts"].update(downstream_result["artifacts"])
@@ -3292,10 +3459,10 @@ fi"""
                 raise ValueError("feature_table and rep_seqs are required for amplicon mode")
             feature_abundances = self.extract_relative_abundances(str(feature_table), sample_names=[sample_name], top_k=top_k)[sample_name]
             result["artifacts"]["feature_abundances"] = self._write_tall_mapping(output_path / "feature_abundances.csv", feature_abundances, sample_name=sample_name, key_name="feature_id", value_name="abundance")
-            sample_repseqs = self._write_sample_repseqs(rep_seqs, feature_abundances, output_path / "sample_repseqs.fasta")
+            sample_repseqs = self._write_sample_repseqs(rep_seqs, feature_abundances, scratch_path / "sample_repseqs.fasta")
             result["artifacts"]["sample_repseqs"] = sample_repseqs
 
-            matches_path = pathlib.Path(gtdb_matches) if gtdb_matches else output_path / "matches.blast"
+            matches_path = pathlib.Path(gtdb_matches) if gtdb_matches else scratch_path / "matches.blast"
             if gtdb_matches is None:
                 logger.info("Aligning sample representative sequences to GTDB")
                 step_name = "align_to_gtdb"
@@ -3303,7 +3470,7 @@ fi"""
                 try:
                     script = self.align_to_gtdb(
                         sample_repseqs,
-                        str(output_path),
+                        str(scratch_path),
                         container=self._step_container(execution_profile, step_name, container),
                     )[0]
                 finally:
@@ -3312,10 +3479,11 @@ fi"""
                     script,
                     step_name=step_name,
                     sample_name=sample_name,
-                    output_dir=output_path,
+                    output_dir=scratch_path,
                     logger=logger,
                     execute=execute,
                     execution_profile=execution_profile,
+                    dependencies=dependencies,
                 )
             if not matches_path.exists():
                 logger.info("GTDB matches are not available yet: %s", matches_path)
@@ -3337,8 +3505,13 @@ fi"""
                     genome_files = self._genome_files_from_dir(genomes_dir)
                     alignments = {}
                     commands = {}
-                    alignment_dir = output_path / "genome_alignments"
+                    alignment_dir = scratch_path / "genome_alignments"
                     alignment_dir.mkdir(parents=True, exist_ok=True)
+                    genome_alignment_dependencies = (
+                        [result["artifacts"]["align_to_gtdb"]]
+                        if result["artifacts"].get("align_to_gtdb")
+                        else None
+                    )
                     for genome in genome_abund:
                         if genome not in genome_files:
                             logger.info("No genome FASTA found for %s", genome)
@@ -3360,7 +3533,7 @@ fi"""
                             script,
                             step_name=step_name,
                             sample_name=sample_name,
-                            output_dir=output_path,
+                            output_dir=scratch_path,
                             logger=logger,
                             execute=execute,
                             execution_profile={
@@ -3370,9 +3543,10 @@ fi"""
                                     step_name: self._step_settings(execution_profile, profile_step_name),
                                 },
                             },
+                            dependencies=genome_alignment_dependencies,
                         )
                         alignments[genome] = alignment
-                    result["artifacts"]["genome_alignment_scripts"] = self._write_json(output_path / "genome_alignment_commands.json", commands)
+                    result["artifacts"]["genome_alignment_scripts"] = self._write_json(scratch_path / "genome_alignment_commands.json", commands)
                 else:
                     raise ValueError("amplicon mode requires genome_alignments or genomes_dir after GTDB matching")
 
@@ -3480,6 +3654,7 @@ fi"""
                     raise ValueError("Each manifest row must include sample/sample_name, accession, or read_1")
             paired = self._row_bool(row, "paired", default=read_2 is not None or accession is not None)
             sample_result = {"input": dict(row), "artifacts": {}}
+            sample_dependencies = []
 
             if accession and not read_1 and stage in {"download", "preprocess", "all"}:
                 download_result = self.run_sra_download_step(
@@ -3496,6 +3671,7 @@ fi"""
                 sample_result["artifacts"]["download"] = download_result["artifacts"]
                 read_1 = download_result["artifacts"]["reads"]["read_1"]
                 read_2 = download_result["artifacts"]["reads"]["read_2"]
+                sample_dependencies = [download_result["artifacts"]["download_sra"]]
 
             if stage == "download":
                 results["samples"][sample_name] = sample_result
@@ -3524,17 +3700,23 @@ fi"""
                     execute=execute,
                     verbose=verbose,
                     execution_profile=execution_profile,
+                    dependencies=sample_dependencies,
                 )
                 sample_result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
                 results["samples"][sample_name] = sample_result
                 continue
 
             sample_dir = output_path / sample_name
-            feature_table = self._row_value(row, "feature_table", "feature-table") or str(sample_dir / "amplicon_preprocess" / "feature-table.tsv")
-            rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences") or str(sample_dir / "amplicon_preprocess" / "rep-seqs.fasta")
+            scratch_dir = sample_dir / "scratch"
+            feature_table = self._row_value(row, "feature_table", "feature-table") or str(scratch_dir / "amplicon_preprocess" / "feature-table.tsv")
+            rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences") or str(scratch_dir / "amplicon_preprocess" / "rep-seqs.fasta")
             row_gtdb_matches = self._row_value(row, "gtdb_matches", "matches")
             if row_gtdb_matches is None and gtdb_matches_dir is not None:
                 candidate = pathlib.Path(gtdb_matches_dir) / sample_name / "matches.blast"
+                if candidate.exists():
+                    row_gtdb_matches = str(candidate)
+            if row_gtdb_matches is None:
+                candidate = scratch_dir / "matches.blast"
                 if candidate.exists():
                     row_gtdb_matches = str(candidate)
 
@@ -3554,6 +3736,7 @@ fi"""
                     normalize=normalize,
                     verbose=verbose,
                     execution_profile=execution_profile,
+                    dependencies=sample_dependencies,
                 )
             else:
                 cod_result = self.sample_to_cod(
@@ -3581,6 +3764,7 @@ fi"""
                     normalize=normalize,
                     verbose=verbose,
                     execution_profile=execution_profile,
+                    dependencies=sample_dependencies,
                 )
             sample_result["artifacts"]["cod"] = cod_result["artifacts"]
             sample_result["cod_profile"] = cod_result.get("cod_profile", {})

@@ -12,6 +12,11 @@ container = "None"
 cpus = 8
 memory = "32G"
 time = "04:00:00"
+# Optional ADToolbox-side submission throttle. This checks existing Slurm jobs
+# whose names start with `job_name_prefix` before submitting another job.
+# max_concurrent_jobs = 20
+# poll_seconds = 30
+# job_name_prefix = "adtoolbox_"
 # partition = "general"
 # account = "my_account"
 # qos = "normal"
