@@ -1,726 +1,725 @@
-from adtoolbox import core,configs
-from adtoolbox.core import Experiment
-from adtoolbox import adm
-import pandas as pd
-import numpy as np
-from dataclasses import dataclass
-import plotly
-import json
-from typing import Iterable
-import plotly.graph_objects as go
-import plotly.express as px
-import torch
-import pickle
-import pathlib
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from collections import namedtuple
-import ray
-import time
-import multiprocessing as mp
+from dataclasses import asdict, dataclass, field
+import importlib
+import json
 import logging
-import os
-from functools import lru_cache
-start_time=time.strftime("%Y-%m-%d-%H-%M-%S")
-log_base_dir = os.path.join(os.getcwd(), "logs")
-log_dir=os.path.join(log_base_dir,f"optimize_{start_time}")
+import pathlib
+from typing import Any, Iterable, Literal, Mapping, Sequence
 
-if not os.path.exists(log_base_dir):
-    os.makedirs(log_base_dir)
-
-logging.basicConfig(
-     filename=f"{log_dir}.log",
-     level=logging.INFO,
-     encoding="utf-8",
-     filemode="a",
-     format="{asctime} - {levelname} - {message}",
-     style="{",
-     datefmt="%Y-%m-%d %H:%M",
- )
-NUM_CORES=mp.cpu_count()
-Validation=namedtuple("Validation",("r_squared","rmse"))
-        
-class BBTuner:
-    """
-    This class is a wrapper around openbox to optimize a model.
-    """
-    def __init__(self,
-                 base_model: adm.Model,
-                 train_data: list[core.Experiment],
-                 tuneables:dict,
-                 fitness_mode:str="equalized",
-                 var_type:str="model_parameters",
-                 parallel:bool=False,
-                 **kwargs)->None:
-        """
-        base_model: The model to optimize.
-        train_data: The data to train the model on.
-        fitness_mode: The fitness mode to use.
-        kwargs: Additional arguments to pass to openbox.
-        """
-        self.base_model = base_model
-        if set(tuneables.keys())-set(base_model.__getattribute__(var_type).keys()):
-            raise ValueError("Tuneable parameters not in model parameters.")
-        self.tunables = tuneables
-        self.train_data = train_data
-        self.fitness_mode = fitness_mode
-        self.var_type = var_type
-        self.kwargs = kwargs
-        self.parallel=parallel
-    
-    def _get_space(self):
-        """
-        This function creates the search space for openbox.
-        :return: The search space.
-        """
-        from openbox import space as sp
-        space = sp.Space()
-        space.add_variables([sp.Real(name, low, high,default_value=(high+low)/2) for name, (low, high) in self.tunables.items()])
-        return space
-        
-    def cost(self, parameters: dict)->float:
-        """
-        This function is called by openbox to evaluate a configuration.
-        :param config: The configuration to evaluate.
-        :return: The cost of the configuration.
-        """
-        if self.fitness_mode == "equalized":
-            res=0
-            for experiment in self.train_data:
-                ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
-                ic.update(experiment.initial_concentrations)
-                self._model= self.base_model.copy()
-                self._model.update_parameters(**{self.var_type:parameters})
-                self._model.update_parameters(initial_conditions=ic)
-                solution=self._model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
-                res+=np.sum(np.square(solution.T-experiment.data))
-            
-            return res
-        else:
-            raise NotImplementedError("Fitness mode not implemented.")
+from adtoolbox import adm, core
+import numpy as np
+import plotly
+import plotly.express as px
+import plotly.graph_objects as go
+import polars as pl
 
 
-    def optimize(self, **kwargs)->dict:
-        """
-        This function optimizes the model.
-        kwargs: Additional arguments to pass to openbox.
-        :return: The best configuration.
-        """
-        from openbox import Optimizer,ParallelOptimizer
-        if self.parallel:
-            opt=ParallelOptimizer(
-                self.cost,
-                self._get_space(),
-                **kwargs,
-                )
-        else:
-            opt=Optimizer(
-                    self.cost,
-                    self._get_space(),
-                    **kwargs,
-                    )
-        self.history=opt.run()
-        self.optimized_model=self.base_model.copy()
-        self.optimized_model.update_parameters(**{self.var_type:self.history.get_incumbents()})
-        return self.history
-        
-class GATuner:
-    """
-    This class is a wrapper around pyGAD to optimize a model.
-
-    """
-    def __init__(self,
-                 base_model: adm.Model,
-                 train_data: list[core.Experiment],
-                 tuneables:dict,
-                 fitness_mode:str="equalized",
-                 var_type:str="model_parameters",
-                 **kwargs)->None:
-        """
-        base_model: The model to optimize.
-        train_data: The data to train the model on.
-        fitness_mode: The fitness mode to use.
-        kwargs: Additional arguments to pass to pyGAD.
-        """
-        self.base_model = base_model
-        if set(tuneables.keys())-set(base_model.__getattribute__(var_type).keys()):
-            raise ValueError("Tuneable parameters not in model parameters.")
-        self.tunables = tuneables
-        self.train_data = train_data
-        self.fitness_mode = fitness_mode
-        self.var_type = var_type
-        self.kwargs = kwargs
-        
-    def _get_space(self):
-        """
-        Returns the search space for pyGAD.
-        """
-        return [{"low":low,"high":high} for name, (low, high) in self.tunables.items()]
-        
-    def fitness(self, ga_instance,solution,solution_idx)->float:
-        """
-        This function is called by pyGAD to evaluate a configuration.
-        :param config: The configuration to evaluate.
-        :return: The cost of the configuration.
-        """
-        solution_=dict(zip(self.tunables.keys(),solution))
-        if self.fitness_mode == "equalized":
-            res=0
-            for experiment in self.train_data:
-                ic={self.base_model.species[k]:experiment.data[0,idx] for idx,k in enumerate(experiment.variables) }
-                ic.update(experiment.initial_concentrations)
-                self._model= self.base_model.copy()
-                
-                self._model.update_parameters(**{self.var_type:solution_})
-                self._model.update_parameters(initial_conditions=ic)
-                solution=self._model.solve_model(np.array(experiment.time)).y[experiment.variables,:]
-                res+=np.sum(np.square(solution.T-experiment.data))
-            return 1/res
-        else:
-            raise NotImplementedError("Fitness mode not implemented.")
+Validation = namedtuple("Validation", ("r_squared", "rmse"))
+ParameterTarget = Literal[
+    "auto",
+    "model_parameters",
+    "base_parameters",
+    "initial_conditions",
+    "inlet_conditions",
+]
 
 
-    def optimize(self, **kwargs)->dict:
-        """
-        This function optimizes the model.
-        kwargs: Additional arguments to pass to openbox.
-        :return: The best configuration.
-        """
-        import pygad
-        opt=pygad.GA(
-                     fitness_func=self.fitness,
-                     num_genes=len(self.tunables),
-                     gene_space=self._get_space(),
-
-                     **kwargs)
-        opt.run()
-        
-        return opt
-
-
-class NNSurrogateTuner:
-    def __init__(self,
-             base_model: adm.Model,
-             train_data: list[core.Experiment],
-             tuneables:dict,
-             fitness_mode:str="equalized",
-             var_type:str="model_parameters",
-             n_process:int=4,
-             grad_steps:int=10,
-             n_steps:int=100,
-             initial_points:int=5,
-             save_every:int=10,
-             history_file_path:pathlib.Path=pathlib.Path("./history.pkl"),
-             exp_std:float=5,
-             )->None:
-
-        self.base_model = base_model
-        self.tunables = tuneables
-        self.train_data = train_data
-        self.fitness_mode = fitness_mode
-        self.var_type = var_type
-        self.n_process=n_process
-        self.grad_steps=grad_steps
-        self.n_steps=n_steps
-        self.initial_points=initial_points
-        self._get_space()
-        self._generate_initial_population()
-        self._aquired={}
-        self._network=torch.nn.Sequential(
-            torch.nn.Linear(len(self.tunables), 30),
-            torch.nn.Tanh(),
-            torch.nn.Linear(30, 30),
-            torch.nn.Tanh(),
-            torch.nn.Linear(30, 30),
-            torch.nn.Tanh(),
-            torch.nn.Linear(30, 30),
-            torch.nn.Tanh(),
-            torch.nn.Linear(30, 30),
-            torch.nn.Tanh(),
-            torch.nn.Linear(30, 30),
-            torch.nn.Tanh(),
-            torch.nn.Linear(30, 1),   
+def _require_package(module_name: str, extra: str):
+    module = importlib.util.find_spec(module_name)
+    if module is None:
+        raise ImportError(
+            f"This optimizer requires `{module_name}`. Install it with "
+            f"`pip install adtoolbox[{extra}]`."
         )
-        self.save_every=save_every
-        self.history_file_path=history_file_path
-        self.exp_std=exp_std
-        torch.set_num_threads(1)
-        self._initialized=False
-        
-    def _get_space(self)->np.ndarray:
-        self._param_space=np.array(list(zip(*self.tunables.values()))).T
-        return self._param_space.copy()
-    
-    def _generate_initial_population(self):
-        self._popuplation=np.array([np.random.uniform(low=self._param_space[:,0],high=self._param_space[:,1]) for i in range(self.initial_points)])
-
-    def _cost(self, parameters: dict,ode_method:str)->float:
-        """
-        This function is called by openbox to evaluate a configuration.
-        :param config: The configuration to evaluate.
-        :return: The cost of the configuration.
-        """
-        if self.fitness_mode == "equalized":
-
-            res=0
-            for experiment in self.train_data:
-                ic=experiment.initial_concentrations.copy()
-                ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
-                _model= self.base_model.copy()
-
-                for k,v in _model._ic.items():
-                    if k in parameters:
-                        ic[k]=parameters.get(k,v)
-                
-                for k,v in _model.model_parameters.items():
-                    if k in parameters:
-                        _model.model_parameters[k]=parameters.get(k,v)
-                
-                for k,v in _model.base_parameters.items():
-                    if k in parameters:
-                        _model.base_parameters[k]=parameters.get(k,v)
-                
-                _model.update_parameters(initial_conditions=ic)
-                _model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
-                _model.feed=experiment.feed
-
-                solution=_model.solve_model(np.array(experiment.time),method=ode_method).y[[_model.species.index(i) for i in experiment.variables],:]
-                res+=np.sum(np.square(solution.T-experiment.data))
-
-            return res
-        else:
-            raise NotImplementedError("Fitness mode not implemented.")
-    
-
-    def _suggest_parameters(self):
-        if len(self._aquired)==0:
-            raise ValueError("No sample is aquired yet.")
-        else:
-            input_data = torch.tensor(self._best_tensor, requires_grad=True,dtype=torch.float32)
-            self._optimizer_inputs = torch.optim.Adam([input_data], lr=0.001)
-            self._optimizer_model = torch.optim.Adam(self._network.parameters(), lr=0.001)
-            for step in range(self.grad_steps):
-                output = self._network(input_data)
-                loss = torch.mean(output)
-                loss.backward()
-                self._optimizer_inputs.step()
-                self._optimizer_inputs.zero_grad()
-                self._optimizer_inputs.zero_grad()
-        return input_data.detach().numpy()
-    def _train_surrogate(self):
-        net_inputs=torch.tensor(self._aquired["parameters"],dtype=torch.float32)
-        net_labels=torch.tensor(self._aquired["cost"],dtype=torch.float32)
-        self._optimizer_model = torch.optim.Adam(self._network.parameters(), lr=0.001)
-        net_labels[net_labels>10000]=1000
-        for step in range(1000):
-            output=self._network(net_inputs)
-            loss=torch.mean(torch.square(output-net_labels))
-            loss.backward()
-            self._optimizer_model.step()
-            self._optimizer_model.zero_grad()
-        return loss.detach().numpy()
-
-    def optimize(self, perturbation_method:str="random",ode_method="BDF",parallel:bool=False, **kwargs)->dict:
-        if not parallel:
-            costs=[]
-            if not self._initialized:
-                logging.info("Generating initial population:")
-                for num,pop in enumerate(self._popuplation):
-                    costs.append(self._cost(tuple(pop),ode_method=ode_method))
-                    logging.info(f"Initial population: {num+1}/{len(self._popuplation)}")
-
-                self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
-            self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-            self._best_cost=np.min(self._aquired["cost"])
-            for i in range(self.n_steps):
-                loss=self._train_surrogate()
-                print(f"Training Loss: {loss}")
-                new_params=self._suggest_parameters()
-                new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-                if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
-                    print("Local optima reached: Perturbing the best solution and continuing.")
-
-                    if perturbation_method=="random":
-                        new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
+    return importlib.import_module(module_name)
 
 
-                    elif perturbation_method=="estimate_gradient_directions":
-                        diff=self._aquired["parameters"]-self._best_tensor
-                        cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
-                        diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
-                        new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
+@dataclass(frozen=True)
+class ParameterSpec:
+    """Bounds and optional default value for one optimized parameter."""
+
+    name: str
+    lower: float
+    upper: float
+    default: float | None = None
+
+    @classmethod
+    def from_value(cls, name: str, value: "ParameterSpec | Sequence[float] | Mapping[str, float]") -> "ParameterSpec":
+        if isinstance(value, ParameterSpec):
+            return value
+        if isinstance(value, Mapping):
+            return cls(
+                name=name,
+                lower=float(value["lower"]),
+                upper=float(value["upper"]),
+                default=None if value.get("default") is None else float(value["default"]),
+            )
+        if len(value) not in (2, 3):
+            raise ValueError(f"Search-space entry for `{name}` must be (lower, upper) or (lower, upper, default).")
+        lower, upper = float(value[0]), float(value[1])
+        default = None if len(value) == 2 else float(value[2])
+        return cls(name=name, lower=lower, upper=upper, default=default)
+
+    def __post_init__(self) -> None:
+        if self.upper <= self.lower:
+            raise ValueError(f"Upper bound for `{self.name}` must be greater than the lower bound.")
+        if self.default is not None and not self.lower <= self.default <= self.upper:
+            raise ValueError(f"Default value for `{self.name}` must be inside the search-space bounds.")
 
 
-                    elif perturbation_method=="predict_pattern":
-                        pass
-                    
-                    
-                new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-                ## make sure not in the local optima
-                new_cost=self._cost(tuple(new_params),ode_method=ode_method)
-                self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
-                self._aquired["cost"].append(new_cost)
-                self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                self._best_cost=np.min(self._aquired["cost"])
-                print(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
-                if i%self.save_every==0:
-                    self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
-                    with open(f"{str(self.history_file_path.absolute())}","wb") as file:
-                        pickle.dump(self.history,file)
-                if i>51:
-                    self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
-                    self._aquired["cost"]=self._aquired["cost"][-50:]   
+@dataclass
+class OptimizationRecord:
+    step: int
+    parameters: dict[str, float]
+    cost: float
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
-            return self.history
-        
-        else:
-            if kwargs.get("parallel_framework","ray")=="ray":
-                ray.init()
-                self.base_model_id = ray.put(self.base_model)
-                self.train_data_ids = [ray.put(exp) for exp in self.train_data]
-                self.tunables_id = ray.put(self.tunables)
-                if not self._initialized:
-                    logging.info("Generating initial population:")
-                    costs=ray.get([_single_cost_ray.remote(self.base_model_id,
-                                                           dict(zip(self.tunables.keys(),pop)),
-                                                           exp_id,
-                                                           ode_method=ode_method) for exp_id in self.train_data_ids for pop in self._popuplation])
-                    costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
-                    self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
-                self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                self._best_cost=np.min(self._aquired["cost"])
-                for i in range(self.n_steps):
-                    loss=self._train_surrogate()
-                    print(f"Training Loss: {loss}")
-                    new_params=self._suggest_parameters()
-                    new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                    new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
+class Optimizer(ABC):
+    """Common interface for ADToolbox parameter optimizers."""
 
-                    if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
-                        print("Local optima reached: Perturbing the best solution and continuing.")
-                        if perturbation_method=="random":
-                            new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
-                        elif perturbation_method=="estimate_gradient_directions":
-                            diff=self._aquired["parameters"]-self._best_tensor
-                            cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
-                            diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
-                            new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
-
-
-                        elif perturbation_method=="predict_pattern":
-                            pass
-                        
-                        
-                        
-                    new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                    new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-                    ## make sure not in the local optima
-                    new_cost=np.sum(ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,ode_method=ode_method) for exp in self.train_data]))
-                    self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
-                    self._aquired["cost"].append(new_cost)
-                    self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                    self._best_cost=np.min(self._aquired["cost"])
-                    logging.info(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
-                    if i%self.save_every==0:
-                        self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
-                        with open(f"{str(self.history_file_path.absolute())}","wb") as file:
-                            pickle.dump(self.history,file)
-                    if i>51:
-                        self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
-                        self._aquired["cost"]=self._aquired["cost"][-50:]
-                return self.history
-            
-            elif kwargs.get("parallel_framework","ray")=="native":
-                if not self._initialized:
-                    logging.info("Generating initial population:")
-                    with mp.Pool(NUM_CORES) as pool:
-                        costs=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),pop)),exp,self.var_type,ode_method)) for exp in self.train_data for pop in self._popuplation]
-                        costs=[c.get() for c in costs]
-                    logging.info("All initial population costs calculated.")
-                    costs=list(np.array(costs).reshape(-1,len(self.train_data)).sum(axis=1))
-                    self._aquired={"parameters":self._popuplation,"cost":[c for c in costs]}
-                    
-                self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                self._best_cost=np.min(self._aquired["cost"])
-                with mp.Pool(NUM_CORES) as pool:
-                    for i in range(self.n_steps):
-                        loss=self._train_surrogate()
-                        logging.info(f"Training Loss: {loss}")
-                        new_params=self._suggest_parameters()
-                        new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                        new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-                        if (len(self._aquired["cost"])>1) and (abs(self._aquired["cost"][-1]-self._aquired["cost"][-2])<1e-3):
-                            logging.info("Local optima reached: Perturbing the best solution and continuing.")
-                            if perturbation_method=="random":
-                                new_params=np.random.normal(self._best_tensor,np.abs(self._best_tensor/self.exp_std))
-                            elif perturbation_method=="estimate_gradient_directions":
-                                diff=self._aquired["parameters"]-self._best_tensor
-                                cost_diff=(np.array(self._aquired["cost"])-self._best_cost).reshape(1,-1).repeat(diff.shape[1],axis=0).T
-                                diff=-np.sign(np.mean(np.sign(np.multiply(diff,cost_diff)),axis=0))
-                                new_params=self._best_tensor+np.random.normal(np.multiply(self._best_tensor,diff)/self.exp_std,np.abs(self._best_tensor/self.exp_std),size=diff.shape[0])
-                    
-                    
-                    
-                        new_params[new_params<self._param_space[:,0]]=self._param_space[:,0][new_params<self._param_space[:,0]]
-                        new_params[new_params>self._param_space[:,1]]=self._param_space[:,1][new_params>self._param_space[:,1]]
-                        ## make sure not in the local optima
-                        new_cost=[pool.apply_async(_single_cost,args=(self.base_model,dict(zip(self.tunables.keys(),new_params)),exp,self.var_type,ode_method)) for exp in self.train_data]
-                        new_cost=np.sum([c.get() for c in new_cost])
-                        self._aquired["parameters"]=np.vstack((self._aquired["parameters"],new_params))
-                        self._aquired["cost"].append(new_cost)
-                        self._best_tensor=self._aquired["parameters"][np.argmin(self._aquired["cost"])]
-                        self._best_cost=np.min(self._aquired["cost"])
-                        logging.info(f"Step {i+1}/{self.n_steps} completed.Current cost:{new_cost} Best cost: {self._best_cost}")
-                        if i%self.save_every==0:
-                            self.history={"parameters":self._aquired["parameters"],"cost":self._aquired["cost"],"tunable_parameters":list(self.tunables.keys())}
-                            with open(f"{str(self.history_file_path.absolute())}","wb") as file:
-                                pickle.dump(self.history,file)
-                            logging.info(f"optimization results saved to {self.history_file_path.absolute()}")
-                        if i>51:
-                            self._aquired["parameters"]=self._aquired["parameters"][-50:,:]
-                            self._aquired["cost"]=self._aquired["cost"][-50:]
-                return self.history
-            else:
-                raise ValueError("Parallel framework not supported.")
-                
-
-    
-    def load_history_file(self,address:str)->None:
-        with open(address,"rb") as f:
-            info=pickle.load(f)
-            
-        parameters=info["parameters"][np.argmin(info["cost"])]
-        cost=np.min(info["cost"])
-        parameters=dict(zip(info["tunable_parameters"],parameters))
-        p_=np.array([parameters[i] for i in self.tunables.keys()]).reshape(1,-1)
-        self._aquired={"cost":[cost],"parameters":p_,"tunable_parameters":list(self.tunables.keys())}
-        self.base_model.update_parameters(**{self.var_type:parameters})
-        # self._aquired=info
-        self._initialized=True
-    
-    def _calculate_distributed_costs(
+    def __init__(
         self,
-        parameters:np.ndarray,
-        experiments:Iterable[core.Experiment],
-        ode_method:str="BDF",
-        parallel_framework:str="ray")->np.ndarray:
-        
-        if parallel_framework=="ray":
-            costs=ray.get([_single_cost_ray.remote(self.base_model,dict(zip(self.tunables.keys(),p)),exp,ode_method=ode_method) for exp in experiments for p in parameters])
-        return np.array(costs)
-    
-@ray.remote(num_cpus=NUM_CORES)
-def _single_cost_ray(base_model:adm.Model,
-                 parameters:dict,
-                 experiment:core.Experiment,
-                 ode_method:str="BDF")->float:
+        base_model: adm.Model,
+        train_data: Iterable[core.Experiment],
+        search_space: Mapping[str, ParameterSpec | Sequence[float] | Mapping[str, float]],
+        *,
+        parameter_target: ParameterTarget = "auto",
+        fitness_mode: str = "sum_squared_error",
+        ode_method: str = "BDF",
+        random_state: int | None = None,
+        logger: logging.Logger | None = None,
+    ) -> None:
+        self.base_model = base_model
+        self.train_data = list(train_data)
+        self.search_space = {
+            name: ParameterSpec.from_value(name, value)
+            for name, value in search_space.items()
+        }
+        self.parameter_target = parameter_target
+        self.fitness_mode = fitness_mode
+        self.ode_method = ode_method
+        self.random_state = random_state
+        self.rng = np.random.default_rng(random_state)
+        self.logger = logger or logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+
+        self.history: list[OptimizationRecord] = []
+        self.optimized_parameters: dict[str, float] | None = None
+        self.optimized_model: adm.Model | None = None
+        self.best_cost: float | None = None
+
+        self._validate_inputs()
+
+    @property
+    def parameter_names(self) -> list[str]:
+        return list(self.search_space)
+
+    @property
+    def bounds(self) -> np.ndarray:
+        return np.array(
+            [[spec.lower, spec.upper] for spec in self.search_space.values()],
+            dtype=float,
+        )
+
+    @property
+    def best_record(self) -> OptimizationRecord | None:
+        if not self.history:
+            return None
+        return min(self.history, key=lambda record: record.cost)
+
+    def _validate_inputs(self) -> None:
+        if not self.train_data:
+            raise ValueError("At least one experiment is required for optimization.")
+        if not self.search_space:
+            raise ValueError("Search space cannot be empty.")
+        if self.fitness_mode != "sum_squared_error":
+            raise ValueError("Only `sum_squared_error` fitness is currently supported.")
+        if self.parameter_target == "auto":
+            missing = [
+                name for name in self.search_space
+                if self._parameter_location(self.base_model, name) is None
+            ]
+        else:
+            available = self._target_keys(self.base_model, self.parameter_target)
+            missing = [name for name in self.search_space if name not in available]
+        if missing:
+            joined = ", ".join(missing)
+            raise ValueError(f"Search-space parameter(s) not found in model: {joined}")
+
+    def _target_keys(self, model: adm.Model, target: ParameterTarget) -> set[str]:
+        if target == "model_parameters":
+            return set(model.model_parameters)
+        if target == "base_parameters":
+            return set(model.base_parameters)
+        if target == "initial_conditions":
+            return set(getattr(model, "_ic", {}))
+        if target == "inlet_conditions":
+            return set(getattr(model, "_inc", {})) | set(model.species)
+        return set()
+
+    def _parameter_location(self, model: adm.Model, name: str) -> ParameterTarget | None:
+        if name in model.model_parameters:
+            return "model_parameters"
+        if name in model.base_parameters:
+            return "base_parameters"
+        if name in getattr(model, "_ic", {}):
+            return "initial_conditions"
+        if name in getattr(model, "_inc", {}) or name in model.species:
+            return "inlet_conditions"
+        return None
+
+    def _coerce_parameters(self, parameters: Mapping[str, float] | Sequence[float] | np.ndarray) -> dict[str, float]:
+        if isinstance(parameters, Mapping):
+            missing = set(self.search_space) - set(parameters)
+            unknown = set(parameters) - set(self.search_space)
+            if missing or unknown:
+                problems = []
+                if missing:
+                    problems.append(f"missing: {', '.join(sorted(missing))}")
+                if unknown:
+                    problems.append(f"unknown: {', '.join(sorted(unknown))}")
+                raise ValueError("Invalid parameter set (" + "; ".join(problems) + ").")
+            return {name: float(parameters[name]) for name in self.parameter_names}
+
+        vector = np.asarray(parameters, dtype=float).reshape(-1)
+        if vector.size != len(self.search_space):
+            raise ValueError(f"Expected {len(self.search_space)} parameters, got {vector.size}.")
+        return dict(zip(self.parameter_names, vector.tolist()))
+
+    def parameters_to_vector(self, parameters: Mapping[str, float]) -> np.ndarray:
+        parameters = self._coerce_parameters(parameters)
+        return np.array([parameters[name] for name in self.parameter_names], dtype=float)
+
+    def vector_to_parameters(self, vector: Sequence[float] | np.ndarray) -> dict[str, float]:
+        return self._coerce_parameters(vector)
+
+    def clip_vector(self, vector: Sequence[float] | np.ndarray) -> np.ndarray:
+        values = np.asarray(vector, dtype=float).reshape(-1)
+        return np.clip(values, self.bounds[:, 0], self.bounds[:, 1])
+
+    def default_vector(self) -> np.ndarray:
+        return np.array(
+            [
+                spec.default if spec.default is not None else (spec.lower + spec.upper) / 2
+                for spec in self.search_space.values()
+            ],
+            dtype=float,
+        )
+
+    def random_vector(self) -> np.ndarray:
+        return self.rng.uniform(self.bounds[:, 0], self.bounds[:, 1])
+
+    def prepare_model(
+        self,
+        parameters: Mapping[str, float] | Sequence[float] | np.ndarray,
+        experiment: core.Experiment | None = None,
+    ) -> adm.Model:
+        model = self.base_model.copy()
+        self._apply_parameters(model, self._coerce_parameters(parameters))
+        if experiment is not None:
+            if experiment.base_parameters:
+                model.update_parameters(base_parameters=experiment.base_parameters)
+            model.feed = experiment.feed
+            ic = self._experiment_initial_conditions(experiment)
+            model.update_parameters(initial_conditions=ic)
+            model.control_state = {
+                key: ic[key]
+                for key in experiment.constants
+                if key in ic
+            }
+        return model
+
+    def _experiment_initial_conditions(self, experiment: core.Experiment) -> dict[str, float]:
+        initial = dict(getattr(self.base_model, "_ic", {}))
+        initial.update(experiment.initial_concentrations)
+        for index, variable in enumerate(experiment.variables):
+            initial[variable] = float(experiment.data[0, index])
+        return initial
+
+    def _apply_parameters(self, model: adm.Model, parameters: Mapping[str, float]) -> None:
+        updates: dict[str, dict[str, float]] = {
+            "model_parameters": {},
+            "base_parameters": {},
+            "initial_conditions": {},
+            "inlet_conditions": {},
+        }
+        for name, value in parameters.items():
+            target = self.parameter_target
+            if target == "auto":
+                target = self._parameter_location(model, name)
+            if target is None:
+                raise ValueError(f"Could not determine target for parameter `{name}`.")
+            if target == "inlet_conditions" and name.endswith("_in"):
+                name = name[:-3]
+            updates[target][name] = float(value)
+
+        clean_updates = {key: value for key, value in updates.items() if value}
+        if clean_updates:
+            model.update_parameters(**clean_updates)
+
+    def evaluate(self, parameters: Mapping[str, float] | Sequence[float] | np.ndarray) -> float:
+        parameters = self._coerce_parameters(parameters)
+        total = 0.0
+        for experiment in self.train_data:
+            model = self.prepare_model(parameters, experiment)
+            rows = [model.species.index(variable) for variable in experiment.variables]
+            solution = model.solve_model(np.array(experiment.time), method=self.ode_method)
+            prediction = np.asarray(solution.y[rows, :], dtype=float).T
+            residual = prediction - experiment.data
+            total += float(np.sum(np.square(residual)))
+        return total
+
+    def _evaluate_and_record(
+        self,
+        parameters: Mapping[str, float] | Sequence[float] | np.ndarray,
+        *,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> float:
+        parameters = self._coerce_parameters(parameters)
+        cost = self.evaluate(parameters)
+        self.record(parameters, cost, metadata=metadata)
+        return cost
+
+    def record(
+        self,
+        parameters: Mapping[str, float] | Sequence[float] | np.ndarray,
+        cost: float,
+        *,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> OptimizationRecord:
+        record = OptimizationRecord(
+            step=len(self.history),
+            parameters=self._coerce_parameters(parameters),
+            cost=float(cost),
+            metadata=dict(metadata or {}),
+        )
+        self.history.append(record)
+        if self.best_cost is None or record.cost < self.best_cost:
+            self.best_cost = record.cost
+            self.optimized_parameters = record.parameters.copy()
+            self.optimized_model = self.prepare_model(record.parameters)
+        return record
+
+    def clear_history(self) -> None:
+        self.history.clear()
+        self.optimized_parameters = None
+        self.optimized_model = None
+        self.best_cost = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "optimizer": self.__class__.__name__,
+            "parameter_target": self.parameter_target,
+            "fitness_mode": self.fitness_mode,
+            "ode_method": self.ode_method,
+            "search_space": {
+                name: asdict(spec)
+                for name, spec in self.search_space.items()
+            },
+            "optimized_parameters": self.optimized_parameters,
+            "best_cost": self.best_cost,
+            "history": [asdict(record) for record in self.history],
+        }
+
+    def save(self, path: str | pathlib.Path) -> pathlib.Path:
+        path = pathlib.Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as handle:
+            json.dump(self.to_dict(), handle, indent=2)
+        return path
+
+    def load(self, path: str | pathlib.Path) -> "Optimizer":
+        path = pathlib.Path(path)
+        with path.open(encoding="utf-8") as handle:
+            payload = json.load(handle)
+        saved_names = list(payload.get("search_space", {}))
+        if saved_names and saved_names != self.parameter_names:
+            raise ValueError("Saved optimizer state does not match this optimizer search space.")
+        self.clear_history()
+        for item in payload.get("history", []):
+            self.record(item["parameters"], item["cost"], metadata=item.get("metadata"))
+        return self
+
+    @abstractmethod
+    def optimize(self, **kwargs) -> Any:
+        """Run the optimizer and update history, optimized_parameters, and optimized_model."""
+
+
+class ScipyOptimizer(Optimizer):
+    """Differential-evolution optimizer using SciPy only."""
+
+    def optimize(
+        self,
+        *,
+        maxiter: int = 100,
+        popsize: int = 15,
+        polish: bool = True,
+        workers: int = 1,
+        **kwargs,
+    ):
+        from scipy.optimize import differential_evolution
+
+        def objective(vector: np.ndarray) -> float:
+            return self._evaluate_and_record(
+                vector,
+                metadata={"optimizer": "scipy_differential_evolution"},
+            )
+
+        result = differential_evolution(
+            objective,
+            bounds=[tuple(bound) for bound in self.bounds],
+            maxiter=maxiter,
+            popsize=popsize,
+            polish=polish,
+            seed=self.random_state,
+            workers=workers,
+            **kwargs,
+        )
+        self.record(
+            result.x,
+            float(result.fun),
+            metadata={"optimizer": "scipy_differential_evolution", "final": True},
+        )
+        return result
+
+
+class BlackBoxOptimizer(Optimizer):
+    """OpenBox-backed optimizer with the shared ADToolbox optimizer interface."""
+
+    def optimize(self, *, parallel: bool = False, **kwargs):
+        openbox = _require_package("openbox", "blackbox")
+        space_module = importlib.import_module("openbox.space")
+        space = space_module.Space()
+        space.add_variables(
+            [
+                space_module.Real(
+                    spec.name,
+                    spec.lower,
+                    spec.upper,
+                    default_value=spec.default if spec.default is not None else (spec.lower + spec.upper) / 2,
+                )
+                for spec in self.search_space.values()
+            ]
+        )
+
+        def objective(config):
+            parameters = config.get_dictionary() if hasattr(config, "get_dictionary") else dict(config)
+            return self._evaluate_and_record(
+                parameters,
+                metadata={"optimizer": "openbox"},
+            )
+
+        optimizer_cls = openbox.ParallelOptimizer if parallel else openbox.Optimizer
+        optimizer = optimizer_cls(objective, space, **kwargs)
+        result = optimizer.run()
+        record = self.best_record
+        if record is not None:
+            self.optimized_parameters = record.parameters.copy()
+            self.best_cost = record.cost
+            self.optimized_model = self.prepare_model(record.parameters)
+        return result
+
+
+class GeneticOptimizer(Optimizer):
+    """PyGAD-backed genetic optimizer with the shared ADToolbox optimizer interface."""
+
+    def optimize(self, *, num_generations: int = 50, sol_per_pop: int = 20, **kwargs):
+        pygad = _require_package("pygad", "genetic")
+
+        def fitness(ga_instance, solution, solution_idx) -> float:
+            cost = self._evaluate_and_record(
+                solution,
+                metadata={"optimizer": "pygad", "solution_idx": int(solution_idx)},
+            )
+            return 1.0 / (cost + 1e-12)
+
+        ga = pygad.GA(
+            fitness_func=fitness,
+            num_genes=len(self.search_space),
+            gene_space=[
+                {"low": spec.lower, "high": spec.upper}
+                for spec in self.search_space.values()
+            ],
+            num_generations=num_generations,
+            sol_per_pop=sol_per_pop,
+            **kwargs,
+        )
+        ga.run()
+        solution, fitness_value, solution_idx = ga.best_solution()
+        cost = 1.0 / max(float(fitness_value), 1e-12)
+        self.record(
+            solution,
+            cost,
+            metadata={"optimizer": "pygad", "final": True, "solution_idx": int(solution_idx)},
+        )
+        return ga
+
+
+class SurrogateOptimizer(Optimizer):
+    """Small neural surrogate optimizer for expensive ODE model evaluations."""
+
+    def __init__(
+        self,
+        *args,
+        hidden_size: int = 30,
+        hidden_layers: int = 4,
+        learning_rate: float = 1e-3,
+        input_learning_rate: float = 1e-3,
+        train_epochs: int = 500,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        torch = _require_package("torch", "surrogate")
+        layers: list[Any] = []
+        width = len(self.search_space)
+        for _ in range(hidden_layers):
+            layers.append(torch.nn.Linear(width, hidden_size))
+            layers.append(torch.nn.Tanh())
+            width = hidden_size
+        layers.append(torch.nn.Linear(width, 1))
+        self._torch = torch
+        self.network = torch.nn.Sequential(*layers)
+        self.learning_rate = learning_rate
+        self.input_learning_rate = input_learning_rate
+        self.train_epochs = train_epochs
+
+    def _history_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+        if not self.history:
+            raise ValueError("Surrogate optimizer needs at least one evaluated point.")
+        x = np.array(
+            [
+                [record.parameters[name] for name in self.parameter_names]
+                for record in self.history
+            ],
+            dtype=np.float32,
+        )
+        y = np.array([record.cost for record in self.history], dtype=np.float32).reshape(-1, 1)
+        return x, y
+
+    def _train_surrogate(self) -> float:
+        torch = self._torch
+        x, y = self._history_arrays()
+        inputs = torch.tensor(x, dtype=torch.float32)
+        labels = torch.tensor(y, dtype=torch.float32)
+        labels = torch.clamp(labels, max=1e6)
+        optimizer = torch.optim.Adam(self.network.parameters(), lr=self.learning_rate)
+        loss = torch.tensor(float("nan"))
+        for _ in range(self.train_epochs):
+            predicted = self.network(inputs)
+            loss = torch.mean(torch.square(predicted - labels))
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+        return float(loss.detach().numpy())
+
+    def _suggest_vector(self, *, grad_steps: int) -> np.ndarray:
+        torch = self._torch
+        start = self.parameters_to_vector(self.optimized_parameters) if self.optimized_parameters else self.default_vector()
+        vector = torch.tensor(start, dtype=torch.float32, requires_grad=True)
+        optimizer = torch.optim.Adam([vector], lr=self.input_learning_rate)
+        lower = torch.tensor(self.bounds[:, 0], dtype=torch.float32)
+        upper = torch.tensor(self.bounds[:, 1], dtype=torch.float32)
+        for _ in range(grad_steps):
+            loss = torch.mean(self.network(vector))
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            with torch.no_grad():
+                vector.copy_(torch.maximum(torch.minimum(vector, upper), lower))
+        return vector.detach().numpy()
+
+    def optimize(
+        self,
+        *,
+        n_steps: int = 100,
+        initial_points: int = 8,
+        grad_steps: int = 20,
+        perturbation_scale: float = 0.05,
+        save_every: int | None = None,
+        history_path: str | pathlib.Path | None = None,
+    ) -> list[OptimizationRecord]:
+        if not self.history:
+            for index in range(initial_points):
+                self._evaluate_and_record(
+                    self.random_vector(),
+                    metadata={"optimizer": "surrogate", "phase": "initial", "index": index},
+                )
+
+        for step in range(n_steps):
+            loss = self._train_surrogate()
+            candidate = self.clip_vector(self._suggest_vector(grad_steps=grad_steps))
+            if self.history and len(self.history) > 1:
+                recent = [record.cost for record in self.history[-2:]]
+                if abs(recent[-1] - recent[-2]) < 1e-9:
+                    spread = np.maximum(np.abs(candidate) * perturbation_scale, perturbation_scale)
+                    candidate = self.clip_vector(self.rng.normal(candidate, spread))
+            cost = self._evaluate_and_record(
+                candidate,
+                metadata={"optimizer": "surrogate", "phase": "search", "step": step, "training_loss": loss},
+            )
+            self.logger.info("Surrogate step %s/%s cost=%s best=%s", step + 1, n_steps, cost, self.best_cost)
+            if history_path is not None and save_every and (step + 1) % save_every == 0:
+                self.save(history_path)
+
+        if history_path is not None:
+            self.save(history_path)
+        return self.history
+
+
+def validate_model(
+    model: adm.Model,
+    data: core.Experiment | Iterable[core.Experiment],
+    plot: bool = False,
+    show_extra_states: Iterable[str] | None = None,
+    ode_solver: str = "Radau",
+) -> tuple[dict[str, pl.DataFrame], plotly.graph_objs.Figure | None]:
     """
-    This function is called by ray to calculate the cost of a configuration.
+    Compare model predictions against one or more experiments.
     """
-    base_model=base_model.copy()
+    palette = px.colors.qualitative.Plotly
+    fig = None
 
-    ic=experiment.initial_concentrations.copy()
-    ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
-    
-    for k,v in base_model._ic.items():
-        if k in parameters:
-            ic[k]=parameters[k]
-    
-    for k,v in base_model.model_parameters.items():
-        if k in parameters:
-            base_model.model_parameters[k]=parameters[k]
-            
-    
-    base_model.update_parameters(initial_conditions=ic)
-    
-    for k,v in base_model.base_parameters.items():
-        if k in parameters:
-            base_model.base_parameters[k]=parameters[k]
-            
-    base_model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
-    base_model.feed=experiment.feed
-    solution=base_model.solve_model(np.array(experiment.time),method=ode_method).y[[base_model.species.index(i) for i in experiment.variables],:]
-    return np.sum(np.square(solution.T-experiment.data))
-
-    
-def _single_cost(base_model:adm.Model,
-                    parameters:dict,
-                    experiment:core.Experiment,
-                    var_type:str="model_parameters",
-                    ode_method:str="LSODA")->float:
-    
-        ic=experiment.initial_concentrations.copy()
-        ic.update({k:experiment.data[0,idx] for idx,k in enumerate(experiment.variables)})
-        for k,v in base_model.initial_conditions.items():
-            ic[k]=parameters.get(k,v)
-        base_model.update_parameters(**{var_type:parameters})
-        base_model.update_parameters(initial_conditions=ic)
-        base_model.base_parameters=experiment.base_parameters
-        base_model.control_state={k:experiment.initial_concentrations[k] for k in experiment.constants}
-        base_model.feed=experiment.feed
-        solution=base_model.solve_model(np.array(experiment.time),method=ode_method).y[[base_model.species.index(i) for i in experiment.variables],:]
-        return np.sum(np.square(solution.T-experiment.data))
-    
-
-            
-    
-
-            
-        
-
-    
-
-def validate_model(model:adm.Model,data:core.Experiment|Iterable[core.Experiment],plot:bool=False,show_extra_states:Iterable[str]|None=None,ode_solver:str="Radau")->tuple[dict[str,pd.DataFrame],plotly.graph_objs.Figure|None]:
-    """
-    This function can be used to compare the model's predictions to the experimental data of interest.
-    
-    Args:
-        model: The model to validate.
-        data: The experiment to validate the model on in the form of a core.Experiment object.
-        plot: Whether to plot the results.
-    
-    Returns:
-        dict[str,pd.DataFrame]: A dictionary containing the model's predictions and the experimental data.
-    
-    """
-    
-    pallet=px.colors.qualitative.Plotly
-    fig=None
-
-    
-    if isinstance(data,Iterable):
-        
-
-        fig=go.Figure()
-        ic=pd.concat([pd.DataFrame(i.initial_concentrations,index=[0]) for  i in data ]).mean().to_dict()
-        
-        ic.update({k:data[0].data[0,idx] for idx,k in enumerate(data[0].variables) })
-        model.control_state={k:data[0].initial_concentrations[k] for k in data[0].constants}
-        model.update_parameters(base_parameters=data[0].base_parameters)
+    if not isinstance(data, core.Experiment):
+        experiments = list(data)
+        if not experiments:
+            raise ValueError("At least one experiment is required.")
+        fig = go.Figure()
+        first = experiments[0]
+        ic = pl.DataFrame([experiment.initial_concentrations for experiment in experiments]).mean().to_dicts()[0]
+        ic.update({variable: first.data[0, idx] for idx, variable in enumerate(first.variables)})
+        model.control_state = {key: ic[key] for key in first.constants if key in ic}
+        model.update_parameters(base_parameters=first.base_parameters)
         model.update_parameters(initial_conditions=ic)
-        all_time_points=np.array(sorted(list(set(sum([exp.time for exp in data],start=[])))))
-        solution=model.solve_model(all_time_points,method=ode_solver)
-        out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data[0].variables],:].T,index=np.array(all_time_points).tolist(),columns=data[0].variables)}
-        for idx,variable in enumerate(data[0].variables):
-            fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=variable,mode="lines",line=dict(
-                    color=pallet[idx])))
-        df=[]
-        for data_ in data:
-            conc=pd.DataFrame(data_.data,columns=data_.variables,index=data_.time)
-            conc["time"]=conc.index
-            conc=conc.melt(id_vars=["time"])
-            df.append(conc)
-        df=pd.concat(df)
-        comps=df["variable"].unique()
-        times=df["time"].unique()
-
-        df_grouped=df.groupby(["time","variable"])
-        for idx,comp in enumerate(comps):
-            t=[]
-            y=[]
-            e=[]
-            for time in times:
-                t.append(time)
-                y.append(df_grouped.get_group((time,comp)).mean(numeric_only=True)["value"])
-                e.append(df_grouped.get_group((time,comp)).std(numeric_only=True)["value"]/np.sqrt(df_grouped.get_group((time,comp)).shape[0]))
-            fig.add_trace(go.Scatter(x=t,
-                                    y=y,
-                                    error_y=dict(
-                                    type='data', # value of error bar given in data coordinates
-                                    array=e,
-                                    color=pallet[idx],
-                                    visible=True),
-                                    mode="markers",
-                                    marker=dict(
-                                        color=pallet[idx]
-                                    ),
-                                    name=comp+" Observed"
-                                    ))
-            
+        all_time_points = np.array(sorted(set(sum([experiment.time for experiment in experiments], start=[]))))
+        solution = model.solve_model(all_time_points, method=ode_solver)
+        out = {
+            "model": pl.DataFrame(
+                solution.y[[model.species.index(variable) for variable in first.variables], :].T,
+                schema=first.variables,
+            ).with_columns(pl.Series("time", all_time_points.tolist()))
+        }
+        for idx, variable in enumerate(first.variables):
+            fig.add_trace(
+                go.Scatter(
+                    x=out["model"]["time"],
+                    y=out["model"][variable],
+                    name=variable,
+                    mode="lines",
+                    line=dict(color=palette[idx]),
+                )
+            )
+        rows = []
+        for experiment in experiments:
+            for row_index, time_point in enumerate(experiment.time):
+                for col_index, variable in enumerate(experiment.variables):
+                    rows.append(
+                        {"time": time_point, "variable": variable, "value": experiment.data[row_index, col_index]}
+                    )
+        observed = pl.DataFrame(rows)
+        comps = observed["variable"].unique().to_list()
+        times = observed["time"].unique().to_list()
+        for idx, comp in enumerate(comps):
+            t, y, e = [], [], []
+            for time_point in times:
+                group = observed.filter((pl.col("time") == time_point) & (pl.col("variable") == comp))
+                t.append(time_point)
+                y.append(group["value"].mean())
+                e.append((group["value"].std() or 0.0) / np.sqrt(group.height))
+            fig.add_trace(
+                go.Scatter(
+                    x=t,
+                    y=y,
+                    error_y=dict(type="data", array=e, color=palette[idx], visible=True),
+                    mode="markers",
+                    marker=dict(color=palette[idx]),
+                    name=f"{comp} Observed",
+                )
+            )
         if show_extra_states:
-            for idx,extra in enumerate(show_extra_states):
-                fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=extra,mode="lines",line=dict(
-                    color=pallet[idx+len(data[0].variables)])))
+            for idx, extra in enumerate(show_extra_states):
+                fig.add_trace(
+                    go.Scatter(
+                        x=out["model"]["time"],
+                        y=solution.y[model.species.index(extra)],
+                        name=extra,
+                        mode="lines",
+                        line=dict(color=palette[idx + len(first.variables)]),
+                    )
+                )
         if plot:
             fig.show(renderer="svg")
+        return out, fig
+
+    ic = data.initial_concentrations.copy()
+    ic.update({variable: data.data[0, idx] for idx, variable in enumerate(data.variables)})
+    model.control_state = {key: ic[key] for key in data.constants if key in ic}
+    model.update_parameters(base_parameters=data.base_parameters)
+    model.update_parameters(initial_conditions=ic)
+    solution = model.solve_model(np.array(data.time), method=ode_solver)
+    out = {
+        "model": pl.DataFrame(
+            solution.y[[model.species.index(variable) for variable in data.variables], :].T,
+            schema=data.variables,
+        ).with_columns(pl.Series("time", np.array(data.time).tolist())),
+        "data": pl.DataFrame(data.data, schema=data.variables).with_columns(pl.Series("time", data.time)),
+    }
+    if plot:
+        fig = go.Figure()
+        for idx, variable in enumerate(data.variables):
+            fig.add_trace(
+                go.Scatter(
+                    x=out["model"]["time"],
+                    y=out["model"][variable],
+                    name=variable,
+                    mode="lines",
+                    line=dict(color=palette[idx]),
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=out["data"]["time"],
+                    y=out["data"][variable],
+                    name=f"{variable} observed",
+                    mode="markers",
+                    marker=dict(color=palette[idx]),
+                )
+            )
+        if show_extra_states:
+            for idx, extra in enumerate(show_extra_states):
+                fig.add_trace(
+                    go.Scatter(
+                        x=out["model"]["time"],
+                        y=solution.y[model.species.index(extra)],
+                        name=extra,
+                        mode="lines",
+                        line=dict(color=palette[idx + len(data.variables)]),
+                    )
+                )
+        fig.show(renderer="svg")
+
+    return out, fig
 
 
-    else:
-  
-        ic=data.initial_concentrations.copy()
-        ic.update({k:data.data[0,idx] for idx,k in enumerate(data.variables) })
-        model.control_state={k:data.initial_concentrations[k] for k in data.constants}
-        model.update_parameters(base_parameters=data.base_parameters)
-        model.update_parameters(initial_conditions=ic)
-        solution=model.solve_model(np.array(data.time),method=ode_solver)
-        out={"model":pd.DataFrame(solution.y[[model.species.index(i) for i in data.variables],:].T,index=np.array(data.time).tolist(),columns=data.variables),
-             "data":pd.DataFrame(data.data,index=data.time,columns=data.variables)}
-        if plot:
-            fig=go.Figure()
-            for idx,variable in enumerate(data.variables):
-                fig.add_trace(go.Scatter(x=out["model"].index,y=out["model"][variable],name=variable,mode="lines",line=dict(
-                    color=pallet[idx])))
-                fig.add_trace(go.Scatter(x=out["data"].index,y=out["data"][variable],name=variable+" observed",mode="markers",marker=dict(
-                    color=pallet[idx])))
-            if show_extra_states:
-                for idx,extra in enumerate(show_extra_states):
-                    fig.add_trace(go.Scatter(x=out["model"].index,y=solution.y[model.species.index(extra)],name=extra,mode="lines",line=dict(
-                        color=pallet[idx+len(data.variables)])))
-            fig.show(renderer="svg")
-        
-    return  out,fig
-
-def calculate_fit_stats(model:adm.Model,data:Iterable[core.Experiment])->Validation:
-    """This function calculates RMSE and R-squared metrics on a set of experiment objects
-    #AIC
-    """
-    x=[]
-    y=[]
-    for study in data:
-        formatted_data=validate_model(model,study)[0]
-        model_,data_=formatted_data["model"],formatted_data["data"]
-        for column in model_.columns:
-            x.extend(model_[column])
-            y.extend(data_[column])
-    x=np.array(x)
-    y=np.array(y)
-    return Validation(r_squared=1-(np.sum(np.square(y-x))/np.sum(np.square(y-np.mean(y)))),rmse=np.sqrt(np.sum(np.square(y-x))))
-      
-            
-        
-
-
-
-
-    
-if __name__ == "__main__":
-    import utils
-    params=utils.load_multiple_json_files(configs.E_ADM_LOCAL)
-    model=adm.Model(
-    initial_conditions=params.initial_conditions,
-    inlet_conditions=params.inlet_conditions,
-    model_parameters=params.model_parameters,
-    reactions=params.reactions,
-    species=params.species,
-    feed=adm.DEFAULT_FEED,
-    base_parameters=params.base_parameters,
-    control_state={},
-    build_stoichiometric_matrix=adm.build_e_adm_stoichiometric_matrix,
-    ode_system=adm.e_adm_ode_sys,
+def calculate_fit_stats(model: adm.Model, data: Iterable[core.Experiment]) -> Validation:
+    """Calculate RMSE and R-squared metrics for a set of experiments."""
+    predicted_values = []
+    observed_values = []
+    for experiment in data:
+        formatted_data = validate_model(model, experiment)[0]
+        model_frame, data_frame = formatted_data["model"], formatted_data["data"]
+        for column in model_frame.columns:
+            if column == "time":
+                continue
+            predicted_values.extend(model_frame[column])
+            observed_values.extend(data_frame[column])
+    predicted = np.array(predicted_values)
+    observed = np.array(observed_values)
+    residual_sum = np.sum(np.square(observed - predicted))
+    total_sum = np.sum(np.square(observed - np.mean(observed)))
+    return Validation(
+        r_squared=1 - (residual_sum / total_sum),
+        rmse=np.sqrt(residual_sum),
     )
-    db=core.Database(configs.Database())
-    exp=db.get_experiment_from_experiments_db("name","")[:3]
-    tuner=NNSurrogateTuner(
-        base_model=model,
-        train_data=exp[:3],
-        tuneables={"k_m_bu":(1,100),"k_m_ac":(1,100)},
-         history_file_path=pathlib.Path("./test_parallel.pkl"),
-            n_steps=100,
-    )
-    tuner.optimize(parallel=True,parallel_framework="native",ode_method="BDF")
-
-    
-    
-    
-   

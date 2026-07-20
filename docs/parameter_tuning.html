@@ -9363,7 +9363,7 @@ Experiment already in database
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">adtoolbox.optimize</span> <span class="kn">import</span> <span class="n">NNSurrogateTuner</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">adtoolbox.optimize</span> <span class="kn">import</span> <span class="n">SurrogateOptimizer</span>
 </pre></div>
 </div>
 </div>
@@ -9390,16 +9390,12 @@ Experiment already in database
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">base_model</span><span class="o">.</span><span class="n">control_state</span><span class="o">=</span><span class="p">{</span><span class="s2">"S_H_ion"</span><span class="p">:</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">feedstock_pH</span><span class="p">)}</span>
 <span class="n">base_model</span><span class="o">.</span><span class="n">time_limit</span><span class="o">=</span><span class="mi">10</span>
-<span class="n">test_nn</span><span class="o">=</span><span class="n">NNSurrogateTuner</span><span class="p">(</span>
+<span class="n">test_nn</span><span class="o">=</span><span class="n">SurrogateOptimizer</span><span class="p">(</span>
     <span class="n">base_model</span><span class="o">=</span><span class="n">base_model</span><span class="p">,</span>
     <span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span>
-    <span class="n">tuneables</span><span class="o">=</span><span class="n">tunables</span><span class="p">,</span>
-    <span class="n">grad_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-    <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-    <span class="n">initial_points</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-    <span class="n">exp_std</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">search_space</span><span class="o">=</span><span class="n">tunables</span><span class="p">,</span>
     <span class="p">)</span>
-<span class="n">test_nn</span><span class="o">.</span><span class="n">load_history_file</span><span class="p">(</span><span class="s2">"history.pkl"</span><span class="p">)</span>  <span class="c1">#Only if you want to continue from a previous run</span>
+<span class="n">test_nn</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"history.json"</span><span class="p">)</span>  <span class="c1"># Only if you want to continue from a previous run</span>
 </pre></div>
 </div>
 </div>
@@ -9413,7 +9409,7 @@ Experiment already in database
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># history_nn_surogate=test_nn.optimize(perturbation_method="estimate_gradient_directions",ode_method="Radau") Run this line to start the optimization</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># history_nn_surrogate = test_nn.optimize(n_steps=5000, initial_points=50, grad_steps=5, history_path="history.json")</span>
 </pre></div>
 </div>
 </div>
@@ -9427,9 +9423,9 @@ Experiment already in database
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"./history.pkl"</span><span class="p">,</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">params</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"./history.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">history</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9443,7 +9439,8 @@ Experiment already in database
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">min_index</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]))</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">best_record</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">history</span><span class="p">[</span><span class="s2">"history"</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">record</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">])</span>
+<span class="n">params</span><span class="o">=</span><span class="n">best_record</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -9458,7 +9455,7 @@ Experiment already in database
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">m</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">m</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="n">model_parameters</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">tunables</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">params</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">][</span><span class="n">min_index</span><span class="p">])))</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="n">model_parameters</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

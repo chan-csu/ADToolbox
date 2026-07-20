@@ -6,7 +6,8 @@
 # Without --execute, commands/scripts are written but not run or submitted.
 
 backend = "local"
-container = "None"
+container = "apptainer"
+image = "docker://parsaghadermazi/adtoolbox:latest"
 
 [slurm]
 cpus = 8
@@ -16,6 +17,8 @@ time = "04:00:00"
 # whose names start with `job_name_prefix` before submitting another job.
 # max_concurrent_jobs = 20
 # poll_seconds = 30
+# retries = 1
+# retry_delay_seconds = 60
 # job_name_prefix = "adtoolbox_"
 # partition = "general"
 # account = "my_account"
@@ -24,17 +27,18 @@ time = "04:00:00"
 
 [steps.download_sra]
 backend = "slurm"
-container = "singularity"
+container = "apptainer"
 cpus = 4
 memory = "16G"
 time = "04:00:00"
 
 [steps.trim_reads]
 backend = "slurm"
-container = "singularity"
+container = "apptainer"
 cpus = 4
 memory = "8G"
 time = "01:00:00"
+# retries = 2
 
 [steps.trim_reads.settings]
 threads = 4
@@ -45,7 +49,7 @@ quality_cutoff = 20
 
 [steps.build_amplicon_features]
 backend = "slurm"
-container = "singularity"
+container = "apptainer"
 cpus = 8
 memory = "24G"
 time = "04:00:00"
@@ -60,7 +64,7 @@ chimera_filter = true
 
 [steps.align_to_gtdb]
 backend = "slurm"
-container = "singularity"
+container = "apptainer"
 cpus = 8
 memory = "32G"
 time = "04:00:00"
@@ -71,14 +75,14 @@ vsearch_similarity = 0.97
 
 [steps.align_genome]
 backend = "slurm"
-container = "singularity"
+container = "apptainer"
 cpus = 12
 memory = "48G"
 time = "08:00:00"
 
 [steps.align_short_reads]
 backend = "slurm"
-container = "singularity"
+container = "apptainer"
 cpus = 24
 memory = "150G"
 time = "12:00:00"

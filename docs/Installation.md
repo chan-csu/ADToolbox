@@ -37,7 +37,7 @@ pip install adtoolbox
 ```
 docker build -t adtoolbox:local .
 docker run --rm adtoolbox:local adtoolbox --help
-docker run --rm -v "$PWD:/workspace" adtoolbox:local adtoolbox Metagenomics process --help
+docker run --rm -v "$PWD:/workspace" adtoolbox:local adtoolbox metagenomics process --help
 
 ```
 

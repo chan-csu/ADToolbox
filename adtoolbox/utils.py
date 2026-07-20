@@ -3,11 +3,11 @@ import random
 import subprocess
 import pathlib
 import json
-import pandas as pd
 import os
 from typing import Iterable, Any,Union
 from warnings import warn
 from collections import namedtuple
+import polars as pl
 class Sequence_Toolkit:
 
     aa_list = ['A', 'M', 'N', 'V', 'W', 'L', 'H', 'S', 'G', 'F',
@@ -247,14 +247,15 @@ def create_mmseqs_database(fasta_db:str,
     if container == "None":
         pass
     
-    elif container == "singularity":         
-        bashscript = f"singularity exec --bind {fasta_db}:{fasta_db} {config.adtoolbox_singularity} {bashscript}"
+    elif container in {"singularity", "apptainer"}:
+        runtime = "apptainer" if container == "apptainer" else "singularity"
+        bashscript = f"{runtime} exec --bind {fasta_db}:{fasta_db} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {fasta_db}:{fasta_db} -v {db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_docker} {bashscript}"
     
     else:
-        raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
+        raise ValueError("Invalid container type. Please choose between None, singularity, apptainer and docker.")
     if save:
         with open(save,'w') as f:
             f.write(bashscript)
@@ -273,14 +274,15 @@ def index_mmseqs_db(mmseqs_db:str,container:str="None",save:Union[str,None]=None
     if container != "None":
         pass
     
-    elif container == "singularity":
-        bashscript = f"singularity exec --bind {str(pathlib.Path(mmseqs_db).parent)}:{str(pathlib.Path(mmseqs_db).parent)},{db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_singularity} {bashscript}"
+    elif container in {"singularity", "apptainer"}:
+        runtime = "apptainer" if container == "apptainer" else "singularity"
+        bashscript = f"{runtime} exec --bind {str(pathlib.Path(mmseqs_db).parent)}:{str(pathlib.Path(mmseqs_db).parent)},{db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {mmseqs_db}:{mmseqs_db} -v {db_name_path.parent}:{db_name_path.parent} {config.adtoolbox_docker} {bashscript}"
     
     else:
-        raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
+        raise ValueError("Invalid container type. Please choose between None, singularity, apptainer and docker.")
     if save:
         with open(save,'w') as f:
             f.write(bashscript)
@@ -308,19 +310,20 @@ def mmseqs_search(
     if container == "None":
         pass 
     
-    elif container == "singularity":
+    elif container in {"singularity", "apptainer"}:
+        runtime = "apptainer" if container == "apptainer" else "singularity"
         query_db=str(pathlib.Path(query_db).parent)
         target_db=str(pathlib.Path(target_db).parent)
         results_db=str(pathlib.Path(results_db).parent)
         path_mount=list(set([query_db,target_db,results_db]))
         path_mount=",".join([f"{i}:{i}" for i in path_mount])
-        bashscript = f"singularity exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
+        bashscript = f"{runtime} exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {query_db}:{query_db} -v {str(pathlib.Path(target_db).parent)}:{str(pathlib.Path(target_db).parent)} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
 
     else:
-        raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
+        raise ValueError("Invalid container type. Please choose between None, singularity, apptainer and docker.")
 
     if save:
         with open(save,'w') as f:
@@ -344,20 +347,21 @@ def mmseqs_result_db_to_tsv(query_db:str,target_db:str,results_db:str,tsv_file:s
     if container == "None":
         pass
     
-    elif container == "singularity":
+    elif container in {"singularity", "apptainer"}:
+        runtime = "apptainer" if container == "apptainer" else "singularity"
         query_db=str(pathlib.Path(query_db).parent)
         target_db=str(pathlib.Path(target_db).parent)
         results_db=str(pathlib.Path(results_db).parent)
         tsv_file=str(pathlib.Path(tsv_file).parent)
         path_mount=list(set([query_db,target_db,results_db,tsv_file]))
         path_mount=",".join([f"{i}:{i}" for i in path_mount])
-        bashscript = f"singularity exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
+        bashscript = f"{runtime} exec --bind {path_mount} {config.adtoolbox_singularity} {bashscript}"
     
     elif container == "docker":
         bashscript = f"docker run -v {query_db}:{query_db} -v {str(pathlib.Path(target_db).parent)}:{str(pathlib.Path(target_db).parent)} -v {results_db}:{results_db} {config.adtoolbox_docker} {bashscript}"
     
     else:
-        raise ValueError("Invalid container type. Please choose between None, singularity and docker.")
+        raise ValueError("Invalid container type. Please choose between None, singularity, apptainer and docker.")
     if save:
         with open(save,'w') as f:
             f.write(bashscript)
@@ -374,12 +378,12 @@ def make_json_from_genomes(input_dir:str,output_dir:str)->dict:
     3- Genome_Dir: Absolute path to the fasta files: NOT .gz
     """
     genomes_json={}
-    genomes_table=pd.read_table(input_dir,delimiter=",")
-    genomes_table.set_index("genome_id",inplace=True)
-    for[gi] in genomes_table.index:
+    genomes_table=pl.read_csv(input_dir,separator=",", infer_schema_length=0)
+    for row in genomes_table.to_dicts():
+        gi = row["genome_id"]
         genomes_json[gi]={}
-        genomes_json[gi]["NCBI_Name"]= genomes_table.loc[gi,"NCBI_Name"]
-        genomes_json[gi]["Genome_Dir"]= genomes_table.loc[gi,"Genome_Dir"]
+        genomes_json[gi]["NCBI_Name"]= row["NCBI_Name"]
+        genomes_json[gi]["Genome_Dir"]= row["Genome_Dir"]
     with open(output_dir,"w") as fp:
         json.dump(genomes_json,fp)
     return

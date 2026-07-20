@@ -73,22 +73,13 @@ def _model_paths_from_dir(parameters_dir, prefix):
     }
 
 
-def _resolve_model_paths(parameters_dir, prefix, legacy_prefixes=(), **overrides):
+def _resolve_model_paths(parameters_dir, prefix, **overrides):
     if parameters_dir:
         parameters_dir = _prompt_path(parameters_dir, "ADM parameter directory", exists=True, file_okay=False, dir_okay=True)
     elif not any(overrides.values()):
         parameters_dir = _prompt_path(None, "ADM parameter directory", exists=True, file_okay=False, dir_okay=True)
 
     paths = _model_paths_from_dir(parameters_dir, prefix) if parameters_dir else {}
-    if parameters_dir and legacy_prefixes:
-        for key, path in list(paths.items()):
-            if os.path.exists(path):
-                continue
-            for legacy_prefix in legacy_prefixes:
-                legacy_path = _model_paths_from_dir(parameters_dir, legacy_prefix)[key]
-                if os.path.exists(legacy_path):
-                    paths[key] = legacy_path
-                    break
     resolved = {}
     for key, value in overrides.items():
         resolved[key] = value or paths.get(key)
@@ -97,7 +88,7 @@ def _resolve_model_paths(parameters_dir, prefix, legacy_prefixes=(), **overrides
     return resolved
 
 
-def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, legacy_prefixes=(), **paths):
+def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, **paths):
     if models_json:
         models_json = _prompt_path(models_json, "ADM models JSON", exists=True, file_okay=True, dir_okay=False)
         try:
@@ -108,7 +99,6 @@ def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, legac
     paths = _resolve_model_paths(
         parameters_dir,
         prefix,
-        legacy_prefixes=legacy_prefixes,
         **paths,
     )
     return utils.load_multiple_json_files(paths)._asdict()
@@ -142,7 +132,9 @@ def _write_representative_genomes(results, output_dir, output_format):
 
 
 def _report_adm_solution(model, solution, report):
-    if report in (None, "dash"):
+    if report is None:
+        return
+    if report == "dash":
         model.dash_app(solution)
     elif report == "csv":
         address = Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
@@ -152,18 +144,18 @@ def _report_adm_solution(model, solution, report):
 
 
 @click.group(
-    name="ADToolBox",
+    name="adtoolbox",
     context_settings=CONTEXT_SETTINGS,
-    help="ADToolBox, a toolbox for anaerobic digestion modeling",
+    help="ADToolbox, a toolbox for anaerobic digestion modeling",
     no_args_is_help=True,
     invoke_without_command=True,
 )
-@click.version_option(__version__, "-v", "--version", prog_name="ADToolBox")
+@click.version_option(__version__, "-v", "--version", prog_name="adtoolbox")
 def main():
     pass
 
 
-@main.group(name="Database", help="Build or download databases required by ADToolbox.", no_args_is_help=True)
+@main.group(name="database", help="Build or download databases required by ADToolbox.", no_args_is_help=True)
 def database():
     pass
 
@@ -314,7 +306,7 @@ def download_all_databases(output_dir):
 
 
 @main.group(
-    name="Metagenomics",
+    name="metagenomics",
     help="Import and process metagenomics data from the command line.",
     no_args_is_help=True,
 )
@@ -322,11 +314,11 @@ def metagenomics():
     pass
 
 
-@metagenomics.command(name="download_from_sra", help="Download metagenomics data from SRA.")
+@metagenomics.command(name="download-sra", help="Download metagenomics data from SRA.")
 @click.option("-s", "--sample-accession", required=True, help="SRA accession ID for the sample.")
 @click.option("-o", "--output-dir", help="Output directory for downloaded data.")
 @click.option("-c", "--container", default="None", show_default=True, help="Container: None, docker, or singularity.")
-def download_from_sra(sample_accession, output_dir, container):
+def download_sra(sample_accession, output_dir, container):
     output_dir = _prompt_path(output_dir, "Downloaded SRA output directory", file_okay=False, dir_okay=True, writable=True)
     config = _metagenomics_config()
     prefetch_script, _ = core.Metagenomics(config).seqs_from_sra(
@@ -337,11 +329,11 @@ def download_from_sra(sample_accession, output_dir, container):
     subprocess.run(prefetch_script, shell=True)
 
 
-@metagenomics.command(name="download_genome", help="Download a genome from NCBI.")
+@metagenomics.command(name="download-genome", help="Download a genome from NCBI.")
 @click.option("-g", "--genome-accession", required=True, help="NCBI accession ID for the genome.")
 @click.option("-o", "--output-dir", help="Output directory for downloaded data.")
 @click.option("-c", "--container", default="None", show_default=True, help="Container: None, docker, or singularity.")
-def download_genome(genome_accession, output_dir, container):
+def download_genome_command(genome_accession, output_dir, container):
     output_dir = _prompt_path(output_dir, "Downloaded genome output directory", file_okay=False, dir_okay=True, writable=True)
     config = _metagenomics_config()
     script = core.Metagenomics(config).download_genome(
@@ -530,7 +522,7 @@ def metagenomics_process(
     rich.print(f"[green]Batch summary written to {result['summary']}")
 
 
-@main.command(name="Documentations", help="Documentations for using ADToolbox.")
+@main.command(name="docs", help="Print package documentation in the terminal.")
 @click.option("-s", "--show", is_flag=True, help="Show the README documentation.")
 def documentations(show):
     if not show:
@@ -539,7 +531,7 @@ def documentations(show):
         console.print(markdown.Markdown(f.read()))
 
 
-@main.group(name="ADM", help="Run and visualize ADToolbox ADM models.", no_args_is_help=True)
+@main.group(name="adm", help="Run and visualize ADToolbox ADM models.", no_args_is_help=True)
 def adm_group():
     pass
 
@@ -625,7 +617,6 @@ def e_adm(
         "e_adm",
         parameters_dir=parameters_dir,
         prefix="e_adm",
-        legacy_prefixes=("e_adm_2",),
         model_parameters=model_parameters,
         base_parameters=base_parameters,
         initial_conditions=initial_conditions,

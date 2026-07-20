@@ -13,9 +13,9 @@ workflow should use, and the object derives its file paths from that directory.
 
 
 ADTOOLBOX_CONTAINERS = {
-    "docker_x86": "parsaghadermazi/adtoolbox:x86",
+    "docker_x86": "parsaghadermazi/adtoolbox:latest",
     "docker_arm64": "parsaghadermazi/adtoolbox:arm64",
-    "singularity_x86": "docker://parsaghadermazi/adtoolbox:x86",
+    "singularity_x86": "docker://parsaghadermazi/adtoolbox:latest",
     "singularity_arm64": "docker://parsaghadermazi/adtoolbox:arm64",
 }
 

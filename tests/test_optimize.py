@@ -1,70 +1,101 @@
-from adtoolbox import __version__
-from adtoolbox import core,configs,optimize,adm
+import inspect
+
 import numpy as np
-import json
-from pytest import fixture
-import pytest
+
+from adtoolbox import __version__, core, optimize
+
+
+class FakeSolution:
+    def __init__(self, y):
+        self.y = y
+
+
+class FakeModel:
+    species = ["S_x"]
+
+    def __init__(self, k=0.0):
+        self.model_parameters = {"k": k}
+        self.base_parameters = {}
+        self._ic = {"S_x": 0.0}
+        self._inc = {}
+        self.feed = None
+        self.control_state = {}
+
+    def copy(self):
+        copied = FakeModel(self.model_parameters["k"])
+        copied.base_parameters = self.base_parameters.copy()
+        copied._ic = self._ic.copy()
+        copied._inc = self._inc.copy()
+        return copied
+
+    def update_parameters(
+        self,
+        model_parameters=None,
+        base_parameters=None,
+        initial_conditions=None,
+        inlet_conditions=None,
+    ):
+        if model_parameters:
+            self.model_parameters.update(model_parameters)
+        if base_parameters:
+            self.base_parameters.update(base_parameters)
+        if initial_conditions:
+            self._ic.update(initial_conditions)
+        if inlet_conditions:
+            self._inc.update(inlet_conditions)
+
+    def solve_model(self, time, method="BDF"):
+        time = np.asarray(time, dtype=float)
+        y = self._ic["S_x"] + self.model_parameters["k"] * time
+        return FakeSolution(y.reshape(1, -1))
+
+
+def _experiment():
+    return core.Experiment(
+        name="linear",
+        time=[0, 1, 2],
+        variables=["S_x"],
+        data=[[1, 3, 5]],
+        feed=core.Feed("test", carbohydrates=25, lipids=25, proteins=25, tss=50, si=25, xi=25),
+    )
+
 
 def test_version():
-    assert __version__ == '0.1.0'
-    
-###FIXTURES###
+    assert __version__ == "1.1.0"
 
-@fixture
-def experimental_data():
-    study=core.Experiment(
-        "test_study",
-        time=[0,1,2,3,4,5],
-        variables=[10,12],
-        data=[[1,2,3,4,5,6],[2,3,4,5,6,7]],
-        reference="test_reference"
+
+def test_optimizer_is_abstract():
+    assert inspect.isabstract(optimize.Optimizer)
+
+
+def test_optimizer_evaluates_by_species_name():
+    optimizer = optimize.ScipyOptimizer(
+        base_model=FakeModel(),
+        train_data=[_experiment()],
+        search_space={"k": (0, 4)},
     )
-    return study
+
+    assert optimizer.evaluate({"k": 2.0}) == 0.0
+    assert optimizer.evaluate([1.0]) > 0.0
 
 
-    
-###--optimize module--###
-@pytest.mark.long
-def test_build_optimizer_object(experimental_data):
-    with open(configs.Database().initial_conditions) as file:
-        initial_conditions=json.load(file)
-    
-    with open(configs.Database().base_parameters) as file:
-        base_parameters=json.load(file)
-    
-    with open(configs.Database().model_parameters) as file:
-        model_parameters=json.load(file)
-    
-    with open(configs.Database().inlet_conditions) as file:
-        inlet_conditions=json.load(file)
-    
-    with open(configs.Database().reactions) as file:
-        reactions=json.load(file)
-    
-    with open(configs.Database().species) as file:
-        species=json.load(file)
-    
-    
+def test_optimizer_tracks_and_loads_history(tmp_path):
+    optimizer = optimize.ScipyOptimizer(
+        base_model=FakeModel(),
+        train_data=[_experiment()],
+        search_space={"k": (0, 4)},
+    )
 
-    tuner=optimize.Tuner(
-        base_model=adm.Model(initial_conditions=initial_conditions,
-                             base_parameters=base_parameters,
-                             model_parameters=model_parameters,
-                            inlet_conditions=inlet_conditions,
-                            feed=adm.DEFAULT_FEED,
-                            reactions=reactions,
-                            species=species,
-                            ode_system=adm.modified_adm_ode_sys,
-                            build_stoichiometric_matrix=adm.build_modified_adm_stoichiometric_matrix,
-                            name="test_model"),
+    optimizer.record({"k": 1.0}, optimizer.evaluate({"k": 1.0}))
+    optimizer.record({"k": 2.0}, optimizer.evaluate({"k": 2.0}))
+    path = optimizer.save(tmp_path / "history.json")
 
-                        
-                    train_data=[experimental_data],
-                    tuneables={"Y_Me_h2":(0,1),
-                               "Y_Me_h2":(0,1),
-                               },
-                    fitness_mode="equalized",
-                    var_type="model_parameters"
-             )
-    hist=tuner.optimize(max_runs=2)
-    assert len(hist.successful_perfs)==2
+    restored = optimize.ScipyOptimizer(
+        base_model=FakeModel(),
+        train_data=[_experiment()],
+        search_space={"k": (0, 4)},
+    ).load(path)
+
+    assert restored.optimized_parameters == {"k": 2.0}
+    assert restored.best_cost == 0.0
+    assert len(restored.history) == 2

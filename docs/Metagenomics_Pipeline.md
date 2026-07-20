@@ -1,6 +1,6 @@
 # Metagenomics Pipeline
 
-ADToolbox converts metagenomics evidence into model-ready e-ADM microbial COD allocations from a sample table. The current pipeline is exposed through the `adtoolbox Metagenomics process` CLI command and supports:
+ADToolbox converts metagenomics evidence into model-ready e-ADM microbial COD allocations from a sample table. The current pipeline is exposed through the `adtoolbox metagenomics process` CLI command and supports:
 
 - SRA accession tables
 - local FASTQ/FASTQ.GZ read tables
@@ -35,7 +35,7 @@ sample_02	SRR28403134
 ```
 
 ```bash
-adtoolbox Metagenomics process \
+adtoolbox metagenomics process \
   --input ./metagenomics/read_samples.tsv \
   --input-type reads \
   --output-dir ./metagenomics/process \
@@ -51,7 +51,7 @@ adtoolbox Metagenomics process \
 For SRA tables, use the same command with `--input-type sra` and an SRA download directory:
 
 ```bash
-adtoolbox Metagenomics process \
+adtoolbox metagenomics process \
   --input ./metagenomics/sra_samples.tsv \
   --input-type sra \
   --output-dir ./metagenomics/process \
@@ -66,6 +66,10 @@ adtoolbox Metagenomics process \
 ## Execution Profiles
 
 Use a TOML execution profile to choose local or Slurm execution per step. The reference profile is `reference_data/metagenomics_pipeline.toml`.
+
+Container image selection is controlled by the top-level `image` key, for example `image = "docker://parsaghadermazi/adtoolbox:latest"`. Step-specific `image` values override the top-level image. If no image is provided, ADToolbox defaults to the packaged `parsaghadermazi/adtoolbox:latest` image for Docker and `docker://parsaghadermazi/adtoolbox:latest` for Apptainer/Singularity.
+
+Slurm retries are opt-in. Set `retries` under `[slurm]` for a global default, or under a specific `[steps.<name>]` table for one step. When retries are enabled, ADToolbox submits the job, monitors terminal state with `sacct`, and resubmits failed Slurm jobs until the retry limit is reached.
 
 Important step names are:
 
@@ -92,8 +96,8 @@ trim = mg.run_trim_reads_step(
     output_dir="./metagenomics/process",
     read_1="./metagenomics/sample_01/R1.fastq.gz",
     read_2="./metagenomics/sample_01/R2.fastq.gz",
-    forward_primer="GTGYCAGCMGCCGCGGTAA",
-    reverse_primer="GGACTACNVGGGTWTCTAAT",
+    adapter_1="AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+    adapter_2="AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
     execution_profile="reference_data/metagenomics_pipeline.toml",
     execute=False,
 )

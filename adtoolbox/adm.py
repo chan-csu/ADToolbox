@@ -3,23 +3,18 @@ import plotly
 import numpy as np
 import scipy.optimize
 import scipy.integrate
-import pandas as pd
 import json
 import os
 import plotly.express as px
-from dash import Dash, html, dcc
 import plotly.graph_objects as go
-from dash import Dash, dcc, html, Input, Output,dash_table
 from core import Database as Database
 from core import SeedDB as SeedDB
 from core import Feed
-import pandas as pd
-import dash_bootstrap_components as dbc
 import utils
 from adtoolbox import PKG_DATA
-import dash_escher
 import configs
 import time
+import polars as pl
 
 ### Note ###
 # The following code is a modified version of the code from the PyADM1 package
@@ -211,7 +206,7 @@ class Model:
         }
         for i in range(len(self.species)):
             solution[self.species[i]] = Sol.y[i, :]
-        sol_df = pd.DataFrame(solution)
+        sol_df = pl.DataFrame(solution)
 
         if type == "Line":
             fig = px.line(sol_df, x="t", y=sol_df.columns,
@@ -293,6 +288,16 @@ class Model:
             with open(cobra_model,'rb') as f:
                 cobra_model=json.load(f)
 
+        try:
+            from dash import Dash, dcc, html, Input, Output, dash_table
+            import dash_bootstrap_components as dbc
+            import dash_escher
+        except ImportError as exc:
+            raise ImportError(
+                "Dash reports require optional dashboard dependencies. "
+                "Install them with `pip install adtoolbox[dashboard]`."
+            ) from exc
+
         app = Dash(__name__, external_stylesheets=[dbc.themes.FLATLY])
         colors = {
             'background': '#659dbd',
@@ -305,7 +310,7 @@ class Model:
         }
         for i in range(len(self.species)):
             solution[self.species[i]] = sol.y[i, :]
-        sol_df = pd.DataFrame(solution)
+        sol_df = pl.DataFrame(solution)
 
         
         fig = px.line(sol_df, x="t", y=sol_df.columns,
@@ -377,7 +382,7 @@ class Model:
                                         dash_table.DataTable(
                                         id='base_parameters',
                                         columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.base_parameters.keys())],
-                                        data=pd.DataFrame(self.base_parameters,index=[0]).to_dict('records'),
+                                        data=[self.base_parameters.copy()],
                                         editable=True,
                                         style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
                                         style_header={
@@ -400,7 +405,7 @@ class Model:
                                         dash_table.DataTable(
                                         id='model_parameters',
                                         columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self.model_parameters.keys())],
-                                        data=pd.DataFrame(self.model_parameters,index=[0]).to_dict('records'),
+                                        data=[self.model_parameters.copy()],
                                         editable=True,
                                         style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
                                         style_header={
@@ -423,7 +428,7 @@ class Model:
                                         dash_table.DataTable(
                                         id='initial_conditions',
                                         columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._ic.keys())],
-                                        data=pd.DataFrame(self._ic,index=[0]).to_dict('records'),
+                                        data=[self._ic.copy()],
                                         editable=True,
                                         style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
                                         style_header={
@@ -446,7 +451,7 @@ class Model:
                                         dash_table.DataTable(
                                         id='inlet_conditions',
                                         columns=[{"name": i, "id": i,"type":"numeric"} for i in list(self._inc.keys())],
-                                        data=pd.DataFrame(self._inc,index=[0]).to_dict('records'),
+                                        data=[self._inc.copy()],
                                         editable=True,
                                         style_table={'overflowX': 'scroll', 'padding-left': '20px','padding-bottom':'30px', 'width': styles['table_width']},
                                         style_header={
@@ -548,7 +553,7 @@ class Model:
                         }
             for i in range(len(self.species)):
                 solution[self.species[i]] = update_sol.y[i, :]
-            sol_df = pd.DataFrame(solution)
+            sol_df = pl.DataFrame(solution)
 
             fig = px.line(sol_df, x="t", y=sol_df.columns,
                           title="Concentration of species")
@@ -592,10 +597,13 @@ class Model:
         app.run_server(**kwargs)
 
     def csv_report(self,sol: scipy.integrate._ivp.ivp.OdeResult ,address: str)->None:
-        """Converts the results to a pandas data frame then to a csv"""
-        df = pd.DataFrame(sol.y, columns=sol.t, index=self.species)
-        df.to_csv(os.path.join(address,self.name+"_Report.csv"), header=True,
-                  index=True)
+        """Write the model solution to CSV."""
+        rows = []
+        for species, values in zip(self.species, sol.y):
+            row = {"species": species}
+            row.update({str(time_point): value for time_point, value in zip(sol.t, values)})
+            rows.append(row)
+        pl.DataFrame(rows).write_csv(os.path.join(address,self.name+"_Report.csv"))
         
     def copy(self):
         """Returns a copy of the model"""

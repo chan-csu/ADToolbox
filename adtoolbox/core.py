@@ -2,7 +2,6 @@ from distutils.log import warn
 import subprocess
 import os
 from collections import UserDict
-import pandas as pd
 import time
 import json
 import logging
@@ -42,6 +41,25 @@ from utils import (wrap_for_slurm,
 import polars as pl
 # import doctest
 # doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
+
+
+def _read_json_records(path: str | os.PathLike) -> list[dict]:
+    with open(path) as handle:
+        payload = json.load(handle)
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict):
+        return list(payload.values())
+    raise ValueError(f"Expected JSON records in {path}")
+
+
+def _empty_csv(path: str | os.PathLike, columns: list[str], separator: str = "\t") -> None:
+    pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+    pl.DataFrame(schema={column: pl.Utf8 for column in columns}).write_csv(path, separator=separator)
+
+
+def _read_table(path: str | os.PathLike, separator: str = "\t") -> pl.DataFrame:
+    return pl.read_csv(path, separator=separator, infer_schema_length=None)
 
 
 @dataclass
@@ -106,6 +124,14 @@ class PipelineTaskManager:
                 job_ids.append(str(job_id))
         return job_ids
 
+    @staticmethod
+    def _truthy(value) -> bool:
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return False
+        return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
     def wait_for_slurm_capacity(self, job_name_prefix: str) -> None:
         global_slurm = self.execution_profile.get("slurm", {})
         max_jobs = global_slurm.get("max_concurrent_jobs")
@@ -137,6 +163,85 @@ class PipelineTaskManager:
                 max_jobs,
             )
             time.sleep(int(global_slurm.get("poll_seconds", 30)))
+
+    def submit_slurm_job(
+        self,
+        *,
+        sbatch_path: str | os.PathLike,
+        task: PipelineTask,
+        job_name_prefix: str,
+        attempt: int,
+    ) -> tuple[str, str | None]:
+        self.wait_for_slurm_capacity(job_name_prefix)
+        completed = subprocess.run(["sbatch", str(sbatch_path)], capture_output=True, text=True)
+        submission = completed.stdout.strip()
+        if completed.returncode:
+            message = completed.stderr.strip() or submission or f"sbatch exited with status {completed.returncode}"
+            task.status = "failed"
+            self.record("submission_failed", task, attempt=attempt, returncode=completed.returncode, message=message)
+            raise RuntimeError(f"Could not submit Slurm step {task.step_name}: {message}")
+        job_id = self.parse_slurm_job_id(submission)
+        task.status = "submitted"
+        task.submission = submission
+        task.job_id = job_id
+        self.record("submitted", task, attempt=attempt, submission=submission)
+        return submission, job_id
+
+    def slurm_job_state(self, job_id: str) -> str | None:
+        try:
+            completed = subprocess.run(
+                ["sacct", "-j", str(job_id), "--format=State", "--noheader", "--parsable2"],
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError:
+            completed = None
+        if completed is not None and completed.returncode == 0:
+            states = [line.split("|", 1)[0].strip().split()[0] for line in completed.stdout.splitlines() if line.strip()]
+            if states:
+                for state in states:
+                    if state in {"FAILED", "CANCELLED", "TIMEOUT", "OUT_OF_MEMORY", "NODE_FAIL", "PREEMPTED", "BOOT_FAIL", "DEADLINE", "REVOKED", "SPECIAL_EXIT"}:
+                        return state
+                if all(state == "COMPLETED" for state in states):
+                    return "COMPLETED"
+                return states[0]
+
+        try:
+            queued = subprocess.run(
+                ["squeue", "-h", "-j", str(job_id), "-o", "%T"],
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError:
+            return None
+        if queued.returncode == 0 and queued.stdout.strip():
+            return queued.stdout.splitlines()[0].strip().split()[0]
+
+        return None
+
+    def wait_for_slurm_terminal_state(self, job_id: str, poll_seconds: int) -> str | None:
+        terminal_states = {
+            "COMPLETED",
+            "FAILED",
+            "CANCELLED",
+            "TIMEOUT",
+            "OUT_OF_MEMORY",
+            "NODE_FAIL",
+            "PREEMPTED",
+            "BOOT_FAIL",
+            "DEADLINE",
+            "REVOKED",
+            "SPECIAL_EXIT",
+        }
+        while True:
+            state = self.slurm_job_state(job_id)
+            if state is None:
+                self.logger.warning("Could not determine Slurm state for job %s; stopping retry monitor", job_id)
+                return None
+            if state in terminal_states:
+                return state
+            self.logger.info("Slurm job %s is %s; waiting %s seconds", job_id, state, poll_seconds)
+            time.sleep(poll_seconds)
 
 @dataclass
 class Feed:
@@ -476,8 +581,8 @@ class SeedDB:
             >>> rxn=seed_db.instantiate_rxns("rxn00558")
             >>> assert rxn.data["name"]=="D-glucose-6-phosphate aldose-ketose-isomerase"
         """
-        db=pd.read_json(self.reaction_db)
-        return Reaction(data=db[db["id"]==seed_id].to_dict(orient="records")[0])
+        records = _read_json_records(self.reaction_db)
+        return Reaction(data=next(record for record in records if record.get("id") == seed_id))
 
     def instantiate_metabs(self, seed_id:str)->Metabolite:
         """
@@ -498,8 +603,8 @@ class SeedDB:
             >>> metab=seed_db.instantiate_metabs("cpd01024")
             >>> assert metab.cod==4.0
         """
-        db=pd.read_json(self.compound_db)
-        return Metabolite(data=db[db["id"]==seed_id].to_dict(orient="records")[0])
+        records = _read_json_records(self.compound_db)
+        return Metabolite(data=next(record for record in records if record.get("id") == seed_id))
 
     def get_seed_rxn_from_ec(self, ec_number:str)->list:
         """
@@ -520,10 +625,16 @@ class SeedDB:
             >>> assert len(seed_rxn_list)>0
         
         """
-        db=pd.read_json(self.reaction_db)
-        db=db[db["ec_numbers"].apply(lambda x: ec_number in x if x else False)]
-        db.drop_duplicates("id",inplace=True,keep="first")
-        return db.to_dict(orient="records")
+        seen = set()
+        matches = []
+        for record in _read_json_records(self.reaction_db):
+            if ec_number not in (record.get("ec_numbers") or []):
+                continue
+            if record.get("id") in seen:
+                continue
+            seen.add(record.get("id"))
+            matches.append(record)
+        return matches
             
 
 class Database:
@@ -605,7 +716,7 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.tsv"))
         
         """
-        pd.DataFrame(columns=["ec_numbers","seed_ids","reaction_names","adm1_reaction","e_adm_reactions","pathways"]).to_csv(self.config.reaction_db,index=False,sep="\t")
+        _empty_csv(self.config.reaction_db, ["ec_numbers","seed_ids","reaction_names","adm1_reaction","e_adm_reactions","pathways"])
         
     def initialize_feed_db(self)->None:
         r"""This function intializes ADToolbox's Feed database by creating an empty tsv file.
@@ -624,7 +735,7 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"feed_test_db.tsv"))
         
         """
-        pd.DataFrame(columns=["name","carbohydrates","lipids","proteins","tss","si","xi","reference"]).to_csv(self.config.feed_db,index=False,sep="\t")
+        _empty_csv(self.config.feed_db, ["name","carbohydrates","lipids","proteins","tss","si","xi","reference"])
     
     def initialize_metagenomics_studies_db(self)->None:
         r"""This function intializes ADToolbox's Metagenomics studies database by creating an empty tsv file.
@@ -643,7 +754,7 @@ class Database:
             >>> os.remove(local_dir['metagenomics_studies'])
          
         """
-        pd.DataFrame(columns=["name","study_type","microbiome","sample_accession","comments","study_accession"]).to_csv(self.config.studies_local["metagenomics_studies"],index=False,sep="\t")
+        _empty_csv(self.config.studies_local["metagenomics_studies"], ["name","study_type","microbiome","sample_accession","comments","study_accession"])
         
     def initialize_experimental_data_db(self)->None:
         """This function intializes ADToolbox's experimental data database by creating an empty json file.
@@ -664,7 +775,8 @@ class Database:
         """
         if not (pathlib.Path(self.config.studies_local["experimental_data_db"]).parent).exists():
             pathlib.Path(self.config.studies_local["experimental_data_db"]).parent.mkdir(parents=True)
-        pd.DataFrame(columns=["name","initial_concentrations","time","variables","data","reference"]).to_json(self.config.studies_local["experimental_data_db"],orient="records")
+        with open(self.config.studies_local["experimental_data_db"], "w") as handle:
+            json.dump([], handle)
         
     
     def filter_seed_from_ec(self, 
@@ -699,14 +811,25 @@ class Database:
             >>> assert len(seed_rxn_db)>0 and len(seed_compound_db)>0
             >>> assert pd.read_json(configs.Database().reaction_db).shape[0]>pd.DataFrame(seed_rxn_db).shape[0]
         """
-        seed_rxn_db=pd.read_json(self.config.reaction_db)
-        seed_compound_db=pd.read_json(self.config.compound_db)
-        seed_rxn_db=seed_rxn_db[seed_rxn_db["ec_numbers"].apply(lambda x: any(ec in x for ec in ec_list) if x else False)]
-        seed_compound_db=seed_compound_db[seed_compound_db["id"].apply(lambda x: True if x in seed_rxn_db["stoichiometry"].sum() else False)]
+        seed_rxn_db = [
+            record for record in _read_json_records(self.config.reaction_db)
+            if any(ec in (record.get("ec_numbers") or []) for ec in ec_list)
+        ]
+        stoichiometry_ids = {
+            metabolite
+            for record in seed_rxn_db
+            for metabolite in (record.get("stoichiometry") or [])
+        }
+        seed_compound_db = [
+            record for record in _read_json_records(self.config.compound_db)
+            if record.get("id") in stoichiometry_ids
+        ]
         if save:
-            seed_rxn_db.to_json(self.config.local_reaction_db)
-            seed_compound_db.to_json(self.config.local_compound_db)
-        return seed_rxn_db.to_dict(orient="record"),seed_compound_db.to_dict(orient="record")
+            with open(self.config.local_reaction_db, "w") as handle:
+                json.dump(seed_rxn_db, handle)
+            with open(self.config.local_compound_db, "w") as handle:
+                json.dump(seed_compound_db, handle)
+        return seed_rxn_db, seed_compound_db
         
             
 
@@ -817,9 +940,8 @@ class Database:
             >>> os.remove(os.path.join(Main_Dir,"protein_test_db.fasta"))
             >>> os.remove(os.path.join(Main_Dir,"reaction_test_db.tsv"))
         """
-        rxn_db=pd.read_table(self.config.reaction_db,delimiter="\t")
-        ec_numbers=rxn_db["EC_Numbers"]
-        ec_numbers=list(set(ec_numbers))
+        rxn_db=_read_table(self.config.reaction_db)
+        ec_numbers=list(set(rxn_db["EC_Numbers"].to_list()))
         protein_seqs={}
         for ec in ec_numbers:
             protein_seqs.update(self.proteins_from_ec(ec))
@@ -920,11 +1042,10 @@ class Database:
         if not os.path.exists(self.config.feed_db):
             self.initialize_feed_db()
             
-        if feed.name in pd.read_table(self.config.feed_db,delimiter="\t")["name"].values:
+        feed_db = _read_table(self.config.feed_db)
+        if feed.name in feed_db["name"].to_list():
             raise ValueError("Feed already exists in the database.")
-        feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
-        feed_db=pd.concat([feed_db,pd.DataFrame([feed.to_dict()])],ignore_index=True,axis=0)
-        feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
+        pl.concat([feed_db, pl.DataFrame([feed.to_dict()])], how="diagonal_relaxed").write_csv(self.config.feed_db, separator="\t")
     
     def remove_feed_from_feed_db(self,field_name:str,query:str)->None:
         r"""
@@ -954,9 +1075,8 @@ class Database:
             raise FileNotFoundError("Feed database does not exist!")
         
         
-        feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
-        feed_db=feed_db[feed_db[field_name].str.contains(query)==False]
-        feed_db.to_csv(self.config.feed_db,index=False,sep="\t")
+        feed_db=_read_table(self.config.feed_db)
+        feed_db.filter(~pl.col(field_name).str.contains(query, literal=True)).write_csv(self.config.feed_db, separator="\t")
         
     def get_feed_from_feed_db(self,field_name:str,query:str)->list[Feed]:
         r"""
@@ -988,9 +1108,9 @@ class Database:
         if not os.path.exists(self.config.feed_db):
             raise FileNotFoundError("Feed database does not exist!")
         
-        feed_db=pd.read_table(self.config.feed_db,delimiter="\t")
-        feed_db=feed_db[feed_db[field_name].str.contains(query)]
-        return [Feed(**feed.to_dict()) for _,feed in feed_db.iterrows()]
+        feed_db=_read_table(self.config.feed_db)
+        feed_db=feed_db.filter(pl.col(field_name).str.contains(query, literal=True))
+        return [Feed(**feed) for feed in feed_db.to_dicts()]
     
     def add_metagenomics_study_to_metagenomics_studies_db(self,metagenomics_study:MetagenomicsStudy)->None:
         r"""
@@ -1014,9 +1134,10 @@ class Database:
         """
         if not os.path.exists(self.config.studies_local["metagenomics_studies"]):
             self.initialize_metagenomics_studies_db()
-        metagenomics_studies_db=pd.read_table(self.config.studies_local["metagenomics_studies"],delimiter="\t")
-        metagenomics_studies_db=pd.concat([metagenomics_studies_db,pd.DataFrame([metagenomics_study.to_dict()])],ignore_index=True,axis=0)
-        metagenomics_studies_db.to_csv(self.config.studies_local["metagenomics_studies"],index=False,sep="\t")
+        metagenomics_studies_db=_read_table(self.config.studies_local["metagenomics_studies"])
+        pl.concat([metagenomics_studies_db, pl.DataFrame([metagenomics_study.to_dict()])], how="diagonal_relaxed").write_csv(
+            self.config.studies_local["metagenomics_studies"], separator="\t"
+        )
     
     def remove_metagenomics_study_from_metagenomics_studies_db(self,field_name:str,query:str)->None:
         r"""
@@ -1044,9 +1165,10 @@ class Database:
         if not os.path.exists(self.config.studies_local["metagenomics_studies"]):
             raise FileNotFoundError("Metagenomics studies database does not exist!")
 
-        metagenomics_studies_db=pd.read_table(self.config.studies_local["metagenomics_studies"],delimiter="\t")
-        metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)==False]
-        metagenomics_studies_db.to_csv(self.config.studies_local["metagenomics_studies"],index=False,sep="\t")
+        metagenomics_studies_db=_read_table(self.config.studies_local["metagenomics_studies"])
+        metagenomics_studies_db.filter(~pl.col(field_name).str.contains(query, literal=True)).write_csv(
+            self.config.studies_local["metagenomics_studies"], separator="\t"
+        )
     
     def get_metagenomics_study_from_metagenomics_studies_db(self,field_name:str,query:str)->list[MetagenomicsStudy]:
         r"""
@@ -1077,9 +1199,9 @@ class Database:
         if not os.path.exists(self.config.studies_local["metagenomics_studies"]):
             raise FileNotFoundError("Metagenomics studies database does not exist!")
 
-        metagenomics_studies_db=pd.read_table(self.config.studies_local["metagenomics_studies"],delimiter="\t")
-        metagenomics_studies_db=metagenomics_studies_db[metagenomics_studies_db[field_name].str.contains(query)]
-        return [MetagenomicsStudy(**metagenomics_study.to_dict()) for _,metagenomics_study in metagenomics_studies_db.iterrows()]
+        metagenomics_studies_db=_read_table(self.config.studies_local["metagenomics_studies"])
+        metagenomics_studies_db=metagenomics_studies_db.filter(pl.col(field_name).str.contains(query, literal=True))
+        return [MetagenomicsStudy(**metagenomics_study) for metagenomics_study in metagenomics_studies_db.to_dicts()]
     
     def add_experiment_to_experiments_db(self,experiment:Experiment,force:bool=False)->None:
         r"""
@@ -1606,26 +1728,37 @@ class Metagenomics:
             dict: A dictionary of the top k features and their taxonomy.
         """
         ### Load all the required files
-        feature_table = pd.read_table(self.config.feature_table_dir, sep='\t',skiprows=1)
-        taxonomy_table = pd.read_table(self.config.taxonomy_table_dir, delimiter='\t')
+        feature_table = pl.read_csv(self.config.feature_table_dir, separator="\t", skip_rows=1, infer_schema_length=0)
+        taxonomy_table = pl.read_csv(self.config.taxonomy_table_dir, separator="\t", infer_schema_length=0)
         repseqs=fasta_to_dict(self.config.rep_seq_fasta)
         ### End Loading
         if mode == 'top_k':
-            sorted_df=feature_table.sort_values(sample_name, ascending=False)
-            top_featureids=list(sorted_df['#OTU ID'].head(treshold))
-            top_taxa=[taxonomy_table[taxonomy_table['Feature ID']==featureid]['Taxon'].values[0] for featureid in top_featureids]
+            sorted_df=feature_table.with_columns(pl.col(sample_name).cast(pl.Float64, strict=False).fill_null(0.0)).sort(sample_name, descending=True)
+            top_featureids=sorted_df['#OTU ID'].head(treshold).to_list()
+            top_taxa=[
+                taxonomy_table.filter(pl.col('Feature ID') == featureid)['Taxon'][0]
+                for featureid in top_featureids
+            ]
             top_repseqs=[repseqs[featureid] for featureid in top_featureids]
-            top_abundances=list(sorted_df[sample_name].head(treshold)/sorted_df[sample_name].sum())
+            total = sorted_df[sample_name].sum()
+            top_abundances=[float(value) / float(total) for value in sorted_df[sample_name].head(treshold).to_list()]
             
         elif mode == 'percentile':
-            feature_table[sample_name]=feature_table[sample_name]/feature_table[sample_name].sum()
-            sorted_df=feature_table.sort_values(sample_name, ascending=False)
-            sorted_df['cumsum']=sorted_df[sample_name].cumsum()*100
-            sorted_df_filtered=sorted_df[sorted_df['cumsum']<=treshold]
-            top_featureids=list(sorted_df_filtered['#OTU ID'])
-            top_taxa=[taxonomy_table[taxonomy_table['Feature ID']==featureid]['Taxon'].values[0] for featureid in top_featureids]
+            total = feature_table.select(pl.col(sample_name).cast(pl.Float64, strict=False).fill_null(0.0).sum()).item()
+            sorted_df=(
+                feature_table
+                .with_columns((pl.col(sample_name).cast(pl.Float64, strict=False).fill_null(0.0) / total).alias(sample_name))
+                .sort(sample_name, descending=True)
+                .with_columns((pl.col(sample_name).cum_sum() * 100).alias("cumsum"))
+            )
+            sorted_df_filtered=sorted_df.filter(pl.col("cumsum") <= treshold)
+            top_featureids=sorted_df_filtered['#OTU ID'].to_list()
+            top_taxa=[
+                taxonomy_table.filter(pl.col('Feature ID') == featureid)['Taxon'][0]
+                for featureid in top_featureids
+            ]
             top_repseqs=[repseqs[featureid] for featureid in top_featureids]
-            top_abundances=sorted_df.loc[sorted_df_filtered.index][sample_name].values.tolist()
+            top_abundances=sorted_df_filtered[sample_name].to_list()
         else:
             raise ValueError("mode must be either 'top_k' or 'percentile'")
         
@@ -1635,7 +1768,8 @@ class Metagenomics:
     def align_to_gtdb(self,
                       query_dir:str,
                       output_dir:str,
-                      container:str="None")->tuple[str]:
+                      container:str="None",
+                      image: str | None = None)->tuple[str]:
         r"""This function takes the representative sequences of the top k features and generates the script to
         align these feature sequences to gtdb using VSEARCH. If you intend to run this you either
         need to have VSEARCH installed or run it with a container option. You can use either the docker or singularity
@@ -1705,7 +1839,7 @@ class Metagenomics:
             for dir in dirs:
                 bash_script+=('-v '+dir+':'+dir+' ')
             
-            bash_script += (self.config.adtoolbox_docker+' vsearch --top_hits_only --blast6out '+
+            bash_script += (self._container_image(container, image)+' vsearch --top_hits_only --blast6out '+
                         match_table+
                         ' --usearch_global '+ query +
                         ' --db '+ gtdb_dir_fasta +
@@ -1714,12 +1848,13 @@ class Metagenomics:
                         ' --alnout '+ alignment_dir +
                         ' --top_hits_only'+'\n')
         
-        if container=="singularity":
-            bash_script='singularity exec '
+        if container in {"singularity", "apptainer"}:
+            runtime = "apptainer" if container == "apptainer" else "singularity"
+            bash_script=f'{runtime} exec '
             for dir in dirs:
                 bash_script+=('-B '+str(dir)+':'+str(dir)+' ')
             
-            bash_script += (self.config.adtoolbox_singularity+' vsearch --top_hits_only --blast6out '+
+            bash_script += (self._container_image(container, image)+' vsearch --top_hits_only --blast6out '+
                         match_table+
                         ' --usearch_global '+ str(query) +
                         ' --db '+ gtdb_dir_fasta +
@@ -1930,6 +2065,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             outdir:str,
             name:str,
             container:str="None",
+            image: str | None = None,
             )->tuple[str,str]:
         r"""
         This is a function that will align a genome to the Protein Database of the ADToolbox using mmseqs2.
@@ -1979,19 +2115,20 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             " -v "+address+":"+address+ \
             " -v "+self.config.protein_db+":"+self.config.protein_db+ \
             " -v "+outdir+":"+outdir+ \
-            f" {self.config.adtoolbox_docker}  mmseqs easy-search " + \
+            f" {self._container_image(container, image)}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
                 alignment_file+' tmpfiles --format-mode 4 '+"\n\n"
 
-        if container=="singularity":
+        if container in {"singularity", "apptainer"}:
+            runtime = "apptainer" if container == "apptainer" else "singularity"
             bash_script = ""
             alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
-            bash_script +="singularity exec "+ \
+            bash_script +=f"{runtime} exec "+ \
             " -B "+address+":"+address+ \
             " -B "+self.config.protein_db+":"+self.config.protein_db+ \
             " -B "+outdir+":"+outdir+ \
-            f" {self.config.adtoolbox_singularity}  mmseqs easy-search " + \
+            f" {self._container_image(container, image)}  mmseqs easy-search " + \
                 address + " " + \
                 self.config.protein_db + " " + \
                 alignment_file+' tmpfiles --format-mode 4 '+"\n\n"
@@ -2002,6 +2139,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                                         query_seq:str,
                                         alignment_file_name:str,
                                         container:str="None",
+                                        image: str | None = None,
                                         )->tuple[str,str]:
         r"""This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
         mmseqs wrappers in utils are used to perform this task. The result of this task is an alignment table.
@@ -2036,24 +2174,41 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             raise FileNotFoundError("""The protein database of the ADToolbox for mmseqs is not found. Please build it first
                                     using Database.build_mmseqs_database method.""")
         path_query=pathlib.Path(query_seq)
+        old_image_values = {}
+        if image:
+            old_image_values = {
+                "adtoolbox_docker": self.config.adtoolbox_docker,
+                "adtoolbox_singularity": self.config.adtoolbox_singularity,
+            }
+            if container == "docker":
+                self.config.adtoolbox_docker = image
+            elif container in {"singularity", "apptainer"}:
+                self.config.adtoolbox_singularity = image
         script = ""
-        script += create_mmseqs_database(query_seq,str(path_query.parent/path_query.name.split(".")[0]),container=container,save=None,run=False)+"\n"
-        script += mmseqs_search(
-            query_db=str(path_query.parent/path_query.name.split(".")[0]),
-            target_db=self.config.protein_db_mmseqs,
-            results_db=path_query.parent/alignment_file_name,
-            run=False,
-            save=None,
-            container=container,
-        )+"\n"
-        script += mmseqs_result_db_to_tsv(
-            query_db=str(path_query.parent/path_query.name.split(".")[0]),
-            target_db=self.config.protein_db_mmseqs,
-            results_db=path_query.parent/alignment_file_name,
-            tsv_file=path_query.parent/(alignment_file_name+".tsv"),
-            container=container,
-            save=None,
-            run=False,)+"\n"
+        try:
+            script += create_mmseqs_database(query_seq,str(path_query.parent/path_query.name.split(".")[0]),container=container,save=None,run=False,config=self.config)+"\n"
+            script += mmseqs_search(
+                query_db=str(path_query.parent/path_query.name.split(".")[0]),
+                target_db=self.config.protein_db_mmseqs,
+                results_db=path_query.parent/alignment_file_name,
+                run=False,
+                save=None,
+                container=container,
+                config=self.config,
+            )+"\n"
+            script += mmseqs_result_db_to_tsv(
+                query_db=str(path_query.parent/path_query.name.split(".")[0]),
+                target_db=self.config.protein_db_mmseqs,
+                results_db=path_query.parent/alignment_file_name,
+                tsv_file=path_query.parent/(alignment_file_name+".tsv"),
+                container=container,
+                save=None,
+                run=False,
+                config=self.config,
+            )+"\n"
+        finally:
+            for key, value in old_image_values.items():
+                setattr(self.config, key, value)
         return script,path_query.parent/(alignment_file_name+".tsv")
     
     def extract_ec_from_alignment(self,alignment_file:str)->dict[str,int]:
@@ -2131,11 +2286,17 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         Returns:
             dict: A dictionary containing the ADM microbial agents counts.
         """
-        reaction_db = pd.read_table(self.config.csv_reaction_db, sep=',').drop_duplicates("EC_Numbers")
-        reaction_db.set_index("EC_Numbers",inplace=True)
+        reaction_rows = {
+            row["EC_Numbers"]: row
+            for row in pl.read_csv(self.config.csv_reaction_db, separator=",", infer_schema_length=0)
+            .unique(subset=["EC_Numbers"], keep="first")
+            .to_dicts()
+        }
         adm_reactions_agents = {k:0 for k in self.config.adm_mapping.keys()}
         for ec in ec_counts.keys():
-            l=reaction_db.loc[ec,"e_adm_Reactions"].split("|")
+            if ec not in reaction_rows:
+                continue
+            l=reaction_rows[ec]["e_adm_Reactions"].split("|")
             for adm_rxn in l: 
                 adm_reactions_agents[adm_rxn]+=ec_counts[ec]
         adm_microbial_agents={}
@@ -2166,6 +2327,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         default_profile = {
             "backend": "local",
             "container": "None",
+            "image": None,
             "slurm": {},
             "steps": {},
         }
@@ -2190,6 +2352,17 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
     def _step_container(self, execution_profile: dict, step_name: str, fallback: str) -> str:
         step_settings = self._step_settings(execution_profile, step_name)
         return str(step_settings.get("container", execution_profile.get("container", fallback)))
+
+    def _step_image(self, execution_profile: dict, step_name: str, container: str) -> str | None:
+        step_settings = self._step_settings(execution_profile, step_name)
+        image = step_settings.get("image", execution_profile.get("image"))
+        if image:
+            return str(image)
+        if container == "docker":
+            return self.config.adtoolbox_docker
+        if container in {"singularity", "apptainer"}:
+            return self.config.adtoolbox_singularity
+        return None
 
     @staticmethod
     def _slurm_script(
@@ -2327,18 +2500,73 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             artifact["job_name"] = job_name
             if execute:
                 job_prefix = str(execution_profile.get("slurm", {}).get("job_name_prefix", f"adtoolbox_{sample_name}"))
-                manager.wait_for_slurm_capacity(job_prefix)
-                logger.info("Submitting Slurm step %s with sbatch %s", step_name, sbatch_path)
-                completed = subprocess.run(["sbatch", str(sbatch_path)], check=True, capture_output=True, text=True)
-                submission = completed.stdout.strip()
-                job_id = manager.parse_slurm_job_id(submission)
-                task.status = "submitted"
-                task.submission = submission
-                task.job_id = job_id
-                artifact["status"] = "submitted"
-                artifact["submission"] = submission
-                artifact["job_id"] = job_id
-                manager.record("submitted", task, submission=submission)
+                slurm_settings = execution_profile.get("slurm", {})
+                max_retries = int(step_settings.get("retries", slurm_settings.get("retries", 0)))
+                wait_for_completion = manager._truthy(
+                    step_settings.get("wait_for_completion", slurm_settings.get("wait_for_completion", False))
+                )
+                monitor_job = wait_for_completion or max_retries > 0
+                poll_seconds = int(step_settings.get("poll_seconds", slurm_settings.get("poll_seconds", 30)))
+                retry_delay = int(step_settings.get("retry_delay_seconds", slurm_settings.get("retry_delay_seconds", 60)))
+                attempts = []
+
+                for attempt in range(max_retries + 1):
+                    logger.info("Submitting Slurm step %s attempt %s with sbatch %s", step_name, attempt + 1, sbatch_path)
+                    submission, job_id = manager.submit_slurm_job(
+                        sbatch_path=sbatch_path,
+                        task=task,
+                        job_name_prefix=job_prefix,
+                        attempt=attempt,
+                    )
+                    attempt_record = {"attempt": attempt, "submission": submission, "job_id": job_id}
+                    attempts.append(attempt_record)
+                    artifact["status"] = "submitted"
+                    artifact["submission"] = submission
+                    artifact["job_id"] = job_id
+                    artifact["attempts"] = attempts
+                    artifact["retries"] = max_retries
+
+                    if not monitor_job:
+                        break
+                    if not job_id:
+                        task.status = "submitted"
+                        manager.record("monitor_skipped", task, attempt=attempt, reason="missing_job_id")
+                        logger.warning("Could not parse Slurm job id for %s; retry monitor is disabled for this step", step_name)
+                        break
+
+                    task.status = "monitoring"
+                    artifact["status"] = "monitoring"
+                    manager.record("monitoring", task, attempt=attempt)
+                    state = manager.wait_for_slurm_terminal_state(job_id, poll_seconds)
+                    attempt_record["state"] = state
+                    artifact["slurm_state"] = state
+                    if state == "COMPLETED":
+                        task.status = "completed"
+                        artifact["status"] = "completed"
+                        manager.record("completed", task, attempt=attempt, slurm_state=state)
+                        break
+                    if state is None:
+                        task.status = "submitted"
+                        artifact["status"] = "submitted"
+                        manager.record("monitor_unknown", task, attempt=attempt)
+                        break
+                    task.status = "failed"
+                    artifact["status"] = "failed"
+                    manager.record("failed", task, attempt=attempt, slurm_state=state)
+                    if attempt >= max_retries:
+                        raise RuntimeError(
+                            f"Slurm step {step_name} failed after {attempt + 1} attempt(s); "
+                            f"last job {job_id} ended as {state}. See {sbatch_path}."
+                        )
+                    logger.warning(
+                        "Slurm step %s job %s ended as %s; retrying in %s seconds",
+                        step_name,
+                        job_id,
+                        state,
+                        retry_delay,
+                    )
+                    manager.record("retrying", task, attempt=attempt, slurm_state=state, retry_delay_seconds=retry_delay)
+                    time.sleep(retry_delay)
             else:
                 logger.info("Prepared Slurm step %s at %s", step_name, sbatch_path)
                 manager.record("prepared_slurm", task)
@@ -2362,10 +2590,12 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
     def _quote(value: str | os.PathLike) -> str:
         return shlex.quote(str(value))
 
-    def _container_image(self, container: str) -> str:
+    def _container_image(self, container: str, image: str | None = None) -> str:
+        if image:
+            return image
         if container == "docker":
             return self.config.adtoolbox_docker
-        if container == "singularity":
+        if container in {"singularity", "apptainer"}:
             return self.config.adtoolbox_singularity
         return ""
 
@@ -2375,6 +2605,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         *,
         container: str,
         mounts: Iterable[str | os.PathLike],
+        image: str | None = None,
     ) -> str:
         container = str(container)
         if container == "None":
@@ -2391,11 +2622,12 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
 
         if container == "docker":
             mount_args = " ".join(f"-v {self._quote(path)}:{self._quote(path)}" for path in mount_dirs)
-            return f"docker run {mount_args} {self._container_image(container)} sh -lc {self._quote(command)}"
-        if container == "singularity":
+            return f"docker run {mount_args} {self._container_image(container, image)} sh -lc {self._quote(command)}"
+        if container in {"singularity", "apptainer"}:
+            runtime = "apptainer" if container == "apptainer" else "singularity"
             bind_args = " ".join(f"-B {self._quote(path)}:{self._quote(path)}" for path in mount_dirs)
-            return f"singularity exec {bind_args} {self._container_image(container)} sh -lc {self._quote(command)}"
-        raise ValueError("container must be one of: None, docker, singularity")
+            return f"{runtime} exec {bind_args} {self._container_image(container, image)} sh -lc {self._quote(command)}"
+        raise ValueError("container must be one of: None, docker, singularity, apptainer")
 
     @staticmethod
     def _write_json(path: str | os.PathLike, payload: dict) -> str:
@@ -2600,6 +2832,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         quality_cutoff: str | int | None = None,
         threads: int = 1,
         container: str = "None",
+        image: str | None = None,
     ) -> tuple[str, dict[str, str | None]]:
         output_path = pathlib.Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -2648,6 +2881,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             command,
             container=container,
             mounts=[read_1, read_2, output_path],
+            image=image,
         )
         return script + "\n", {"read_1": str(trimmed_1), "read_2": str(trimmed_2) if trimmed_2 else None}
 
@@ -2665,6 +2899,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         chimera_filter: bool = True,
         threads: int = 1,
         container: str = "None",
+        image: str | None = None,
     ) -> tuple[str, dict[str, str]]:
         output_path = pathlib.Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -2790,6 +3025,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             command,
             container=container,
             mounts=[read_1, read_2, output_path],
+            image=image,
         )
         return script + "\n", {"feature_table": str(feature_table), "rep_seqs": str(rep_seqs)}
 
@@ -2822,6 +3058,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
 
         step_name = "trim_reads"
         settings = self._step_settings(execution_profile, step_name).get("settings", {})
+        step_container = self._step_container(execution_profile, step_name, container)
         script, trimmed_reads = self.trim_amplicon_reads(
             read_1=read_1,
             read_2=read_2,
@@ -2834,7 +3071,8 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             minimum_length=int(settings.get("minimum_length", minimum_length)),
             quality_cutoff=settings.get("quality_cutoff", quality_cutoff),
             threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
-            container=self._step_container(execution_profile, step_name, container),
+            container=step_container,
+            image=self._step_image(execution_profile, step_name, step_container),
         )
         artifact = self._execute_step(
             script,
@@ -2863,6 +3101,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         accession: str,
         target_dir: str | os.PathLike,
         container: str = "None",
+        image: str | None = None,
     ) -> tuple[str, dict[str, str]]:
         target_path = pathlib.Path(target_dir)
         accession_dir = target_path / accession
@@ -2906,6 +3145,7 @@ fi"""
             command,
             container=container,
             mounts=[target_path],
+            image=image,
         )
         return script + "\n", {"read_1": str(read_1), "read_2": str(read_2)}
 
@@ -2949,10 +3189,12 @@ fi"""
         logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
         step_name = "download_sra"
+        step_container = self._step_container(execution_profile, step_name, container)
         script, reads = self._sra_download_script(
             accession=accession,
             target_dir=target_dir,
-            container=self._step_container(execution_profile, step_name, container),
+            container=step_container,
+            image=self._step_image(execution_profile, step_name, step_container),
         )
         if not paired:
             reads["read_2"] = None
@@ -3010,6 +3252,7 @@ fi"""
 
         step_name = "build_amplicon_features"
         settings = self._step_settings(execution_profile, step_name).get("settings", {})
+        step_container = self._step_container(execution_profile, step_name, container)
         script, feature_artifacts = self.build_amplicon_features(
             read_1=read_1,
             read_2=read_2,
@@ -3021,7 +3264,8 @@ fi"""
             min_unique_size=int(settings.get("min_unique_size", min_unique_size)),
             chimera_filter=bool(settings.get("chimera_filter", chimera_filter)),
             threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
-            container=self._step_container(execution_profile, step_name, container),
+            container=step_container,
+            image=self._step_image(execution_profile, step_name, step_container),
         )
         artifact = self._execute_step(
             script,
@@ -3062,12 +3306,14 @@ fi"""
         logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
         step_name = "align_short_reads"
+        step_container = self._step_container(execution_profile, step_name, container)
         old_settings = self._apply_step_config_settings(execution_profile, step_name)
         try:
             script, alignment_path = self.align_short_reads_to_protein_db(
                 str(reads),
                 f"{sample_name}_mmseq",
-                container=self._step_container(execution_profile, step_name, container),
+                container=step_container,
+                image=self._step_image(execution_profile, step_name, step_container),
             )
         finally:
             self._restore_config_settings(old_settings)
@@ -3108,12 +3354,14 @@ fi"""
         logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
         step_name = "align_to_gtdb"
+        step_container = self._step_container(execution_profile, step_name, container)
         old_settings = self._apply_step_config_settings(execution_profile, step_name)
         try:
             script = self.align_to_gtdb(
                 str(query_fasta),
                 str(sample_dir),
-                container=self._step_container(execution_profile, step_name, container),
+                container=step_container,
+                image=self._step_image(execution_profile, step_name, step_container),
             )[0]
         finally:
             self._restore_config_settings(old_settings)
@@ -3159,13 +3407,15 @@ fi"""
         execution_profile = self._load_execution_profile(execution_profile)
         profile_step_name = "align_genome"
         step_name = f"align_genome_{genome_name}"
+        step_container = self._step_container(execution_profile, profile_step_name, container)
         old_settings = self._apply_step_config_settings(execution_profile, profile_step_name)
         try:
             script, alignment = self.align_genome_to_protein_db(
                 str(genome_file),
                 str(alignment_path),
                 genome_name,
-                container=self._step_container(execution_profile, profile_step_name, container),
+                container=step_container,
+                image=self._step_image(execution_profile, profile_step_name, step_container),
             )
         finally:
             self._restore_config_settings(old_settings)
@@ -3473,12 +3723,14 @@ fi"""
             if gtdb_matches is None:
                 logger.info("Aligning sample representative sequences to GTDB")
                 step_name = "align_to_gtdb"
+                step_container = self._step_container(execution_profile, step_name, container)
                 old_settings = self._apply_step_config_settings(execution_profile, step_name)
                 try:
                     script = self.align_to_gtdb(
                         sample_repseqs,
                         str(scratch_path),
-                        container=self._step_container(execution_profile, step_name, container),
+                        container=step_container,
+                        image=self._step_image(execution_profile, step_name, step_container),
                     )[0]
                 finally:
                     self._restore_config_settings(old_settings)
@@ -3525,13 +3777,15 @@ fi"""
                             continue
                         step_name = f"align_genome_{genome}"
                         profile_step_name = "align_genome"
+                        step_container = self._step_container(execution_profile, profile_step_name, container)
                         old_settings = self._apply_step_config_settings(execution_profile, profile_step_name)
                         try:
                             script, alignment = self.align_genome_to_protein_db(
                                 genome_files[genome],
                                 str(alignment_dir),
                                 genome,
-                                container=self._step_container(execution_profile, profile_step_name, container),
+                                container=step_container,
+                                image=self._step_image(execution_profile, profile_step_name, step_container),
                             )
                         finally:
                             self._restore_config_settings(old_settings)
@@ -3799,9 +4053,13 @@ fi"""
             dict[str,dict[str,float]]: A dictionary containing the relative abundances of the elements in each sample.
         """
         out={}
-        df=pd.DataFrame(elements_feature_abundances).T.fillna(0)
+        features = sorted({feature for abundances in elements_feature_abundances.values() for feature in abundances})
         for sample,abunds in rel_abund.items():
-            out[sample]=scaler(pd.DataFrame(df.loc[abunds.keys(),:].multiply(list(abunds.values()),axis=0).sum(axis=0)).T).to_dict(orient="records")[0]
+            weighted = {feature: 0.0 for feature in features}
+            for element, abundance in abunds.items():
+                for feature, value in elements_feature_abundances.get(element, {}).items():
+                    weighted[feature] = weighted.get(feature, 0.0) + float(value) * float(abundance)
+            out[sample]=scaler(pl.DataFrame([weighted])).to_dicts()[0]
         return out
     
     def extract_relative_abundances(self,feature_table_dir:str,sample_names:Union[list[str],None]=None,top_k:int=-1)->dict:
@@ -3885,18 +4143,40 @@ fi"""
             dict: A dictionary containing the e-adm reactions and the EC numbers that are found in the genome and are grouped under the e-adm reaction.
         """
 
-        aligntable = pd.read_table(alignment_file,delimiter="\t")
-        aligntable = aligntable[(aligntable["bits"]>self.config.bit_score) & (aligntable["evalue"]<self.config.e_value)]
+        aligntable = pl.read_csv(alignment_file, separator="\t", infer_schema_length=0).with_columns([
+            pl.col("bits").cast(pl.Float64, strict=False).fill_null(0.0),
+            pl.col("evalue").cast(pl.Float64, strict=False).fill_null(float("inf")),
+        ])
+        aligntable = aligntable.filter((pl.col("bits") > self.config.bit_score) & (pl.col("evalue") < self.config.e_value))
 
-        ec_align_list = aligntable["target"].str.split("|",expand=True)
-        ec_align_list = list(ec_align_list[1].unique()) 
+        ec_align_list = (
+            aligntable
+            .select(pl.col("target").str.split_exact("|", 1).struct.field("field_1").alias("ec"))
+            .drop_nulls()
+            .unique()
+            ["ec"]
+            .to_list()
+        )
 
-        metadatatable = pd.read_table(self.config.csv_reaction_db, sep=',').drop_duplicates("EC_Numbers")[(['EC_Numbers','Modified_ADM_Reactions'])].dropna(axis=0)
-        metadatatable=metadatatable[metadatatable["EC_Numbers"].isin(ec_align_list)]
-        adm_reactions=list(set(metadatatable["Modified_ADM_Reactions"].str.split("|").sum()))
+        metadatatable = (
+            pl.read_csv(self.config.csv_reaction_db, separator=",", infer_schema_length=0)
+            .unique(subset=["EC_Numbers"], keep="first")
+            .select(["EC_Numbers","Modified_ADM_Reactions"])
+            .drop_nulls()
+            .filter(pl.col("EC_Numbers").is_in(ec_align_list))
+        )
+        adm_reactions=sorted({
+            reaction
+            for row in metadatatable.to_dicts()
+            for reaction in row["Modified_ADM_Reactions"].split("|")
+        })
         adm_to_ecs={}
         for reaction in adm_reactions:
-            adm_to_ecs[reaction]=list(metadatatable[metadatatable["Modified_ADM_Reactions"].str.contains(reaction)]["EC_Numbers"])
+            adm_to_ecs[reaction]=[
+                row["EC_Numbers"]
+                for row in metadatatable.to_dicts()
+                if reaction in row["Modified_ADM_Reactions"].split("|")
+            ]
             
         return adm_to_ecs
 
@@ -4024,12 +4304,17 @@ class Annotation:
                     if pathway not in metacyc_full_dict:
                         metacyc_full_dict[pathway] = set()
                     metacyc_full_dict[pathway].add(reaction)
-        alignment_table=pd.read_table(alignment_file,sep='\t')
-        targets_df = pd.DataFrame(alignment_table["target"].str.split("|", expand=True))
-        grouped = targets_df.groupby(0)[[1, 2]].agg(lambda x: set(x))
-        for pathway in grouped.index:
-            annotation_dict.setdefault(pathway,{})["reactions"]=grouped.loc[pathway][1]
-            annotation_dict.setdefault(pathway,{})["coverage"]=len(grouped.loc[pathway][1])/len(metacyc_full_dict[pathway])
+        alignment_table=pl.read_csv(alignment_file, separator="\t", infer_schema_length=0)
+        grouped: dict[str, dict[str, set[str]]] = {}
+        for target in alignment_table["target"].to_list():
+            pathway, reaction, *_ = target.split("|")
+            grouped.setdefault(pathway, {"reactions": set(), "extras": set()})
+            grouped[pathway]["reactions"].add(reaction)
+            if _:
+                grouped[pathway]["extras"].add(_[0])
+        for pathway, values in grouped.items():
+            annotation_dict.setdefault(pathway,{})["reactions"]=values["reactions"]
+            annotation_dict.setdefault(pathway,{})["coverage"]=len(values["reactions"])/len(metacyc_full_dict[pathway])
             annotation_dict.setdefault(pathway,{})["all_reactions"]=metacyc_full_dict[pathway]
             
         return annotation_dict

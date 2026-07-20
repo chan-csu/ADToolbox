@@ -1,4 +1,5 @@
 import json
+import subprocess
 
 import polars as pl
 
@@ -330,6 +331,86 @@ def test_task_manager_adds_slurm_dependencies(tmp_path):
     assert artifact["dependency_job_ids"] == ["12345"]
     assert artifact["dependencies"] == ["parent"]
     assert "#SBATCH --dependency=afterok:12345" in sbatch.read_text()
+
+
+def test_slurm_step_retries_failed_job(monkeypatch, tmp_path):
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {"poll_seconds": 1, "retry_delay_seconds": 1},
+        "steps": {"child": {"backend": "slurm", "retries": 1}},
+    }
+    submissions = iter(["Submitted batch job 100", "Submitted batch job 101"])
+    states = {"100": "FAILED", "101": "COMPLETED"}
+
+    def fake_run(command, capture_output=True, text=True, **kwargs):
+        if command[0] == "sbatch":
+            return subprocess.CompletedProcess(command, 0, stdout=next(submissions) + "\n", stderr="")
+        if command[0] == "sacct":
+            return subprocess.CompletedProcess(command, 0, stdout=states[command[2]] + "\n", stderr="")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr(core.subprocess, "run", fake_run)
+    monkeypatch.setattr(core.time, "sleep", lambda seconds: None)
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    logger = metagenomics._sample_pipeline_logger("sample_task", tmp_path / "sample_task", verbose=False)
+    artifact = metagenomics._execute_step(
+        "echo child",
+        step_name="child",
+        sample_name="sample_task",
+        output_dir=tmp_path / "sample_task" / "scratch",
+        logger=logger,
+        execute=True,
+        execution_profile=profile,
+    )
+
+    events = (tmp_path / "sample_task" / "scratch" / "task_events.jsonl").read_text()
+
+    assert artifact["status"] == "completed"
+    assert artifact["job_id"] == "101"
+    assert artifact["attempts"][0]["state"] == "FAILED"
+    assert artifact["attempts"][1]["state"] == "COMPLETED"
+    assert '"event": "retrying"' in events
+    assert '"event": "completed"' in events
+
+
+def test_slurm_step_raises_after_retry_exhausted(monkeypatch, tmp_path):
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "slurm": {"poll_seconds": 1, "retry_delay_seconds": 1},
+        "steps": {"child": {"backend": "slurm", "retries": 1}},
+    }
+    submissions = iter(["Submitted batch job 100", "Submitted batch job 101"])
+
+    def fake_run(command, capture_output=True, text=True, **kwargs):
+        if command[0] == "sbatch":
+            return subprocess.CompletedProcess(command, 0, stdout=next(submissions) + "\n", stderr="")
+        if command[0] == "sacct":
+            return subprocess.CompletedProcess(command, 0, stdout="FAILED\n", stderr="")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr(core.subprocess, "run", fake_run)
+    monkeypatch.setattr(core.time, "sleep", lambda seconds: None)
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    logger = metagenomics._sample_pipeline_logger("sample_task", tmp_path / "sample_task", verbose=False)
+
+    try:
+        metagenomics._execute_step(
+            "echo child",
+            step_name="child",
+            sample_name="sample_task",
+            output_dir=tmp_path / "sample_task" / "scratch",
+            logger=logger,
+            execute=True,
+            execution_profile=profile,
+        )
+    except RuntimeError as exc:
+        assert "failed after 2 attempt" in str(exc)
+    else:
+        raise AssertionError("Expected Slurm retry exhaustion to raise")
 
 
 def test_amplicon_preprocessing_writes_trim_and_vsearch_steps(tmp_path):
