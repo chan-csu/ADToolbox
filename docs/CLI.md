@@ -137,7 +137,7 @@ adtoolbox metagenomics align-multiple-genomes \
 
 ### Processing Pipeline
 
-`process` is the table-driven pipeline for converting amplicon evidence into e-ADM microbial biomass/COD allocations. Each run creates one sample folder per table row under `--output-dir`. Clean result files stay at the sample-folder root, while generated commands, raw alignments, VSEARCH intermediates, and other working files are written under `scratch/`.
+`process` is the table-driven pipeline for converting amplicon evidence into e-ADM microbial biomass/COD allocations. Each run creates one sample folder per table row under `--output-dir`. Clean result files stay at the sample-folder root, while generated commands, raw alignments, DADA2 intermediates, and other working files are written under `scratch/`.
 
 | File | Meaning |
 | --- | --- |
@@ -151,29 +151,30 @@ adtoolbox metagenomics align-multiple-genomes \
 | `pipeline.log` | Step-by-step log for the sample. |
 | `scratch/` | Intermediate files, generated scripts, GTDB matches, and genome alignment files. |
 
-By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run fastp, VSEARCH, and MMseqs commands.
+By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run fastp, Cutadapt, DADA2, VSEARCH, and MMseqs commands.
 
 Execution behavior can be controlled with a TOML profile. The repository includes an example at `reference_data/metagenomics_pipeline.toml`.
 
 ```toml
 backend = "local"
-container = "apptainer"
-image = "docker://parsaghadermazi/adtoolbox:latest"
+container = "None"
 
 [slurm]
+# Tasks always run synchronously with `sbatch --wait`.
+# Each retry is a fresh Slurm submission with a new job ID.
 # retries = 1
 # retry_delay_seconds = 60
 
 [steps.download_sra]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 4
 memory = "16G"
 time = "04:00:00"
 
 [steps.trim_reads]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 4
 memory = "8G"
 time = "01:00:00"
@@ -182,25 +183,39 @@ time = "01:00:00"
 [steps.trim_reads.settings]
 threads = 4
 minimum_length = 100
+quality_cutoff = 20
+quality_trim = "cut_right"
+quality_window_size = 4
+quality_mean = 20
 # Optional explicit adapters. When omitted, fastp auto-detects common adapters.
 # adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
 # adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
 [steps.build_amplicon_features]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 8
 memory = "24G"
 time = "04:00:00"
 
 [steps.build_amplicon_features.settings]
 threads = 8
-identity = 0.97
-maxee = 1.0
+denoiser = "dada2"
+primer_mode = "auto"
+primer_detection_reads = 10000
+primer_max_offset = 12
+primer_max_error_rate = 0.15
+primer_min_fraction = 0.80
+cutadapt_error_rate = 0.15
+discard_untrimmed = true
+maxee = 2.0
+minimum_length = 100
+chimera_filter = true
+dada2_min_overlap = 12
 
 [steps.align_to_gtdb]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 8
 memory = "32G"
 time = "04:00:00"
@@ -209,16 +224,16 @@ time = "04:00:00"
 vsearch_threads = 8
 vsearch_similarity = 0.97
 
-[steps.align_genome]
+[steps.align_genomes]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 12
 memory = "48G"
 time = "08:00:00"
 
 [steps.align_short_reads]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 24
 memory = "150G"
 time = "12:00:00"
@@ -246,6 +261,7 @@ adtoolbox metagenomics process \
   --genomes-dir ./metagenomics/genomes \
   --protein-db ./database/Protein_DB.fasta \
   --reaction-db ./database/Reaction_Metadata.csv \
+  --sample-workers 4 \
   --execution-profile reference_data/metagenomics_pipeline.toml \
   --execute
 ```
@@ -273,7 +289,7 @@ adtoolbox metagenomics process \
   --execute
 ```
 
-On Slurm, the safer pattern is staged execution:
+On Slurm, each sample waits for its current task before starting its next task. Up to four sample chains run concurrently by default; use `--sample-workers` to change that bound. One `--execute` run can therefore continue from SRA download through preprocessing, amplicon-to-genome mapping, genome alignments, and COD allocation. Staged execution is still available when you want manual control:
 
 ```bash
 adtoolbox metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage download --output-dir ./metagenomics/process --sra-dir ./metagenomics/sra --execution-profile reference_data/metagenomics_pipeline.toml --execute

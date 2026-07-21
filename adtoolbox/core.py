@@ -20,8 +20,11 @@ from collections import Counter
 from collections import namedtuple
 import pathlib
 import asyncio
+import threading
 import gzip
+import hashlib
 import tomllib
+from concurrent.futures import ThreadPoolExecutor
 import configs
 from rich.progress import track,Progress
 import rich
@@ -75,6 +78,23 @@ class PipelineTask:
     submission: str | None = None
 
 
+class SlurmTaskAttemptError(RuntimeError):
+    """A submitted Slurm attempt that did not complete successfully."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        returncode: int,
+        submission: str = "",
+        job_id: str | None = None,
+    ):
+        super().__init__(message)
+        self.returncode = int(returncode)
+        self.submission = submission
+        self.job_id = job_id
+
+
 class PipelineTaskManager:
     """Small execution manager for local and Slurm pipeline tasks."""
 
@@ -114,15 +134,6 @@ class PipelineTaskManager:
     def parse_slurm_job_id(submission: str) -> str | None:
         match = re.search(r"\b(\d+)(?:\.\d+)?\b", submission or "")
         return match.group(1) if match else None
-
-    @staticmethod
-    def dependency_job_ids(dependencies: Iterable[dict] | None) -> list[str]:
-        job_ids = []
-        for dependency in dependencies or []:
-            job_id = dependency.get("job_id") if isinstance(dependency, dict) else None
-            if job_id:
-                job_ids.append(str(job_id))
-        return job_ids
 
     @staticmethod
     def _truthy(value) -> bool:
@@ -173,19 +184,121 @@ class PipelineTaskManager:
         attempt: int,
     ) -> tuple[str, str | None]:
         self.wait_for_slurm_capacity(job_name_prefix)
-        completed = subprocess.run(["sbatch", str(sbatch_path)], capture_output=True, text=True)
+        try:
+            completed = subprocess.run(
+                ["sbatch", "--wait", "--parsable", str(sbatch_path)],
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError as error:
+            message = "sbatch is not available on PATH"
+            task.status = "failed"
+            self.record("attempt_failed", task, attempt=attempt, returncode=127, message=message)
+            raise SlurmTaskAttemptError(message, returncode=127) from error
         submission = completed.stdout.strip()
+        job_id = self.parse_slurm_job_id(submission)
+        task.submission = submission
+        task.job_id = job_id
         if completed.returncode:
             message = completed.stderr.strip() or submission or f"sbatch exited with status {completed.returncode}"
             task.status = "failed"
-            self.record("submission_failed", task, attempt=attempt, returncode=completed.returncode, message=message)
-            raise RuntimeError(f"Could not submit Slurm step {task.step_name}: {message}")
-        job_id = self.parse_slurm_job_id(submission)
-        task.status = "submitted"
-        task.submission = submission
-        task.job_id = job_id
-        self.record("submitted", task, attempt=attempt, submission=submission)
+            self.record(
+                "attempt_failed",
+                task,
+                attempt=attempt,
+                returncode=completed.returncode,
+                message=message,
+                submission=submission,
+            )
+            raise SlurmTaskAttemptError(
+                message,
+                returncode=completed.returncode,
+                submission=submission,
+                job_id=job_id,
+            )
+        task.status = "completed"
+        self.record("completed", task, attempt=attempt, submission=submission)
         return submission, job_id
+
+    def submit_slurm_job_with_retries(
+        self,
+        *,
+        sbatch_path: str | os.PathLike,
+        task: PipelineTask,
+        job_name_prefix: str,
+        max_retries: int,
+        retry_delay_seconds: int,
+    ) -> dict:
+        """Submit a fresh Slurm job for every task attempt."""
+        attempts = []
+        total_attempts = int(max_retries) + 1
+        for attempt in range(1, total_attempts + 1):
+            task.status = "submitting"
+            task.submission = None
+            task.job_id = None
+            self.logger.info(
+                "Submitting Slurm step %s attempt %s/%s with sbatch %s",
+                task.step_name,
+                attempt,
+                total_attempts,
+                sbatch_path,
+            )
+            self.record("submitting", task, attempt=attempt, total_attempts=total_attempts)
+            try:
+                submission, job_id = self.submit_slurm_job(
+                    sbatch_path=sbatch_path,
+                    task=task,
+                    job_name_prefix=job_name_prefix,
+                    attempt=attempt,
+                )
+            except SlurmTaskAttemptError as error:
+                attempts.append(
+                    {
+                        "attempt": attempt,
+                        "status": "failed",
+                        "returncode": error.returncode,
+                        "job_id": error.job_id,
+                        "submission": error.submission,
+                        "message": str(error),
+                    }
+                )
+                if error.returncode in {64, 127}:
+                    raise RuntimeError(
+                        f"Slurm step {task.step_name} failed with non-retryable status "
+                        f"{error.returncode}: {error}"
+                    ) from error
+                if attempt >= total_attempts:
+                    raise RuntimeError(
+                        f"Slurm step {task.step_name} failed after {total_attempts} attempt(s): {error}"
+                    ) from error
+                self.logger.warning(
+                    "Slurm step %s attempt %s/%s failed; submitting a new job in %ss",
+                    task.step_name,
+                    attempt,
+                    total_attempts,
+                    retry_delay_seconds,
+                )
+                time.sleep(int(retry_delay_seconds))
+                continue
+
+            attempts.append(
+                {
+                    "attempt": attempt,
+                    "status": "completed",
+                    "returncode": 0,
+                    "job_id": job_id,
+                    "submission": submission,
+                }
+            )
+            return {
+                "submission": submission,
+                "job_id": job_id,
+                "job_ids": [item["job_id"] for item in attempts if item.get("job_id")],
+                "attempt_count": attempt,
+                "attempts": attempts,
+            }
+
+        raise RuntimeError(f"Slurm step {task.step_name} did not produce a terminal result")
 
     def slurm_job_state(self, job_id: str) -> str | None:
         try:
@@ -265,6 +378,7 @@ class MetagenomicsWorkflowState:
         self.output_dir = pathlib.Path(output_dir)
         self.state_path = self.output_dir / "workflow_state.json"
         self.events_path = self.output_dir / "workflow_events.jsonl"
+        self._lock = threading.RLock()
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.state = self._load()
 
@@ -299,30 +413,31 @@ class MetagenomicsWorkflowState:
         message: str | None = None,
         paths: dict | None = None,
     ) -> dict:
-        previous = self.stage(sample_name, stage_name)
-        attempts = int(previous.get("attempts", 0))
-        if status == "submitted" and previous.get("job_id") != (artifact or {}).get("job_id"):
-            attempts += 1
-        entry = {
-            **previous,
-            "status": status,
-            "updated_at": datetime.now().isoformat(timespec="seconds"),
-            "attempts": attempts,
-        }
-        if artifact:
-            entry["artifact"] = artifact
-            if artifact.get("job_id"):
-                entry["job_id"] = artifact["job_id"]
-            if artifact.get("sbatch"):
-                entry["sbatch"] = artifact["sbatch"]
-        if message:
-            entry["message"] = message
-        if paths:
-            entry["paths"] = paths
-        self.sample(sample_name)["stages"][stage_name] = entry
-        self._event(sample_name, stage_name, status, entry, message=message)
-        self.save()
-        return entry
+        with self._lock:
+            previous = self.stage(sample_name, stage_name)
+            attempts = int(previous.get("attempts", 0))
+            if status == "submitted" and previous.get("job_id") != (artifact or {}).get("job_id"):
+                attempts += 1
+            entry = {
+                **previous,
+                "status": status,
+                "updated_at": datetime.now().isoformat(timespec="seconds"),
+                "attempts": attempts,
+            }
+            if artifact:
+                entry["artifact"] = artifact
+                if artifact.get("job_id"):
+                    entry["job_id"] = artifact["job_id"]
+                if artifact.get("sbatch"):
+                    entry["sbatch"] = artifact["sbatch"]
+            if message:
+                entry["message"] = message
+            if paths:
+                entry["paths"] = paths
+            self.sample(sample_name)["stages"][stage_name] = entry
+            self._event(sample_name, stage_name, status, entry, message=message)
+            self.save()
+            return entry
 
     def _event(self, sample_name: str, stage_name: str, status: str, entry: dict, *, message: str | None = None) -> None:
         record = {
@@ -348,11 +463,20 @@ class MetagenomicsWorkflowState:
         if entry.get("status") not in {"submitted", "running", "monitoring"}:
             return False
         job_id = entry.get("job_id")
-        if not job_id or slurm_checker is None:
+        if not job_id:
+            self.record(sample_name, stage_name, "stale", message="Old active state has no Slurm job id; checking cached outputs")
+            return False
+        if slurm_checker is None:
             return True
         state = slurm_checker.slurm_job_state(str(job_id))
         if state is None:
-            return True
+            self.record(
+                sample_name,
+                stage_name,
+                "stale",
+                message=f"Slurm job {job_id} is no longer visible; checking cached outputs",
+            )
+            return False
         if state == "COMPLETED":
             self.record(sample_name, stage_name, "completed", message=f"Slurm job {job_id} completed")
             return False
@@ -1813,6 +1937,9 @@ class Metagenomics:
             None
         """
         self.config=config
+        self._config_settings_lock = threading.RLock()
+        self._genome_download_condition = threading.Condition()
+        self._genomes_downloading: set[str] = set()
 
     #### NEEDS to BE FIXED        
     def find_top_taxa(
@@ -2004,12 +2131,18 @@ class Metagenomics:
         Args:
             alignment_dir (str): The path to the alignment file generated by align_to_gtdb.
         """
-        aligned = pl.read_csv(
-            alignment_dir,
-            separator="\t",
-            has_header=False,
-            infer_schema_length=0,
-        )
+        alignment_path = pathlib.Path(alignment_dir)
+        if not alignment_path.exists() or alignment_path.stat().st_size == 0:
+            return {}
+        try:
+            aligned = pl.read_csv(
+                alignment_path,
+                separator="\t",
+                has_header=False,
+                infer_schema_length=0,
+            )
+        except pl.exceptions.NoDataError:
+            return {}
         if aligned.is_empty():
             return {}
         query_col, target_col = aligned.columns[:2]
@@ -2093,15 +2226,101 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                 f"docker run -v {shlex.quote(str(genome_dir))}:{shlex.quote(str(genome_dir))} "
                 f"{self.config.adtoolbox_docker} bash -lc {shlex.quote(script_body)}"
             )
-        elif container=="singularity":
+        elif container in {"singularity", "apptainer"}:
+            runtime = "apptainer" if container == "apptainer" else "singularity"
             bash_script = (
-                f"singularity exec -B {shlex.quote(str(genome_dir))}:{shlex.quote(str(genome_dir))} "
+                f"{runtime} exec -B {shlex.quote(str(genome_dir))}:{shlex.quote(str(genome_dir))} "
                 f"{self.config.adtoolbox_singularity} bash -lc {shlex.quote(script_body)}"
             )
         else:
-            raise ValueError("container must be one of: None, docker, singularity")
+            raise ValueError("container must be one of: None, docker, singularity, apptainer")
         
         return bash_script,
+
+    def download_genomes(
+        self,
+        identifiers: Iterable[str],
+        output_dir: str | os.PathLike,
+        work_dir: str | os.PathLike,
+        *,
+        max_workers: int = 10,
+        container: str = "None",
+        image: str | None = None,
+    ) -> tuple[str]:
+        """Build one NCBI Datasets command for a batch of assembly accessions."""
+        accessions = sorted({self._ncbi_genome_path(identifier)[0] for identifier in identifiers})
+        if not accessions:
+            raise ValueError("At least one genome accession is required")
+        if not 1 <= int(max_workers) <= 30:
+            raise ValueError("max_workers must be between 1 and 30")
+
+        genome_dir = pathlib.Path(output_dir).resolve()
+        batch_dir = pathlib.Path(work_dir).resolve()
+        genome_dir.mkdir(parents=True, exist_ok=True)
+        batch_dir.mkdir(parents=True, exist_ok=True)
+        accession_file = batch_dir / "accessions.txt"
+        accession_file.write_text("\n".join(accessions) + "\n")
+        script_body = f"""set -euo pipefail
+out_dir={shlex.quote(str(genome_dir))}
+batch_dir={shlex.quote(str(batch_dir))}
+failed_file="$batch_dir/failed_genomes.txt"
+rm -rf "$batch_dir/package"
+rm -f "$batch_dir/genomes.zip"
+mkdir -p "$batch_dir/package"
+: > "$failed_file"
+if command -v datasets >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1 && datasets --version >/dev/null 2>&1; then
+  echo "Downloading genome batch with NCBI Datasets"
+  datasets download genome accession --inputfile "$batch_dir/accessions.txt" --include genome --dehydrated --no-progressbar --filename "$batch_dir/genomes.zip"
+  unzip -oq "$batch_dir/genomes.zip" -d "$batch_dir/package"
+  datasets rehydrate --directory "$batch_dir/package" --gzip --max-workers {int(max_workers)} --no-progressbar
+  while IFS= read -r accession; do
+    source_dir="$batch_dir/package/ncbi_dataset/data/$accession"
+    if [ ! -d "$source_dir" ]; then
+      echo "Skipping unavailable or deprecated genome: $accession" >&2
+      printf '%s\n' "$accession" >> "$failed_file"
+      continue
+    fi
+    mkdir -p "$out_dir/$accession"
+    cp -R "$source_dir/." "$out_dir/$accession/"
+  done < "$batch_dir/accessions.txt"
+else
+  echo "NCBI Datasets or unzip is unavailable; falling back to NCBI HTTPS downloads" >&2
+  command -v curl >/dev/null 2>&1 || {{ echo "curl is required for the genome-download fallback" >&2; exit 127; }}
+  while IFS= read -r accession; do
+    prefix=${{accession%%_*}}
+    digits_with_version=${{accession#*_}}
+    digits=${{digits_with_version%%.*}}
+    accession_path="$prefix/${{digits:0:3}}/${{digits:3:3}}/${{digits:6:3}}"
+    base_url="https://ftp.ncbi.nlm.nih.gov/genomes/all/$accession_path"
+    assembly_dir=$(curl -fsSL --retry 3 "$base_url/" | sed -n 's/.*href="\\([^"]*'${{accession}}'[^"]*\\/\\)".*/\\1/p' | head -n 1)
+    if [ -z "$assembly_dir" ]; then
+      echo "Skipping unavailable or deprecated genome: $accession" >&2
+      printf '%s\n' "$accession" >> "$failed_file"
+      continue
+    fi
+    genome_file=$(curl -fsSL --retry 3 "$base_url/$assembly_dir" | sed -n 's/.*href="\\([^"]*_genomic\\.fna\\.gz\\)".*/\\1/p' | head -n 1)
+    if [ -z "$genome_file" ]; then
+      echo "Skipping accession without a genomic FASTA: $accession" >&2
+      printf '%s\n' "$accession" >> "$failed_file"
+      continue
+    fi
+    mkdir -p "$out_dir/$accession"
+    if ! curl -fL --retry 3 "$base_url/$assembly_dir$genome_file" -o "$out_dir/$accession/$genome_file"; then
+      echo "Skipping genome after HTTPS retries were exhausted: $accession" >&2
+      rm -f "$out_dir/$accession/$genome_file"
+      printf '%s\n' "$accession" >> "$failed_file"
+      continue
+    fi
+  done < "$batch_dir/accessions.txt"
+fi
+"""
+        script = self._wrap_external_command(
+            script_body,
+            container=container,
+            mounts=[genome_dir, batch_dir],
+            image=image,
+        )
+        return script + "\n",
     
     def async_genome_downloader(self,identifiers:Iterable[str],batch_size:float=10,container:str="None"):
         sem=asyncio.Semaphore(batch_size)
@@ -2164,6 +2383,8 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                 continue
             genome_id = name.replace("_genomic.fna.gz", "").replace("_genomic.fna", "")
             accession_match = re.match(r"^(GC[AF]_\d+\.\d+)", genome_id)
+            if accession_match is None:
+                accession_match = re.match(r"^(GC[AF]_\d+\.\d+)", candidate.parent.name)
             assembly_accession = accession_match.group(1) if accession_match else genome_id
             records.append({
                 "genome_id": genome_id,
@@ -2185,6 +2406,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             name:str,
             container:str="None",
             image: str | None = None,
+            tmp_dir: str | os.PathLike | None = None,
             )->tuple[str,str]:
         r"""
         This is a function that will align a genome to the Protein Database of the ADToolbox using mmseqs2.
@@ -2219,40 +2441,33 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             str: The bash script that is used to align the genomes or to be used to align the genomes.
         """
  
-        if container=="None":
-            bash_script = ""
-            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
-            bash_script += "mmseqs easy-search " + \
-                address + " " + \
-                self.config.protein_db + " " + \
-                alignment_file+ ' tmp --format-mode 4 '+"\n\n"
-        
-        if container=="docker":
-            bash_script = ""
-            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
-            bash_script +="docker run "+ \
-            " -v "+address+":"+address+ \
-            " -v "+self.config.protein_db+":"+self.config.protein_db+ \
-            " -v "+outdir+":"+outdir+ \
-            f" {self._container_image(container, image)}  mmseqs easy-search " + \
-                address + " " + \
-                self.config.protein_db + " " + \
-                alignment_file+' tmpfiles --format-mode 4 '+"\n\n"
-
-        if container in {"singularity", "apptainer"}:
-            runtime = "apptainer" if container == "apptainer" else "singularity"
-            bash_script = ""
-            alignment_file=os.path.join(outdir,"Alignment_Results_mmseq_"+name+".tsv")
-            bash_script +=f"{runtime} exec "+ \
-            " -B "+address+":"+address+ \
-            " -B "+self.config.protein_db+":"+self.config.protein_db+ \
-            " -B "+outdir+":"+outdir+ \
-            f" {self._container_image(container, image)}  mmseqs easy-search " + \
-                address + " " + \
-                self.config.protein_db + " " + \
-                alignment_file+' tmpfiles --format-mode 4 '+"\n\n"
-        
-        return  bash_script,alignment_file
+        alignment_file = os.path.join(outdir, "Alignment_Results_mmseq_" + name + ".tsv")
+        mmseqs_tmp = pathlib.Path(tmp_dir) if tmp_dir else pathlib.Path(outdir) / "mmseqs_tmp" / name
+        command = "\n".join(
+            [
+                f"mkdir -p {self._quote(mmseqs_tmp)}",
+                " ".join(
+                    self._quote(value)
+                    for value in [
+                        "mmseqs",
+                        "easy-search",
+                        address,
+                        self.config.protein_db,
+                        alignment_file,
+                        mmseqs_tmp,
+                        "--format-mode",
+                        "4",
+                    ]
+                ),
+            ]
+        )
+        bash_script = self._wrap_external_command(
+            command,
+            container=container,
+            mounts=[address, self.config.protein_db, outdir],
+            image=image,
+        )
+        return bash_script + "\n", alignment_file
 
     def align_short_reads_to_protein_db(self,
                                         query_seq:str,
@@ -2491,7 +2706,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         log_file: str | os.PathLike,
         global_slurm: dict,
         step_settings: dict,
-        dependency_job_ids: Iterable[str] | None = None,
     ) -> str:
         cpus = step_settings.get("cpus", global_slurm.get("cpus", 1))
         memory = step_settings.get("memory", global_slurm.get("memory", "8G"))
@@ -2499,8 +2713,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         partition = step_settings.get("partition", global_slurm.get("partition"))
         account = step_settings.get("account", global_slurm.get("account"))
         qos = step_settings.get("qos", global_slurm.get("qos"))
-        max_retries = int(step_settings.get("retries", global_slurm.get("retries", 0)))
-        retry_delay = int(step_settings.get("retry_delay_seconds", global_slurm.get("retry_delay_seconds", 60)))
         requeue = PipelineTaskManager._truthy(step_settings.get("requeue", global_slurm.get("requeue", False)))
 
         lines = [
@@ -2519,49 +2731,10 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             lines.append(f"#SBATCH --qos={qos}")
         if requeue:
             lines.append("#SBATCH --requeue")
-        dependency_job_ids = list(dependency_job_ids or [])
-        if dependency_job_ids:
-            lines.append(f"#SBATCH --dependency=afterok:{':'.join(dependency_job_ids)}")
         for option in step_settings.get("extra_sbatch", global_slurm.get("extra_sbatch", [])):
             lines.append(f"#SBATCH {option}")
 
-        command_lines = command.strip().splitlines()
-        if max_retries > 0:
-            lines.extend(
-                [
-                    "",
-                    "set -uo pipefail",
-                    "attempt=0",
-                    f"max_retries={max_retries}",
-                    f"retry_delay_seconds={retry_delay}",
-                    "while true; do",
-                    '  echo "ADToolbox step attempt $((attempt + 1))/$((max_retries + 1))"',
-                    "  set +e",
-                    "  (",
-                ]
-            )
-            lines.extend([f"    {line}" for line in command_lines])
-            lines.extend(
-                [
-                    "  )",
-                    "  status=$?",
-                    "  set -e",
-                    '  if [ "$status" -eq 0 ]; then',
-                    "    exit 0",
-                    "  fi",
-                    '  if [ "$attempt" -ge "$max_retries" ]; then',
-                    '    echo "ADToolbox step failed after $((max_retries + 1)) attempt(s)" >&2',
-                    '    exit "$status"',
-                    "  fi",
-                    '  echo "ADToolbox step failed with status $status; retrying in ${retry_delay_seconds}s" >&2',
-                    "  attempt=$((attempt + 1))",
-                    '  sleep "$retry_delay_seconds"',
-                    "done",
-                    "",
-                ]
-            )
-        else:
-            lines.extend(["", "set -euo pipefail", command.strip(), ""])
+        lines.extend(["", "set -euo pipefail", command.strip(), ""])
         return "\n".join(lines)
 
     def _execute_step(
@@ -2588,7 +2761,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             execution_profile=execution_profile,
             logger=logger,
         )
-        dependency_job_ids = manager.dependency_job_ids(dependencies)
         dependency_steps = [
             str(dependency.get("step", dependency.get("step_name", "")))
             for dependency in dependencies or []
@@ -2600,7 +2772,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             backend=backend,
             command=str(command_path),
             status="prepared",
-            dependencies=dependency_job_ids,
+            dependencies=dependency_steps,
         )
 
         artifact = {
@@ -2610,7 +2782,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             "executed": execute,
             "status": "prepared",
             "dependencies": dependency_steps,
-            "dependency_job_ids": dependency_job_ids,
             "task_events": str(manager.events_path),
         }
         manager.record("prepared", task)
@@ -2654,7 +2825,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                     log_file=slurm_log,
                     global_slurm=execution_profile.get("slurm", {}),
                     step_settings=step_settings,
-                    dependency_job_ids=dependency_job_ids,
                 )
             )
             artifact["sbatch"] = str(sbatch_path)
@@ -2663,45 +2833,28 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                 job_prefix = str(execution_profile.get("slurm", {}).get("job_name_prefix", f"adtoolbox_{sample_name}"))
                 slurm_settings = execution_profile.get("slurm", {})
                 max_retries = int(step_settings.get("retries", slurm_settings.get("retries", 0)))
-                wait_for_completion = manager._truthy(
-                    step_settings.get("wait_for_completion", slurm_settings.get("wait_for_completion", False))
+                retry_delay = int(
+                    step_settings.get(
+                        "retry_delay_seconds",
+                        slurm_settings.get("retry_delay_seconds", 60),
+                    )
                 )
-                poll_seconds = int(step_settings.get("poll_seconds", slurm_settings.get("poll_seconds", 30)))
-                logger.info("Submitting Slurm step %s with sbatch %s", step_name, sbatch_path)
-                submission, job_id = manager.submit_slurm_job(
+                retry_result = manager.submit_slurm_job_with_retries(
                     sbatch_path=sbatch_path,
                     task=task,
                     job_name_prefix=job_prefix,
-                    attempt=0,
+                    max_retries=max_retries,
+                    retry_delay_seconds=retry_delay,
                 )
-                artifact["status"] = "submitted"
-                artifact["submission"] = submission
-                artifact["job_id"] = job_id
+                artifact["status"] = "completed"
+                artifact["submission"] = retry_result["submission"]
+                artifact["job_id"] = retry_result["job_id"]
+                artifact["job_ids"] = retry_result["job_ids"]
+                artifact["attempt_count"] = retry_result["attempt_count"]
+                artifact["attempts"] = retry_result["attempts"]
                 artifact["retries"] = max_retries
-                artifact["retry_mode"] = "slurm_job_wrapper" if max_retries > 0 else "none"
+                artifact["retry_mode"] = "slurm_resubmit" if max_retries > 0 else "none"
 
-                if wait_for_completion and job_id:
-                    task.status = "monitoring"
-                    artifact["status"] = "monitoring"
-                    manager.record("monitoring", task, attempt=0)
-                    state = manager.wait_for_slurm_terminal_state(job_id, poll_seconds)
-                    artifact["slurm_state"] = state
-                    if state == "COMPLETED":
-                        task.status = "completed"
-                        artifact["status"] = "completed"
-                        manager.record("completed", task, attempt=0, slurm_state=state)
-                    elif state is None:
-                        task.status = "submitted"
-                        artifact["status"] = "submitted"
-                        manager.record("monitor_unknown", task, attempt=0)
-                    else:
-                        task.status = "failed"
-                        artifact["status"] = "failed"
-                        manager.record("failed", task, attempt=0, slurm_state=state)
-                        raise RuntimeError(f"Slurm step {step_name} failed as {state}. See {sbatch_path}.")
-                elif wait_for_completion and not job_id:
-                    manager.record("monitor_skipped", task, attempt=0, reason="missing_job_id")
-                    logger.warning("Could not parse Slurm job id for %s; wait_for_completion is disabled for this step", step_name)
             else:
                 logger.info("Prepared Slurm step %s at %s", step_name, sbatch_path)
                 manager.record("prepared_slurm", task)
@@ -2710,6 +2863,7 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         raise ValueError("Execution backend must be local or slurm")
 
     def _apply_step_config_settings(self, execution_profile: dict, step_name: str) -> dict:
+        self._config_settings_lock.acquire()
         old_values = {}
         for key, value in self._step_settings(execution_profile, step_name).get("settings", {}).items():
             if hasattr(self.config, key):
@@ -2718,8 +2872,11 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         return old_values
 
     def _restore_config_settings(self, old_values: dict) -> None:
-        for key, value in old_values.items():
-            setattr(self.config, key, value)
+        try:
+            for key, value in old_values.items():
+                setattr(self.config, key, value)
+        finally:
+            self._config_settings_lock.release()
 
     @staticmethod
     def _quote(value: str | os.PathLike) -> str:
@@ -2757,11 +2914,11 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
 
         if container == "docker":
             mount_args = " ".join(f"-v {self._quote(path)}:{self._quote(path)}" for path in mount_dirs)
-            return f"docker run {mount_args} {self._container_image(container, image)} sh -lc {self._quote(command)}"
+            return f"docker run {mount_args} {self._container_image(container, image)} bash -lc {self._quote(command)}"
         if container in {"singularity", "apptainer"}:
             runtime = "apptainer" if container == "apptainer" else "singularity"
             bind_args = " ".join(f"-B {self._quote(path)}:{self._quote(path)}" for path in mount_dirs)
-            return f"{runtime} exec {bind_args} {self._container_image(container, image)} sh -lc {self._quote(command)}"
+            return f"{runtime} exec {bind_args} {self._container_image(container, image)} bash -lc {self._quote(command)}"
         raise ValueError("container must be one of: None, docker, singularity, apptainer")
 
     @staticmethod
@@ -2919,9 +3076,13 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         return alignments
 
     def _genome_files_from_dir(self, genomes_dir: str | os.PathLike) -> dict[str, str]:
-        genome_info = self.extract_genome_info(str(genomes_dir))
-        normalized = dict(genome_info)
-        for key, value in genome_info.items():
+        genome_info = self.extract_genome_info_df(str(genomes_dir))
+        normalized = {}
+        for row in genome_info.to_dicts():
+            key = str(row["genome_id"])
+            value = str(row["path"])
+            normalized.setdefault(key, value)
+            normalized.setdefault(str(row["assembly_accession"]), value)
             normalized.setdefault(key.replace("_genomic", ""), value)
             normalized.setdefault(key.split("_genomic")[0], value)
             accession_match = re.match(r"^(GC[AF]_\d+\.\d+)", key)
@@ -2942,15 +3103,167 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         feature_abundances: dict[str, float],
         output_fasta: str | os.PathLike,
     ) -> str:
+        def normalize_feature_id(value: str) -> str:
+            return str(value).split(";", 1)[0].split(None, 1)[0]
+
         sequences = {}
         for header, sequence in fasta_to_dict(str(rep_seqs)).items():
-            feature_id = header.split(";", 1)[0].split(None, 1)[0]
+            feature_id = normalize_feature_id(header)
             sequences.setdefault(feature_id, sequence)
-        selected = {feature: sequences[feature] for feature in feature_abundances if feature in sequences}
+            sequences.setdefault(str(header), sequence)
+
+        selected = {}
+        missing = []
+        for feature in feature_abundances:
+            feature_key = str(feature)
+            normalized_feature = normalize_feature_id(feature_key)
+            sequence = sequences.get(feature_key) or sequences.get(normalized_feature)
+            if sequence is None:
+                missing.append(feature_key)
+                continue
+            selected[normalized_feature] = sequence
         if not selected:
-            raise ValueError("None of the selected feature IDs were found in the representative sequence FASTA")
+            observed = list(sequences)[:5]
+            expected = list(feature_abundances)[:5]
+            raise ValueError(
+                "None of the selected feature IDs were found in the representative sequence FASTA. "
+                f"Selected examples: {expected}. FASTA header examples: {observed}."
+            )
         utils.dict_to_fasta(selected, str(output_fasta))
         return str(output_fasta)
+
+    _IUPAC_BASES = {
+        "A": frozenset("A"),
+        "C": frozenset("C"),
+        "G": frozenset("G"),
+        "T": frozenset("T"),
+        "R": frozenset("AG"),
+        "Y": frozenset("CT"),
+        "S": frozenset("GC"),
+        "W": frozenset("AT"),
+        "K": frozenset("GT"),
+        "M": frozenset("AC"),
+        "B": frozenset("CGT"),
+        "D": frozenset("AGT"),
+        "H": frozenset("ACT"),
+        "V": frozenset("ACG"),
+        "N": frozenset("ACGTN"),
+    }
+
+    @staticmethod
+    def _read_fastq_sequences(path: str | os.PathLike, limit: int = 10000) -> list[str]:
+        """Read a bounded number of sequences from plain or gzip FASTQ."""
+        path = pathlib.Path(path)
+        opener = gzip.open if path.suffix == ".gz" else open
+        sequences = []
+        with opener(path, "rt") as handle:
+            while len(sequences) < int(limit):
+                header = handle.readline()
+                if not header:
+                    break
+                sequence = handle.readline().strip().upper()
+                plus = handle.readline()
+                quality = handle.readline()
+                if not sequence or not plus or not quality:
+                    raise ValueError(f"Incomplete FASTQ record in {path}")
+                sequences.append(sequence)
+        return sequences
+
+    @classmethod
+    def _primer_match_fraction(
+        cls,
+        sequences: Iterable[str],
+        primer: str,
+        *,
+        max_offset: int,
+        max_error_rate: float,
+    ) -> float:
+        primer = str(primer).upper().replace("U", "T")
+        allowed = [cls._IUPAC_BASES.get(base, frozenset(base)) for base in primer]
+        max_errors = max(0, int(len(primer) * float(max_error_rate)))
+        total = 0
+        matched = 0
+        for sequence in sequences:
+            total += 1
+            best_errors = len(primer) + 1
+            last_offset = min(int(max_offset), max(0, len(sequence) - len(primer)))
+            for offset in range(last_offset + 1):
+                observed = sequence[offset : offset + len(primer)]
+                errors = sum(base not in choices for base, choices in zip(observed, allowed))
+                best_errors = min(best_errors, errors)
+                if best_errors <= max_errors:
+                    break
+            if best_errors <= max_errors:
+                matched += 1
+        return float(matched) / float(total) if total else 0.0
+
+    @staticmethod
+    def _load_amplicon_primer_catalog(path: str | os.PathLike | None = None) -> list[dict[str, str]]:
+        catalog_path = pathlib.Path(path) if path else pathlib.Path(__file__).with_name("pkg_data") / "amplicon_primers.tsv"
+        if not catalog_path.exists():
+            raise FileNotFoundError(f"Amplicon primer catalog was not found: {catalog_path}")
+        return pl.read_csv(catalog_path, separator="\t", infer_schema_length=0).to_dicts()
+
+    def detect_amplicon_primers(
+        self,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None = None,
+        *,
+        catalog: str | os.PathLike | None = None,
+        reads_to_check: int = 10000,
+        max_offset: int = 12,
+        max_error_rate: float = 0.15,
+        minimum_fraction: float = 0.80,
+    ) -> dict:
+        """Conservatively select a known primer pair from read starts."""
+        forward_reads = self._read_fastq_sequences(read_1, limit=reads_to_check)
+        reverse_reads = self._read_fastq_sequences(read_2, limit=reads_to_check) if read_2 else []
+        if not forward_reads:
+            raise ValueError(f"No reads were available for primer detection in {read_1}")
+
+        candidates = []
+        for row in self._load_amplicon_primer_catalog(catalog):
+            forward_fraction = self._primer_match_fraction(
+                forward_reads,
+                row["forward_primer"],
+                max_offset=max_offset,
+                max_error_rate=max_error_rate,
+            )
+            reverse_fraction = 1.0
+            if read_2:
+                reverse_fraction = self._primer_match_fraction(
+                    reverse_reads,
+                    row["reverse_primer"],
+                    max_offset=max_offset,
+                    max_error_rate=max_error_rate,
+                )
+            candidates.append(
+                {
+                    **row,
+                    "forward_match_fraction": forward_fraction,
+                    "reverse_match_fraction": reverse_fraction,
+                    "score": min(forward_fraction, reverse_fraction),
+                }
+            )
+
+        candidates.sort(
+            key=lambda item: (
+                item["score"],
+                item["forward_match_fraction"] + item["reverse_match_fraction"],
+            ),
+            reverse=True,
+        )
+        best = candidates[0] if candidates else None
+        if best is None or float(best["score"]) < float(minimum_fraction):
+            examples = ", ".join(
+                f"{item['name']}={item['score']:.3f}" for item in candidates[:3]
+            ) or "no catalog entries"
+            raise ValueError(
+                "No primer pair passed the automatic detection threshold. "
+                f"Best catalog scores: {examples}. Supply forward_primer and reverse_primer explicitly "
+                "or extend the primer catalog."
+            )
+        return {**best, "candidates": candidates[:5]}
 
     def trim_amplicon_reads(
         self,
@@ -2965,6 +3278,9 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         adapter_2: str | None = None,
         minimum_length: int = 100,
         quality_cutoff: str | int | None = None,
+        quality_trim: str = "none",
+        quality_window_size: int = 4,
+        quality_mean: int | None = None,
         threads: int = 1,
         container: str = "None",
         image: str | None = None,
@@ -2973,9 +3289,6 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         output_path.mkdir(parents=True, exist_ok=True)
         trimmed_1 = output_path / f"{sample_name}_trimmed_R1.fastq.gz"
         trimmed_2 = output_path / f"{sample_name}_trimmed_R2.fastq.gz" if read_2 else None
-
-        adapter_1 = adapter_1 or forward_primer
-        adapter_2 = adapter_2 or reverse_primer
 
         report_prefix = output_path / f"{sample_name}_fastp"
         args = [
@@ -3006,6 +3319,20 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
                 args.append("--detect_adapter_for_pe")
         if quality_cutoff is not None:
             args.extend(["--qualified_quality_phred", str(quality_cutoff).split(",", 1)[0]])
+        quality_trim = str(quality_trim).lower()
+        if quality_trim not in {"none", "cut_right", "cut_tail"}:
+            raise ValueError("quality_trim must be one of: none, cut_right, cut_tail")
+        if quality_trim != "none":
+            mean_quality = int(quality_mean if quality_mean is not None else quality_cutoff or 20)
+            args.extend(
+                [
+                    f"--{quality_trim}",
+                    f"--{quality_trim}_window_size",
+                    str(int(quality_window_size)),
+                    f"--{quality_trim}_mean_quality",
+                    str(mean_quality),
+                ]
+            )
         if adapter_1:
             args.extend(["--adapter_sequence", adapter_1])
         if adapter_2 and read_2:
@@ -3020,11 +3347,270 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         )
         return script + "\n", {"read_1": str(trimmed_1), "read_2": str(trimmed_2) if trimmed_2 else None}
 
+    def _build_dada2_amplicon_features(
+        self,
+        *,
+        read_1: str | os.PathLike,
+        read_2: str | os.PathLike | None,
+        primer_detection_read_1: str | os.PathLike | None,
+        primer_detection_read_2: str | os.PathLike | None,
+        output_path: pathlib.Path,
+        sample_name: str,
+        forward_primer: str | None,
+        reverse_primer: str | None,
+        primer_mode: str,
+        primer_catalog: str | os.PathLike | None,
+        primer_detection_reads: int,
+        primer_max_offset: int,
+        primer_max_error_rate: float,
+        primer_min_fraction: float,
+        cutadapt_error_rate: float,
+        discard_untrimmed: bool,
+        maxee: float,
+        minimum_length: int,
+        chimera_filter: bool,
+        min_overlap: int,
+        threads: int,
+    ) -> tuple[str, dict[str, str]]:
+        primer_mode = str(primer_mode).lower()
+        if primer_mode not in {"auto", "explicit", "none"}:
+            raise ValueError("primer_mode must be one of: auto, explicit, none")
+
+        explicit_primer_supplied = bool(forward_primer or reverse_primer)
+        explicit_primer_complete = bool(forward_primer and (not read_2 or reverse_primer))
+        if primer_mode == "auto" and explicit_primer_supplied:
+            if not explicit_primer_complete:
+                raise ValueError(
+                    "Both forward_primer and reverse_primer are required to override automatic detection "
+                    "for paired reads"
+                )
+            primer_mode = "explicit"
+
+        primer_info = None
+        if primer_mode == "auto":
+            detection_read_1 = primer_detection_read_1 or read_1
+            detection_read_2 = primer_detection_read_2 if read_2 else None
+            if read_2 and detection_read_2 is None:
+                detection_read_2 = read_2
+            primer_info = self.detect_amplicon_primers(
+                detection_read_1,
+                detection_read_2,
+                catalog=primer_catalog,
+                reads_to_check=primer_detection_reads,
+                max_offset=primer_max_offset,
+                max_error_rate=primer_max_error_rate,
+                minimum_fraction=primer_min_fraction,
+            )
+            forward_primer = str(primer_info["forward_primer"])
+            reverse_primer = str(primer_info["reverse_primer"]) if read_2 else None
+        elif primer_mode == "explicit":
+            if not forward_primer or (read_2 and not reverse_primer):
+                raise ValueError(
+                    "primer_mode='explicit' requires forward_primer and, for paired reads, reverse_primer"
+                )
+            primer_info = {
+                "name": "explicit",
+                "forward_primer": str(forward_primer),
+                "reverse_primer": str(reverse_primer) if reverse_primer else None,
+                "target_region": "user-supplied",
+            }
+
+        primer_manifest = output_path / "detected_primers.json"
+        self._write_json(
+            primer_manifest,
+            {
+                "mode": primer_mode,
+                "read_1": str(read_1),
+                "read_2": str(read_2) if read_2 else None,
+                "detection_read_1": str(primer_detection_read_1 or read_1),
+                "detection_read_2": str(primer_detection_read_2 or read_2) if read_2 else None,
+                "selection": primer_info,
+            },
+        )
+
+        primer_trimmed_1 = output_path / f"{sample_name}_primer_trimmed_R1.fastq.gz"
+        primer_trimmed_2 = output_path / f"{sample_name}_primer_trimmed_R2.fastq.gz" if read_2 else None
+        cutadapt_report = output_path / f"{sample_name}_cutadapt.json"
+        dada2_filtered_1 = output_path / f"{sample_name}_dada2_filtered_R1.fastq.gz"
+        dada2_filtered_2 = output_path / f"{sample_name}_dada2_filtered_R2.fastq.gz" if read_2 else None
+        dada2_stats = output_path / "dada2-stats.tsv"
+        rep_seqs = output_path / "rep-seqs.fasta"
+        feature_table = output_path / "feature-table.tsv"
+        r_script = output_path / f"{sample_name}_dada2.R"
+
+        if primer_mode == "none":
+            dada2_input_1 = pathlib.Path(read_1)
+            dada2_input_2 = pathlib.Path(read_2) if read_2 else None
+            cutadapt_command = ""
+        else:
+            cutadapt_args = [
+                "cutadapt",
+                "--cores",
+                str(threads),
+                "--error-rate",
+                str(cutadapt_error_rate),
+                "--overlap",
+                str(max(8, int(len(str(forward_primer))) // 2)),
+                "--minimum-length",
+                str(minimum_length),
+                "--json",
+                str(cutadapt_report),
+                "-g",
+                str(forward_primer),
+                "-o",
+                str(primer_trimmed_1),
+            ]
+            if discard_untrimmed:
+                cutadapt_args.append("--discard-untrimmed")
+            if read_2:
+                cutadapt_args.extend(
+                    [
+                        "-G",
+                        str(reverse_primer),
+                        "-p",
+                        str(primer_trimmed_2),
+                        str(read_1),
+                        str(read_2),
+                    ]
+                )
+            else:
+                cutadapt_args.append(str(read_1))
+            cutadapt_command = " ".join(self._quote(value) for value in cutadapt_args)
+            dada2_input_1 = primer_trimmed_1
+            dada2_input_2 = primer_trimmed_2
+
+        r_string = lambda value: json.dumps(str(value))
+        paired = bool(read_2)
+        r_lines = [
+            "suppressPackageStartupMessages(library(dada2))",
+            "suppressPackageStartupMessages(library(digest))",
+            f"sample_name <- {r_string(sample_name)}",
+            f"threads <- {int(threads)}",
+            f"input_f <- {r_string(dada2_input_1)}",
+            f"filtered_f <- {r_string(dada2_filtered_1)}",
+            f"feature_table <- {r_string(feature_table)}",
+            f"rep_seqs <- {r_string(rep_seqs)}",
+            f"stats_path <- {r_string(dada2_stats)}",
+            "quit_no_features <- function(message) { write(message, stderr()); quit(save='no', status=64) }",
+        ]
+        if paired:
+            r_lines.extend(
+                [
+                    f"input_r <- {r_string(dada2_input_2)}",
+                    f"filtered_r <- {r_string(dada2_filtered_2)}",
+                    "filter_stats <- filterAndTrim(input_f, filtered_f, input_r, filtered_r, "
+                    f"maxN=0, maxEE=c({float(maxee)}, {float(maxee)}), truncQ=2, minLen={int(minimum_length)}, "
+                    "rm.phix=TRUE, compress=TRUE, matchIDs=TRUE, multithread=threads, verbose=TRUE)",
+                    "if (sum(filter_stats[, 2]) == 0) quit_no_features('DADA2 filtering retained no paired reads')",
+                    "err_f <- learnErrors(filtered_f, multithread=threads, randomize=TRUE)",
+                    "err_r <- learnErrors(filtered_r, multithread=threads, randomize=TRUE)",
+                    "derep_f <- derepFastq(c(filtered_f), verbose=TRUE)",
+                    "derep_r <- derepFastq(c(filtered_r), verbose=TRUE)",
+                    "names(derep_f) <- sample_name",
+                    "names(derep_r) <- sample_name",
+                    "dada_f <- dada(derep_f, err=err_f, multithread=threads)",
+                    "dada_r <- dada(derep_r, err=err_r, multithread=threads)",
+                    f"mergers <- mergePairs(dada_f, derep_f, dada_r, derep_r, minOverlap={int(min_overlap)}, verbose=TRUE)",
+                    "seqtab <- makeSequenceTable(mergers)",
+                    "get_n <- function(x) sum(getUniques(x))",
+                    "merged_n <- sapply(mergers, get_n)",
+                    "denoised_f_n <- sapply(dada_f, get_n)",
+                    "denoised_r_n <- sapply(dada_r, get_n)",
+                ]
+            )
+        else:
+            r_lines.extend(
+                [
+                    "filter_stats <- filterAndTrim(input_f, filtered_f, maxN=0, "
+                    f"maxEE={float(maxee)}, truncQ=2, minLen={int(minimum_length)}, "
+                    "rm.phix=TRUE, compress=TRUE, multithread=threads, verbose=TRUE)",
+                    "if (sum(filter_stats[, 2]) == 0) quit_no_features('DADA2 filtering retained no reads')",
+                    "err_f <- learnErrors(filtered_f, multithread=threads, randomize=TRUE)",
+                    "derep_f <- derepFastq(c(filtered_f), verbose=TRUE)",
+                    "names(derep_f) <- sample_name",
+                    "dada_f <- dada(derep_f, err=err_f, multithread=threads)",
+                    "seqtab <- makeSequenceTable(dada_f)",
+                    "get_n <- function(x) sum(getUniques(x))",
+                    "denoised_f_n <- sapply(dada_f, get_n)",
+                ]
+            )
+        r_lines.append(
+            "if (ncol(seqtab) == 0 || sum(seqtab) == 0) quit_no_features('DADA2 produced no merged or inferred ASVs')"
+        )
+        if chimera_filter:
+            r_lines.append(
+                "seqtab_final <- removeBimeraDenovo(seqtab, method='consensus', multithread=threads, verbose=TRUE)"
+            )
+        else:
+            r_lines.append("seqtab_final <- seqtab")
+        r_lines.extend(
+            [
+                "if (ncol(seqtab_final) == 0 || sum(seqtab_final) == 0) quit_no_features('DADA2 produced no non-chimeric ASVs')",
+                "sequences <- colnames(seqtab_final)",
+                "feature_ids <- vapply(sequences, function(sequence) paste0('ASV_', digest(sequence, algo='sha1', serialize=FALSE)), character(1))",
+                "feature_frame <- data.frame(feature_ids, as.integer(seqtab_final[1, ]), check.names=FALSE)",
+                "names(feature_frame) <- c('#OTU ID', sample_name)",
+                "write.table(feature_frame, feature_table, sep='\\t', quote=FALSE, row.names=FALSE, col.names=TRUE)",
+                "writeLines(as.vector(rbind(paste0('>', feature_ids), sequences)), rep_seqs)",
+            ]
+        )
+        if paired:
+            r_lines.extend(
+                [
+                    "track <- data.frame(sample=sample_name, input=filter_stats[, 1], filtered=filter_stats[, 2], "
+                    "denoised_forward=denoised_f_n, denoised_reverse=denoised_r_n, merged=merged_n, nonchimeric=sum(seqtab_final))",
+                ]
+            )
+        else:
+            r_lines.extend(
+                [
+                    "track <- data.frame(sample=sample_name, input=filter_stats[, 1], filtered=filter_stats[, 2], "
+                    "denoised_forward=denoised_f_n, nonchimeric=sum(seqtab_final))",
+                ]
+            )
+        r_lines.append("write.table(track, stats_path, sep='\\t', quote=FALSE, row.names=FALSE, col.names=TRUE)")
+        r_script.write_text("\n".join(r_lines) + "\n")
+
+        cleanup_targets = [feature_table, rep_seqs, dada2_stats, dada2_filtered_1]
+        if dada2_filtered_2:
+            cleanup_targets.append(dada2_filtered_2)
+        commands = []
+        if cutadapt_command:
+            commands.append(
+                "command -v cutadapt >/dev/null 2>&1 || { echo 'Cutadapt is not available on PATH' >&2; exit 127; }"
+            )
+        commands.extend(
+            [
+                "command -v Rscript >/dev/null 2>&1 || { echo 'Rscript is not available on PATH' >&2; exit 127; }",
+                "Rscript -e \"if (!requireNamespace('dada2', quietly=TRUE) || !requireNamespace('digest', quietly=TRUE)) quit(save='no', status=127)\"",
+                "rm -f " + " ".join(self._quote(path) for path in cleanup_targets),
+            ]
+        )
+        if cutadapt_command:
+            commands.append(cutadapt_command)
+        commands.extend(
+            [
+                f"Rscript {self._quote(r_script)}",
+                f"test -s {self._quote(rep_seqs)} || {{ echo 'DADA2 representative FASTA is empty' >&2; exit 64; }}",
+                f"awk 'NR > 1 {{ found=1 }} END {{ exit(found ? 0 : 64) }}' {self._quote(feature_table)}",
+            ]
+        )
+        return "\n".join(commands), {
+            "feature_table": str(feature_table),
+            "rep_seqs": str(rep_seqs),
+            "dada2_stats": str(dada2_stats),
+            "detected_primers": str(primer_manifest),
+            "cutadapt_report": str(cutadapt_report) if cutadapt_command else None,
+            "dada2_script": str(r_script),
+        }
+
     def build_amplicon_features(
         self,
         *,
         read_1: str | os.PathLike,
         read_2: str | os.PathLike | None,
+        primer_detection_read_1: str | os.PathLike | None = None,
+        primer_detection_read_2: str | os.PathLike | None = None,
         output_dir: str | os.PathLike,
         sample_name: str,
         identity: float = 0.97,
@@ -3032,12 +3618,59 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
         minimum_length: int = 100,
         min_unique_size: int = 2,
         chimera_filter: bool = True,
+        denoiser: str = "vsearch",
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
+        primer_mode: str = "none",
+        primer_catalog: str | os.PathLike | None = None,
+        primer_detection_reads: int = 10000,
+        primer_max_offset: int = 12,
+        primer_max_error_rate: float = 0.15,
+        primer_min_fraction: float = 0.80,
+        cutadapt_error_rate: float = 0.15,
+        discard_untrimmed: bool = True,
+        dada2_min_overlap: int = 12,
         threads: int = 1,
         container: str = "None",
         image: str | None = None,
     ) -> tuple[str, dict[str, str]]:
         output_path = pathlib.Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
+        denoiser = str(denoiser).lower()
+        if denoiser not in {"vsearch", "dada2"}:
+            raise ValueError("denoiser must be one of: vsearch, dada2")
+        if denoiser == "dada2":
+            command, artifacts = self._build_dada2_amplicon_features(
+                read_1=read_1,
+                read_2=read_2,
+                primer_detection_read_1=primer_detection_read_1,
+                primer_detection_read_2=primer_detection_read_2,
+                output_path=output_path,
+                sample_name=sample_name,
+                forward_primer=forward_primer,
+                reverse_primer=reverse_primer,
+                primer_mode=primer_mode,
+                primer_catalog=primer_catalog,
+                primer_detection_reads=primer_detection_reads,
+                primer_max_offset=primer_max_offset,
+                primer_max_error_rate=primer_max_error_rate,
+                primer_min_fraction=primer_min_fraction,
+                cutadapt_error_rate=cutadapt_error_rate,
+                discard_untrimmed=discard_untrimmed,
+                maxee=maxee,
+                minimum_length=minimum_length,
+                chimera_filter=chimera_filter,
+                min_overlap=dada2_min_overlap,
+                threads=threads,
+            )
+            script = self._wrap_external_command(
+                command,
+                container=container,
+                mounts=[read_1, read_2, output_path, primer_catalog],
+                image=image,
+            )
+            return script + "\n", artifacts
+
         merged = output_path / f"{sample_name}_merged.fastq"
         filtered = output_path / f"{sample_name}_filtered.fasta"
         uniques = output_path / f"{sample_name}_uniques.fasta"
@@ -3154,6 +3787,12 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             f"'BEGIN{{FS=OFS=\"\\t\"}} NR==1{{if (NF >= 2) $2=sample; print; next}} {{print}}' "
             f"{self._quote(raw_feature_table)} > {self._quote(feature_table)}"
         )
+        commands.extend(
+            [
+                f"test -s {self._quote(rep_seqs)} || {{ echo 'VSEARCH representative FASTA is empty' >&2; exit 64; }}",
+                f"awk 'NR > 1 {{ found=1 }} END {{ exit(found ? 0 : 64) }}' {self._quote(feature_table)}",
+            ]
+        )
 
         command = "\n".join(commands)
         script = self._wrap_external_command(
@@ -3205,6 +3844,13 @@ curl -fL "$base_url/$assembly_dir$genome_file" -o "$out_dir/$assembly_name/$geno
             adapter_2=settings.get("adapter_2", adapter_2),
             minimum_length=int(settings.get("minimum_length", minimum_length)),
             quality_cutoff=settings.get("quality_cutoff", quality_cutoff),
+            quality_trim=str(settings.get("quality_trim", "none")),
+            quality_window_size=int(settings.get("quality_window_size", 4)),
+            quality_mean=(
+                int(settings["quality_mean"])
+                if settings.get("quality_mean") is not None
+                else None
+            ),
             threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
             container=step_container,
             image=self._step_image(execution_profile, step_name, step_container),
@@ -3366,7 +4012,11 @@ fi"""
         output_dir: str | os.PathLike,
         read_1: str | os.PathLike,
         read_2: str | os.PathLike | None = None,
+        primer_detection_read_1: str | os.PathLike | None = None,
+        primer_detection_read_2: str | os.PathLike | None = None,
         step_output_dir: str | os.PathLike | None = None,
+        forward_primer: str | None = None,
+        reverse_primer: str | None = None,
         identity: float = 0.97,
         maxee: float = 1.0,
         minimum_length: int = 100,
@@ -3378,7 +4028,7 @@ fi"""
         execution_profile: str | os.PathLike | dict | None = None,
         dependencies: Iterable[dict] | None = None,
     ) -> dict:
-        """Prepare or run the VSEARCH feature-table step for one sample."""
+        """Prepare or run the configured amplicon feature-table step for one sample."""
         sample_dir = pathlib.Path(output_dir) / sample_name
         sample_dir.mkdir(parents=True, exist_ok=True)
         step_output = pathlib.Path(step_output_dir) if step_output_dir else sample_dir / "amplicon_preprocess"
@@ -3391,6 +4041,8 @@ fi"""
         script, feature_artifacts = self.build_amplicon_features(
             read_1=read_1,
             read_2=read_2,
+            primer_detection_read_1=primer_detection_read_1,
+            primer_detection_read_2=primer_detection_read_2,
             output_dir=step_output,
             sample_name=sample_name,
             identity=float(settings.get("identity", identity)),
@@ -3398,6 +4050,18 @@ fi"""
             minimum_length=int(settings.get("minimum_length", minimum_length)),
             min_unique_size=int(settings.get("min_unique_size", min_unique_size)),
             chimera_filter=bool(settings.get("chimera_filter", chimera_filter)),
+            denoiser=str(settings.get("denoiser", "vsearch")),
+            forward_primer=settings.get("forward_primer", forward_primer),
+            reverse_primer=settings.get("reverse_primer", reverse_primer),
+            primer_mode=str(settings.get("primer_mode", "none")),
+            primer_catalog=settings.get("primer_catalog"),
+            primer_detection_reads=int(settings.get("primer_detection_reads", 10000)),
+            primer_max_offset=int(settings.get("primer_max_offset", 12)),
+            primer_max_error_rate=float(settings.get("primer_max_error_rate", 0.15)),
+            primer_min_fraction=float(settings.get("primer_min_fraction", 0.80)),
+            cutadapt_error_rate=float(settings.get("cutadapt_error_rate", 0.15)),
+            discard_untrimmed=bool(settings.get("discard_untrimmed", True)),
+            dada2_min_overlap=int(settings.get("dada2_min_overlap", 12)),
             threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
             container=step_container,
             image=self._step_image(execution_profile, step_name, step_container),
@@ -3642,7 +4306,11 @@ fi"""
             output_dir=output_dir,
             read_1=trimmed_reads["read_1"],
             read_2=trimmed_reads["read_2"],
+            primer_detection_read_1=read_1,
+            primer_detection_read_2=read_2,
             step_output_dir=preprocess_path,
+            forward_primer=forward_primer,
+            reverse_primer=reverse_primer,
             identity=identity,
             maxee=quality_maxee,
             minimum_length=minimum_length,
@@ -3695,6 +4363,7 @@ fi"""
         feature_table: str | os.PathLike | None = None,
         rep_seqs: str | os.PathLike | None = None,
         gtdb_matches: str | os.PathLike | None = None,
+        force_gtdb_alignment: bool = False,
         forward_primer: str | None = None,
         reverse_primer: str | None = None,
         adapter_1: str | None = None,
@@ -3879,7 +4548,7 @@ fi"""
                     execution_profile=execution_profile,
                     dependencies=dependencies,
                 )
-            if not matches_path.exists():
+            if not matches_path.exists() or (force_gtdb_alignment and not execute):
                 logger.info("GTDB matches are not available yet: %s", matches_path)
                 cod_profile = {}
                 result["status"] = "waiting_for_gtdb_alignment"
@@ -3901,34 +4570,139 @@ fi"""
                     commands = {}
                     alignment_dir = scratch_path / "genome_alignments"
                     alignment_dir.mkdir(parents=True, exist_ok=True)
-                    missing_genome_fastas = []
+                    missing_genome_fastas = [genome for genome in genome_abund if genome not in genome_files]
+                    if missing_genome_fastas:
+                        with self._genome_download_condition:
+                            genomes_to_download = [
+                                genome for genome in missing_genome_fastas
+                                if genome not in self._genomes_downloading
+                            ]
+                            genomes_to_wait_for = [
+                                genome for genome in missing_genome_fastas
+                                if genome in self._genomes_downloading
+                            ]
+                            self._genomes_downloading.update(genomes_to_download)
+                        logger.info(
+                            "Genome FASTAs needed: downloading=%s waiting_for_other_samples=%s",
+                            len(genomes_to_download),
+                            len(genomes_to_wait_for),
+                        )
+                        download_profile_step = "download_genomes"
+                        download_step_settings = (
+                            self._step_settings(execution_profile, download_profile_step)
+                            or self._step_settings(execution_profile, "download_genome")
+                            or self._step_settings(execution_profile, "align_genome")
+                        )
+                        download_container = str(
+                            download_step_settings.get("container", execution_profile.get("container", container))
+                        )
+                        if genomes_to_download:
+                            try:
+                                download_settings = download_step_settings.get("settings", {})
+                                step_name = "download_genomes"
+                                script = self.download_genomes(
+                                    genomes_to_download,
+                                    str(genomes_dir),
+                                    scratch_path / "genome_download",
+                                    max_workers=int(download_settings.get("max_workers", 10)),
+                                    container=download_container,
+                                    image=download_step_settings.get("image") or self._step_image(
+                                        execution_profile, download_profile_step, download_container
+                                    ),
+                                )[0]
+                                result["artifacts"][step_name] = self._execute_step(
+                                    script,
+                                    step_name=step_name,
+                                    sample_name=sample_name,
+                                    output_dir=scratch_path,
+                                    logger=logger,
+                                    execute=execute,
+                                    execution_profile={
+                                        **execution_profile,
+                                        "steps": {
+                                            **execution_profile.get("steps", {}),
+                                            step_name: download_step_settings,
+                                        },
+                                    },
+                                )
+                            finally:
+                                with self._genome_download_condition:
+                                    self._genomes_downloading.difference_update(genomes_to_download)
+                                    self._genome_download_condition.notify_all()
+                        if genomes_to_wait_for:
+                            with self._genome_download_condition:
+                                self._genome_download_condition.wait_for(
+                                    lambda: not any(
+                                        genome in self._genomes_downloading
+                                        for genome in genomes_to_wait_for
+                                    )
+                                )
+                        if execute:
+                            genome_files = self._genome_files_from_dir(genomes_dir)
+                            missing_genome_fastas = [genome for genome in genome_abund if genome not in genome_files]
+                            if missing_genome_fastas:
+                                logger.warning(
+                                    "Skipping %s unavailable or deprecated genome FASTA file(s): %s",
+                                    len(missing_genome_fastas),
+                                    ", ".join(missing_genome_fastas),
+                                )
                     genome_alignment_dependencies = (
                         [result["artifacts"]["align_to_gtdb"]]
                         if result["artifacts"].get("align_to_gtdb")
                         else None
                     )
-                    for genome in genome_abund:
-                        if genome not in genome_files:
-                            logger.info("No genome FASTA found for %s", genome)
-                            missing_genome_fastas.append(genome)
-                            continue
-                        step_name = f"align_genome_{genome}"
-                        profile_step_name = "align_genome"
-                        step_container = self._step_container(execution_profile, profile_step_name, container)
-                        old_settings = self._apply_step_config_settings(execution_profile, profile_step_name)
-                        try:
+                    profile_step_name = (
+                        "align_genomes"
+                        if self._step_settings(execution_profile, "align_genomes")
+                        else "align_genome"
+                    )
+                    alignment_step_settings = self._step_settings(execution_profile, profile_step_name)
+                    step_container = str(
+                        alignment_step_settings.get("container", execution_profile.get("container", container))
+                    )
+                    alignment_commands = []
+                    old_settings = self._apply_step_config_settings(execution_profile, profile_step_name)
+                    try:
+                        for genome in genome_abund:
+                            if genome not in genome_files:
+                                continue
                             script, alignment = self.align_genome_to_protein_db(
                                 genome_files[genome],
                                 str(alignment_dir),
                                 genome,
                                 container=step_container,
-                                image=self._step_image(execution_profile, profile_step_name, step_container),
+                                image=alignment_step_settings.get("image") or self._step_image(
+                                    execution_profile, profile_step_name, step_container
+                                ),
+                                tmp_dir=alignment_dir / "mmseqs_tmp" / genome,
                             )
-                        finally:
-                            self._restore_config_settings(old_settings)
-                        commands[genome] = script
+                            commands[genome] = script
+                            alignments[genome] = alignment
+                            if not pathlib.Path(alignment).exists():
+                                alignment_commands.append(
+                                    "\n".join(
+                                        [
+                                            f"if [ ! -e {self._quote(alignment)} ]; then",
+                                            "  set +e",
+                                            "  (",
+                                            *[f"    {line}" for line in script.strip().splitlines()],
+                                            "  )",
+                                            "  alignment_status=$?",
+                                            "  set -e",
+                                            '  if [ "$alignment_status" -ne 0 ]; then',
+                                            f"    rm -f {self._quote(alignment)}",
+                                            '    exit "$alignment_status"',
+                                            "  fi",
+                                            "fi",
+                                        ]
+                                    )
+                                )
+                    finally:
+                        self._restore_config_settings(old_settings)
+                    if alignment_commands:
+                        step_name = "align_genomes"
                         result["artifacts"][step_name] = self._execute_step(
-                            script,
+                            "\n".join(alignment_commands),
                             step_name=step_name,
                             sample_name=sample_name,
                             output_dir=scratch_path,
@@ -3938,15 +4712,14 @@ fi"""
                                 **execution_profile,
                                 "steps": {
                                     **execution_profile.get("steps", {}),
-                                    step_name: self._step_settings(execution_profile, profile_step_name),
+                                    step_name: alignment_step_settings,
                                 },
                             },
                             dependencies=genome_alignment_dependencies,
                         )
-                        alignments[genome] = alignment
                     result["artifacts"]["genome_alignment_scripts"] = self._write_json(scratch_path / "genome_alignment_commands.json", commands)
                     if missing_genome_fastas:
-                        result["artifacts"]["missing_genome_fastas"] = missing_genome_fastas
+                        result["artifacts"]["skipped_genome_fastas"] = missing_genome_fastas
                 else:
                     raise ValueError("amplicon mode requires genome_alignments or genomes_dir after GTDB matching")
 
@@ -3968,13 +4741,17 @@ fi"""
                     cod_profile = {}
                     result["status"] = "waiting_for_genome_alignment"
                     result["artifacts"]["missing_genome_alignments"] = missing_alignments
-                elif result["artifacts"].get("missing_genome_fastas") and not genome_cods:
-                    logger.info(
-                        "Genome FASTA files are missing for %s genome(s)",
-                        len(result["artifacts"]["missing_genome_fastas"]),
-                    )
+                elif result["artifacts"].get("skipped_genome_fastas") and not genome_cods:
+                    logger.warning("No downloadable genome FASTAs were available for this sample")
                     cod_profile = {}
-                    result["status"] = "waiting_for_genome_fasta"
+                    result["status"] = "completed_no_available_genomes"
+                    result["artifacts"]["cod_profile"] = self._write_tall_mapping(
+                        output_path / "cod_profile.csv",
+                        cod_profile,
+                        sample_name=sample_name,
+                        key_name="group",
+                        value_name="value",
+                    )
                 else:
                     cod_profile = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=normalize) if genome_cods else {}
                     result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
@@ -4032,6 +4809,7 @@ fi"""
         execute: bool = False,
         normalize: bool = True,
         verbose: bool = True,
+        sample_workers: int = 4,
         execution_profile: str | os.PathLike | dict | None = None,
     ) -> dict:
         """Run a manifest-driven batch of amplicon samples to COD artifacts.
@@ -4044,6 +4822,8 @@ fi"""
             raise ValueError("stage must be one of: download, preprocess, cod, all")
         if input_type not in {None, "sra", "reads"}:
             raise ValueError("input_type must be 'sra' or 'reads'")
+        if int(sample_workers) < 1:
+            raise ValueError("sample_workers must be at least 1")
         if amplicon_to_genome_db is not None:
             self.config.amplicon2genome_db = str(amplicon_to_genome_db)
             matches = list(pathlib.Path(amplicon_to_genome_db).rglob(self.config.gtdb_dir))
@@ -4054,6 +4834,10 @@ fi"""
         rows = self._read_sample_manifest(manifest)
         workflow = MetagenomicsWorkflowState(output_path)
         execution_profile_data = self._load_execution_profile(execution_profile)
+        build_feature_settings = self._step_settings(
+            execution_profile_data, "build_amplicon_features"
+        ).get("settings", {})
+        expected_feature_denoiser = str(build_feature_settings.get("denoiser", "vsearch")).lower()
         results = {
             "manifest": str(manifest),
             "output_dir": str(output_path),
@@ -4073,6 +4857,51 @@ fi"""
             except Exception:
                 return False
 
+        def _fasta_has_records(path: str | os.PathLike) -> bool:
+            path = pathlib.Path(path)
+            if not path.exists() or path.stat().st_size == 0:
+                return False
+            try:
+                with open(path) as handle:
+                    return any(line.startswith(">") for line in handle)
+            except OSError:
+                return False
+
+        def _amplicon_outputs_ready(
+            feature_path: str | os.PathLike,
+            fasta_path: str | os.PathLike,
+            *,
+            require_dada2_artifacts: bool = False,
+        ) -> bool:
+            if not (_csv_has_rows(feature_path) and _fasta_has_records(fasta_path)):
+                return False
+            if not require_dada2_artifacts:
+                return True
+            preprocess_path = pathlib.Path(feature_path).parent
+            return _csv_has_rows(preprocess_path / "dada2-stats.tsv") and (
+                preprocess_path / "detected_primers.json"
+            ).exists()
+
+        def _amplicon_input_signature(
+            feature_path: str | os.PathLike,
+            fasta_path: str | os.PathLike,
+        ) -> str:
+            digest = hashlib.sha256()
+            for path in (pathlib.Path(feature_path), pathlib.Path(fasta_path)):
+                digest.update(path.name.encode())
+                with open(path, "rb") as handle:
+                    for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                        digest.update(chunk)
+            return digest.hexdigest()
+
+        def _matching_downstream_signature(path: pathlib.Path, signature: str) -> bool:
+            if not path.exists():
+                return False
+            try:
+                return json.loads(path.read_text()).get("amplicon_input_sha256") == signature
+            except (OSError, ValueError, AttributeError):
+                return False
+
         def _artifact_status(artifacts: Iterable[dict]) -> str:
             statuses = {
                 str(artifact.get("status", "prepared"))
@@ -4087,7 +4916,7 @@ fi"""
                 return "completed"
             return "prepared"
 
-        for row in rows:
+        def process_row(row: dict) -> None:
             accession = self._row_value(row, "accession", "sra", "run")
             read_1 = self._row_value(row, "read_1", "read1", "forward", "fastq_1", "fastq1")
             read_2 = self._row_value(row, "read_2", "read2", "reverse", "fastq_2", "fastq2")
@@ -4104,12 +4933,22 @@ fi"""
                 else:
                     raise ValueError("Each manifest row must include sample/sample_name, accession, or read_1")
             paired = self._row_bool(row, "paired", default=read_2 is not None or accession is not None)
+            sample_forward_primer = self._row_value(row, "forward_primer", "forward-primer") or forward_primer
+            sample_reverse_primer = self._row_value(row, "reverse_primer", "reverse-primer") or reverse_primer
             sample_dir = output_path / sample_name
             scratch_dir = sample_dir / "scratch"
             preprocess_dir = scratch_dir / "amplicon_preprocess"
-            feature_table = self._row_value(row, "feature_table", "feature-table") or str(preprocess_dir / "feature-table.tsv")
-            rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences") or str(preprocess_dir / "rep-seqs.fasta")
+            supplied_feature_table = self._row_value(row, "feature_table", "feature-table")
+            supplied_rep_seqs = self._row_value(row, "rep_seqs", "rep-seqs", "representative_sequences")
+            feature_table = supplied_feature_table or str(preprocess_dir / "feature-table.tsv")
+            rep_seqs = supplied_rep_seqs or str(preprocess_dir / "rep-seqs.fasta")
+            require_dada2_artifacts = (
+                expected_feature_denoiser == "dada2"
+                and supplied_feature_table is None
+                and supplied_rep_seqs is None
+            )
             cod_profile_path = sample_dir / "cod_profile.csv"
+            downstream_signature_path = scratch_dir / "amplicon_downstream_inputs.json"
             sample_result = {"input": dict(row), "artifacts": {}, "stages": {}}
             sample_dependencies: list[dict] = []
             logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
@@ -4135,6 +4974,14 @@ fi"""
             def active(stage_name: str) -> bool:
                 return workflow.active_submission(sample_name, stage_name, slurm_checker=slurm_checker)
 
+            def fail_sample(stage_name: str, error: Exception) -> None:
+                message = str(error)
+                logger.error("Sample pipeline failed after retries: sample=%s stage=%s error=%s", sample_name, stage_name, message)
+                sample_result["status"] = "failed"
+                sample_result["error"] = {"stage": stage_name, "message": message}
+                record_stage(stage_name, "failed", message=message)
+                results["samples"][sample_name] = sample_result
+
             if accession and not read_1:
                 target_sra_dir = pathlib.Path(sra_dir) if sra_dir else output_path / "sra"
                 try:
@@ -4155,19 +5002,23 @@ fi"""
                     record_stage("download_sra", "submitted", message="download is already active")
                     sample_result["status"] = "waiting_for_download"
                     results["samples"][sample_name] = sample_result
-                    continue
+                    return
                 else:
-                    download_result = self.run_sra_download_step(
-                        sample_name=sample_name,
-                        output_dir=output_path,
-                        accession=accession,
-                        sra_dir=sra_dir,
-                        paired=paired,
-                        container=container,
-                        execute=execute,
-                        verbose=verbose,
-                        execution_profile=execution_profile_data,
-                    )
+                    try:
+                        download_result = self.run_sra_download_step(
+                            sample_name=sample_name,
+                            output_dir=output_path,
+                            accession=accession,
+                            sra_dir=sra_dir,
+                            paired=paired,
+                            container=container,
+                            execute=execute,
+                            verbose=verbose,
+                            execution_profile=execution_profile_data,
+                        )
+                    except Exception as error:
+                        fail_sample("download_sra", error)
+                        return
                     sample_result["artifacts"]["download"] = download_result["artifacts"]
                     download_artifact = download_result["artifacts"]["download_sra"]
                     read_1 = download_result["artifacts"]["reads"]["read_1"]
@@ -4182,14 +5033,18 @@ fi"""
                     if download_artifact.get("status") in {"submitted", "prepared", "running", "monitoring"} and not pathlib.Path(read_1).exists():
                         sample_result["status"] = "waiting_for_download"
                         results["samples"][sample_name] = sample_result
-                        continue
+                        return
 
             if stage == "download":
                 sample_result.setdefault("status", "completed" if read_1 else "submitted")
                 results["samples"][sample_name] = sample_result
-                continue
+                return
 
-            preprocess_ready = pathlib.Path(feature_table).exists() and pathlib.Path(rep_seqs).exists()
+            preprocess_ready = _amplicon_outputs_ready(
+                feature_table,
+                rep_seqs,
+                require_dada2_artifacts=require_dada2_artifacts,
+            )
             if stage in {"preprocess", "all"}:
                 if preprocess_ready:
                     record_stage(
@@ -4202,29 +5057,33 @@ fi"""
                     record_stage("preprocess", "submitted", message="preprocessing is already active")
                     sample_result["status"] = "waiting_for_preprocess"
                     results["samples"][sample_name] = sample_result
-                    continue
+                    return
                 elif read_1 and (not execute or pathlib.Path(read_1).exists()):
-                    preprocess_result = self.preprocess_amplicon_sample(
-                        sample_name=sample_name,
-                        output_dir=output_path,
-                        read_1=read_1,
-                        read_2=read_2,
-                        forward_primer=forward_primer,
-                        reverse_primer=reverse_primer,
-                        adapter_1=adapter_1,
-                        adapter_2=adapter_2,
-                        minimum_length=minimum_length,
-                        quality_cutoff=quality_cutoff,
-                        quality_maxee=quality_maxee,
-                        identity=identity,
-                        min_unique_size=min_unique_size,
-                        chimera_filter=chimera_filter,
-                        container=container,
-                        execute=execute,
-                        verbose=verbose,
-                        execution_profile=execution_profile_data,
-                        dependencies=sample_dependencies,
-                    )
+                    try:
+                        preprocess_result = self.preprocess_amplicon_sample(
+                            sample_name=sample_name,
+                            output_dir=output_path,
+                            read_1=read_1,
+                            read_2=read_2,
+                            forward_primer=sample_forward_primer,
+                            reverse_primer=sample_reverse_primer,
+                            adapter_1=adapter_1,
+                            adapter_2=adapter_2,
+                            minimum_length=minimum_length,
+                            quality_cutoff=quality_cutoff,
+                            quality_maxee=quality_maxee,
+                            identity=identity,
+                            min_unique_size=min_unique_size,
+                            chimera_filter=chimera_filter,
+                            container=container,
+                            execute=execute,
+                            verbose=verbose,
+                            execution_profile=execution_profile_data,
+                            dependencies=sample_dependencies,
+                        )
+                    except Exception as error:
+                        fail_sample("preprocess", error)
+                        return
                     sample_result["artifacts"]["preprocess"] = preprocess_result["artifacts"]
                     preprocess_artifacts = [
                         preprocess_result["artifacts"].get("trim_reads"),
@@ -4237,10 +5096,14 @@ fi"""
                         artifact={"steps": preprocess_artifacts},
                         paths={"feature_table": feature_table, "rep_seqs": rep_seqs},
                     )
-                    if not pathlib.Path(feature_table).exists() or not pathlib.Path(rep_seqs).exists():
+                    if not _amplicon_outputs_ready(
+                        feature_table,
+                        rep_seqs,
+                        require_dada2_artifacts=require_dada2_artifacts,
+                    ):
                         sample_result["status"] = "waiting_for_preprocess"
                         results["samples"][sample_name] = sample_result
-                        continue
+                        return
                     preprocess_ready = True
                 else:
                     if input_type == "reads":
@@ -4248,24 +5111,18 @@ fi"""
                     record_stage("download_sra", "waiting", message="FASTQ files are not available yet")
                     sample_result["status"] = "waiting_for_download"
                     results["samples"][sample_name] = sample_result
-                    continue
+                    return
 
             if stage == "preprocess":
                 sample_result.setdefault("status", "completed" if preprocess_ready else "waiting_for_preprocess")
                 results["samples"][sample_name] = sample_result
-                continue
+                return
 
-            row_gtdb_matches = self._row_value(row, "gtdb_matches", "matches")
-            if row_gtdb_matches is None and gtdb_matches_dir is not None:
-                candidate = pathlib.Path(gtdb_matches_dir) / sample_name / "matches.blast"
-                if candidate.exists():
-                    row_gtdb_matches = str(candidate)
-            if row_gtdb_matches is None:
-                candidate = scratch_dir / "matches.blast"
-                if candidate.exists():
-                    row_gtdb_matches = str(candidate)
-
-            if not pathlib.Path(feature_table).exists() or not pathlib.Path(rep_seqs).exists():
+            if not _amplicon_outputs_ready(
+                feature_table,
+                rep_seqs,
+                require_dada2_artifacts=require_dada2_artifacts,
+            ):
                 record_stage(
                     "preprocess",
                     "waiting",
@@ -4274,28 +5131,48 @@ fi"""
                 )
                 sample_result["status"] = "waiting_for_preprocess"
                 results["samples"][sample_name] = sample_result
-                continue
+                return
 
-            if _csv_has_rows(cod_profile_path):
+            amplicon_input_signature = _amplicon_input_signature(feature_table, rep_seqs)
+            downstream_signature_matches = _matching_downstream_signature(
+                downstream_signature_path,
+                amplicon_input_signature,
+            )
+            row_gtdb_matches = self._row_value(row, "gtdb_matches", "matches")
+            external_gtdb_matches = row_gtdb_matches is not None
+            if row_gtdb_matches is None and gtdb_matches_dir is not None:
+                candidate = pathlib.Path(gtdb_matches_dir) / sample_name / "matches.blast"
+                if candidate.exists():
+                    row_gtdb_matches = str(candidate)
+                    external_gtdb_matches = True
+            stale_internal_gtdb_matches = False
+            if row_gtdb_matches is None:
+                candidate = scratch_dir / "matches.blast"
+                if candidate.exists() and downstream_signature_matches:
+                    row_gtdb_matches = str(candidate)
+                elif candidate.exists():
+                    stale_internal_gtdb_matches = True
+
+            if _csv_has_rows(cod_profile_path) and downstream_signature_matches:
                 record_stage("cod", "completed", message="cached COD profile found", paths={"cod_profile": str(cod_profile_path)})
                 sample_result["status"] = "completed"
                 sample_result["artifacts"]["cod"] = {"cod_profile": str(cod_profile_path)}
                 results["samples"][sample_name] = sample_result
-                continue
+                return
 
             if row_gtdb_matches is None and active("align_to_gtdb"):
                 record_stage("align_to_gtdb", "submitted", message="GTDB alignment is already active")
                 sample_result["status"] = "waiting_for_gtdb_alignment"
                 results["samples"][sample_name] = sample_result
-                continue
+                return
 
-            if row_gtdb_matches is not None and active("align_genome"):
-                record_stage("align_genome", "submitted", message="genome alignments are already active")
+            if row_gtdb_matches is not None and (active("align_genomes") or active("align_genome")):
+                record_stage("align_genomes", "submitted", message="genome-alignment task is already active")
                 sample_result["status"] = "waiting_for_genome_alignment"
                 results["samples"][sample_name] = sample_result
-                continue
+                return
 
-            if stage == "cod":
+            try:
                 cod_result = self.sample_to_cod(
                     sample_name=sample_name,
                     output_dir=output_path,
@@ -4305,6 +5182,7 @@ fi"""
                     feature_table=feature_table,
                     rep_seqs=rep_seqs,
                     gtdb_matches=row_gtdb_matches,
+                    force_gtdb_alignment=stale_internal_gtdb_matches and not external_gtdb_matches,
                     top_k=top_k,
                     container=container,
                     execute=execute,
@@ -4313,26 +5191,22 @@ fi"""
                     execution_profile=execution_profile_data,
                     dependencies=sample_dependencies,
                 )
-            else:
-                cod_result = self.sample_to_cod(
-                    sample_name=sample_name,
-                    output_dir=output_path,
-                    mode="amplicon",
-                    genome_alignments=genome_alignments,
-                    genomes_dir=genomes_dir,
-                    feature_table=feature_table,
-                    rep_seqs=rep_seqs,
-                    gtdb_matches=row_gtdb_matches,
-                    top_k=top_k,
-                    container=container,
-                    execute=execute,
-                    normalize=normalize,
-                    verbose=verbose,
-                    execution_profile=execution_profile_data,
-                    dependencies=sample_dependencies,
-                )
+            except Exception as error:
+                fail_sample("cod", error)
+                return
             sample_result["artifacts"]["cod"] = cod_result["artifacts"]
             sample_result["cod_profile"] = cod_result.get("cod_profile", {})
+            resolved_matches_path = pathlib.Path(row_gtdb_matches) if row_gtdb_matches else scratch_dir / "matches.blast"
+            if resolved_matches_path.exists() and cod_result.get("status") != "waiting_for_gtdb_alignment":
+                self._write_json(
+                    downstream_signature_path,
+                    {
+                        "amplicon_input_sha256": amplicon_input_signature,
+                        "feature_table": str(feature_table),
+                        "rep_seqs": str(rep_seqs),
+                        "matches": str(resolved_matches_path),
+                    },
+                )
             if cod_result["artifacts"].get("align_to_gtdb"):
                 gtdb_artifact = cod_result["artifacts"]["align_to_gtdb"]
                 record_stage(
@@ -4344,22 +5218,25 @@ fi"""
             genome_artifacts = [
                 artifact
                 for name, artifact in cod_result["artifacts"].items()
-                if str(name).startswith("align_genome_") and isinstance(artifact, dict)
+                if str(name) == "align_genomes" and isinstance(artifact, dict)
             ]
             if genome_artifacts:
-                record_stage("align_genome", _artifact_status(genome_artifacts), artifact={"steps": genome_artifacts})
+                record_stage("align_genomes", _artifact_status(genome_artifacts), artifact={"steps": genome_artifacts})
             if cod_result.get("status"):
                 sample_result["status"] = cod_result["status"]
-                waiting_stage = {
-                    "waiting_for_gtdb_alignment": "align_to_gtdb",
-                    "waiting_for_genome_alignment": "align_genome",
-                    "waiting_for_genome_fasta": "genome_fasta",
-                }.get(cod_result["status"], "cod")
-                current_stage = workflow.stage(sample_name, waiting_stage)
-                if current_stage.get("status") in {"submitted", "running", "monitoring"}:
-                    sample_result["stages"][waiting_stage] = current_stage
+                if str(cod_result["status"]).startswith("completed"):
+                    record_stage("cod", "completed", message=cod_result["status"])
                 else:
-                    record_stage(waiting_stage, "waiting", message=cod_result["status"])
+                    waiting_stage = {
+                        "waiting_for_gtdb_alignment": "align_to_gtdb",
+                        "waiting_for_genome_alignment": "align_genomes",
+                        "waiting_for_genome_fasta": "genome_fasta",
+                    }.get(cod_result["status"], "cod")
+                    current_stage = workflow.stage(sample_name, waiting_stage)
+                    if current_stage.get("status") in {"submitted", "running", "monitoring"}:
+                        sample_result["stages"][waiting_stage] = current_stage
+                    else:
+                        record_stage(waiting_stage, "waiting", message=cod_result["status"])
             elif _csv_has_rows(cod_profile_path):
                 sample_result["status"] = "completed"
                 record_stage("cod", "completed", paths={"cod_profile": str(cod_profile_path)})
@@ -4367,6 +5244,9 @@ fi"""
                 sample_result["status"] = "waiting_for_cod"
                 record_stage("cod", "waiting", message="COD profile was not produced")
             results["samples"][sample_name] = sample_result
+
+        with ThreadPoolExecutor(max_workers=min(int(sample_workers), max(1, len(rows)))) as executor:
+            list(executor.map(process_row, rows))
 
         results["summary"] = self._write_json(output_path / "batch_summary.json", results)
         return results

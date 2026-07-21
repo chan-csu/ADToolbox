@@ -4,11 +4,11 @@ ADToolbox converts metagenomics evidence into model-ready e-ADM microbial COD al
 
 - SRA accession tables
 - local FASTQ/FASTQ.GZ read tables
-- raw amplicon reads processed with fastp and VSEARCH
+- raw amplicon reads processed with fastp, Cutadapt, and standalone DADA2
 
-Each sample row writes a dedicated output folder containing clean result CSVs, `pipeline.log`, and `provenance.json`. Generated command scripts, raw alignment files, VSEARCH intermediates, and other working files are kept under that sample's `scratch/` folder.
+Each sample row writes a dedicated output folder containing clean result CSVs, `pipeline.log`, and `provenance.json`. Generated command scripts, raw alignment files, DADA2 intermediates, and other working files are kept under that sample's `scratch/` folder.
 
-Batch runs also write `workflow_state.json` and `workflow_events.jsonl` under `--output-dir`. These files make the command resumable: rerun the same command and ADToolbox skips cached outputs, avoids resubmitting active Slurm jobs, and advances samples whose upstream files are now present.
+Batch runs also write `workflow_state.json` and `workflow_events.jsonl` under `--output-dir`. These files keep a durable record of each sample and stage, so interrupted runs can be resumed and cached outputs can be skipped.
 
 ```mermaid
 flowchart LR
@@ -19,34 +19,51 @@ flowchart LR
 
     subgraph pp["preprocess"]
         direction TB
-        B["Trimmed reads<br>fastp"]
-        C["Feature table and<br>representative sequences<br>VSEARCH"]
-        B --> C
+        B["Quality-trimmed reads<br>fastp"]
+        C["Primer-free reads<br>Cutadapt"]
+        D["ASV table and<br>representative sequences<br>DADA2"]
+        B --> C --> D
     end
 
     subgraph al["allocate"]
         direction TB
-        D["Representative genomes<br>VSEARCH vs GTDB"]
-        E["EC numbers<br>MMseqs2 vs protein DB"]
-        F["cod_profile.csv<br>reaction metadata"]
-        D --> E --> F
+        E["Representative genomes<br>VSEARCH vs GTDB"]
+        F["EC numbers<br>MMseqs2 vs protein DB"]
+        G["cod_profile.csv<br>reaction metadata"]
+        E --> F --> G
     end
 
     A --> B
-    C --> D
+    D --> E
 ```
 
 New to the pipeline? The [Quickstart](Quickstart.md#4-turn-amplicon-data-into-microbial-cod) has a shorter, worked example. This page is the complete reference.
 
 ## Amplicon Reads
 
-Raw amplicon reads are handled in three stages:
+Raw amplicon reads are handled in four stages:
 
-1. Trim adapters and short reads with fastp. Explicit adapters can be supplied, otherwise fastp auto-detects common adapters.
-2. Build a feature table and representative sequence FASTA with VSEARCH.
-3. Map representative sequences to GTDB, connect genomes to ADToolbox protein alignments, and aggregate the resulting e-ADM COD allocation.
+1. Trim adapters, low-quality tails, and short reads with fastp. Explicit adapters can be supplied, otherwise fastp auto-detects common adapters.
+2. Detect a known universal primer pair and remove it with Cutadapt.
+3. Infer exact ASVs, merge paired reads, and remove chimeras with standalone DADA2.
+4. Map representative sequences to GTDB, connect genomes to ADToolbox protein alignments, and aggregate the resulting e-ADM COD allocation.
 
-The feature-generation path is intentionally opinionated: VSEARCH UNOISE-style denoising is used to produce representative sequences and a feature table with minimal dependencies.
+This path does not install or invoke QIIME2. DADA2 is called directly through `Rscript`; VSEARCH remains a separate lightweight dependency for mapping the resulting representative sequences to GTDB.
+
+### Universal primer catalog
+
+With `primer_mode = "auto"`, ADToolbox checks the starts of both read directions against the packaged catalog at `adtoolbox/pkg_data/amplicon_primers.tsv`. Detection supports IUPAC ambiguity codes, sequencing errors, and short leading heterogeneity spacers. A pair is accepted only when both read directions pass `primer_min_fraction` (0.80 in the reference profile). The selected pair and the top candidate scores are saved in `scratch/amplicon_preprocess/detected_primers.json`.
+
+The catalog is a tab-separated file with `name`, `forward_primer`, `reverse_primer`, and `target_region` columns. To use a larger or project-specific catalog, set `primer_catalog` in `[steps.build_amplicon_features.settings]`. A primer pair can also be supplied for one sample by adding `forward_primer` and `reverse_primer` columns to the manifest, or for the whole run with the matching CLI options. Explicit primers override automatic detection.
+
+If no pair passes the threshold, the sample fails before Slurm submission with candidate scores in the error message. This is deliberate: continuing with an unknown primer layout can create an empty or misleading ASV table.
+
+The main preprocessing artifacts are:
+
+- `feature-table.tsv` — per-sample ASV counts
+- `rep-seqs.fasta` — ASV sequences with stable sequence-derived IDs
+- `dada2-stats.tsv` — input, filtered, denoised, merged, and non-chimeric read counts
+- `detected_primers.json` and `<sample>_cutadapt.json` — primer audit and trimming report
 
 For local reads, use a table with `sample`, `read_1`, and optionally `read_2`:
 
@@ -97,31 +114,50 @@ adtoolbox metagenomics process \
 
 Use a TOML execution profile to choose local or Slurm execution per step. The reference profile is `reference_data/metagenomics_pipeline.toml`.
 
-Container image selection is controlled by the top-level `image` key, for example `image = "docker://parsaghadermazi/adtoolbox:latest"`. Step-specific `image` values override the top-level image. If no image is provided, ADToolbox defaults to the packaged `parsaghadermazi/adtoolbox:latest` image for Docker and `docker://parsaghadermazi/adtoolbox:latest` for Apptainer/Singularity.
+The reference profile uses `container = "None"`, so commands run from the active Conda environment on the compute node. Container image selection remains available through a top-level or step-specific `image` key when Docker or Apptainer is wanted.
 
-Slurm retries are opt-in. Set `retries` under `[slurm]` for a global default, or under a specific `[steps.<name>]` table for one step. When retries are enabled, the submitted Slurm script retries the command inside the job before Slurm marks the job failed.
+Slurm steps use `sbatch --wait --parsable`. The application waits for each task to finish, validates its outputs, and only then starts the next task for that sample. It does not use Slurm dependency directives.
+
+Sample pipelines run concurrently with a bounded worker pool. `--sample-workers 4` is the default: up to four samples can be active at once, while the tasks inside each sample remain strictly sequential. Set it to `1` for serial execution or lower it when scheduler or download limits require less concurrency.
+
+Each named task is one Slurm job per sample. In particular, `align_genomes` contains all required genome-to-protein MMseqs alignments for that sample and runs them sequentially inside one job. Completed alignment files are reused on retries and reruns. Each MMseqs command receives a unique absolute temporary directory under `scratch/genome_alignments/mmseqs_tmp/<genome_accession>`.
+
+Slurm retries are opt-in. Set `retries` under `[slurm]` for a global default, or under a specific `[steps.<name>]` table for one step. Every attempt is a separate `sbatch --wait` submission with its own Slurm job ID. A failed, timed-out, preempted, or manually cancelled attempt returns control to ADToolbox; after `retry_delay_seconds`, ADToolbox submits a fresh job. The generated sbatch script contains the task once and has no Bash retry loop.
+
+To stop a task permanently, stop the controlling `adtoolbox metagenomics process` command before calling `scancel`. If the controller remains alive, a manually cancelled attempt is treated like another retryable Slurm failure and may be resubmitted.
+
+Exit status 64 marks a deterministic no-feature result, such as DADA2 retaining no non-chimeric ASVs. Status 127 marks a missing executable or DADA2 R dependency. Those statuses are not resubmitted because another allocation cannot fix them. Other failures, including cancellation, retain the configured retry behavior.
+
+When all retries are exhausted, ADToolbox marks that sample and stage as `failed`, records the error in `batch_summary.json` and the workflow log, skips the remaining tasks for that sample, and continues with the next sample in the manifest.
+
+For each sample, `download_genomes` deduplicates missing assembly accessions and uses one NCBI Datasets dehydrated package plus `datasets rehydrate` instead of submitting one download per genome. Set `steps.download_genomes.settings.max_workers` between 1 and 30 to bound concurrent transfers; the default is 10. Genomes already present in `--genomes-dir` are not downloaded again. If either NCBI Datasets or `unzip` is unavailable, the same task automatically falls back to sequential HTTPS downloads from the NCBI assembly archive.
+
+Unavailable, suppressed, or deprecated assembly accessions are skipped individually and recorded in `scratch/genome_download/failed_genomes.txt` and the sample provenance as `skipped_genome_fastas`. Valid genomes continue through alignment and COD calculation. A sample for which no requested genome is available finishes as `completed_no_available_genomes` instead of retrying indefinitely.
 
 Important step names are:
 
 - `download_sra`
+- `download_genomes`
 - `trim_reads`
 - `build_amplicon_features`
 - `align_to_gtdb`
-- `align_genome`
+- `align_genomes`
 - `align_short_reads`
 
 Without `--execute`, ADToolbox writes scripts and Slurm files but does not run or submit them.
 
-Final COD files are only written when real upstream data exists. If a Slurm job is still running, or a GTDB match, genome FASTA, or genome alignment is missing, the sample is marked with a waiting status in the workflow state instead of producing a header-only `cod_profile.csv`.
+Final COD files are only written when real upstream data exists. If a GTDB match, genome FASTA, or genome alignment is missing, the sample is marked with a waiting status in the workflow state instead of producing a header-only `cod_profile.csv`. Downstream GTDB and COD caches are tied to a SHA-256 signature of the feature table and representative FASTA, so changing from VSEARCH features to DADA2 features forces the affected downstream work to run again.
+
+When a DADA2 profile is selected, legacy VSEARCH `feature-table.tsv` and `rep-seqs.fasta` files are not considered a complete preprocessing cache unless the DADA2 statistics and primer audit are also present. Read downloads, genome FASTAs, and compatible genome-to-protein alignments can still be reused.
 
 ## Stages
 
-Both the CLI and the Python API can run one stage at a time. You can also use `--stage all` as a resumable advancement command on Slurm: each invocation submits or runs currently ready work, records what happened, and exits without pretending submitted jobs are already complete.
+Both the CLI and the Python API can run one stage at a time. In the usual Slurm setup, `--stage all` waits for each submitted step and runs the full sample pipeline through downstream amplicon-to-genome mapping and COD allocation.
 
 | Stage | Does |
 | --- | --- |
 | `download` | Fetch reads from SRA. Skipped for local read tables. |
-| `preprocess` | Trim with fastp and build the feature table and representative sequences with VSEARCH. |
+| `preprocess` | Quality-trim with fastp, remove primers with Cutadapt, and infer ASVs with DADA2. |
 | `allocate` (CLI) / `cod` (Python) | Map to GTDB, align to the protein database, and write the COD profile. |
 | `all` | Run every applicable stage in order. |
 

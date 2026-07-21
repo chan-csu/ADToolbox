@@ -6,8 +6,8 @@
 # Without --execute, commands/scripts are written but not run or submitted.
 
 backend = "local"
-container = "apptainer"
-image = "docker://parsaghadermazi/adtoolbox:latest"
+# Run tools from the active Conda environment; no Apptainer image is used.
+container = "None"
 
 [slurm]
 cpus = 8
@@ -17,15 +17,14 @@ time = "04:00:00"
 # whose names start with `job_name_prefix` before submitting another job.
 # max_concurrent_jobs = 20
 # poll_seconds = 30
-# Rerun the same `adtoolbox metagenomics process` command to resume. ADToolbox
-# records stage state in workflow_state.json, skips cached outputs, and avoids
-# resubmitting active Slurm jobs.
+# ADToolbox submits every Slurm task with `sbatch --wait`. After the task
+# succeeds and its outputs are validated, the application starts the next task.
+# Slurm dependency directives are not used.
 #
-# Retries are handled inside each submitted Slurm job, so sample submission can
-# continue up to max_concurrent_jobs instead of waiting for each job to finish.
+# On failure or cancellation, ADToolbox submits a fresh Slurm job after the
+# configured delay. The sbatch script itself does not contain a retry loop.
 # retries = 1
 # retry_delay_seconds = 60
-# wait_for_completion = false
 # job_name_prefix = "adtoolbox_"
 # partition = "general"
 # account = "my_account"
@@ -34,14 +33,24 @@ time = "04:00:00"
 
 [steps.download_sra]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 4
 memory = "16G"
 time = "04:00:00"
 
+[steps.download_genomes]
+backend = "slurm"
+container = "None"
+cpus = 1
+memory = "2G"
+time = "01:00:00"
+
+[steps.download_genomes.settings]
+max_workers = 10
+
 [steps.trim_reads]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 4
 memory = "8G"
 time = "01:00:00"
@@ -51,27 +60,37 @@ time = "01:00:00"
 threads = 4
 minimum_length = 100
 quality_cutoff = 20
+quality_trim = "cut_right"
+quality_window_size = 4
+quality_mean = 20
 # adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
 # adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
 [steps.build_amplicon_features]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 8
 memory = "24G"
 time = "04:00:00"
 
 [steps.build_amplicon_features.settings]
 threads = 8
-identity = 0.97
-maxee = 1.0
+denoiser = "dada2"
+primer_mode = "auto"
+primer_detection_reads = 10000
+primer_max_offset = 12
+primer_max_error_rate = 0.15
+primer_min_fraction = 0.80
+cutadapt_error_rate = 0.15
+discard_untrimmed = true
+maxee = 2.0
 minimum_length = 100
-min_unique_size = 2
 chimera_filter = true
+dada2_min_overlap = 12
 
 [steps.align_to_gtdb]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 8
 memory = "32G"
 time = "04:00:00"
@@ -80,16 +99,16 @@ time = "04:00:00"
 vsearch_threads = 8
 vsearch_similarity = 0.97
 
-[steps.align_genome]
+[steps.align_genomes]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 12
 memory = "48G"
 time = "08:00:00"
 
 [steps.align_short_reads]
 backend = "slurm"
-container = "apptainer"
+container = "None"
 cpus = 24
 memory = "150G"
 time = "12:00:00"

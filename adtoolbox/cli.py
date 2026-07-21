@@ -421,15 +421,18 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
 @click.option("--genome-alignments", help="Genome alignment JSON, one TSV file, or directory of Alignment_Results_mmseq_*.tsv files.")
 @click.option("--genomes-dir", help="Directory containing genome FASTA files when alignments are not precomputed.")
 @click.option("--gtdb-matches-dir", help="Directory containing per-sample matches.blast files.")
+@click.option("--forward-primer", help="Explicit forward PCR primer. Overrides automatic catalog detection for that run.")
+@click.option("--reverse-primer", help="Explicit reverse PCR primer for paired reads.")
 @click.option("--adapter-1", help="Forward-read adapter sequence for fastp. Omit to let fastp auto-detect.")
 @click.option("--adapter-2", help="Reverse-read adapter sequence for paired-end fastp. Omit to let fastp auto-detect.")
 @click.option("--minimum-length", default=100, show_default=True, type=int, help="Minimum amplicon read length after trimming/filtering.")
 @click.option("--quality-cutoff", help="fastp qualified quality phred cutoff.")
-@click.option("--quality-maxee", default=1.0, show_default=True, type=float, help="VSEARCH expected-error filter.")
-@click.option("--identity", default=0.97, show_default=True, type=float, help="VSEARCH identity for assigning reads to denoised rep-seqs.")
-@click.option("--min-unique-size", default=2, show_default=True, type=int, help="Minimum dereplicated sequence size.")
-@click.option("--chimera-filter/--no-chimera-filter", default=True, show_default=True, help="Run VSEARCH de novo chimera filtering.")
+@click.option("--quality-maxee", default=1.0, show_default=True, type=float, help="Maximum expected errors used by DADA2 or VSEARCH filtering.")
+@click.option("--identity", default=0.97, show_default=True, type=float, help="VSEARCH-only identity for assigning reads to denoised rep-seqs.")
+@click.option("--min-unique-size", default=2, show_default=True, type=int, help="VSEARCH-only minimum dereplicated sequence size.")
+@click.option("--chimera-filter/--no-chimera-filter", default=True, show_default=True, help="Enable de novo chimera removal in the selected denoiser.")
 @click.option("--top-k", default=-1, show_default=True, type=int, help="Number of top amplicon features to keep; -1 keeps all.")
+@click.option("--sample-workers", default=4, show_default=True, type=click.IntRange(min=1), help="Maximum number of sample pipelines to run concurrently.")
 @click.option("--bit-score", default=None, type=float, help="Minimum MMseqs bit score.")
 @click.option("--e-value", default=None, type=float, help="Maximum MMseqs e-value.")
 @click.option("--execution-profile", help="TOML file defining local/Slurm execution and step-specific settings.")
@@ -449,6 +452,8 @@ def metagenomics_process(
     genome_alignments,
     genomes_dir,
     gtdb_matches_dir,
+    forward_primer,
+    reverse_primer,
     adapter_1,
     adapter_2,
     minimum_length,
@@ -458,6 +463,7 @@ def metagenomics_process(
     min_unique_size,
     chimera_filter,
     top_k,
+    sample_workers,
     bit_score,
     e_value,
     execution_profile,
@@ -501,6 +507,8 @@ def metagenomics_process(
             genome_alignments=genome_alignments,
             genomes_dir=genomes_dir,
             gtdb_matches_dir=gtdb_matches_dir,
+            forward_primer=forward_primer,
+            reverse_primer=reverse_primer,
             adapter_1=adapter_1,
             adapter_2=adapter_2,
             minimum_length=minimum_length,
@@ -510,6 +518,7 @@ def metagenomics_process(
             min_unique_size=min_unique_size,
             chimera_filter=chimera_filter,
             top_k=top_k,
+            sample_workers=sample_workers,
             container=container,
             execute=execute,
             normalize=normalize,

@@ -73,15 +73,22 @@ this section — the ADToolbox image already contains all of them.
 | Tool | Used for |
 | --- | --- |
 | [fastp](https://github.com/OpenGene/fastp) | Adapter trimming and quality filtering of amplicon reads. |
-| [VSEARCH](https://github.com/torognes/vsearch) | Dereplication, denoising, chimera filtering, and feature tables. |
+| [Cutadapt](https://cutadapt.readthedocs.io/) | IUPAC-aware PCR primer removal. |
+| [DADA2](https://benjjneb.github.io/dada2/) and R | Error learning, ASV inference, paired-read merging, and chimera removal. |
+| [VSEARCH](https://github.com/torognes/vsearch) | Mapping representative ASVs to GTDB; also available as the legacy feature backend. |
 | [MMseqs2](https://github.com/soedinglab/MMseqs2) | Protein alignment against the ADToolbox enzyme database. |
+| [NCBI Datasets](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/) | Batched assembly downloads. |
 | [SRA Toolkit](https://github.com/ncbi/sra-tools) | `prefetch` and `fasterq-dump` for downloading reads from SRA. |
 
 The quickest local install is conda/mamba:
 
 ```bash
-mamba install -c conda-forge -c bioconda fastp vsearch mmseqs2 sra-tools
+mamba install -c conda-forge -c bioconda \
+  fastp cutadapt r-base r-digest bioconductor-dada2 \
+  vsearch mmseqs2 ncbi-datasets-cli sra-tools
 ```
+
+This installs standalone DADA2 rather than QIIME2. Set `container = "None"` in the execution profile so Slurm jobs use these commands from the active environment.
 
 ## Containers
 
@@ -130,12 +137,11 @@ adtoolbox metagenomics align-genome \
 
 For cluster runs, describe each pipeline step in a TOML execution profile that selects the
 backend, container, and resource request. ADToolbox then generates and submits the Slurm
-scripts, monitors job state with `sacct`, and can retry failed jobs.
+scripts, waits for them with `sbatch --wait`, and can retry failed jobs.
 
 ```toml
 backend = "local"
-container = "apptainer"
-image = "docker://parsaghadermazi/adtoolbox:latest"
+container = "None"
 
 [steps.align_short_reads]
 backend = "slurm"
