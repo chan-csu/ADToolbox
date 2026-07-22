@@ -1,0 +1,126 @@
+/* ADToolbox documentation theme extensions */
+
+:root {
+  --ad-hero-from: #0f766e;
+  --ad-hero-to: #15803d;
+}
+
+[data-md-color-scheme="slate"] {
+  --ad-hero-from: #042f2e;
+  --ad-hero-to: #052e16;
+}
+
+/* ---------------------------------------------------------------- hero --- */
+
+.ad-hero {
+  background: linear-gradient(135deg, var(--ad-hero-from), var(--ad-hero-to));
+  border-radius: 0.8rem;
+  color: #fff;
+  margin: 0 0 2.5rem;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.ad-hero h1 {
+  color: #fff;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.6rem;
+}
+
+.ad-hero p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 0 auto 1.6rem;
+  max-width: 42rem;
+  opacity: 0.92;
+}
+
+.ad-hero .md-button {
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+  margin: 0.3rem;
+}
+
+.ad-hero .md-button--primary {
+  background-color: #fff;
+  border-color: #fff;
+  color: var(--ad-hero-from);
+}
+
+.ad-hero .md-button:focus,
+.ad-hero .md-button:hover {
+  background-color: rgba(255, 255, 255, 0.85);
+  border-color: #fff;
+  color: var(--ad-hero-from);
+}
+
+/* --------------------------------------------------------------- cards --- */
+
+.md-typeset .grid.cards > ul > li {
+  border-radius: 0.6rem;
+  transition: border-color 125ms, box-shadow 125ms, transform 125ms;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.md-typeset .grid.cards > ul > li > hr {
+  margin: 0.6rem 0;
+}
+
+/* ------------------------------------------------------------ typography -- */
+
+.md-typeset h1,
+.md-typeset h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-default-fg-color--lightest);
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) td code {
+  white-space: nowrap;
+}
+
+/* Wide tables and diagrams scroll on their own instead of the page. */
+.md-typeset__table {
+  overflow-x: auto;
+}
+
+/* -------------------------------------------------------- api reference -- */
+
+.md-typeset .doc-heading code {
+  font-size: 0.72rem;
+}
+
+.md-typeset .doc-symbol-class,
+.md-typeset .doc-symbol-function,
+.md-typeset .doc-symbol-method,
+.md-typeset .doc-symbol-attribute {
+  font-size: 0.62rem;
+}
+
+.md-typeset .doc-contents {
+  border-left: 0.1rem solid var(--md-default-fg-color--lightest);
+  margin-left: 0.3rem;
+  padding-left: 0.9rem;
+}
+
+/* --------------------------------------------------------------- misc ---- */
+
+.md-typeset .mermaid {
+  margin: 1.4rem 0;
+  text-align: center;
+}
+
+.md-footer__inner {
+  padding: 0.6rem;
+}

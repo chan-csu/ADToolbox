@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 import numpy as np
-import pandas as pd
+import polars as pl
 import rich
 from rich import markdown
 from rich.console import Console
@@ -23,14 +23,32 @@ def _database(**config_overrides):
     return core.Database(config=configs.Database(**config_overrides))
 
 
-def _metagenomics_config(protein_db=None, amplicon_to_genome_db=None):
-    config = configs.Metagenomics()
+def _metagenomics_config(
+    protein_db=None,
+    amplicon_to_genome_db=None,
+    database_dir=None,
+    reaction_db=None,
+    metagenomics_dir=None,
+    bit_score=None,
+    e_value=None,
+):
+    config = configs.Metagenomics(
+        metagenomics_dir=metagenomics_dir or ".",
+        database_dir=database_dir,
+        protein_db=protein_db,
+        csv_reaction_db=reaction_db,
+        amplicon2genome_db=amplicon_to_genome_db,
+    )
     if protein_db:
         config.protein_db = protein_db
     if amplicon_to_genome_db:
         config.amplicon2genome_db = amplicon_to_genome_db
         matches = list(Path(amplicon_to_genome_db).rglob(config.gtdb_dir))
         config.gtdb_dir_fasta = str(matches[0]) if matches else None
+    if bit_score is not None:
+        config.bit_score = bit_score
+    if e_value is not None:
+        config.e_value = e_value
     return config
 
 
@@ -55,22 +73,13 @@ def _model_paths_from_dir(parameters_dir, prefix):
     }
 
 
-def _resolve_model_paths(parameters_dir, prefix, legacy_prefixes=(), **overrides):
+def _resolve_model_paths(parameters_dir, prefix, **overrides):
     if parameters_dir:
         parameters_dir = _prompt_path(parameters_dir, "ADM parameter directory", exists=True, file_okay=False, dir_okay=True)
     elif not any(overrides.values()):
         parameters_dir = _prompt_path(None, "ADM parameter directory", exists=True, file_okay=False, dir_okay=True)
 
     paths = _model_paths_from_dir(parameters_dir, prefix) if parameters_dir else {}
-    if parameters_dir and legacy_prefixes:
-        for key, path in list(paths.items()):
-            if os.path.exists(path):
-                continue
-            for legacy_prefix in legacy_prefixes:
-                legacy_path = _model_paths_from_dir(parameters_dir, legacy_prefix)[key]
-                if os.path.exists(legacy_path):
-                    paths[key] = legacy_path
-                    break
     resolved = {}
     for key, value in overrides.items():
         resolved[key] = value or paths.get(key)
@@ -79,7 +88,7 @@ def _resolve_model_paths(parameters_dir, prefix, legacy_prefixes=(), **overrides
     return resolved
 
 
-def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, legacy_prefixes=(), **paths):
+def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, **paths):
     if models_json:
         models_json = _prompt_path(models_json, "ADM models JSON", exists=True, file_okay=True, dir_okay=False)
         try:
@@ -90,7 +99,6 @@ def _load_model_payload(models_json, model_key, *, parameters_dir, prefix, legac
     paths = _resolve_model_paths(
         parameters_dir,
         prefix,
-        legacy_prefixes=legacy_prefixes,
         **paths,
     )
     return utils.load_multiple_json_files(paths)._asdict()
@@ -115,18 +123,18 @@ def _print_feed_table(feeds):
 
 def _write_representative_genomes(results, output_dir, output_format):
     if output_format == "csv":
-        pd.DataFrame.from_dict(results, orient="index").to_csv(
-            os.path.join(output_dir, "representative_genomes.csv")
-        )
-    elif output_format == "json":
-        with open(os.path.join(output_dir, "representative_genomes.json"), "w") as f:
-            json.dump(results, f)
+        pl.DataFrame(
+            [{"feature_id": feature, "genome_id": genome} for feature, genome in results.items()],
+            schema={"feature_id": pl.Utf8, "genome_id": pl.Utf8},
+        ).write_csv(os.path.join(output_dir, "representative_genomes.csv"))
     else:
         raise click.ClickException("Please provide a valid format for the output file")
 
 
 def _report_adm_solution(model, solution, report):
-    if report in (None, "dash"):
+    if report is None:
+        return
+    if report == "dash":
         model.dash_app(solution)
     elif report == "csv":
         address = Prompt.ask("\n[yellow]Where do you want to save the csv file? ")
@@ -136,18 +144,18 @@ def _report_adm_solution(model, solution, report):
 
 
 @click.group(
-    name="ADToolBox",
+    name="adtoolbox",
     context_settings=CONTEXT_SETTINGS,
-    help="ADToolBox, a toolbox for anaerobic digestion modeling",
+    help="ADToolbox, a toolbox for anaerobic digestion modeling",
     no_args_is_help=True,
     invoke_without_command=True,
 )
-@click.version_option(__version__, "-v", "--version", prog_name="ADToolBox")
+@click.version_option(__version__, "-v", "--version", prog_name="adtoolbox")
 def main():
     pass
 
 
-@main.group(name="Database", help="Build or download databases required by ADToolbox.", no_args_is_help=True)
+@main.group(name="database", help="Build or download databases required by ADToolbox.", no_args_is_help=True)
 def database():
     pass
 
@@ -298,7 +306,7 @@ def download_all_databases(output_dir):
 
 
 @main.group(
-    name="Metagenomics",
+    name="metagenomics",
     help="Import and process metagenomics data from the command line.",
     no_args_is_help=True,
 )
@@ -306,11 +314,11 @@ def metagenomics():
     pass
 
 
-@metagenomics.command(name="download_from_sra", help="Download metagenomics data from SRA.")
+@metagenomics.command(name="download-sra", help="Download metagenomics data from SRA.")
 @click.option("-s", "--sample-accession", required=True, help="SRA accession ID for the sample.")
 @click.option("-o", "--output-dir", help="Output directory for downloaded data.")
 @click.option("-c", "--container", default="None", show_default=True, help="Container: None, docker, or singularity.")
-def download_from_sra(sample_accession, output_dir, container):
+def download_sra(sample_accession, output_dir, container):
     output_dir = _prompt_path(output_dir, "Downloaded SRA output directory", file_okay=False, dir_okay=True, writable=True)
     config = _metagenomics_config()
     prefetch_script, _ = core.Metagenomics(config).seqs_from_sra(
@@ -321,18 +329,18 @@ def download_from_sra(sample_accession, output_dir, container):
     subprocess.run(prefetch_script, shell=True)
 
 
-@metagenomics.command(name="download_genome", help="Download a genome from NCBI.")
+@metagenomics.command(name="download-genome", help="Download a genome from NCBI.")
 @click.option("-g", "--genome-accession", required=True, help="NCBI accession ID for the genome.")
 @click.option("-o", "--output-dir", help="Output directory for downloaded data.")
 @click.option("-c", "--container", default="None", show_default=True, help="Container: None, docker, or singularity.")
-def download_genome(genome_accession, output_dir, container):
+def download_genome_command(genome_accession, output_dir, container):
     output_dir = _prompt_path(output_dir, "Downloaded genome output directory", file_okay=False, dir_okay=True, writable=True)
     config = _metagenomics_config()
     script = core.Metagenomics(config).download_genome(
         identifier=genome_accession,
         output_dir=output_dir,
         container=container,
-    )
+    )[0]
     subprocess.run(script, shell=True)
 
 
@@ -383,7 +391,7 @@ def align_multiple_genomes(input_file, output_dir, container, protein_db):
 @click.option("--amplicon-to-genome-db", help="Directory containing the amplicon-to-genome database files.")
 @click.option("-c", "--container", default="None", show_default=True, help="Container: None, docker, or singularity.")
 @click.option("-s", "--similarity", default=0.97, show_default=True, type=float, help="Similarity cutoff for clustering.")
-@click.option("-f", "--format", "output_format", default="csv", show_default=True, type=click.Choice(["csv", "json"]), help="Output format.")
+@click.option("-f", "--format", "output_format", default="csv", show_default=True, type=click.Choice(["csv"]), help="Output format.")
 def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, container, similarity, output_format):
     input_file = _prompt_path(input_file, "Repseqs FASTA path", exists=True, file_okay=True, dir_okay=False)
     output_dir = _prompt_path(output_dir, "Representative genomes output directory", file_okay=False, dir_okay=True, writable=True)
@@ -396,11 +404,137 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
         container=container,
     )
     subprocess.run(script, shell=True)
-    results = core.Metagenomics(config).get_genomes_from_gtdb_alignment(output_dir)
+    results = core.Metagenomics(config).get_genomes_from_gtdb_alignment(os.path.join(output_dir, "matches.blast"))
     _write_representative_genomes(results, output_dir, output_format)
 
 
-@main.command(name="Documentations", help="Documentations for using ADToolbox.")
+@metagenomics.command(name="process", help="Process amplicon or shotgun samples into e-ADM microbial allocations.")
+@click.option("--input", "input_table", required=True, help="CSV/TSV table describing samples.")
+@click.option("--input-type", required=True, type=click.Choice(["sra", "reads"]), help="Whether the input table contains SRA accessions or local read files.")
+@click.option("--assay", default="amplicon", show_default=True, type=click.Choice(["amplicon", "shotgun"]), help="Sequence-analysis route to run.")
+@click.option("-o", "--output-dir", help="Directory where per-sample artifacts should be written.")
+@click.option("--sra-dir", help="Directory where SRA downloads should be written for SRA input.")
+@click.option("--stage", default="all", show_default=True, type=click.Choice(["download", "preprocess", "allocate", "all"]), help="Pipeline stage to run.")
+@click.option("--database-dir", help="Directory containing ADToolbox database files.")
+@click.option("--reaction-db", help="Reaction metadata CSV with EC-to-eADM mappings.")
+@click.option("--protein-db", help="Protein FASTA database for MMseqs alignment.")
+@click.option("--amplicon-to-genome-db", help="Directory containing GTDB/amplicon-to-genome files.")
+@click.option("--genome-alignments", help="Genome alignment JSON, one TSV file, or directory of Alignment_Results_mmseq_*.tsv files.")
+@click.option("--genomes-dir", help="Directory containing genome FASTA files when alignments are not precomputed.")
+@click.option("--gtdb-matches-dir", help="Directory containing per-sample matches.blast files.")
+@click.option("--forward-primer", help="Explicit forward PCR primer. Overrides automatic catalog detection for that run.")
+@click.option("--reverse-primer", help="Explicit reverse PCR primer for paired reads.")
+@click.option("--adapter-1", help="Forward-read adapter sequence for fastp. Omit to let fastp auto-detect.")
+@click.option("--adapter-2", help="Reverse-read adapter sequence for paired-end fastp. Omit to let fastp auto-detect.")
+@click.option("--minimum-length", default=100, show_default=True, type=int, help="Minimum read length after trimming/filtering.")
+@click.option("--quality-cutoff", help="fastp qualified quality phred cutoff.")
+@click.option("--quality-maxee", default=1.0, show_default=True, type=float, help="Maximum expected errors used by DADA2 or VSEARCH filtering.")
+@click.option("--identity", default=0.97, show_default=True, type=float, help="VSEARCH-only identity for assigning reads to denoised rep-seqs.")
+@click.option("--min-unique-size", default=2, show_default=True, type=int, help="VSEARCH-only minimum dereplicated sequence size.")
+@click.option("--chimera-filter/--no-chimera-filter", default=True, show_default=True, help="Enable de novo chimera removal in the selected denoiser.")
+@click.option("--top-k", default=-1, show_default=True, type=int, help="Number of top amplicon features to keep; -1 keeps all.")
+@click.option("--sample-workers", default=4, show_default=True, type=click.IntRange(min=1), help="Maximum number of sample pipelines to run concurrently.")
+@click.option("--bit-score", default=None, type=float, help="Minimum MMseqs bit score.")
+@click.option("--e-value", default=None, type=float, help="Maximum MMseqs e-value.")
+@click.option("--execution-profile", help="TOML file defining local/Slurm execution and step-specific settings.")
+@click.option("-c", "--container", default="None", show_default=True, help="Container: None, docker, or singularity.")
+@click.option("--execute/--dry-run", default=False, show_default=True, help="Run external commands instead of only preparing/parsing available files.")
+@click.option("--normalize/--no-normalize", default=True, show_default=True, help="Normalize final COD allocation to sum to 1.")
+def metagenomics_process(
+    input_table,
+    input_type,
+    assay,
+    output_dir,
+    sra_dir,
+    stage,
+    database_dir,
+    reaction_db,
+    protein_db,
+    amplicon_to_genome_db,
+    genome_alignments,
+    genomes_dir,
+    gtdb_matches_dir,
+    forward_primer,
+    reverse_primer,
+    adapter_1,
+    adapter_2,
+    minimum_length,
+    quality_cutoff,
+    quality_maxee,
+    identity,
+    min_unique_size,
+    chimera_filter,
+    top_k,
+    sample_workers,
+    bit_score,
+    e_value,
+    execution_profile,
+    container,
+    execute,
+    normalize,
+):
+    input_table = _prompt_path(input_table, "Input sample table CSV/TSV", exists=True, file_okay=True, dir_okay=False)
+    output_dir = _prompt_path(output_dir, "Metagenomics output directory", file_okay=False, dir_okay=True, writable=True)
+    if sra_dir:
+        sra_dir = _prompt_path(sra_dir, "SRA download directory", file_okay=False, dir_okay=True, writable=True)
+    if execution_profile:
+        execution_profile = _prompt_path(execution_profile, "Execution profile TOML", exists=True, file_okay=True, dir_okay=False)
+    if genome_alignments:
+        genome_alignments = _prompt_path(genome_alignments, "Genome alignments file/directory", exists=True, file_okay=True, dir_okay=True)
+    if genomes_dir:
+        genomes_dir = _prompt_path(genomes_dir, "Genome FASTA directory", exists=True, file_okay=False, dir_okay=True)
+    if amplicon_to_genome_db:
+        amplicon_to_genome_db = _prompt_path(amplicon_to_genome_db, "Amplicon-to-genome database directory", exists=True, file_okay=False, dir_okay=True)
+    if gtdb_matches_dir:
+        gtdb_matches_dir = _prompt_path(gtdb_matches_dir, "GTDB matches directory", exists=True, file_okay=False, dir_okay=True)
+
+    config = _metagenomics_config(
+        protein_db=protein_db,
+        amplicon_to_genome_db=amplicon_to_genome_db,
+        database_dir=database_dir,
+        reaction_db=reaction_db,
+        metagenomics_dir=output_dir,
+        bit_score=bit_score,
+        e_value=e_value,
+    )
+
+    try:
+        result = core.Metagenomics(config).batch_sample_to_cod(
+            manifest=input_table,
+            input_type=input_type,
+            assay=assay,
+            output_dir=output_dir,
+            sra_dir=sra_dir,
+            stage="cod" if stage == "allocate" else stage,
+            amplicon_to_genome_db=amplicon_to_genome_db,
+            genome_alignments=genome_alignments,
+            genomes_dir=genomes_dir,
+            gtdb_matches_dir=gtdb_matches_dir,
+            forward_primer=forward_primer,
+            reverse_primer=reverse_primer,
+            adapter_1=adapter_1,
+            adapter_2=adapter_2,
+            minimum_length=minimum_length,
+            quality_cutoff=quality_cutoff,
+            quality_maxee=quality_maxee,
+            identity=identity,
+            min_unique_size=min_unique_size,
+            chimera_filter=chimera_filter,
+            top_k=top_k,
+            sample_workers=sample_workers,
+            container=container,
+            execute=execute,
+            normalize=normalize,
+            execution_profile=execution_profile,
+        )
+    except (FileNotFoundError, ValueError, KeyError, RuntimeError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    rich.print(f"[green]Processed {len(result['samples'])} samples")
+    rich.print(f"[green]Batch summary written to {result['summary']}")
+
+
+@main.command(name="docs", help="Print package documentation in the terminal.")
 @click.option("-s", "--show", is_flag=True, help="Show the README documentation.")
 def documentations(show):
     if not show:
@@ -409,7 +543,7 @@ def documentations(show):
         console.print(markdown.Markdown(f.read()))
 
 
-@main.group(name="ADM", help="Run and visualize ADToolbox ADM models.", no_args_is_help=True)
+@main.group(name="adm", help="Run and visualize ADToolbox ADM models.", no_args_is_help=True)
 def adm_group():
     pass
 
@@ -495,7 +629,6 @@ def e_adm(
         "e_adm",
         parameters_dir=parameters_dir,
         prefix="e_adm",
-        legacy_prefixes=("e_adm_2",),
         model_parameters=model_parameters,
         base_parameters=base_parameters,
         initial_conditions=initial_conditions,

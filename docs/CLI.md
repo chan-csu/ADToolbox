@@ -13,16 +13,16 @@ The CLI does not create or store a global project directory. Commands that need 
 
 | Module | Purpose |
 | --- | --- |
-| `Database` | Initialize, edit, download, and build ADToolbox databases. |
-| `Metagenomics` | Download genomes or SRA data and align genomes to protein databases. |
-| `ADM` | Run ADM1 and e-ADM models. |
-| `Documentations` | Print package documentation in the terminal. |
+| `database` | Initialize, edit, download, and build ADToolbox databases. |
+| `metagenomics` | Download SRA/genome data, align genomes, and run the amplicon or shotgun `process` pipeline. |
+| `adm` | Run ADM1 and e-ADM models. |
+| `docs` | Print package documentation in the terminal. |
 
 Every command supports `-h` and `--help`.
 
 ```bash
-adtoolbox Database --help
-adtoolbox ADM adm1 --help
+adtoolbox database --help
+adtoolbox adm adm1 --help
 ```
 
 ## Database
@@ -49,9 +49,9 @@ Database commands work with explicit file paths. The path can point to a local d
 Examples:
 
 ```bash
-adtoolbox Database initialize-feed-db --feed-db ./database/feed_db.tsv
+adtoolbox database initialize-feed-db --feed-db ./database/feed_db.tsv
 
-adtoolbox Database add-feed \
+adtoolbox database add-feed \
   --feed-db ./database/feed_db.tsv \
   --name "food waste" \
   --carbohydrates 42 \
@@ -62,20 +62,20 @@ adtoolbox Database add-feed \
   --xi 15 \
   --reference "example reference"
 
-adtoolbox Database show-feed-db --feed-db ./database/feed_db.tsv
-adtoolbox Database show-feed-db --feed-db ./database/feed_db.tsv --filter "food waste"
+adtoolbox database show-feed-db --feed-db ./database/feed_db.tsv
+adtoolbox database show-feed-db --feed-db ./database/feed_db.tsv --filter "food waste"
 ```
 
 To download the full reference database bundle:
 
 ```bash
-adtoolbox Database download-all-databases --output-dir ./database
+adtoolbox database download-all-databases --output-dir ./database
 ```
 
 To build a protein database from reaction metadata:
 
 ```bash
-adtoolbox Database build-protein-db \
+adtoolbox database build-protein-db \
   --reaction-db ./database/Reaction_Metadata.csv \
   --protein-db ./database/Protein_DB.fasta
 ```
@@ -86,28 +86,29 @@ Metagenomics commands also take explicit inputs and output directories.
 
 | Command | Purpose |
 | --- | --- |
-| `download_from_sra` | Download reads from SRA by sample accession. |
-| `download_genome` | Download a genome from NCBI by genome accession. |
+| `download-sra` | Download reads from SRA by sample accession. |
+| `download-genome` | Download a genome from NCBI by genome accession. |
 | `align-genome` | Align one genome to a protein FASTA database. |
 | `align-multiple-genomes` | Align multiple genomes listed in a JSON manifest. |
 | `find-representative-genomes` | Find representative genomes from a repseqs FASTA file. |
+| `process` | Process a table of SRA accessions or local reads — amplicon or shotgun — into model-ready e-ADM microbial COD allocations. |
 
 Use `--container None` for local execution, or `--container docker` / `--container singularity` when running through a container backend.
 
 Examples:
 
 ```bash
-adtoolbox Metagenomics download_from_sra \
+adtoolbox metagenomics download-sra \
   --sample-accession SRR28403133 \
   --output-dir ./metagenomics/sra \
   --container None
 
-adtoolbox Metagenomics download_genome \
+adtoolbox metagenomics download-genome \
   --genome-accession GCA_021152825.1 \
   --output-dir ./metagenomics/genomes \
   --container None
 
-adtoolbox Metagenomics align-genome \
+adtoolbox metagenomics align-genome \
   --name GCA_021152825_1 \
   --input-file ./metagenomics/genomes/GCA_021152825.1.fna \
   --output-dir ./metagenomics/alignment \
@@ -127,12 +128,204 @@ For multiple genomes, the input JSON maps genome names to input files:
 Run the batch alignment with:
 
 ```bash
-adtoolbox Metagenomics align-multiple-genomes \
+adtoolbox metagenomics align-multiple-genomes \
   --input-file ./metagenomics/genomes.json \
   --output-dir ./metagenomics/alignment \
   --protein-db ./database/Protein_DB.fasta \
   --container None
 ```
+
+### Processing Pipeline
+
+`process` is the table-driven pipeline for converting amplicon or shotgun evidence into e-ADM microbial biomass/COD allocations. Select the route with `--assay amplicon` (the default) or `--assay shotgun`. Each run creates one sample folder per table row under `--output-dir`. Clean result files stay at the sample-folder root, while generated commands, raw alignments, DADA2 intermediates, and other working files are written under `scratch/`.
+
+| File | Meaning |
+| --- | --- |
+| `cod_profile.csv` | Final normalized `X_*` allocation for the ADM model, as `sample`, `group`, `value`. |
+| `ec_counts.csv` | EC counts when the mode produces direct EC evidence, as `sample`, `ec`, `count`. |
+| `feature_abundances.csv` | Amplicon feature abundances, as `sample`, `feature_id`, `abundance`. |
+| `representative_genomes.csv` | GTDB mapping from feature IDs to representative genomes. |
+| `genome_abundances.csv` | Per-sample genome abundances after feature-to-genome aggregation. |
+| `genome_cods.csv` | Genome-level `X_*` profiles when genomes are involved, as `sample`, `genome_id`, `group`, `value`. |
+| `provenance.json` | Inputs, thresholds, databases, and artifacts used. |
+| `pipeline.log` | Step-by-step log for the sample. |
+| `scratch/` | Intermediate files, generated scripts, GTDB matches, and genome alignment files. |
+
+By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run the applicable fastp, Cutadapt, DADA2, VSEARCH, and MMseqs commands.
+
+Execution behavior can be controlled with a TOML profile. The repository includes an example at `reference_data/metagenomics_pipeline.toml`.
+
+```toml
+backend = "local"
+container = "None"
+
+[slurm]
+# Tasks always run synchronously with `sbatch --wait`.
+# Each retry is a fresh Slurm submission with a new job ID.
+# retries = 1
+# retry_delay_seconds = 60
+
+[steps.download_sra]
+backend = "slurm"
+container = "None"
+cpus = 4
+memory = "16G"
+time = "04:00:00"
+
+[steps.trim_reads]
+backend = "slurm"
+container = "None"
+cpus = 4
+memory = "8G"
+time = "01:00:00"
+# retries = 2
+
+[steps.trim_reads.settings]
+threads = 4
+minimum_length = 100
+quality_cutoff = 20
+quality_trim = "cut_right"
+quality_window_size = 4
+quality_mean = 20
+min_reads_for_denoising = 1000
+allow_single_end_fallback = true
+# Optional explicit adapters. When omitted, fastp auto-detects common adapters.
+# adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+# adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+[steps.build_amplicon_features]
+backend = "slurm"
+container = "None"
+cpus = 8
+memory = "24G"
+time = "04:00:00"
+
+[steps.build_amplicon_features.settings]
+threads = 8
+denoiser = "dada2"
+primer_mode = "auto"
+primer_detection_reads = 10000
+primer_max_offset = 12
+primer_max_error_rate = 0.15
+primer_min_fraction = 0.80
+cutadapt_error_rate = 0.15
+discard_untrimmed = true
+maxee = 2.0
+minimum_length = 100
+chimera_filter = true
+dada2_min_overlap = 12
+
+[steps.align_to_gtdb]
+backend = "slurm"
+container = "None"
+cpus = 8
+memory = "32G"
+time = "04:00:00"
+
+[steps.align_to_gtdb.settings]
+vsearch_threads = 8
+vsearch_similarity = 0.97
+
+[steps.align_genomes]
+backend = "slurm"
+container = "None"
+cpus = 12
+memory = "48G"
+time = "08:00:00"
+
+[steps.align_short_reads]
+backend = "slurm"
+container = "None"
+cpus = 24
+memory = "150G"
+time = "12:00:00"
+
+[steps.align_short_reads.settings]
+threads = 24
+search_type = 2
+keep_work = false
+# sensitivity = 7.5
+```
+
+For SRA accessions, the input table must include `sample` and `accession` columns:
+
+```tsv
+sample	accession
+sample_01	SRR28403133
+sample_02	SRR28403134
+```
+
+Run with:
+
+```bash
+adtoolbox metagenomics process \
+  --input ./metagenomics/sra_samples.tsv \
+  --input-type sra \
+  --output-dir ./metagenomics/process \
+  --sra-dir ./metagenomics/sra \
+  --adapter-1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+  --adapter-2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
+  --amplicon-to-genome-db ./database/amplicon_to_genome \
+  --genomes-dir ./metagenomics/genomes \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --sample-workers 4 \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+For local FASTQ/FASTQ.GZ files, the input table must include `sample`, `read_1`, and optionally `read_2`:
+
+```tsv
+sample	read_1	read_2
+sample_01	./fastq/sample_01_R1.fastq.gz	./fastq/sample_01_R2.fastq.gz
+sample_02	./fastq/sample_02_R1.fastq.gz	./fastq/sample_02_R2.fastq.gz
+```
+
+```bash
+adtoolbox metagenomics process \
+  --input ./metagenomics/read_samples.tsv \
+  --input-type reads \
+  --assay amplicon \
+  --output-dir ./metagenomics/process \
+  --adapter-1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+  --adapter-2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
+  --amplicon-to-genome-db ./database/amplicon_to_genome \
+  --genomes-dir ./metagenomics/genomes \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+For shotgun reads, the manifest uses the same SRA or local-read columns. Select `--assay shotgun`; do not provide the amplicon-to-genome or genome directories:
+
+```bash
+adtoolbox metagenomics process \
+  --input ./metagenomics/read_samples.tsv \
+  --input-type reads \
+  --assay shotgun \
+  --output-dir ./metagenomics/process \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --sample-workers 4 \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+For an SRA shotgun table, change `--input-type` to `sra` and provide `--sra-dir`. Each sample follows `download_sra -> trim_reads -> align_short_reads -> cod`. The MMseqs translated search consumes both trimmed mates in one sample job and writes its query database, result database, and temporary directory under `scratch/shotgun_alignment/`. If a shared `protein_db_mmseqs` exists beside `Protein_DB.fasta`, it is reused; otherwise the sample job creates a private target database from the FASTA. Successful jobs remove the large `mmseqs_work` directory unless `keep_work = true`; failed work directories remain available for diagnosis.
+
+Shotgun mode writes `ec_counts.csv` and `cod_profile.csv` directly from functional evidence. It deliberately skips Cutadapt, DADA2, GTDB matching, genome download, and genome alignment. It does not currently produce a taxonomic profile.
+
+On Slurm, each sample waits for its current task before starting its next task. Up to four sample chains run concurrently by default; use `--sample-workers` to change that bound. One `--execute` run can therefore continue through the selected assay and COD allocation. Staged execution is still available when you want manual control:
+
+```bash
+adtoolbox metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage download --output-dir ./metagenomics/process --sra-dir ./metagenomics/sra --execution-profile reference_data/metagenomics_pipeline.toml --execute
+adtoolbox metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage preprocess --output-dir ./metagenomics/process --sra-dir ./metagenomics/sra --execution-profile reference_data/metagenomics_pipeline.toml --execute
+adtoolbox metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage allocate --output-dir ./metagenomics/process --genomes-dir ./metagenomics/genomes --reaction-db ./database/Reaction_Metadata.csv --execution-profile reference_data/metagenomics_pipeline.toml --execute
+```
+
+Each batch run writes `batch_summary.json` under `--output-dir`.
 
 ## ADM
 
@@ -146,8 +339,8 @@ The ADM CLI currently exposes two model families:
 The recommended input format is one consolidated model JSON file keyed by model name. The repository includes a reference example at `reference_data/models.json`.
 
 ```bash
-adtoolbox ADM adm1 --models-json reference_data/models.json --report csv
-adtoolbox ADM e-adm --models-json reference_data/models.json --report csv
+adtoolbox adm adm1 --models-json reference_data/models.json --report csv
+adtoolbox adm e-adm --models-json reference_data/models.json --report csv
 ```
 
 When `--report csv` is used, the CLI asks where to save the output CSV. When `--report dash` is used, or when `--report` is omitted, the CLI opens the interactive Dash visualization.
@@ -155,7 +348,7 @@ When `--report csv` is used, the CLI asks where to save the output CSV. When `--
 The e-ADM command can also accept a control-state JSON file:
 
 ```bash
-adtoolbox ADM e-adm \
+adtoolbox adm e-adm \
   --models-json reference_data/models.json \
   --control-states ./control_states.json \
   --report csv
@@ -192,7 +385,7 @@ The consolidated model JSON has this structure:
 }
 ```
 
-For compatibility with older database layouts, each ADM command can still load six separate JSON files:
+Each ADM command can also load six separate JSON files:
 
 | Option | Contents |
 | --- | --- |
@@ -206,7 +399,7 @@ For compatibility with older database layouts, each ADM command can still load s
 You can pass those files directly:
 
 ```bash
-adtoolbox ADM adm1 \
+adtoolbox adm adm1 \
   --model-parameters ./ADM_Parameters/adm1_model_parameters.json \
   --base-parameters ./ADM_Parameters/adm1_base_parameters.json \
   --initial-conditions ./ADM_Parameters/adm1_initial_conditions.json \
@@ -219,18 +412,16 @@ adtoolbox ADM adm1 \
 Or pass a directory containing consistently named files:
 
 ```bash
-adtoolbox ADM adm1 --parameters-dir ./ADM_Parameters --report csv
-adtoolbox ADM e-adm --parameters-dir ./ADM_Parameters --report csv
+adtoolbox adm adm1 --parameters-dir ./ADM_Parameters --report csv
+adtoolbox adm e-adm --parameters-dir ./ADM_Parameters --report csv
 ```
-
-For `e-adm`, the CLI first looks for `e_adm_*.json` files and then falls back to the legacy `e_adm_2_*.json` file names.
 
 ## Documentation
 
 Print the package README in the terminal:
 
 ```bash
-adtoolbox Documentations --show
+adtoolbox docs --show
 ```
 
 ## Reference Data

@@ -1,24 +1,49 @@
-FROM ubuntu
+FROM mambaorg/micromamba:1.5.10-bookworm-slim
 
-RUN  apt-get update \
-  && apt-get install -y wget \
-  && rm -rf /var/lib/apt/lists/*
+LABEL org.opencontainers.image.title="ADToolbox"
+LABEL org.opencontainers.image.description="ADToolbox with metagenomics pipeline dependencies"
+LABEL org.opencontainers.image.version="1.1.0"
 
-  
-RUN wget https://github.com/torognes/vsearch/releases/download/v2.28.1/vsearch-2.28.1-linux-x86_64.tar.gz
-RUN tar xzf vsearch-2.28.1-linux-x86_64.tar.gz
+USER root
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/opt/conda/bin:${PATH}
 
-RUN apt-get update && apt-get -y install rsync
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bash \
+        ca-certificates \
+        curl \
+        git \
+        gzip \
+        procps \
+        rsync \
+        tar \
+        unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="${PATH}:vsearch-2.22.1-linux-aarch64/bin/"
+USER $MAMBA_USER
 
-RUN wget https://mmseqs.com/latest/mmseqs-linux-arm64.tar.gz
-RUN tar xzf mmseqs-linux-arm64.tar.gz
-RUN mkdir apps
-RUN mv mmseqs apps
-ENV PATH="${PATH}:apps/mmseqs/bin/"
+RUN micromamba install -y -n base -c conda-forge -c bioconda \
+        python=3.11 \
+        pip \
+        fastp \
+        mmseqs2 \
+        sra-tools \
+        vsearch \
+    && micromamba clean --all --yes
 
-RUN wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.1.0/sratoolkit.3.1.0-ubuntu64.tar.gz
-RUN tar -vxzf sratoolkit.3.1.0-ubuntu64.tar.gz
-ENV PATH="${PATH}:sratoolkit.3.1.0-ubuntu64/bin/"
+RUN micromamba run -n base pip install --no-cache-dir adtoolbox==1.1.0 \
+    && micromamba run -n base pip check
 
+USER root
+RUN ln -sf /opt/conda/bin/adtoolbox /usr/local/bin/adtoolbox \
+    && ln -sf /opt/conda/bin/fasterq-dump /usr/local/bin/fasterq-dump \
+    && ln -sf /opt/conda/bin/fastp /usr/local/bin/fastp \
+    && ln -sf /opt/conda/bin/mmseqs /usr/local/bin/mmseqs \
+    && ln -sf /opt/conda/bin/prefetch /usr/local/bin/prefetch \
+    && ln -sf /opt/conda/bin/vsearch /usr/local/bin/vsearch
+
+USER $MAMBA_USER
+WORKDIR /workspace
+
+CMD ["adtoolbox", "--help"]

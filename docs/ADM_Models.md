@@ -4,8 +4,8 @@ ADToolbox exposes two anaerobic digestion models:
 
 | CLI command | Model | Parameter folder | Stoichiometric builder | ODE system |
 | --- | --- | --- | --- | --- |
-| `adtoolbox ADM adm1` | ADM1 | `adm1` | `adm.build_adm1_stoichiometric_matrix` | `adm.adm1_ode_sys` |
-| `adtoolbox ADM e-adm` | e-ADM | `e_adm` | `adm.build_e_adm_stoichiometric_matrix` | `adm.e_adm_ode_sys` |
+| `adtoolbox adm adm1` | ADM1 | `adm1` | `adm.build_adm1_stoichiometric_matrix` | `adm.adm1_ode_sys` |
+| `adtoolbox adm e-adm` | e-ADM | `e_adm` | `adm.build_e_adm_stoichiometric_matrix` | `adm.e_adm_ode_sys` |
 
 The CLI and public API use only the names ADM1 and e-ADM. The preferred parameter format is one `models.json` file containing all models, keyed by model name.
 
@@ -38,8 +38,8 @@ The first layer is always the model key. The second layer is the complete model 
 
 | Top-level key | Public model | CLI command |
 | --- | --- | --- |
-| `adm1` | ADM1 | `adtoolbox ADM adm1 --models-json models.json` |
-| `e_adm` | e-ADM | `adtoolbox ADM e-adm --models-json models.json` |
+| `adm1` | ADM1 | `adtoolbox adm adm1 --models-json models.json` |
+| `e_adm` | e-ADM | `adtoolbox adm e-adm --models-json models.json` |
 
 The older six-file layout is still supported as a compatibility path, either by passing `--parameters-dir` or by passing each file explicitly.
 
@@ -505,9 +505,9 @@ S[X_su, Uptake of sugars] = Y_su
 ## Minimal CLI Run
 
 ```bash
-adtoolbox ADM adm1 --models-json /path/to/ADToolbox/models.json --report csv
+adtoolbox adm adm1 --models-json /path/to/ADToolbox/models.json --report csv
 ```
 
 ```bash
-adtoolbox ADM e-adm --models-json /path/to/ADToolbox/models.json --report csv
+adtoolbox adm e-adm --models-json /path/to/ADToolbox/models.json --report csv
 ```
