@@ -2469,81 +2469,118 @@ fi
         )
         return bash_script + "\n", alignment_file
 
-    def align_short_reads_to_protein_db(self,
-                                        query_seq:str,
-                                        alignment_file_name:str,
-                                        container:str="None",
-                                        image: str | None = None,
-                                        )->tuple[str,str]:
-        r"""This function aligns shotgun short reads to the protein database of the ADToolbox using mmseqs2.
-        mmseqs wrappers in utils are used to perform this task. The result of this task is an alignment table.
-        
-        Required Configs:
-        
-            protein_db_mmseqs (str): The address of the existing/to be created protein database of the ADToolbox for mmseqs.
-            --------
-        Example:
-            >>> import os
-            >>> query_seq= os.path.join(Main_Dir,"test","query.seq")
-            >>> alignment_file= "output_alignment.txt"
-            >>> protein_db_mmseqs=os.path.join(Main_Dir,"test","protein_db_mmseqs")
-            >>> with open(protein_db_mmseqs,'w') as f:
-            ...     f.write("")
-            0
-            >>> obj = Metagenomics(configs.Metagenomics(protein_db_mmseqs=protein_db_mmseqs)) 
-            >>> assert obj.align_short_reads_to_protein_db(query_seq=query_seq, alignment_file_name= protein_db_mmseqs, container="docker")[0] == 'docker run -v /home/parsa/ADresearch/test/query.seq:/home/parsa/ADresearch/test/query.seq -v /home/parsa/ADresearch/test:/home/parsa/ADresearch/test parsaghadermazi/adtoolbox:x86 mmseqs createdb /home/parsa/ADresearch/test/query.seq /home/parsa/ADresearch/test/query\ndocker run -v /home/parsa/ADresearch/test/query:/home/parsa/ADresearch/test/query -v /home/parsa/ADresearch/test:/home/parsa/ADresearch/test -v /home/parsa/ADresearch/test/protein_db_mmseqs:/home/parsa/ADresearch/test/protein_db_mmseqs parsaghadermazi/adtoolbox:x86 mmseqs search /home/parsa/ADresearch/test/query /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/tmp\ndocker run -v /home/parsa/ADresearch/test/query:/home/parsa/ADresearch/test/query -v /home/parsa/ADresearch/test:/home/parsa/ADresearch/test -v /home/parsa/ADresearch/test/protein_db_mmseqs:/home/parsa/ADresearch/test/protein_db_mmseqs parsaghadermazi/adtoolbox:x86 mmseqs convertalis /home/parsa/ADresearch/test/query /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/protein_db_mmseqs /home/parsa/ADresearch/test/protein_db_mmseqs.tsv --format-mode 4\n'
-            >>> os.remove(protein_db_mmseqs)
+    def align_short_reads_to_protein_db(
+        self,
+        query_seq: str | os.PathLike | Iterable[str | os.PathLike],
+        alignment_file_name: str,
+        container: str = "None",
+        image: str | None = None,
+        output_dir: str | os.PathLike | None = None,
+        threads: int = 1,
+        search_type: int = 2,
+        sensitivity: float | None = None,
+        keep_work: bool = False,
+    ) -> tuple[str, str]:
+        """Prepare one MMseqs translated-search task for shotgun reads.
 
-        Args:
-            query_seq (str): The address of the query sequence.
-            alignment_file_name (str): The name of the alignment file.
-            container (str, optional): The container to use. Defaults to "None". You may select from "None", "docker", "singularity".
-
-
-        Returns:
-            str: The bash script that is used to align the genomes or to be used to align the genomes.
-            str: The address of the alignment file.
+        One or two FASTQ/FASTA inputs are accepted. All MMseqs query, result,
+        and temporary databases are kept below ``output_dir`` instead of next
+        to the source reads. A prebuilt ``protein_db_mmseqs`` is reused when
+        available; otherwise the configured protein FASTA is converted inside
+        this task's private working directory.
         """
-        if not pathlib.Path(self.config.protein_db_mmseqs).exists():
-            raise FileNotFoundError("""The protein database of the ADToolbox for mmseqs is not found. Please build it first
-                                    using Database.build_mmseqs_database method.""")
-        path_query=pathlib.Path(query_seq)
-        old_image_values = {}
-        if image:
-            old_image_values = {
-                "adtoolbox_docker": self.config.adtoolbox_docker,
-                "adtoolbox_singularity": self.config.adtoolbox_singularity,
-            }
-            if container == "docker":
-                self.config.adtoolbox_docker = image
-            elif container in {"singularity", "apptainer"}:
-                self.config.adtoolbox_singularity = image
-        script = ""
-        try:
-            script += create_mmseqs_database(query_seq,str(path_query.parent/path_query.name.split(".")[0]),container=container,save=None,run=False,config=self.config)+"\n"
-            script += mmseqs_search(
-                query_db=str(path_query.parent/path_query.name.split(".")[0]),
-                target_db=self.config.protein_db_mmseqs,
-                results_db=path_query.parent/alignment_file_name,
-                run=False,
-                save=None,
-                container=container,
-                config=self.config,
-            )+"\n"
-            script += mmseqs_result_db_to_tsv(
-                query_db=str(path_query.parent/path_query.name.split(".")[0]),
-                target_db=self.config.protein_db_mmseqs,
-                results_db=path_query.parent/alignment_file_name,
-                tsv_file=path_query.parent/(alignment_file_name+".tsv"),
-                container=container,
-                save=None,
-                run=False,
-                config=self.config,
-            )+"\n"
-        finally:
-            for key, value in old_image_values.items():
-                setattr(self.config, key, value)
-        return script,path_query.parent/(alignment_file_name+".tsv")
+        if isinstance(query_seq, (str, os.PathLike)):
+            query_paths = [pathlib.Path(query_seq)]
+        else:
+            query_paths = [pathlib.Path(path) for path in query_seq if path is not None]
+        if not query_paths:
+            raise ValueError("At least one shotgun read file is required")
+
+        work_path = pathlib.Path(output_dir) if output_dir else query_paths[0].parent
+        work_path.mkdir(parents=True, exist_ok=True)
+        alignment_stem = pathlib.Path(str(alignment_file_name)).name
+        if alignment_stem.endswith(".tsv"):
+            alignment_stem = alignment_stem[:-4]
+        alignment_path = work_path / f"{alignment_stem}.tsv"
+        run_path = work_path / "mmseqs_work"
+        query_db = run_path / "query"
+        result_db = run_path / "result"
+        tmp_dir = run_path / "tmp"
+
+        shared_target = pathlib.Path(self.config.protein_db_mmseqs)
+        protein_fasta = pathlib.Path(self.config.protein_db)
+        if shared_target.exists():
+            target_db = shared_target
+            build_target_command = None
+        elif protein_fasta.exists():
+            target_db = run_path / "target"
+            build_target_command = " ".join(
+                self._quote(value)
+                for value in ["mmseqs", "createdb", protein_fasta, target_db]
+            )
+        else:
+            raise FileNotFoundError(
+                "Neither the MMseqs protein database nor its source FASTA was found. "
+                f"Expected {shared_target} or {protein_fasta}."
+            )
+
+        commands = [
+            "set -e",
+            f"rm -f {self._quote(alignment_path)}",
+            f"rm -rf {self._quote(run_path)}",
+            f"mkdir -p {self._quote(run_path)} {self._quote(tmp_dir)}",
+        ]
+        if build_target_command:
+            commands.append(build_target_command)
+        commands.append(
+            " ".join(
+                self._quote(value)
+                for value in ["mmseqs", "createdb", *query_paths, query_db]
+            )
+        )
+        search_args = [
+            "mmseqs",
+            "search",
+            query_db,
+            target_db,
+            result_db,
+            tmp_dir,
+            "--threads",
+            max(1, int(threads)),
+            "--search-type",
+            int(search_type),
+        ]
+        if sensitivity is not None:
+            search_args.extend(["-s", float(sensitivity)])
+        commands.append(" ".join(self._quote(value) for value in search_args))
+        commands.append(
+            " ".join(
+                self._quote(value)
+                for value in [
+                    "mmseqs",
+                    "convertalis",
+                    query_db,
+                    target_db,
+                    result_db,
+                    alignment_path,
+                    "--format-mode",
+                    "4",
+                ]
+            )
+        )
+        commands.append(
+            f"test -s {self._quote(alignment_path)} || "
+            "{ echo 'MMseqs shotgun alignment output is missing or empty' >&2; exit 1; }"
+        )
+        if not keep_work:
+            commands.append(f"rm -rf {self._quote(run_path)}")
+        script = self._wrap_external_command(
+            "\n".join(commands),
+            container=container,
+            mounts=[*query_paths, work_path, shared_target.parent, protein_fasta.parent],
+            image=image,
+        )
+        return script + "\n", str(alignment_path)
     
     def extract_ec_from_alignment(self,alignment_file:str)->dict[str,int]:
         r"""
@@ -3281,6 +3318,8 @@ fi
         quality_trim: str = "none",
         quality_window_size: int = 4,
         quality_mean: int | None = None,
+        min_reads_for_denoising: int = 1,
+        allow_single_end_fallback: bool = True,
         threads: int = 1,
         container: str = "None",
         image: str | None = None,
@@ -3289,8 +3328,17 @@ fi
         output_path.mkdir(parents=True, exist_ok=True)
         trimmed_1 = output_path / f"{sample_name}_trimmed_R1.fastq.gz"
         trimmed_2 = output_path / f"{sample_name}_trimmed_R2.fastq.gz" if read_2 else None
+        read_layout = output_path / "read-layout.txt"
+        read_selection = output_path / "read-selection.json"
+        minimum_reads = int(min_reads_for_denoising)
+        if minimum_reads < 1:
+            raise ValueError("min_reads_for_denoising must be at least 1")
 
         report_prefix = output_path / f"{sample_name}_fastp"
+        paired_trimmed_1 = output_path / f"{sample_name}_paired_R1.fastq.gz" if read_2 else trimmed_1
+        paired_trimmed_2 = output_path / f"{sample_name}_paired_R2.fastq.gz" if read_2 else None
+        unpaired_1 = output_path / f"{sample_name}_unpaired_R1.fastq.gz" if read_2 else None
+        unpaired_2 = output_path / f"{sample_name}_unpaired_R2.fastq.gz" if read_2 else None
         args = [
             "fastp",
             "-w",
@@ -3300,7 +3348,7 @@ fi
             "-i",
             str(read_1),
             "-o",
-            str(trimmed_1),
+            str(paired_trimmed_1),
             "--json",
             str(report_prefix.with_suffix(".json")),
             "--html",
@@ -3312,7 +3360,11 @@ fi
                     "-I",
                     str(read_2),
                     "-O",
-                    str(trimmed_2),
+                    str(paired_trimmed_2),
+                    "--unpaired1",
+                    str(unpaired_1),
+                    "--unpaired2",
+                    str(unpaired_2),
                 ]
             )
             if not adapter_1 and not adapter_2:
@@ -3338,20 +3390,82 @@ fi
         if adapter_2 and read_2:
             args.extend(["--adapter_sequence_r2", adapter_2])
 
-        command = " ".join(self._quote(arg) for arg in args)
+        cleanup_paths = [trimmed_1, read_layout, read_selection]
+        if trimmed_2:
+            cleanup_paths.extend([trimmed_2, paired_trimmed_1, paired_trimmed_2, unpaired_1, unpaired_2])
+        commands = ["rm -f " + " ".join(self._quote(path) for path in cleanup_paths)]
+        commands.append(" ".join(self._quote(arg) for arg in args))
+        commands.extend(
+            [
+                "fastq_read_count() {",
+                "  fastq_path=$1",
+                "  if [ ! -s \"$fastq_path\" ]; then printf '0\\n'; return; fi",
+                "  case \"$fastq_path\" in",
+                "    *.gz) gzip -cd -- \"$fastq_path\" ;;",
+                "    *) cat -- \"$fastq_path\" ;;",
+                "  esac | awk 'END { print int(NR / 4) }'",
+                "}",
+            ]
+        )
+        if trimmed_2:
+            commands.extend(
+                [
+                    f"paired_reads=$(fastq_read_count {self._quote(paired_trimmed_1)})",
+                    f"unpaired_r1_reads=$(fastq_read_count {self._quote(unpaired_1)})",
+                    f"unpaired_r2_reads=$(fastq_read_count {self._quote(unpaired_2)})",
+                    f"if [ \"$paired_reads\" -ge {minimum_reads} ]; then",
+                    f"  mv {self._quote(paired_trimmed_1)} {self._quote(trimmed_1)}",
+                    f"  mv {self._quote(paired_trimmed_2)} {self._quote(trimmed_2)}",
+                    f"  printf 'paired\\n' > {self._quote(read_layout)}",
+                    f"  printf '{{\"layout\":\"paired\",\"paired_reads\":%s,\"single_end_r1_reads\":%s,\"unpaired_r2_reads\":%s,\"minimum_reads\":{minimum_reads},\"fallback_enabled\":{str(bool(allow_single_end_fallback)).lower()}}}\\n' \"$paired_reads\" \"$((paired_reads + unpaired_r1_reads))\" \"$unpaired_r2_reads\" > {self._quote(read_selection)}",
+                    f"elif {str(bool(allow_single_end_fallback)).lower()} && [ \"$((paired_reads + unpaired_r1_reads))\" -ge {minimum_reads} ]; then",
+                    f"  cat {self._quote(paired_trimmed_1)} {self._quote(unpaired_1)} > {self._quote(trimmed_1)}",
+                    f"  rm -f {self._quote(trimmed_2)}",
+                    f"  printf 'single_end_r1\\n' > {self._quote(read_layout)}",
+                    f"  printf '{{\"layout\":\"single_end_r1\",\"paired_reads\":%s,\"single_end_r1_reads\":%s,\"unpaired_r2_reads\":%s,\"minimum_reads\":{minimum_reads},\"fallback_enabled\":true}}\\n' \"$paired_reads\" \"$((paired_reads + unpaired_r1_reads))\" \"$unpaired_r2_reads\" > {self._quote(read_selection)}",
+                    "  echo \"fastp paired output retained $paired_reads read pairs; using $((paired_reads + unpaired_r1_reads)) valid R1 reads in single-end fallback\"",
+                    "else",
+                    f"  printf '{{\"layout\":\"unusable\",\"paired_reads\":%s,\"single_end_r1_reads\":%s,\"unpaired_r2_reads\":%s,\"minimum_reads\":{minimum_reads},\"fallback_enabled\":{str(bool(allow_single_end_fallback)).lower()}}}\\n' \"$paired_reads\" \"$((paired_reads + unpaired_r1_reads))\" \"$unpaired_r2_reads\" > {self._quote(read_selection)}",
+                    f"  echo \"fastp retained fewer than {minimum_reads} usable paired or R1-only reads\" >&2",
+                    "  exit 64",
+                    "fi",
+                    "rm -f " + " ".join(self._quote(path) for path in [paired_trimmed_1, paired_trimmed_2, unpaired_1, unpaired_2]),
+                ]
+            )
+        else:
+            commands.extend(
+                [
+                    f"single_reads=$(fastq_read_count {self._quote(trimmed_1)})",
+                    f"if [ \"$single_reads\" -lt {minimum_reads} ]; then",
+                    f"  printf '{{\"layout\":\"unusable\",\"single_end_r1_reads\":%s,\"minimum_reads\":{minimum_reads},\"fallback_enabled\":false}}\\n' \"$single_reads\" > {self._quote(read_selection)}",
+                    f"  echo \"fastp retained fewer than {minimum_reads} usable single-end reads\" >&2",
+                    "  exit 64",
+                    "fi",
+                    f"printf 'single_end_r1\\n' > {self._quote(read_layout)}",
+                    f"printf '{{\"layout\":\"single_end_r1\",\"single_end_r1_reads\":%s,\"minimum_reads\":{minimum_reads},\"fallback_enabled\":false}}\\n' \"$single_reads\" > {self._quote(read_selection)}",
+                ]
+            )
+        command = "\n".join(commands)
         script = self._wrap_external_command(
             command,
             container=container,
             mounts=[read_1, read_2, output_path],
             image=image,
         )
-        return script + "\n", {"read_1": str(trimmed_1), "read_2": str(trimmed_2) if trimmed_2 else None}
+        return script + "\n", {
+            "read_1": str(trimmed_1),
+            "read_2": str(trimmed_2) if trimmed_2 else None,
+            "read_layout": str(read_layout),
+            "read_selection": str(read_selection),
+        }
 
     def _build_dada2_amplicon_features(
         self,
         *,
         read_1: str | os.PathLike,
         read_2: str | os.PathLike | None,
+        read_layout: str | os.PathLike | None,
+        read_selection: str | os.PathLike | None,
         primer_detection_read_1: str | os.PathLike | None,
         primer_detection_read_2: str | os.PathLike | None,
         output_path: pathlib.Path,
@@ -3422,6 +3536,8 @@ fi
                 "mode": primer_mode,
                 "read_1": str(read_1),
                 "read_2": str(read_2) if read_2 else None,
+                "read_layout": str(read_layout) if read_layout else None,
+                "read_selection": str(read_selection) if read_selection else None,
                 "detection_read_1": str(primer_detection_read_1 or read_1),
                 "detection_read_2": str(primer_detection_read_2 or read_2) if read_2 else None,
                 "selection": primer_info,
@@ -3437,11 +3553,15 @@ fi
         rep_seqs = output_path / "rep-seqs.fasta"
         feature_table = output_path / "feature-table.tsv"
         r_script = output_path / f"{sample_name}_dada2.R"
+        single_r_script = output_path / f"{sample_name}_dada2_single.R" if read_2 and read_layout else None
+        dynamic_single_fallback = single_r_script is not None
 
         if primer_mode == "none":
             dada2_input_1 = pathlib.Path(read_1)
             dada2_input_2 = pathlib.Path(read_2) if read_2 else None
             cutadapt_command = ""
+            single_cutadapt_command = ""
+            single_dada2_input_1 = dada2_input_1
         else:
             cutadapt_args = [
                 "cutadapt",
@@ -3478,6 +3598,30 @@ fi
             cutadapt_command = " ".join(self._quote(value) for value in cutadapt_args)
             dada2_input_1 = primer_trimmed_1
             dada2_input_2 = primer_trimmed_2
+            single_dada2_input_1 = primer_trimmed_1
+            single_cutadapt_args = [
+                "cutadapt",
+                "--cores",
+                str(threads),
+                "--error-rate",
+                str(cutadapt_error_rate),
+                "--overlap",
+                str(max(8, int(len(str(forward_primer))) // 2)),
+                "--minimum-length",
+                str(minimum_length),
+                "--json",
+                str(cutadapt_report),
+                "-g",
+                str(forward_primer),
+                "-o",
+                str(primer_trimmed_1),
+            ]
+            if discard_untrimmed:
+                single_cutadapt_args.append("--discard-untrimmed")
+            single_cutadapt_args.append(str(read_1))
+            single_cutadapt_command = " ".join(
+                self._quote(value) for value in single_cutadapt_args
+            )
 
         r_string = lambda value: json.dumps(str(value))
         paired = bool(read_2)
@@ -3558,18 +3702,66 @@ fi
             r_lines.extend(
                 [
                     "track <- data.frame(sample=sample_name, input=filter_stats[, 1], filtered=filter_stats[, 2], "
-                    "denoised_forward=denoised_f_n, denoised_reverse=denoised_r_n, merged=merged_n, nonchimeric=sum(seqtab_final))",
+                    "denoised_forward=denoised_f_n, denoised_reverse=denoised_r_n, merged=merged_n, "
+                    "nonchimeric=sum(seqtab_final), layout='paired')",
                 ]
             )
         else:
             r_lines.extend(
                 [
                     "track <- data.frame(sample=sample_name, input=filter_stats[, 1], filtered=filter_stats[, 2], "
-                    "denoised_forward=denoised_f_n, nonchimeric=sum(seqtab_final))",
+                    "denoised_forward=denoised_f_n, nonchimeric=sum(seqtab_final), layout='single_end_r1')",
                 ]
             )
         r_lines.append("write.table(track, stats_path, sep='\\t', quote=FALSE, row.names=FALSE, col.names=TRUE)")
         r_script.write_text("\n".join(r_lines) + "\n")
+
+        if single_r_script:
+            single_r_lines = [
+                "suppressPackageStartupMessages(library(dada2))",
+                "suppressPackageStartupMessages(library(digest))",
+                f"sample_name <- {r_string(sample_name)}",
+                f"threads <- {int(threads)}",
+                f"input_f <- {r_string(single_dada2_input_1)}",
+                f"filtered_f <- {r_string(dada2_filtered_1)}",
+                f"feature_table <- {r_string(feature_table)}",
+                f"rep_seqs <- {r_string(rep_seqs)}",
+                f"stats_path <- {r_string(dada2_stats)}",
+                "quit_no_features <- function(message) { write(message, stderr()); quit(save='no', status=64) }",
+                "filter_stats <- filterAndTrim(input_f, filtered_f, maxN=0, "
+                f"maxEE={float(maxee)}, truncQ=2, minLen={int(minimum_length)}, "
+                "rm.phix=TRUE, compress=TRUE, multithread=threads, verbose=TRUE)",
+                "if (sum(filter_stats[, 2]) == 0) quit_no_features('DADA2 filtering retained no single-end R1 reads')",
+                "err_f <- learnErrors(filtered_f, multithread=threads, randomize=TRUE)",
+                "derep_f <- derepFastq(c(filtered_f), verbose=TRUE)",
+                "names(derep_f) <- sample_name",
+                "dada_f <- dada(derep_f, err=err_f, multithread=threads)",
+                "seqtab <- makeSequenceTable(dada_f)",
+                "get_n <- function(x) sum(getUniques(x))",
+                "denoised_f_n <- sapply(dada_f, get_n)",
+                "if (ncol(seqtab) == 0 || sum(seqtab) == 0) quit_no_features('DADA2 produced no inferred single-end ASVs')",
+            ]
+            if chimera_filter:
+                single_r_lines.append(
+                    "seqtab_final <- removeBimeraDenovo(seqtab, method='consensus', multithread=threads, verbose=TRUE)"
+                )
+            else:
+                single_r_lines.append("seqtab_final <- seqtab")
+            single_r_lines.extend(
+                [
+                    "if (ncol(seqtab_final) == 0 || sum(seqtab_final) == 0) quit_no_features('DADA2 produced no non-chimeric single-end ASVs')",
+                    "sequences <- colnames(seqtab_final)",
+                    "feature_ids <- vapply(sequences, function(sequence) paste0('ASV_', digest(sequence, algo='sha1', serialize=FALSE)), character(1))",
+                    "feature_frame <- data.frame(feature_ids, as.integer(seqtab_final[1, ]), check.names=FALSE)",
+                    "names(feature_frame) <- c('#OTU ID', sample_name)",
+                    "write.table(feature_frame, feature_table, sep='\\t', quote=FALSE, row.names=FALSE, col.names=TRUE)",
+                    "writeLines(as.vector(rbind(paste0('>', feature_ids), sequences)), rep_seqs)",
+                    "track <- data.frame(sample=sample_name, input=filter_stats[, 1], filtered=filter_stats[, 2], "
+                    "denoised_forward=denoised_f_n, nonchimeric=sum(seqtab_final), layout='single_end_r1')",
+                    "write.table(track, stats_path, sep='\\t', quote=FALSE, row.names=FALSE, col.names=TRUE)",
+                ]
+            )
+            single_r_script.write_text("\n".join(single_r_lines) + "\n")
 
         cleanup_targets = [feature_table, rep_seqs, dada2_stats, dada2_filtered_1]
         if dada2_filtered_2:
@@ -3587,10 +3779,33 @@ fi
             ]
         )
         if cutadapt_command:
-            commands.append(cutadapt_command)
+            if dynamic_single_fallback:
+                commands.extend(
+                    [
+                        f"if [ -s {self._quote(read_layout)} ] && [ \"$(head -n 1 {self._quote(read_layout)})\" = 'single_end_r1' ]; then",
+                        f"  {single_cutadapt_command}",
+                        "else",
+                        f"  {cutadapt_command}",
+                        "fi",
+                    ]
+                )
+            else:
+                commands.append(cutadapt_command)
+        if dynamic_single_fallback:
+            commands.extend(
+                [
+                    f"if [ -s {self._quote(read_layout)} ] && [ \"$(head -n 1 {self._quote(read_layout)})\" = 'single_end_r1' ]; then",
+                    f"  echo 'Running Cutadapt/DADA2 in automatic single-end R1 fallback mode'",
+                    f"  Rscript {self._quote(single_r_script)}",
+                    "else",
+                    f"  Rscript {self._quote(r_script)}",
+                    "fi",
+                ]
+            )
+        else:
+            commands.append(f"Rscript {self._quote(r_script)}")
         commands.extend(
             [
-                f"Rscript {self._quote(r_script)}",
                 f"test -s {self._quote(rep_seqs)} || {{ echo 'DADA2 representative FASTA is empty' >&2; exit 64; }}",
                 f"awk 'NR > 1 {{ found=1 }} END {{ exit(found ? 0 : 64) }}' {self._quote(feature_table)}",
             ]
@@ -3602,6 +3817,9 @@ fi
             "detected_primers": str(primer_manifest),
             "cutadapt_report": str(cutadapt_report) if cutadapt_command else None,
             "dada2_script": str(r_script),
+            "dada2_single_end_script": str(single_r_script) if single_r_script else None,
+            "read_layout": str(read_layout) if read_layout else None,
+            "read_selection": str(read_selection) if read_selection else None,
         }
 
     def build_amplicon_features(
@@ -3609,6 +3827,8 @@ fi
         *,
         read_1: str | os.PathLike,
         read_2: str | os.PathLike | None,
+        read_layout: str | os.PathLike | None = None,
+        read_selection: str | os.PathLike | None = None,
         primer_detection_read_1: str | os.PathLike | None = None,
         primer_detection_read_2: str | os.PathLike | None = None,
         output_dir: str | os.PathLike,
@@ -3643,6 +3863,8 @@ fi
             command, artifacts = self._build_dada2_amplicon_features(
                 read_1=read_1,
                 read_2=read_2,
+                read_layout=read_layout,
+                read_selection=read_selection,
                 primer_detection_read_1=primer_detection_read_1,
                 primer_detection_read_2=primer_detection_read_2,
                 output_path=output_path,
@@ -3666,7 +3888,7 @@ fi
             script = self._wrap_external_command(
                 command,
                 container=container,
-                mounts=[read_1, read_2, output_path, primer_catalog],
+                mounts=[read_1, read_2, read_layout, read_selection, output_path, primer_catalog],
                 image=image,
             )
             return script + "\n", artifacts
@@ -3817,6 +4039,7 @@ fi
         adapter_2: str | None = None,
         minimum_length: int = 100,
         quality_cutoff: str | int | None = None,
+        enable_single_end_fallback: bool = True,
         container: str = "None",
         execute: bool = False,
         verbose: bool = True,
@@ -3833,6 +4056,14 @@ fi
         step_name = "trim_reads"
         settings = self._step_settings(execution_profile, step_name).get("settings", {})
         step_container = self._step_container(execution_profile, step_name, container)
+        allow_single_end_fallback = enable_single_end_fallback and PipelineTaskManager._truthy(
+            settings.get("allow_single_end_fallback", True)
+        )
+        minimum_reads = (
+            int(settings.get("min_reads_for_denoising", 1))
+            if enable_single_end_fallback
+            else 1
+        )
         script, trimmed_reads = self.trim_amplicon_reads(
             read_1=read_1,
             read_2=read_2,
@@ -3851,6 +4082,8 @@ fi
                 if settings.get("quality_mean") is not None
                 else None
             ),
+            min_reads_for_denoising=minimum_reads,
+            allow_single_end_fallback=allow_single_end_fallback,
             threads=int(settings.get("threads", self._step_settings(execution_profile, step_name).get("cpus", 1))),
             container=step_container,
             image=self._step_image(execution_profile, step_name, step_container),
@@ -4012,6 +4245,8 @@ fi"""
         output_dir: str | os.PathLike,
         read_1: str | os.PathLike,
         read_2: str | os.PathLike | None = None,
+        read_layout: str | os.PathLike | None = None,
+        read_selection: str | os.PathLike | None = None,
         primer_detection_read_1: str | os.PathLike | None = None,
         primer_detection_read_2: str | os.PathLike | None = None,
         step_output_dir: str | os.PathLike | None = None,
@@ -4041,6 +4276,8 @@ fi"""
         script, feature_artifacts = self.build_amplicon_features(
             read_1=read_1,
             read_2=read_2,
+            read_layout=read_layout,
+            read_selection=read_selection,
             primer_detection_read_1=primer_detection_read_1,
             primer_detection_read_2=primer_detection_read_2,
             output_dir=step_output,
@@ -4092,7 +4329,8 @@ fi"""
         *,
         sample_name: str,
         output_dir: str | os.PathLike,
-        reads: str | os.PathLike,
+        reads: str | os.PathLike | Iterable[str | os.PathLike],
+        step_output_dir: str | os.PathLike | None = None,
         container: str = "None",
         execute: bool = False,
         verbose: bool = True,
@@ -4105,25 +4343,34 @@ fi"""
         logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
         step_name = "align_short_reads"
+        step_settings = self._step_settings(execution_profile, step_name)
+        settings = step_settings.get("settings", {})
         step_container = self._step_container(execution_profile, step_name, container)
-        old_settings = self._apply_step_config_settings(execution_profile, step_name)
-        try:
-            script, alignment_path = self.align_short_reads_to_protein_db(
-                str(reads),
-                f"{sample_name}_mmseq",
-                container=step_container,
-                image=self._step_image(execution_profile, step_name, step_container),
-            )
-        finally:
-            self._restore_config_settings(old_settings)
+        alignment_dir = pathlib.Path(step_output_dir) if step_output_dir else sample_dir / "scratch" / "shotgun_alignment"
+        script, alignment_path = self.align_short_reads_to_protein_db(
+            reads,
+            f"{sample_name}_mmseq",
+            container=step_container,
+            image=self._step_image(execution_profile, step_name, step_container),
+            output_dir=alignment_dir,
+            threads=int(settings.get("threads", step_settings.get("cpus", 1))),
+            search_type=int(settings.get("search_type", 2)),
+            sensitivity=(
+                float(settings["sensitivity"])
+                if settings.get("sensitivity") is not None
+                else None
+            ),
+            keep_work=PipelineTaskManager._truthy(settings.get("keep_work", False)),
+        )
         artifact = self._execute_step(
             script,
             step_name=step_name,
             sample_name=sample_name,
-            output_dir=sample_dir,
+            output_dir=alignment_dir.parent,
             logger=logger,
             execute=execute,
             execution_profile=execution_profile,
+            dependencies=dependencies,
         )
         return {
             "sample_name": sample_name,
@@ -4273,6 +4520,11 @@ fi"""
         preprocess_path.mkdir(parents=True, exist_ok=True)
         logger = self._sample_pipeline_logger(sample_name, output_path, verbose=verbose)
         execution_profile = self._load_execution_profile(execution_profile)
+        feature_denoiser = str(
+            self._step_settings(execution_profile, "build_amplicon_features")
+            .get("settings", {})
+            .get("denoiser", "vsearch")
+        ).lower()
         result = {
             "sample_name": sample_name,
             "output_dir": str(output_path),
@@ -4292,6 +4544,7 @@ fi"""
             adapter_2=adapter_2,
             minimum_length=minimum_length,
             quality_cutoff=quality_cutoff,
+            enable_single_end_fallback=feature_denoiser == "dada2",
             container=container,
             execute=execute,
             verbose=verbose,
@@ -4306,6 +4559,8 @@ fi"""
             output_dir=output_dir,
             read_1=trimmed_reads["read_1"],
             read_2=trimmed_reads["read_2"],
+            read_layout=trimmed_reads["read_layout"],
+            read_selection=trimmed_reads["read_selection"],
             primer_detection_read_1=read_1,
             primer_detection_read_2=read_2,
             step_output_dir=preprocess_path,
@@ -4354,7 +4609,7 @@ fi"""
         *,
         mode: str,
         alignment_file: str | os.PathLike | None = None,
-        reads: str | os.PathLike | None = None,
+        reads: str | os.PathLike | Iterable[str | os.PathLike] | None = None,
         read_1: str | os.PathLike | None = None,
         read_2: str | os.PathLike | None = None,
         genome_abundances: str | os.PathLike | dict[str, float] | None = None,
@@ -4407,34 +4662,34 @@ fi"""
             if alignment_file is None:
                 raise ValueError("alignment_file is required for shotgun-alignment mode")
             logger.info("Converting shotgun alignment to EC counts and COD profile")
+            result["artifacts"]["alignment_file"] = str(alignment_file)
             ec_counts = self.extract_ec_from_alignment(str(alignment_file))
             cod_profile = self.cod_from_ec_counts(ec_counts, normalize=normalize)
             result["artifacts"]["ec_counts"] = self._write_tall_mapping(output_path / "ec_counts.csv", ec_counts, sample_name=sample_name, key_name="ec", value_name="count", value_dtype=pl.Int64)
             result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         elif mode == "shotgun-reads":
-            if reads is None:
-                raise ValueError("reads is required for shotgun-reads mode")
+            shotgun_reads = reads
+            if shotgun_reads is None and read_1 is not None:
+                shotgun_reads = [path for path in (read_1, read_2) if path is not None]
+            if shotgun_reads is None:
+                raise ValueError("reads or read_1 is required for shotgun-reads mode")
             logger.info("Aligning shotgun reads to protein database")
             step_name = "align_short_reads"
-            old_settings = self._apply_step_config_settings(execution_profile, step_name)
-            try:
-                script, alignment_path = self.align_short_reads_to_protein_db(
-                    str(reads),
-                    f"{sample_name}_mmseq",
-                    container=self._step_container(execution_profile, step_name, container),
-                )
-            finally:
-                self._restore_config_settings(old_settings)
-            result["artifacts"][step_name] = self._execute_step(
-                script,
-                step_name=step_name,
+            alignment_result = self.run_short_read_alignment_step(
                 sample_name=sample_name,
-                output_dir=scratch_path,
-                logger=logger,
+                output_dir=output_dir,
+                reads=shotgun_reads,
+                step_output_dir=scratch_path / "shotgun_alignment",
+                container=container,
                 execute=execute,
+                verbose=verbose,
                 execution_profile=execution_profile,
+                dependencies=dependencies,
             )
+            result["artifacts"][step_name] = alignment_result["artifacts"][step_name]
+            alignment_path = alignment_result["artifacts"]["alignment_file"]
+            result["artifacts"]["alignment_file"] = str(alignment_path)
             if not pathlib.Path(alignment_path).exists():
                 logger.info("Alignment output is not available yet: %s", alignment_path)
                 cod_profile = {}
@@ -4782,11 +5037,491 @@ fi"""
             logger.info("Finished sample COD pipeline: %s", sample_name)
         return result
 
+    def _batch_shotgun_sample_to_cod(
+        self,
+        *,
+        manifest: str | os.PathLike,
+        output_dir: str | os.PathLike,
+        input_type: str | None,
+        sra_dir: str | os.PathLike | None,
+        stage: str,
+        adapter_1: str | None,
+        adapter_2: str | None,
+        minimum_length: int,
+        quality_cutoff: str | int | None,
+        container: str,
+        execute: bool,
+        normalize: bool,
+        verbose: bool,
+        sample_workers: int,
+        execution_profile: str | os.PathLike | dict | None,
+    ) -> dict:
+        """Run the resumable SRA/FASTQ shotgun-to-COD sample chains."""
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        rows = self._read_sample_manifest(manifest)
+        workflow = MetagenomicsWorkflowState(output_path)
+        execution_profile_data = self._load_execution_profile(execution_profile)
+        results = {
+            "manifest": str(manifest),
+            "assay": "shotgun",
+            "output_dir": str(output_path),
+            "stage": stage,
+            "execute": execute,
+            "workflow_state": str(workflow.state_path),
+            "workflow_events": str(workflow.events_path),
+            "samples": {},
+        }
+
+        def csv_has_rows(path: str | os.PathLike) -> bool:
+            path = pathlib.Path(path)
+            if not path.exists():
+                return False
+            try:
+                return pl.read_csv(path, infer_schema_length=0).height > 0
+            except Exception:
+                return False
+
+        def reads_ready(read_1: str | os.PathLike, read_2: str | os.PathLike | None) -> bool:
+            paths = [pathlib.Path(read_1)]
+            if read_2 is not None:
+                paths.append(pathlib.Path(read_2))
+            return all(path.exists() and path.stat().st_size > 0 for path in paths)
+
+        def reads_signature(read_paths: Iterable[str | os.PathLike]) -> str:
+            digest = hashlib.sha256()
+            for path in [pathlib.Path(value) for value in read_paths]:
+                stat = path.stat()
+                digest.update(str(path.resolve()).encode())
+                digest.update(str(stat.st_size).encode())
+                digest.update(str(stat.st_mtime_ns).encode())
+            return digest.hexdigest()
+
+        def matching_signature(path: pathlib.Path, signature: str) -> dict | None:
+            if not path.exists():
+                return None
+            try:
+                payload = json.loads(path.read_text())
+            except (OSError, ValueError, AttributeError):
+                return None
+            return payload if payload.get("shotgun_input_sha256") == signature else None
+
+        def process_row(row: dict) -> None:
+            accession = self._row_value(row, "accession", "sra", "run")
+            read_1 = self._row_value(row, "read_1", "read1", "forward", "fastq_1", "fastq1")
+            read_2 = self._row_value(row, "read_2", "read2", "reverse", "fastq_2", "fastq2")
+            if input_type == "sra" and not accession:
+                raise ValueError(f"Sample row {row} needs an accession when input_type='sra'")
+            if input_type == "reads" and not read_1:
+                raise ValueError(f"Sample row {row} needs read_1 when input_type='reads'")
+
+            sample_name = self._row_value(row, "sample_name", "sample", "name")
+            if sample_name is None:
+                if accession:
+                    sample_name = accession
+                elif read_1:
+                    sample_name = pathlib.Path(read_1).name.split(".")[0]
+                else:
+                    raise ValueError("Each manifest row must include sample/sample_name, accession, or read_1")
+            paired = self._row_bool(row, "paired", default=read_2 is not None or accession is not None)
+            if input_type == "reads" and paired and read_2 is None:
+                raise ValueError(
+                    f"Shotgun sample {sample_name} is marked paired but does not provide read_2"
+                )
+
+            sample_dir = output_path / sample_name
+            scratch_dir = sample_dir / "scratch"
+            preprocess_dir = scratch_dir / "shotgun_preprocess"
+            alignment_dir = scratch_dir / "shotgun_alignment"
+            trimmed_read_1 = str(preprocess_dir / f"{sample_name}_trimmed_R1.fastq.gz")
+            trimmed_read_2 = (
+                str(preprocess_dir / f"{sample_name}_trimmed_R2.fastq.gz")
+                if paired
+                else None
+            )
+            canonical_alignment = alignment_dir / f"{sample_name}_mmseq.tsv"
+            signature_path = scratch_dir / "shotgun_downstream_inputs.json"
+            cod_profile_path = sample_dir / "cod_profile.csv"
+            sample_result = {
+                "input": dict(row),
+                "assay": "shotgun",
+                "artifacts": {},
+                "stages": {},
+            }
+            sample_dependencies: list[dict] = []
+            logger = self._sample_pipeline_logger(sample_name, sample_dir, verbose=verbose)
+            slurm_checker = PipelineTaskManager(
+                sample_name=sample_name,
+                output_dir=sample_dir,
+                execution_profile=execution_profile_data,
+                logger=logger,
+            )
+
+            def record_stage(
+                stage_name: str,
+                status_value: str,
+                *,
+                artifact: dict | None = None,
+                message: str | None = None,
+                paths: dict | None = None,
+            ) -> dict:
+                entry = workflow.record(
+                    sample_name,
+                    stage_name,
+                    status_value,
+                    artifact=artifact,
+                    message=message,
+                    paths=paths,
+                )
+                sample_result["stages"][stage_name] = entry
+                return entry
+
+            def active(stage_name: str) -> bool:
+                return workflow.active_submission(
+                    sample_name,
+                    stage_name,
+                    slurm_checker=slurm_checker,
+                )
+
+            def fail_sample(stage_name: str, error: Exception) -> None:
+                message = str(error)
+                logger.error(
+                    "Shotgun sample pipeline failed after retries: sample=%s stage=%s error=%s",
+                    sample_name,
+                    stage_name,
+                    message,
+                )
+                sample_result["status"] = "failed"
+                sample_result["error"] = {"stage": stage_name, "message": message}
+                record_stage(stage_name, "failed", message=message)
+                results["samples"][sample_name] = sample_result
+
+            if accession and not read_1:
+                target_sra_dir = pathlib.Path(sra_dir) if sra_dir else output_path / "sra"
+                try:
+                    resolved_reads = self._resolved_sra_reads(
+                        accession,
+                        target_sra_dir,
+                        paired=paired,
+                    )
+                    read_1 = resolved_reads["read_1"]
+                    read_2 = resolved_reads["read_2"]
+                    record_stage(
+                        "download_sra",
+                        "completed",
+                        message="cached FASTQ files found",
+                        paths=resolved_reads,
+                    )
+                except FileNotFoundError:
+                    pass
+
+            if accession and not read_1 and stage in {"download", "preprocess", "all"}:
+                if active("download_sra"):
+                    record_stage("download_sra", "submitted", message="download is already active")
+                    sample_result["status"] = "waiting_for_download"
+                    results["samples"][sample_name] = sample_result
+                    return
+                try:
+                    download_result = self.run_sra_download_step(
+                        sample_name=sample_name,
+                        output_dir=output_path,
+                        accession=accession,
+                        sra_dir=sra_dir,
+                        paired=paired,
+                        container=container,
+                        execute=execute,
+                        verbose=verbose,
+                        execution_profile=execution_profile_data,
+                    )
+                except Exception as error:
+                    fail_sample("download_sra", error)
+                    return
+                sample_result["artifacts"]["download_sra"] = download_result["artifacts"]
+                download_artifact = download_result["artifacts"]["download_sra"]
+                read_1 = download_result["artifacts"]["reads"]["read_1"]
+                read_2 = download_result["artifacts"]["reads"]["read_2"]
+                sample_dependencies = [download_artifact]
+                record_stage(
+                    "download_sra",
+                    download_artifact.get("status", "prepared"),
+                    artifact=download_artifact,
+                    paths=download_result["artifacts"]["reads"],
+                )
+                if not reads_ready(read_1, read_2):
+                    sample_result["status"] = "waiting_for_download"
+                    results["samples"][sample_name] = sample_result
+                    return
+
+            if stage == "download":
+                sample_result["status"] = (
+                    "completed"
+                    if read_1 and (not execute or pathlib.Path(read_1).exists())
+                    else "waiting_for_download"
+                )
+                results["samples"][sample_name] = sample_result
+                return
+
+            trim_ready = reads_ready(trimmed_read_1, trimmed_read_2)
+            if stage in {"preprocess", "all"}:
+                if trim_ready:
+                    record_stage(
+                        "trim_reads",
+                        "completed",
+                        message="cached trimmed shotgun reads found",
+                        paths={"read_1": trimmed_read_1, "read_2": trimmed_read_2},
+                    )
+                elif active("trim_reads"):
+                    record_stage("trim_reads", "submitted", message="trimming is already active")
+                    sample_result["status"] = "waiting_for_preprocess"
+                    results["samples"][sample_name] = sample_result
+                    return
+                elif read_1 and (not execute or pathlib.Path(read_1).exists()):
+                    try:
+                        trim_result = self.run_trim_reads_step(
+                            sample_name=sample_name,
+                            output_dir=output_path,
+                            read_1=read_1,
+                            read_2=read_2,
+                            step_output_dir=preprocess_dir,
+                            adapter_1=(
+                                self._row_value(row, "adapter_1", "adapter1") or adapter_1
+                            ),
+                            adapter_2=(
+                                self._row_value(row, "adapter_2", "adapter2") or adapter_2
+                            ),
+                            minimum_length=minimum_length,
+                            quality_cutoff=quality_cutoff,
+                            enable_single_end_fallback=False,
+                            container=container,
+                            execute=execute,
+                            verbose=verbose,
+                            execution_profile=execution_profile_data,
+                            dependencies=sample_dependencies,
+                        )
+                    except Exception as error:
+                        fail_sample("trim_reads", error)
+                        return
+                    sample_result["artifacts"]["trim_reads"] = trim_result["artifacts"]
+                    trim_artifact = trim_result["artifacts"]["trim_reads"]
+                    trimmed_read_1 = trim_result["artifacts"]["trimmed_reads"]["read_1"]
+                    trimmed_read_2 = trim_result["artifacts"]["trimmed_reads"]["read_2"]
+                    sample_dependencies = [trim_artifact]
+                    record_stage(
+                        "trim_reads",
+                        trim_artifact.get("status", "prepared"),
+                        artifact=trim_artifact,
+                        paths={"read_1": trimmed_read_1, "read_2": trimmed_read_2},
+                    )
+                    trim_ready = reads_ready(trimmed_read_1, trimmed_read_2)
+                    if not trim_ready:
+                        sample_result["status"] = "waiting_for_preprocess"
+                        results["samples"][sample_name] = sample_result
+                        return
+                else:
+                    record_stage(
+                        "trim_reads",
+                        "waiting",
+                        message="source FASTQ files are not available",
+                    )
+                    sample_result["status"] = "waiting_for_download"
+                    results["samples"][sample_name] = sample_result
+                    return
+
+            if stage == "preprocess":
+                sample_result["status"] = (
+                    "completed" if trim_ready else "waiting_for_preprocess"
+                )
+                results["samples"][sample_name] = sample_result
+                return
+
+            if not trim_ready:
+                record_stage(
+                    "trim_reads",
+                    "waiting",
+                    message="trimmed shotgun reads are not available",
+                    paths={"read_1": trimmed_read_1, "read_2": trimmed_read_2},
+                )
+                sample_result["status"] = "waiting_for_preprocess"
+                results["samples"][sample_name] = sample_result
+                return
+
+            shotgun_reads = [trimmed_read_1]
+            if trimmed_read_2:
+                shotgun_reads.append(trimmed_read_2)
+            input_signature = reads_signature(shotgun_reads)
+            signature_metadata = matching_signature(signature_path, input_signature)
+            row_alignment = self._row_value(
+                row,
+                "alignment_file",
+                "alignment",
+                "mmseqs_alignment",
+            )
+            alignment_path = pathlib.Path(row_alignment) if row_alignment else canonical_alignment
+            cached_alignment = (
+                alignment_path.exists()
+                and alignment_path.stat().st_size > 0
+                and (row_alignment is not None or signature_metadata is not None)
+            )
+
+            if csv_has_rows(cod_profile_path) and cached_alignment and signature_metadata is not None:
+                record_stage(
+                    "cod",
+                    "completed",
+                    message="cached shotgun COD profile found",
+                    paths={
+                        "alignment_file": str(alignment_path),
+                        "cod_profile": str(cod_profile_path),
+                    },
+                )
+                sample_result["status"] = "completed"
+                sample_result["artifacts"]["cod"] = {
+                    "alignment_file": str(alignment_path),
+                    "cod_profile": str(cod_profile_path),
+                }
+                results["samples"][sample_name] = sample_result
+                return
+
+            if not cached_alignment and active("align_short_reads"):
+                record_stage(
+                    "align_short_reads",
+                    "submitted",
+                    message="short-read alignment is already active",
+                )
+                sample_result["status"] = "waiting_for_alignment"
+                results["samples"][sample_name] = sample_result
+                return
+
+            try:
+                if cached_alignment:
+                    cod_result = self.sample_to_cod(
+                        sample_name=sample_name,
+                        output_dir=output_path,
+                        mode="shotgun-alignment",
+                        alignment_file=alignment_path,
+                        container=container,
+                        execute=execute,
+                        normalize=normalize,
+                        verbose=verbose,
+                        execution_profile=execution_profile_data,
+                    )
+                else:
+                    cod_result = self.sample_to_cod(
+                        sample_name=sample_name,
+                        output_dir=output_path,
+                        mode="shotgun-reads",
+                        reads=shotgun_reads,
+                        container=container,
+                        execute=execute,
+                        normalize=normalize,
+                        verbose=verbose,
+                        execution_profile=execution_profile_data,
+                        dependencies=sample_dependencies,
+                    )
+                    alignment_path = pathlib.Path(
+                        cod_result["artifacts"].get(
+                            "alignment_file",
+                            canonical_alignment,
+                        )
+                    )
+            except Exception as error:
+                fail_sample("align_short_reads", error)
+                return
+
+            sample_result["artifacts"]["cod"] = cod_result["artifacts"]
+            sample_result["cod_profile"] = cod_result.get("cod_profile", {})
+            alignment_artifact = cod_result["artifacts"].get("align_short_reads")
+            if isinstance(alignment_artifact, dict):
+                record_stage(
+                    "align_short_reads",
+                    alignment_artifact.get("status", "prepared"),
+                    artifact=alignment_artifact,
+                    paths={"alignment_file": str(alignment_path)},
+                )
+
+            if cod_result.get("status") == "waiting_for_alignment" or not alignment_path.exists():
+                sample_result["status"] = "waiting_for_alignment"
+                if "align_short_reads" not in sample_result["stages"]:
+                    record_stage(
+                        "align_short_reads",
+                        "waiting",
+                        message="MMseqs alignment output is not available",
+                    )
+                results["samples"][sample_name] = sample_result
+                return
+
+            if csv_has_rows(cod_profile_path):
+                self._write_json(
+                    signature_path,
+                    {
+                        "shotgun_input_sha256": input_signature,
+                        "reads": shotgun_reads,
+                        "alignment_file": str(alignment_path),
+                    },
+                )
+                sample_result["status"] = "completed"
+                record_stage(
+                    "cod",
+                    "completed",
+                    paths={
+                        "alignment_file": str(alignment_path),
+                        "ec_counts": str(sample_dir / "ec_counts.csv"),
+                        "cod_profile": str(cod_profile_path),
+                    },
+                )
+            else:
+                sample_result["status"] = "waiting_for_cod"
+                record_stage("cod", "waiting", message="COD profile was not produced")
+            results["samples"][sample_name] = sample_result
+
+        def safely_process_row(indexed_row: tuple[int, dict]) -> None:
+            row_index, row = indexed_row
+            try:
+                process_row(row)
+            except Exception as error:
+                sample_name = (
+                    self._row_value(row, "sample_name", "sample", "name", "accession", "sra", "run")
+                    or f"row_{row_index + 1}"
+                )
+                message = str(error)
+                logger = self._sample_pipeline_logger(
+                    sample_name,
+                    output_path / sample_name,
+                    verbose=verbose,
+                )
+                logger.error(
+                    "Shotgun sample input failed: sample=%s error=%s",
+                    sample_name,
+                    message,
+                )
+                stage_entry = workflow.record(
+                    sample_name,
+                    "input",
+                    "failed",
+                    message=message,
+                )
+                results["samples"][sample_name] = {
+                    "input": dict(row),
+                    "assay": "shotgun",
+                    "artifacts": {},
+                    "stages": {"input": stage_entry},
+                    "status": "failed",
+                    "error": {"stage": "input", "message": message},
+                }
+
+        with ThreadPoolExecutor(
+            max_workers=min(int(sample_workers), max(1, len(rows)))
+        ) as executor:
+            list(executor.map(safely_process_row, enumerate(rows)))
+
+        results["summary"] = self._write_json(output_path / "batch_summary.json", results)
+        return results
+
     def batch_sample_to_cod(
         self,
         *,
         manifest: str | os.PathLike,
         output_dir: str | os.PathLike,
+        assay: str = "amplicon",
         input_type: str | None = None,
         sra_dir: str | os.PathLike | None = None,
         stage: str = "all",
@@ -4812,7 +5547,7 @@ fi"""
         sample_workers: int = 4,
         execution_profile: str | os.PathLike | dict | None = None,
     ) -> dict:
-        """Run a manifest-driven batch of amplicon samples to COD artifacts.
+        """Run a manifest-driven batch of amplicon or shotgun samples.
 
         Manifest rows may provide either an SRA ``accession`` or FASTQ paths
         in ``read_1``/``read_2``. The ``stage`` argument can be ``download``,
@@ -4820,10 +5555,31 @@ fi"""
         """
         if stage not in {"download", "preprocess", "cod", "all"}:
             raise ValueError("stage must be one of: download, preprocess, cod, all")
+        assay = str(assay).lower()
+        if assay not in {"amplicon", "shotgun"}:
+            raise ValueError("assay must be 'amplicon' or 'shotgun'")
         if input_type not in {None, "sra", "reads"}:
             raise ValueError("input_type must be 'sra' or 'reads'")
         if int(sample_workers) < 1:
             raise ValueError("sample_workers must be at least 1")
+        if assay == "shotgun":
+            return self._batch_shotgun_sample_to_cod(
+                manifest=manifest,
+                output_dir=output_dir,
+                input_type=input_type,
+                sra_dir=sra_dir,
+                stage=stage,
+                adapter_1=adapter_1,
+                adapter_2=adapter_2,
+                minimum_length=minimum_length,
+                quality_cutoff=quality_cutoff,
+                container=container,
+                execute=execute,
+                normalize=normalize,
+                verbose=verbose,
+                sample_workers=sample_workers,
+                execution_profile=execution_profile,
+            )
         if amplicon_to_genome_db is not None:
             self.config.amplicon2genome_db = str(amplicon_to_genome_db)
             matches = list(pathlib.Path(amplicon_to_genome_db).rglob(self.config.gtdb_dir))
@@ -4840,6 +5596,7 @@ fi"""
         expected_feature_denoiser = str(build_feature_settings.get("denoiser", "vsearch")).lower()
         results = {
             "manifest": str(manifest),
+            "assay": "amplicon",
             "output_dir": str(output_path),
             "stage": stage,
             "execute": execute,
@@ -5245,8 +6002,42 @@ fi"""
                 record_stage("cod", "waiting", message="COD profile was not produced")
             results["samples"][sample_name] = sample_result
 
+        def safely_process_row(indexed_row: tuple[int, dict]) -> None:
+            row_index, row = indexed_row
+            try:
+                process_row(row)
+            except Exception as error:
+                sample_name = (
+                    self._row_value(row, "sample_name", "sample", "name", "accession", "sra", "run")
+                    or f"row_{row_index + 1}"
+                )
+                message = str(error)
+                logger = self._sample_pipeline_logger(
+                    sample_name,
+                    output_path / sample_name,
+                    verbose=verbose,
+                )
+                logger.error(
+                    "Amplicon sample input failed: sample=%s error=%s",
+                    sample_name,
+                    message,
+                )
+                stage_entry = workflow.record(
+                    sample_name,
+                    "input",
+                    "failed",
+                    message=message,
+                )
+                results["samples"][sample_name] = {
+                    "input": dict(row),
+                    "artifacts": {},
+                    "stages": {"input": stage_entry},
+                    "status": "failed",
+                    "error": {"stage": "input", "message": message},
+                }
+
         with ThreadPoolExecutor(max_workers=min(int(sample_workers), max(1, len(rows)))) as executor:
-            list(executor.map(process_row, rows))
+            list(executor.map(safely_process_row, enumerate(rows)))
 
         results["summary"] = self._write_json(output_path / "batch_summary.json", results)
         return results

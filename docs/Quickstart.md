@@ -133,6 +133,7 @@ your samples in a table, then run one command.
     adtoolbox metagenomics process \
       --input ./samples.tsv \
       --input-type sra \
+      --assay amplicon \
       --output-dir ./process \
       --sra-dir ./sra \
       --database-dir ./database \
@@ -151,10 +152,25 @@ your samples in a table, then run one command.
     adtoolbox metagenomics process \
       --input ./samples.tsv \
       --input-type reads \
+      --assay amplicon \
       --output-dir ./process \
       --database-dir ./database \
       --execute
     ```
+
+For shotgun functional profiling, use the same sample-table formats and select the shotgun assay. This route runs fastp and one MMseqs2 translated-search job per sample, then writes `ec_counts.csv` and `cod_profile.csv` without DADA2, GTDB, or genome downloads:
+
+```bash
+adtoolbox metagenomics process \
+  --input ./samples.tsv \
+  --input-type reads \
+  --assay shotgun \
+  --output-dir ./process \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --execution-profile ./reference_data/metagenomics_pipeline.toml \
+  --execute
+```
 
 !!! warning "`--execute` is opt-in"
     Without `--execute` the pipeline runs as a dry run: it parses whatever files already

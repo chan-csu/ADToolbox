@@ -73,12 +73,14 @@ of them in turn.
 
 ## Metagenomics
 
-Everything from SRA download through amplicon denoising, GTDB mapping, protein alignment,
-and COD allocation.
+Everything from SRA download through read preprocessing, alignment, and COD allocation, for
+two assays: an **amplicon** route (DADA2 denoising → GTDB mapping → genome protein
+alignment) and a **shotgun** route (MMseqs2 translated search of reads straight against the
+protein database).
 
 `batch_sample_to_cod` is the entry point the CLI uses; it drives `sample_to_cod` per
-sample, which in turn calls the individual `run_*_step` methods. Any of those three levels
-can be used directly.
+sample — whose `mode` selects the amplicon or shotgun path — which in turn calls the
+individual `run_*_step` methods. Any of those three levels can be used directly.
 
 ```mermaid
 flowchart LR

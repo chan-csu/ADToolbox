@@ -42,9 +42,14 @@ adtoolbox database download-all-databases --output-dir ./database
 
 # 2. Turn amplicon samples into microbial COD allocations
 adtoolbox metagenomics process \
-  --input ./samples.tsv --input-type sra \
+  --input ./samples.tsv --input-type sra --assay amplicon \
   --output-dir ./process --sra-dir ./sra \
   --database-dir ./database --execute
+
+# Use the direct functional route for shotgun reads
+adtoolbox metagenomics process \
+  --input ./shotgun_samples.tsv --input-type reads --assay shotgun \
+  --output-dir ./process --database-dir ./database --execute
 
 # 3. Simulate
 adtoolbox adm e-adm --models-json reference_data/models.json --report csv

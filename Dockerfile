@@ -2,7 +2,7 @@ FROM mambaorg/micromamba:1.5.10-bookworm-slim
 
 LABEL org.opencontainers.image.title="ADToolbox"
 LABEL org.opencontainers.image.description="ADToolbox with metagenomics pipeline dependencies"
-LABEL org.opencontainers.image.version="1.1.13"
+LABEL org.opencontainers.image.version="1.1.14"
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive

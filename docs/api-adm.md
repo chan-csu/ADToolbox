@@ -7,22 +7,9 @@ from adtoolbox import adm
 ```
 
 ```mermaid
-flowchart LR
-    subgraph inputs["parameters"]
-        direction TB
-        P["model_parameters<br>base_parameters"]
-        S["initial_conditions<br>inlet_conditions"]
-        N["reactions<br>species"]
-    end
-
-    subgraph variant["model variant: ADM1 or e-ADM"]
-        direction TB
-        O["ode_system"]
-        M["build_stoichiometric_matrix"]
-    end
-
-    inputs --> MODEL["adm.Model"]
-    variant --> MODEL
+flowchart TB
+    P["Six parameter dicts:<br>model / base parameters,<br>initial / inlet conditions,<br>reactions, species"] --> MODEL["adm.Model"]
+    V["ode_system +<br>build_stoichiometric_matrix<br>(ADM1 or e-ADM)"] --> MODEL
     MODEL --> SOLVE["solve_model<br>scipy solve_ivp"]
     SOLVE --> PLOT["plot"]
     SOLVE --> DASH["dash_app"]

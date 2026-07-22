@@ -63,6 +63,8 @@ quality_cutoff = 20
 quality_trim = "cut_right"
 quality_window_size = 4
 quality_mean = 20
+min_reads_for_denoising = 1000
+allow_single_end_fallback = true
 # adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
 # adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
@@ -107,8 +109,18 @@ memory = "48G"
 time = "08:00:00"
 
 [steps.align_short_reads]
+# Shotgun only: one MMseqs translated-search job per sample.
 backend = "slurm"
 container = "None"
 cpus = 24
 memory = "150G"
 time = "12:00:00"
+
+[steps.align_short_reads.settings]
+threads = 24
+# Nucleotide reads against the protein target require translated search.
+search_type = 2
+# Keep only the final TSV after success. Failed work directories remain for debugging.
+keep_work = false
+# Optional MMseqs sensitivity. Omit to use the MMseqs default.
+# sensitivity = 7.5

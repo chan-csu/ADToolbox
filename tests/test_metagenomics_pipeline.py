@@ -1,12 +1,15 @@
+import gzip
 import json
+import os
 import pathlib
 import subprocess
 import threading
 
 import polars as pl
 import pytest
+from click.testing import CliRunner
 
-from adtoolbox import configs, core
+from adtoolbox import cli, configs, core
 
 
 def _write_alignment(path, rows):
@@ -72,6 +75,313 @@ def test_sample_to_cod_from_shotgun_alignment(tmp_path):
     assert sum(cod_profile.values()) == 1
     assert result["artifacts"]["cod_profile"].endswith("cod_profile.csv")
     assert result["artifacts"]["ec_counts"].endswith("ec_counts.csv")
+
+
+def test_short_read_alignment_keeps_paired_mmseqs_work_below_sample_scratch(tmp_path):
+    read_1 = tmp_path / "sample_R1.fastq.gz"
+    read_2 = tmp_path / "sample_R2.fastq.gz"
+    read_1.write_text("reads-1")
+    read_2.write_text("reads-2")
+    protein_fasta = tmp_path / "Protein_DB.fasta"
+    protein_fasta.write_text(">P00001|1.1.1.1\nMPEPTIDE\n")
+    missing_shared_db = tmp_path / "protein_db_mmseqs"
+    scratch = tmp_path / "out" / "sample_a" / "scratch" / "shotgun_alignment"
+
+    metagenomics = core.Metagenomics(
+        configs.Metagenomics(
+            protein_db=protein_fasta,
+            protein_db_mmseqs=missing_shared_db,
+        )
+    )
+    script, alignment = metagenomics.align_short_reads_to_protein_db(
+        [read_1, read_2],
+        "sample_a_mmseq",
+        output_dir=scratch,
+        threads=12,
+    )
+
+    assert f"mmseqs createdb {protein_fasta}" in script
+    assert f"mmseqs createdb {read_1} {read_2}" in script
+    assert f"{scratch}/mmseqs_work/query" in script
+    assert "--threads 12" in script
+    assert "--search-type 2" in script
+    assert "--format-mode 4" in script
+    assert f"rm -rf {scratch}/mmseqs_work" in script
+    assert alignment == str(scratch / "sample_a_mmseq.tsv")
+    assert f"{read_1} {tmp_path / 'sample_R1'}" not in script
+
+
+def test_batch_shotgun_reads_runs_trim_align_and_cod_per_sample(tmp_path, monkeypatch):
+    reaction_db = tmp_path / "reactions.csv"
+    pl.DataFrame(
+        [{"EC_Numbers": "1.1.1.1", "e_adm_Reactions": "Uptake of sugars"}]
+    ).write_csv(reaction_db)
+    protein_fasta = tmp_path / "Protein_DB.fasta"
+    protein_fasta.write_text(">P00001|1.1.1.1\nMPEPTIDE\n")
+    read_1 = tmp_path / "sample_R1.fastq.gz"
+    read_2 = tmp_path / "sample_R2.fastq.gz"
+    read_1.write_text("raw-1")
+    read_2.write_text("raw-2")
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text(
+        f"sample\tread_1\tread_2\n"
+        f"sample_a\t{read_1}\t{read_2}\n"
+    )
+    captured = {}
+
+    metagenomics = core.Metagenomics(
+        configs.Metagenomics(
+            csv_reaction_db=reaction_db,
+            protein_db=protein_fasta,
+        )
+    )
+
+    def fake_trim(**kwargs):
+        output = pathlib.Path(kwargs["step_output_dir"])
+        output.mkdir(parents=True, exist_ok=True)
+        trimmed_1 = output / "sample_a_trimmed_R1.fastq.gz"
+        trimmed_2 = output / "sample_a_trimmed_R2.fastq.gz"
+        trimmed_1.write_text("trimmed-1")
+        trimmed_2.write_text("trimmed-2")
+        return {
+            "artifacts": {
+                "trim_reads": {"step": "trim_reads", "status": "completed", "backend": "slurm"},
+                "trimmed_reads": {"read_1": str(trimmed_1), "read_2": str(trimmed_2)},
+            }
+        }
+
+    def fake_align(**kwargs):
+        captured["reads"] = [str(path) for path in kwargs["reads"]]
+        output = pathlib.Path(kwargs["step_output_dir"])
+        output.mkdir(parents=True, exist_ok=True)
+        alignment = output / "sample_a_mmseq.tsv"
+        _write_alignment(
+            alignment,
+            [["read_1", "P00001|1.1.1.1", 1, 100, 0, 0, 1, 100, 1, 100, 1e-20, 100]],
+        )
+        return {
+            "artifacts": {
+                "align_short_reads": {
+                    "step": "align_short_reads",
+                    "status": "completed",
+                    "backend": "slurm",
+                },
+                "alignment_file": str(alignment),
+            }
+        }
+
+    monkeypatch.setattr(metagenomics, "run_trim_reads_step", fake_trim)
+    monkeypatch.setattr(metagenomics, "run_short_read_alignment_step", fake_align)
+
+    result = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        output_dir=tmp_path / "out",
+        assay="shotgun",
+        input_type="reads",
+        execute=True,
+        sample_workers=2,
+        verbose=False,
+    )
+
+    sample = result["samples"]["sample_a"]
+    assert result["assay"] == "shotgun"
+    assert sample["status"] == "completed"
+    assert set(sample["stages"]) == {"trim_reads", "align_short_reads", "cod"}
+    assert len(captured["reads"]) == 2
+    assert all("shotgun_preprocess" in path for path in captured["reads"])
+    assert _read_profile(tmp_path / "out" / "sample_a" / "cod_profile.csv")["X_su"] == 1.0
+    signature = json.loads(
+        (tmp_path / "out" / "sample_a" / "scratch" / "shotgun_downstream_inputs.json").read_text()
+    )
+    assert signature["alignment_file"].endswith("sample_a_mmseq.tsv")
+
+    def should_not_run(**kwargs):
+        raise AssertionError("cached shotgun outputs should be resumed without resubmission")
+
+    monkeypatch.setattr(metagenomics, "run_trim_reads_step", should_not_run)
+    monkeypatch.setattr(metagenomics, "run_short_read_alignment_step", should_not_run)
+    resumed = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        output_dir=tmp_path / "out",
+        assay="shotgun",
+        input_type="reads",
+        execute=True,
+        sample_workers=2,
+        verbose=False,
+    )
+    assert resumed["samples"]["sample_a"]["status"] == "completed"
+
+
+def test_batch_shotgun_failure_does_not_stop_other_samples(tmp_path, monkeypatch):
+    reaction_db = tmp_path / "reactions.csv"
+    pl.DataFrame(
+        [{"EC_Numbers": "1.1.1.1", "e_adm_Reactions": "Uptake of sugars"}]
+    ).write_csv(reaction_db)
+    protein_fasta = tmp_path / "Protein_DB.fasta"
+    protein_fasta.write_text(">P00001|1.1.1.1\nMPEPTIDE\n")
+    rows = []
+    for sample in ("good", "bad"):
+        read = tmp_path / f"{sample}.fastq.gz"
+        read.write_text("raw")
+        rows.append((sample, read))
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text(
+        "sample\tread_1\n" + "".join(f"{sample}\t{read}\n" for sample, read in rows)
+    )
+    metagenomics = core.Metagenomics(
+        configs.Metagenomics(csv_reaction_db=reaction_db, protein_db=protein_fasta)
+    )
+
+    def fake_trim(**kwargs):
+        sample = kwargs["sample_name"]
+        output = pathlib.Path(kwargs["step_output_dir"])
+        output.mkdir(parents=True, exist_ok=True)
+        trimmed = output / f"{sample}_trimmed_R1.fastq.gz"
+        trimmed.write_text("trimmed")
+        return {
+            "artifacts": {
+                "trim_reads": {"step": "trim_reads", "status": "completed"},
+                "trimmed_reads": {"read_1": str(trimmed), "read_2": None},
+            }
+        }
+
+    def fake_align(**kwargs):
+        sample = kwargs["sample_name"]
+        if sample == "bad":
+            raise RuntimeError("alignment attempts exhausted")
+        output = pathlib.Path(kwargs["step_output_dir"])
+        output.mkdir(parents=True, exist_ok=True)
+        alignment = output / f"{sample}_mmseq.tsv"
+        _write_alignment(
+            alignment,
+            [["read_1", "P00001|1.1.1.1", 1, 100, 0, 0, 1, 100, 1, 100, 1e-20, 100]],
+        )
+        return {
+            "artifacts": {
+                "align_short_reads": {"step": "align_short_reads", "status": "completed"},
+                "alignment_file": str(alignment),
+            }
+        }
+
+    monkeypatch.setattr(metagenomics, "run_trim_reads_step", fake_trim)
+    monkeypatch.setattr(metagenomics, "run_short_read_alignment_step", fake_align)
+
+    result = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        output_dir=tmp_path / "out",
+        assay="shotgun",
+        input_type="reads",
+        execute=True,
+        sample_workers=2,
+        verbose=False,
+    )
+
+    assert result["samples"]["good"]["status"] == "completed"
+    assert result["samples"]["bad"]["status"] == "failed"
+    assert result["samples"]["bad"]["error"]["stage"] == "align_short_reads"
+
+
+def test_metagenomics_process_cli_forwards_shotgun_assay(tmp_path, monkeypatch):
+    reads = tmp_path / "reads.fastq.gz"
+    reads.write_text("raw")
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text(f"sample\tread_1\nsample_a\t{reads}\n")
+    captured = {}
+
+    def fake_batch(self, **kwargs):
+        captured.update(kwargs)
+        summary = pathlib.Path(kwargs["output_dir"]) / "batch_summary.json"
+        summary.parent.mkdir(parents=True, exist_ok=True)
+        summary.write_text("{}")
+        return {"samples": {"sample_a": {}}, "summary": str(summary)}
+
+    monkeypatch.setattr(core.Metagenomics, "batch_sample_to_cod", fake_batch)
+    result = CliRunner().invoke(
+        cli.main,
+        [
+            "metagenomics",
+            "process",
+            "--input",
+            str(manifest),
+            "--input-type",
+            "reads",
+            "--assay",
+            "shotgun",
+            "--output-dir",
+            str(tmp_path / "out"),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured["assay"] == "shotgun"
+    assert captured["input_type"] == "reads"
+
+
+def test_batch_shotgun_prepares_one_paired_alignment_job_per_sample(tmp_path):
+    read_1 = tmp_path / "raw_R1.fastq.gz"
+    read_2 = tmp_path / "raw_R2.fastq.gz"
+    read_1.write_text("raw-1")
+    read_2.write_text("raw-2")
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text(
+        f"sample\tread_1\tread_2\nsample_a\t{read_1}\t{read_2}\n"
+    )
+    sample_scratch = tmp_path / "out" / "sample_a" / "scratch"
+    preprocess = sample_scratch / "shotgun_preprocess"
+    preprocess.mkdir(parents=True)
+    trimmed_1 = preprocess / "sample_a_trimmed_R1.fastq.gz"
+    trimmed_2 = preprocess / "sample_a_trimmed_R2.fastq.gz"
+    trimmed_1.write_text("trimmed-1")
+    trimmed_2.write_text("trimmed-2")
+    protein_fasta = tmp_path / "Protein_DB.fasta"
+    protein_fasta.write_text(">P00001|1.1.1.1\nMPEPTIDE\n")
+    protein_db_mmseqs = tmp_path / "protein_db_mmseqs"
+    protein_db_mmseqs.write_text("database")
+    profile = tmp_path / "profile.toml"
+    profile.write_text(
+        """
+backend = "local"
+container = "None"
+
+[steps.align_short_reads]
+backend = "slurm"
+container = "None"
+cpus = 20
+memory = "80G"
+time = "20:00:00"
+
+[steps.align_short_reads.settings]
+threads = 20
+search_type = 2
+"""
+    )
+    metagenomics = core.Metagenomics(
+        configs.Metagenomics(
+            protein_db=protein_fasta,
+            protein_db_mmseqs=protein_db_mmseqs,
+        )
+    )
+
+    result = metagenomics.batch_sample_to_cod(
+        manifest=manifest,
+        output_dir=tmp_path / "out",
+        assay="shotgun",
+        input_type="reads",
+        stage="cod",
+        execute=False,
+        execution_profile=profile,
+        verbose=False,
+    )
+
+    sbatch = sample_scratch / "slurm" / "align_short_reads.sbatch"
+    script = sbatch.read_text()
+    assert result["samples"]["sample_a"]["status"] == "waiting_for_alignment"
+    assert script.count("#SBATCH --job-name=") == 1
+    assert "#SBATCH --cpus-per-task=20" in script
+    assert f"mmseqs createdb {trimmed_1} {trimmed_2}" in script
+    assert "--threads 20" in script
+    assert "--search-type 2" in script
+    assert "build_amplicon_features" not in script
 
 
 def test_sample_to_cod_weights_genome_alignments(tmp_path):
@@ -943,6 +1253,118 @@ def test_dada2_preprocessing_detects_primers_from_original_reads_in_dry_run(tmp_
     assert primer_manifest["selection"]["name"] == "16S_341F_806R"
     assert primer_manifest["detection_read_1"] == str(read_1)
     assert result["artifacts"]["dada2_stats"].endswith("dada2-stats.tsv")
+
+
+def test_dada2_preprocessing_writes_runtime_single_end_fallback(tmp_path):
+    read_1 = tmp_path / "sample_R1.fastq"
+    read_2 = tmp_path / "sample_R2.fastq"
+    _write_primer_test_reads(read_1, read_2)
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "steps": {
+            "trim_reads": {
+                "backend": "local",
+                "settings": {
+                    "min_reads_for_denoising": 1000,
+                    "allow_single_end_fallback": True,
+                },
+            },
+            "build_amplicon_features": {
+                "backend": "local",
+                "settings": {"denoiser": "dada2", "primer_mode": "auto"},
+            },
+        },
+    }
+
+    result = core.Metagenomics(configs.Metagenomics()).preprocess_amplicon_sample(
+        sample_name="sample_fallback",
+        output_dir=tmp_path / "out",
+        read_1=read_1,
+        read_2=read_2,
+        execution_profile=profile,
+        execute=False,
+        verbose=False,
+    )
+
+    preprocess = tmp_path / "out" / "sample_fallback" / "scratch" / "amplicon_preprocess"
+    trim_script = (preprocess.parent / "trim_reads.sh").read_text()
+    feature_script = (preprocess.parent / "build_amplicon_features.sh").read_text()
+    paired_r = (preprocess / "sample_fallback_dada2.R").read_text()
+    single_r = (preprocess / "sample_fallback_dada2_single.R").read_text()
+
+    assert "--unpaired1" in trim_script
+    assert 'paired_reads\" -ge 1000' in trim_script
+    assert "single_end_r1" in trim_script
+    assert "read-layout.txt" in feature_script
+    assert "automatic single-end R1 fallback mode" in feature_script
+    assert "mergePairs" in paired_r
+    assert "mergePairs" not in single_r
+    assert "layout='single_end_r1'" in single_r
+    assert result["artifacts"]["read_selection"].endswith("read-selection.json")
+
+
+def test_fastp_gate_uses_valid_r1_reads_when_pairs_are_below_threshold(tmp_path, monkeypatch):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake_fastp = bin_dir / "fastp"
+    fake_fastp.write_text(
+        """#!/bin/bash
+set -eu
+while [ \"$#\" -gt 0 ]; do
+  case \"$1\" in
+    -o) out1=$2; shift 2 ;;
+    -O) out2=$2; shift 2 ;;
+    --unpaired1) unpaired1=$2; shift 2 ;;
+    --unpaired2) unpaired2=$2; shift 2 ;;
+    --json) json=$2; shift 2 ;;
+    --html) html=$2; shift 2 ;;
+    *) shift ;;
+  esac
+done
+write_reads() {
+  count=$1
+  destination=$2
+  index=1
+  while [ \"$index\" -le \"$count\" ]; do
+    printf '@read_%s\\nACGTACGT\\n+\\nIIIIIIII\\n' \"$index\"
+    index=$((index + 1))
+  done | gzip -c > \"$destination\"
+}
+write_reads 1 \"$out1\"
+write_reads 1 \"$out2\"
+write_reads 3 \"$unpaired1\"
+write_reads 0 \"$unpaired2\"
+printf '{}\\n' > \"$json\"
+printf '<html></html>\\n' > \"$html\"
+"""
+    )
+    fake_fastp.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ['PATH']}")
+
+    read_1 = tmp_path / "source_R1.fastq"
+    read_2 = tmp_path / "source_R2.fastq"
+    read_1.write_text("unused\n")
+    read_2.write_text("unused\n")
+    script, artifacts = core.Metagenomics(configs.Metagenomics()).trim_amplicon_reads(
+        read_1=read_1,
+        read_2=read_2,
+        output_dir=tmp_path / "trimmed",
+        sample_name="sample_gate",
+        min_reads_for_denoising=3,
+        allow_single_end_fallback=True,
+    )
+
+    subprocess.run(["bash", "-c", script], check=True)
+
+    selection = json.loads(pathlib.Path(artifacts["read_selection"]).read_text())
+    assert selection["layout"] == "single_end_r1"
+    assert selection["paired_reads"] == 1
+    assert selection["single_end_r1_reads"] == 4
+    assert pathlib.Path(artifacts["read_layout"]).read_text().strip() == "single_end_r1"
+    assert not pathlib.Path(artifacts["read_2"]).exists()
+    with gzip.open(artifacts["read_1"], "rt") as handle:
+        assert sum(1 for _ in handle) == 16
 
 
 def test_explicit_primers_override_auto_catalog_detection(tmp_path):

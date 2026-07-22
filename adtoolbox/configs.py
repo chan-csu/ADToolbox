@@ -234,7 +234,14 @@ class Metagenomics:
         self.align_to_gtdb_outputs_dir = align_to_gtdb_outputs_dir or self.genomes_base_dir
         self.amplicon2genome_db = amplicon2genome_db or database.amplicon_to_genome_db
         self.protein_db = protein_db or database.protein_db
-        self.protein_db_mmseqs = protein_db_mmseqs or database.protein_db_mmseqs
+        self.protein_db_mmseqs = (
+            protein_db_mmseqs
+            or (
+                pathlib.Path(protein_db).parent / "protein_db_mmseqs"
+                if protein_db
+                else database.protein_db_mmseqs
+            )
+        )
         self.seed_rxn_db = database.reaction_db
         self.genome_alignment_output = genome_alignment_output or _join(self.metagenomics_dir, "Outputs")
         self.bit_score = bit_score

@@ -5,7 +5,9 @@
       "name": "docs",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "mkdocs", "serve", "-a", "127.0.0.1:8000"],
-      "port": 8000
+      "port": 8000,
+      "autoPort": false,
+      "cwd": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox"
     },
     {
       "name": "adm-dashboard",

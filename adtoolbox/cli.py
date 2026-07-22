@@ -408,9 +408,10 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
     _write_representative_genomes(results, output_dir, output_format)
 
 
-@metagenomics.command(name="process", help="Process a table of SRA accessions or local amplicon reads into e-ADM microbial allocations.")
+@metagenomics.command(name="process", help="Process amplicon or shotgun samples into e-ADM microbial allocations.")
 @click.option("--input", "input_table", required=True, help="CSV/TSV table describing samples.")
 @click.option("--input-type", required=True, type=click.Choice(["sra", "reads"]), help="Whether the input table contains SRA accessions or local read files.")
+@click.option("--assay", default="amplicon", show_default=True, type=click.Choice(["amplicon", "shotgun"]), help="Sequence-analysis route to run.")
 @click.option("-o", "--output-dir", help="Directory where per-sample artifacts should be written.")
 @click.option("--sra-dir", help="Directory where SRA downloads should be written for SRA input.")
 @click.option("--stage", default="all", show_default=True, type=click.Choice(["download", "preprocess", "allocate", "all"]), help="Pipeline stage to run.")
@@ -425,7 +426,7 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
 @click.option("--reverse-primer", help="Explicit reverse PCR primer for paired reads.")
 @click.option("--adapter-1", help="Forward-read adapter sequence for fastp. Omit to let fastp auto-detect.")
 @click.option("--adapter-2", help="Reverse-read adapter sequence for paired-end fastp. Omit to let fastp auto-detect.")
-@click.option("--minimum-length", default=100, show_default=True, type=int, help="Minimum amplicon read length after trimming/filtering.")
+@click.option("--minimum-length", default=100, show_default=True, type=int, help="Minimum read length after trimming/filtering.")
 @click.option("--quality-cutoff", help="fastp qualified quality phred cutoff.")
 @click.option("--quality-maxee", default=1.0, show_default=True, type=float, help="Maximum expected errors used by DADA2 or VSEARCH filtering.")
 @click.option("--identity", default=0.97, show_default=True, type=float, help="VSEARCH-only identity for assigning reads to denoised rep-seqs.")
@@ -442,6 +443,7 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
 def metagenomics_process(
     input_table,
     input_type,
+    assay,
     output_dir,
     sra_dir,
     stage,
@@ -500,6 +502,7 @@ def metagenomics_process(
         result = core.Metagenomics(config).batch_sample_to_cod(
             manifest=input_table,
             input_type=input_type,
+            assay=assay,
             output_dir=output_dir,
             sra_dir=sra_dir,
             stage="cod" if stage == "allocate" else stage,

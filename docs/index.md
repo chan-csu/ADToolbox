@@ -7,7 +7,7 @@ hide:
 
 # ADToolbox
 
-**From raw amplicon reads to a calibrated anaerobic digestion model.**
+**From raw sequencing reads to a calibrated anaerobic digestion model.**
 ADToolbox connects metagenomics evidence, curated reaction and feed databases, and
 dynamic ADM1 / e-ADM simulations into one reproducible Python and command-line workflow.
 
@@ -21,9 +21,11 @@ dynamic ADM1 / e-ADM simulations into one reproducible Python and command-line w
 
 Anaerobic digestion models such as ADM1 lump the microbial community into a handful of
 guilds whose initial biomass you are expected to guess. ADToolbox replaces that guess with
-measurement: it takes 16S amplicon data, maps it through GTDB and a curated
-enzyme-to-reaction database, and produces the microbial COD allocation that an extended
-ADM (e-ADM) model actually needs. From there you can simulate, visualize, and fit the
+measurement. It profiles a community two ways — 16S **amplicon** reads mapped through GTDB
+and a curated enzyme-to-reaction database, or **shotgun** reads searched directly against
+that database for functional evidence — and turns either into the microbial COD allocation
+that an extended ADM (e-ADM) model actually needs. From there you can simulate, visualize,
+and fit the
 model against experimental data.
 
 ```mermaid

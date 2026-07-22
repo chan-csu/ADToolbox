@@ -14,7 +14,7 @@ The CLI does not create or store a global project directory. Commands that need 
 | Module | Purpose |
 | --- | --- |
 | `database` | Initialize, edit, download, and build ADToolbox databases. |
-| `metagenomics` | Download genomes or SRA data and align genomes to protein databases. |
+| `metagenomics` | Download SRA/genome data, align genomes, and run the amplicon or shotgun `process` pipeline. |
 | `adm` | Run ADM1 and e-ADM models. |
 | `docs` | Print package documentation in the terminal. |
 
@@ -91,7 +91,7 @@ Metagenomics commands also take explicit inputs and output directories.
 | `align-genome` | Align one genome to a protein FASTA database. |
 | `align-multiple-genomes` | Align multiple genomes listed in a JSON manifest. |
 | `find-representative-genomes` | Find representative genomes from a repseqs FASTA file. |
-| `process` | Process a table of SRA accessions or local amplicon reads into model-ready e-ADM microbial COD allocations. |
+| `process` | Process a table of SRA accessions or local reads — amplicon or shotgun — into model-ready e-ADM microbial COD allocations. |
 
 Use `--container None` for local execution, or `--container docker` / `--container singularity` when running through a container backend.
 
@@ -137,7 +137,7 @@ adtoolbox metagenomics align-multiple-genomes \
 
 ### Processing Pipeline
 
-`process` is the table-driven pipeline for converting amplicon evidence into e-ADM microbial biomass/COD allocations. Each run creates one sample folder per table row under `--output-dir`. Clean result files stay at the sample-folder root, while generated commands, raw alignments, DADA2 intermediates, and other working files are written under `scratch/`.
+`process` is the table-driven pipeline for converting amplicon or shotgun evidence into e-ADM microbial biomass/COD allocations. Select the route with `--assay amplicon` (the default) or `--assay shotgun`. Each run creates one sample folder per table row under `--output-dir`. Clean result files stay at the sample-folder root, while generated commands, raw alignments, DADA2 intermediates, and other working files are written under `scratch/`.
 
 | File | Meaning |
 | --- | --- |
@@ -151,7 +151,7 @@ adtoolbox metagenomics align-multiple-genomes \
 | `pipeline.log` | Step-by-step log for the sample. |
 | `scratch/` | Intermediate files, generated scripts, GTDB matches, and genome alignment files. |
 
-By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run fastp, Cutadapt, DADA2, VSEARCH, and MMseqs commands.
+By default, the command is a dry run for external tools: it parses existing files and writes commands for missing trimming, feature-building, and alignment steps. Add `--execute` to run the applicable fastp, Cutadapt, DADA2, VSEARCH, and MMseqs commands.
 
 Execution behavior can be controlled with a TOML profile. The repository includes an example at `reference_data/metagenomics_pipeline.toml`.
 
@@ -187,6 +187,8 @@ quality_cutoff = 20
 quality_trim = "cut_right"
 quality_window_size = 4
 quality_mean = 20
+min_reads_for_denoising = 1000
+allow_single_end_fallback = true
 # Optional explicit adapters. When omitted, fastp auto-detects common adapters.
 # adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
 # adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
@@ -237,6 +239,12 @@ container = "None"
 cpus = 24
 memory = "150G"
 time = "12:00:00"
+
+[steps.align_short_reads.settings]
+threads = 24
+search_type = 2
+keep_work = false
+# sensitivity = 7.5
 ```
 
 For SRA accessions, the input table must include `sample` and `accession` columns:
@@ -278,6 +286,7 @@ sample_02	./fastq/sample_02_R1.fastq.gz	./fastq/sample_02_R2.fastq.gz
 adtoolbox metagenomics process \
   --input ./metagenomics/read_samples.tsv \
   --input-type reads \
+  --assay amplicon \
   --output-dir ./metagenomics/process \
   --adapter-1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
   --adapter-2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
@@ -289,7 +298,26 @@ adtoolbox metagenomics process \
   --execute
 ```
 
-On Slurm, each sample waits for its current task before starting its next task. Up to four sample chains run concurrently by default; use `--sample-workers` to change that bound. One `--execute` run can therefore continue from SRA download through preprocessing, amplicon-to-genome mapping, genome alignments, and COD allocation. Staged execution is still available when you want manual control:
+For shotgun reads, the manifest uses the same SRA or local-read columns. Select `--assay shotgun`; do not provide the amplicon-to-genome or genome directories:
+
+```bash
+adtoolbox metagenomics process \
+  --input ./metagenomics/read_samples.tsv \
+  --input-type reads \
+  --assay shotgun \
+  --output-dir ./metagenomics/process \
+  --protein-db ./database/Protein_DB.fasta \
+  --reaction-db ./database/Reaction_Metadata.csv \
+  --sample-workers 4 \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+For an SRA shotgun table, change `--input-type` to `sra` and provide `--sra-dir`. Each sample follows `download_sra -> trim_reads -> align_short_reads -> cod`. The MMseqs translated search consumes both trimmed mates in one sample job and writes its query database, result database, and temporary directory under `scratch/shotgun_alignment/`. If a shared `protein_db_mmseqs` exists beside `Protein_DB.fasta`, it is reused; otherwise the sample job creates a private target database from the FASTA. Successful jobs remove the large `mmseqs_work` directory unless `keep_work = true`; failed work directories remain available for diagnosis.
+
+Shotgun mode writes `ec_counts.csv` and `cod_profile.csv` directly from functional evidence. It deliberately skips Cutadapt, DADA2, GTDB matching, genome download, and genome alignment. It does not currently produce a taxonomic profile.
+
+On Slurm, each sample waits for its current task before starting its next task. Up to four sample chains run concurrently by default; use `--sample-workers` to change that bound. One `--execute` run can therefore continue through the selected assay and COD allocation. Staged execution is still available when you want manual control:
 
 ```bash
 adtoolbox metagenomics process --input ./metagenomics/sra_samples.tsv --input-type sra --stage download --output-dir ./metagenomics/process --sra-dir ./metagenomics/sra --execution-profile reference_data/metagenomics_pipeline.toml --execute
