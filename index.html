@@ -1186,14 +1186,15 @@ that database for functional evidence — and turns either into the microbial CO
 that an extended ADM (e-ADM) model actually needs. From there you can simulate, visualize,
 and fit the
 model against experimental data.</p>
-<pre class="mermaid"><code>flowchart LR
-    A[SRA accessions&lt;br/&gt;or local FASTQ] --&gt; B[Trim and denoise&lt;br/&gt;fastp + VSEARCH]
-    B --&gt; C[Representative&lt;br/&gt;sequences]
-    C --&gt; D[GTDB&lt;br/&gt;amplicon-to-genome]
-    D --&gt; E[Protein alignment&lt;br/&gt;MMseqs2]
-    E --&gt; F[EC numbers and&lt;br/&gt;COD allocation]
-    F --&gt; G[e-ADM / ADM1&lt;br/&gt;simulation]
-    G --&gt; H[Parameter tuning&lt;br/&gt;against experiments]</code></pre>
+<figure>
+<p><img alt="ADToolbox architecture: microbiome sequence processing and the curated protein,
+  reaction, feed, and experiment databases feed the ADM model attributes; an optimization
+  layer fits parameters, and the toolbox is exposed through a command line interface, a web
+  application, and a Python API." src="overal.png" />
+  </p>
+<figcaption>How the pieces fit together: sequence data and curated databases supply the
+  ADM model, optimization closes the loop, and three interfaces sit on top.</figcaption>
+</figure>
 <h2 id="explore-the-docs">Explore the docs<a class="headerlink" href="#explore-the-docs" title="Link to this section">&para;</a></h2>
 <div class="grid cards">
 <ul>
