@@ -1201,29 +1201,46 @@ environment rather than your system Python:</p>
 </div>
 <p><strong>Requirements:</strong> Python 3.11 or newer.</p>
 <h2 id="install-the-package">Install the package<a class="headerlink" href="#install-the-package" title="Link to this section">&para;</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">pip</label><label for="__tabbed_1_2">From source</label><label for="__tabbed_1_3">Editable (development)</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">conda / mamba (recommended)</label><label for="__tabbed_1_2">pip</label><label for="__tabbed_1_3">From source</label><label for="__tabbed_1_4">Editable (development)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>adtoolbox
+<p>The environment file installs ADToolbox <strong>and every external bioinformatics
+tool</strong> the pipeline needs, so nothing else has to be on your <code>PATH</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>adtoolbox
+</span></code></pre></div>
+<p><code>mamba env create -f environment.yml</code> works the same and solves faster. The
+file lives in the repository root — grab it on its own if you have not
+cloned:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-O<span class="w"> </span>https://raw.githubusercontent.com/chan-csu/ADToolbox/main/environment.yml
+</span></code></pre></div>
+<p>This pulls fastp, Cutadapt, DADA2, VSEARCH, MMseqs2, SRA Toolkit, and the
+NCBI Datasets CLI alongside the Python package, so you can skip the
+<a href="#external-tools">External tools</a> section entirely.</p>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>adtoolbox
+</span></code></pre></div>
+<p>Installs the Python package only. The metagenomics pipeline additionally
+needs the <a href="#external-tools">external tools</a> on your <code>PATH</code>, or a container.</p>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>pip<span class="w"> </span>install<span class="w"> </span>.
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pip<span class="w"> </span>install<span class="w"> </span>.
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <p>Verify the install:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>adtoolbox<span class="w"> </span>--version
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>adtoolbox<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>adtoolbox<span class="w"> </span>--version
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>adtoolbox<span class="w"> </span>--help
 </span></code></pre></div>
 <h2 id="optional-extras">Optional extras<a class="headerlink" href="#optional-extras" title="Link to this section">&para;</a></h2>
 <p>The base install covers databases, the metagenomics pipeline, and ADM simulation. Features
@@ -1265,7 +1282,7 @@ with heavier dependencies are opt-in:</p>
 </tbody>
 </table>
 <p>Combine them as needed:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;adtoolbox[optimize,dashboard]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;adtoolbox[optimize,dashboard]&quot;</span>
 </span></code></pre></div>
 <h2 id="external-tools">External tools<a class="headerlink" href="#external-tools" title="Link to this section">&para;</a></h2>
 <p>These are only required for the metagenomics pipeline. If you plan to use containers, skip
@@ -1308,34 +1325,44 @@ this section — the ADToolbox image already contains all of them.</p>
 </tr>
 </tbody>
 </table>
-<p>The quickest local install is conda/mamba:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>bioconda<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>fastp<span class="w"> </span>cutadapt<span class="w"> </span>r-base<span class="w"> </span>r-digest<span class="w"> </span>bioconductor-dada2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>vsearch<span class="w"> </span>mmseqs2<span class="w"> </span>ncbi-datasets-cli<span class="w"> </span>sra-tools
+<p>If you used the <a href="#install-the-package">conda environment file</a> these are already
+installed. To add them to an existing environment:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>bioconda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>fastp<span class="w"> </span>cutadapt<span class="w"> </span>r-base<span class="w"> </span>r-digest<span class="w"> </span>bioconductor-dada2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>vsearch<span class="w"> </span>mmseqs2<span class="w"> </span>ncbi-datasets-cli<span class="w"> </span>sra-tools
 </span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Channel placement</p>
+<p>Everything above is on <strong>bioconda</strong> except <code>ncbi-datasets-cli</code>, which comes
+from <strong>conda-forge</strong>. Keep both channels on the command line, and list
+<code>conda-forge</code> first — that ordering is what bioconda expects.</p>
+</div>
+<p>Only the shotgun route is lighter: it needs just <strong>fastp</strong> and <strong>MMseqs2</strong>
+(plus SRA Toolkit for <code>--input-type sra</code>). Cutadapt, DADA2/R, and VSEARCH are
+amplicon-only.</p>
 <p>This installs standalone DADA2 rather than QIIME2. Set <code>container = "None"</code> in the execution profile so Slurm jobs use these commands from the active environment.</p>
 <h2 id="containers">Containers<a class="headerlink" href="#containers" title="Link to this section">&para;</a></h2>
 <p>The published image bundles ADToolbox with every external tool.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Docker</label><label for="__tabbed_2_2">Build locally</label><label for="__tabbed_2_3">Apptainer / Singularity</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>parsaghadermazi/adtoolbox:latest<span class="w"> </span>adtoolbox<span class="w"> </span>--help
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Mount the current directory so the container can read and write your data</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/workspace&quot;</span><span class="w"> </span>parsaghadermazi/adtoolbox:latest<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>adtoolbox<span class="w"> </span>metagenomics<span class="w"> </span>process<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>parsaghadermazi/adtoolbox:latest<span class="w"> </span>adtoolbox<span class="w"> </span>--help
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># Mount the current directory so the container can read and write your data</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/workspace&quot;</span><span class="w"> </span>parsaghadermazi/adtoolbox:latest<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>adtoolbox<span class="w"> </span>metagenomics<span class="w"> </span>process<span class="w"> </span>--help
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>adtoolbox:local<span class="w"> </span>.
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/workspace&quot;</span><span class="w"> </span>adtoolbox:local<span class="w"> </span>adtoolbox<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>adtoolbox:local<span class="w"> </span>.
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/workspace&quot;</span><span class="w"> </span>adtoolbox:local<span class="w"> </span>adtoolbox<span class="w"> </span>--help
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>apptainer<span class="w"> </span>pull<span class="w"> </span>adtoolbox.sif<span class="w"> </span>docker://parsaghadermazi/adtoolbox:latest
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>adtoolbox.sif<span class="w"> </span>adtoolbox<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>apptainer<span class="w"> </span>pull<span class="w"> </span>adtoolbox.sif<span class="w"> </span>docker://parsaghadermazi/adtoolbox:latest
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>apptainer<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>adtoolbox.sif<span class="w"> </span>adtoolbox<span class="w"> </span>--help
 </span></code></pre></div>
 </div>
 </div>
@@ -1343,25 +1370,25 @@ this section — the ADToolbox image already contains all of them.</p>
 <p>You do not have to run ADToolbox itself inside the container. A local install can call the
 container for individual pipeline steps with <code>--container docker</code> or
 <code>--container singularity</code>, which is usually the more convenient arrangement:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>adtoolbox<span class="w"> </span>metagenomics<span class="w"> </span>align-genome<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>--name<span class="w"> </span>my_genome<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--input-file<span class="w"> </span>./genomes/my_genome.fna<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--output-dir<span class="w"> </span>./alignment<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--protein-db<span class="w"> </span>./database/Protein_DB.fasta<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>--container<span class="w"> </span>docker
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>adtoolbox<span class="w"> </span>metagenomics<span class="w"> </span>align-genome<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span>--name<span class="w"> </span>my_genome<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>--input-file<span class="w"> </span>./genomes/my_genome.fna<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--output-dir<span class="w"> </span>./alignment<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span>--protein-db<span class="w"> </span>./database/Protein_DB.fasta<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span>--container<span class="w"> </span>docker
 </span></code></pre></div>
 <h2 id="hpc-and-slurm">HPC and Slurm<a class="headerlink" href="#hpc-and-slurm" title="Link to this section">&para;</a></h2>
 <p>For cluster runs, describe each pipeline step in a TOML execution profile that selects the
 backend, container, and resource request. ADToolbox then generates and submits the Slurm
 scripts, waits for them with <code>sbatch --wait</code>, and can retry failed jobs.</p>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;local&quot;</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">container</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;None&quot;</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">[steps.align_short_reads]</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;slurm&quot;</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">cpus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;150G&quot;</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;12:00:00&quot;</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;local&quot;</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">container</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;None&quot;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="k">[steps.align_short_reads]</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;slurm&quot;</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="n">cpus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;150G&quot;</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;12:00:00&quot;</span>
 </span></code></pre></div>
 <p>A complete reference profile ships at <code>reference_data/metagenomics_pipeline.toml</code>. See
 <a href="../Metagenomics_Pipeline/#execution-profiles">Execution profiles</a> for every option.</p>
