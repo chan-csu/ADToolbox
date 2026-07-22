@@ -1,4 +1,4 @@
-from distutils.log import warn
+from warnings import warn
 import subprocess
 import os
 from collections import UserDict

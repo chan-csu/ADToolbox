@@ -17,11 +17,36 @@ additionally be submitted to Slurm, which is how the toolbox scales to HPC clust
 
 ## Install the package
 
+=== "conda / mamba (recommended)"
+
+    The environment file installs ADToolbox **and every external bioinformatics
+    tool** the pipeline needs, so nothing else has to be on your `PATH`:
+
+    ```bash
+    conda env create -f environment.yml
+    conda activate adtoolbox
+    ```
+
+    `mamba env create -f environment.yml` works the same and solves faster. The
+    file lives in the repository root — grab it on its own if you have not
+    cloned:
+
+    ```bash
+    curl -O https://raw.githubusercontent.com/chan-csu/ADToolbox/main/environment.yml
+    ```
+
+    This pulls fastp, Cutadapt, DADA2, VSEARCH, MMseqs2, SRA Toolkit, and the
+    NCBI Datasets CLI alongside the Python package, so you can skip the
+    [External tools](#external-tools) section entirely.
+
 === "pip"
 
     ```bash
     pip install adtoolbox
     ```
+
+    Installs the Python package only. The metagenomics pipeline additionally
+    needs the [external tools](#external-tools) on your `PATH`, or a container.
 
 === "From source"
 
@@ -80,13 +105,23 @@ this section — the ADToolbox image already contains all of them.
 | [NCBI Datasets](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/) | Batched assembly downloads. |
 | [SRA Toolkit](https://github.com/ncbi/sra-tools) | `prefetch` and `fasterq-dump` for downloading reads from SRA. |
 
-The quickest local install is conda/mamba:
+If you used the [conda environment file](#install-the-package) these are already
+installed. To add them to an existing environment:
 
 ```bash
 mamba install -c conda-forge -c bioconda \
   fastp cutadapt r-base r-digest bioconductor-dada2 \
   vsearch mmseqs2 ncbi-datasets-cli sra-tools
 ```
+
+!!! note "Channel placement"
+    Everything above is on **bioconda** except `ncbi-datasets-cli`, which comes
+    from **conda-forge**. Keep both channels on the command line, and list
+    `conda-forge` first — that ordering is what bioconda expects.
+
+Only the shotgun route is lighter: it needs just **fastp** and **MMseqs2**
+(plus SRA Toolkit for `--input-type sra`). Cutadapt, DADA2/R, and VSEARCH are
+amplicon-only.
 
 This installs standalone DADA2 rather than QIIME2. Set `container = "None"` in the execution profile so Slurm jobs use these commands from the active environment.
 
