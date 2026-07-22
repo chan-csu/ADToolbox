@@ -6,17 +6,24 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="A Python toolbox for modeling, simulating, and optimizing anaerobic digestion — from raw amplicon reads to calibrated ADM1 and e-ADM models.">
       
       
       
-        <link rel="prev" href="../API/">
+        <link rel="canonical" href="https://chan-csu.github.io/ADToolbox/ADM_Models/">
       
       
-        <link rel="next" href="../modeling.html">
+        <link rel="prev" href="../Metagenomics_Pipeline/">
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+        <link rel="next" href="../Optimization/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -24,7 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -38,12 +48,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -51,11 +63,17 @@
 
     
     
-    
   </head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -78,12 +96,12 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="ADToolbox" class="md-header__button md-logo" aria-label="ADToolbox" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.27 10 9 7h5.42l1.16-2-.08-.5A1.5 1.5 0 0 1 17 3a1.5 1.5 0 0 1 1.5 1.5c0 .71-.5 1.31-1.17 1.46l-.96 1.67L17.73 10l.86-1.5-.09-.5A1.5 1.5 0 0 1 20 6.5 1.5 1.5 0 0 1 21.5 8c0 .71-.5 1.3-1.15 1.46L18.89 12l1.73 3c.77.07 1.38.71 1.38 1.5a1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5v-.26L17.73 14l-1.36 2.37.96 1.67a1.5 1.5 0 0 1 1.17 1.46A1.5 1.5 0 0 1 17 21a1.5 1.5 0 0 1-1.5-1.5l.08-.5-1.16-2h-3.84l-1.16 2 .08.5A1.5 1.5 0 0 1 8 21a1.5 1.5 0 0 1-1.5-1.5c0-.71.5-1.31 1.17-1.46l.96-1.67L4.38 9C3.61 8.93 3 8.29 3 7.5A1.5 1.5 0 0 1 4.5 6 1.5 1.5 0 0 1 6 7.5v.26zm2.88-1-1.73 3 1.73 3h4.7l1.73-3-1.73-3z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -107,21 +125,231 @@
       </div>
     </div>
     
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Follow system theme"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Follow system theme" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="light-green"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/chan-csu/ADToolbox" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chan-csu/ADToolbox
+  </div>
+</a>
+      </div>
     
   </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../Installation/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../Metagenomics_Pipeline/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../CLI/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CLI
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../API/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Python API
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
   
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -135,17 +363,31 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="ADToolbox" class="md-nav__button md-logo" aria-label="ADToolbox" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.27 10 9 7h5.42l1.16-2-.08-.5A1.5 1.5 0 0 1 17 3a1.5 1.5 0 0 1 1.5 1.5c0 .71-.5 1.31-1.17 1.46l-.96 1.67L17.73 10l.86-1.5-.09-.5A1.5 1.5 0 0 1 20 6.5 1.5 1.5 0 0 1 21.5 8c0 .71-.5 1.3-1.15 1.46L18.89 12l1.73 3c.77.07 1.38.71 1.38 1.5a1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5v-.26L17.73 14l-1.36 2.37.96 1.67a1.5 1.5 0 0 1 1.17 1.46A1.5 1.5 0 0 1 17 21a1.5 1.5 0 0 1-1.5-1.5l.08-.5-1.16-2h-3.84l-1.16 2 .08.5A1.5 1.5 0 0 1 8 21a1.5 1.5 0 0 1-1.5-1.5c0-.71.5-1.31 1.17-1.46l.96-1.67L4.38 9C3.61 8.93 3 8.29 3 7.5A1.5 1.5 0 0 1 4.5 6 1.5 1.5 0 0 1 6 7.5v.26zm2.88-1-1.73 3 1.73 3h4.7l1.73-3-1.73-3z"/></svg>
 
     </a>
     ADToolbox
   </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/chan-csu/ADToolbox" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    chan-csu/ADToolbox
+  </div>
+</a>
+    </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
     
@@ -161,9 +403,14 @@
   
   
   <span class="md-ellipsis">
-    Welcome to ADToolbox
+    
+  
+    Home
+  
+
     
   </span>
+  
   
 
       </a>
@@ -173,6 +420,64 @@
     
       
       
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -183,62 +488,158 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Installation
+  
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../CLI/" class="md-nav__link">
+      <a href="../Quickstart/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Commandline Interface
+    
+  
+    Quickstart
+  
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../API/" class="md-nav__link">
+      <a href="../Metagenomics_Pipeline/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    API
+    
+  
+    Metagenomics Pipeline
+  
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
     
@@ -258,9 +659,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     ADM Models
+  
+
     
   </span>
+  
   
 
           <span class="md-nav__icon md-icon"></span>
@@ -271,9 +677,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     ADM Models
+  
+
     
   </span>
+  
   
 
       </a>
@@ -296,7 +707,9 @@
         <li class="md-nav__item">
   <a href="#model-inputs" class="md-nav__link">
     <span class="md-ellipsis">
-      Model Inputs
+      
+        Model Inputs
+      
     </span>
   </a>
   
@@ -306,7 +719,9 @@
           <li class="md-nav__item">
   <a href="#adm1-input-contract" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Input Contract
+      
+        ADM1 Input Contract
+      
     </span>
   </a>
   
@@ -315,7 +730,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-input-contract" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Input Contract
+      
+        e-ADM Input Contract
+      
     </span>
   </a>
   
@@ -324,7 +741,9 @@
           <li class="md-nav__item">
   <a href="#other-keyed-database-files" class="md-nav__link">
     <span class="md-ellipsis">
-      Other Keyed Database Files
+      
+        Other Keyed Database Files
+      
     </span>
   </a>
   
@@ -338,7 +757,9 @@
         <li class="md-nav__item">
   <a href="#model-outputs" class="md-nav__link">
     <span class="md-ellipsis">
-      Model Outputs
+      
+        Model Outputs
+      
     </span>
   </a>
   
@@ -348,7 +769,9 @@
           <li class="md-nav__item">
   <a href="#output-shapes" class="md-nav__link">
     <span class="md-ellipsis">
-      Output Shapes
+      
+        Output Shapes
+      
     </span>
   </a>
   
@@ -362,7 +785,9 @@
         <li class="md-nav__item">
   <a href="#mathematical-setup" class="md-nav__link">
     <span class="md-ellipsis">
-      Mathematical Setup
+      
+        Mathematical Setup
+      
     </span>
   </a>
   
@@ -371,7 +796,9 @@
         <li class="md-nav__item">
   <a href="#reaction-rate-forms" class="md-nav__link">
     <span class="md-ellipsis">
-      Reaction Rate Forms
+      
+        Reaction Rate Forms
+      
     </span>
   </a>
   
@@ -381,7 +808,9 @@
           <li class="md-nav__item">
   <a href="#acidbase-equations" class="md-nav__link">
     <span class="md-ellipsis">
-      Acid/Base Equations
+      
+        Acid/Base Equations
+      
     </span>
   </a>
   
@@ -390,7 +819,9 @@
           <li class="md-nav__item">
   <a href="#inhibition-equations" class="md-nav__link">
     <span class="md-ellipsis">
-      Inhibition Equations
+      
+        Inhibition Equations
+      
     </span>
   </a>
   
@@ -404,7 +835,9 @@
         <li class="md-nav__item">
   <a href="#adm1-reactions" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Reactions
+      
+        ADM1 Reactions
+      
     </span>
   </a>
   
@@ -414,7 +847,9 @@
           <li class="md-nav__item">
   <a href="#adm1-stoichiometric-coefficients" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Stoichiometric Coefficients
+      
+        ADM1 Stoichiometric Coefficients
+      
     </span>
   </a>
   
@@ -423,7 +858,9 @@
           <li class="md-nav__item">
   <a href="#adm1-inhibition-factors" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Inhibition Factors
+      
+        ADM1 Inhibition Factors
+      
     </span>
   </a>
   
@@ -437,7 +874,9 @@
         <li class="md-nav__item">
   <a href="#e-adm-reactions" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Reactions
+      
+        e-ADM Reactions
+      
     </span>
   </a>
   
@@ -447,7 +886,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-stoichiometric-coefficients" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Stoichiometric Coefficients
+      
+        e-ADM Stoichiometric Coefficients
+      
     </span>
   </a>
   
@@ -456,7 +897,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-inhibition-factors" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Inhibition Factors
+      
+        e-ADM Inhibition Factors
+      
     </span>
   </a>
   
@@ -470,7 +913,9 @@
         <li class="md-nav__item">
   <a href="#methane-producing-reactions" class="md-nav__link">
     <span class="md-ellipsis">
-      Methane-Producing Reactions
+      
+        Methane-Producing Reactions
+      
     </span>
   </a>
   
@@ -479,7 +924,9 @@
         <li class="md-nav__item">
   <a href="#state-vectors" class="md-nav__link">
     <span class="md-ellipsis">
-      State Vectors
+      
+        State Vectors
+      
     </span>
   </a>
   
@@ -489,7 +936,9 @@
           <li class="md-nav__item">
   <a href="#adm1-species" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Species
+      
+        ADM1 Species
+      
     </span>
   </a>
   
@@ -498,7 +947,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-species" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Species
+      
+        e-ADM Species
+      
     </span>
   </a>
   
@@ -512,7 +963,9 @@
         <li class="md-nav__item">
   <a href="#minimal-cli-run" class="md-nav__link">
     <span class="md-ellipsis">
-      Minimal CLI Run
+      
+        Minimal CLI Run
+      
     </span>
   </a>
   
@@ -525,9 +978,66 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
-      
-      
+  
+    Parameter Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Notebooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
@@ -538,18 +1048,24 @@
   
   
   <span class="md-ellipsis">
-    Modeling Pipeline
+    
+  
+    Walkthrough: Modeling
+  
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
@@ -560,9 +1076,49 @@
   
   
   <span class="md-ellipsis">
-    Parameter Tuning Pipeline
+    
+  
+    Walkthrough: Parameter Tuning
+  
+
     
   </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
   
 
       </a>
@@ -576,18 +1132,267 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Python API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../Metagenomics_Pipeline/" class="md-nav__link">
+      <a href="../API/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Metagenomics Pipelines
+    
+  
+    Overview
+  
+
     
   </span>
   
+  
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-configs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    configs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-adm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    adm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-optimize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    optimize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-stats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -621,7 +1426,9 @@
         <li class="md-nav__item">
   <a href="#model-inputs" class="md-nav__link">
     <span class="md-ellipsis">
-      Model Inputs
+      
+        Model Inputs
+      
     </span>
   </a>
   
@@ -631,7 +1438,9 @@
           <li class="md-nav__item">
   <a href="#adm1-input-contract" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Input Contract
+      
+        ADM1 Input Contract
+      
     </span>
   </a>
   
@@ -640,7 +1449,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-input-contract" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Input Contract
+      
+        e-ADM Input Contract
+      
     </span>
   </a>
   
@@ -649,7 +1460,9 @@
           <li class="md-nav__item">
   <a href="#other-keyed-database-files" class="md-nav__link">
     <span class="md-ellipsis">
-      Other Keyed Database Files
+      
+        Other Keyed Database Files
+      
     </span>
   </a>
   
@@ -663,7 +1476,9 @@
         <li class="md-nav__item">
   <a href="#model-outputs" class="md-nav__link">
     <span class="md-ellipsis">
-      Model Outputs
+      
+        Model Outputs
+      
     </span>
   </a>
   
@@ -673,7 +1488,9 @@
           <li class="md-nav__item">
   <a href="#output-shapes" class="md-nav__link">
     <span class="md-ellipsis">
-      Output Shapes
+      
+        Output Shapes
+      
     </span>
   </a>
   
@@ -687,7 +1504,9 @@
         <li class="md-nav__item">
   <a href="#mathematical-setup" class="md-nav__link">
     <span class="md-ellipsis">
-      Mathematical Setup
+      
+        Mathematical Setup
+      
     </span>
   </a>
   
@@ -696,7 +1515,9 @@
         <li class="md-nav__item">
   <a href="#reaction-rate-forms" class="md-nav__link">
     <span class="md-ellipsis">
-      Reaction Rate Forms
+      
+        Reaction Rate Forms
+      
     </span>
   </a>
   
@@ -706,7 +1527,9 @@
           <li class="md-nav__item">
   <a href="#acidbase-equations" class="md-nav__link">
     <span class="md-ellipsis">
-      Acid/Base Equations
+      
+        Acid/Base Equations
+      
     </span>
   </a>
   
@@ -715,7 +1538,9 @@
           <li class="md-nav__item">
   <a href="#inhibition-equations" class="md-nav__link">
     <span class="md-ellipsis">
-      Inhibition Equations
+      
+        Inhibition Equations
+      
     </span>
   </a>
   
@@ -729,7 +1554,9 @@
         <li class="md-nav__item">
   <a href="#adm1-reactions" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Reactions
+      
+        ADM1 Reactions
+      
     </span>
   </a>
   
@@ -739,7 +1566,9 @@
           <li class="md-nav__item">
   <a href="#adm1-stoichiometric-coefficients" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Stoichiometric Coefficients
+      
+        ADM1 Stoichiometric Coefficients
+      
     </span>
   </a>
   
@@ -748,7 +1577,9 @@
           <li class="md-nav__item">
   <a href="#adm1-inhibition-factors" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Inhibition Factors
+      
+        ADM1 Inhibition Factors
+      
     </span>
   </a>
   
@@ -762,7 +1593,9 @@
         <li class="md-nav__item">
   <a href="#e-adm-reactions" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Reactions
+      
+        e-ADM Reactions
+      
     </span>
   </a>
   
@@ -772,7 +1605,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-stoichiometric-coefficients" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Stoichiometric Coefficients
+      
+        e-ADM Stoichiometric Coefficients
+      
     </span>
   </a>
   
@@ -781,7 +1616,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-inhibition-factors" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Inhibition Factors
+      
+        e-ADM Inhibition Factors
+      
     </span>
   </a>
   
@@ -795,7 +1632,9 @@
         <li class="md-nav__item">
   <a href="#methane-producing-reactions" class="md-nav__link">
     <span class="md-ellipsis">
-      Methane-Producing Reactions
+      
+        Methane-Producing Reactions
+      
     </span>
   </a>
   
@@ -804,7 +1643,9 @@
         <li class="md-nav__item">
   <a href="#state-vectors" class="md-nav__link">
     <span class="md-ellipsis">
-      State Vectors
+      
+        State Vectors
+      
     </span>
   </a>
   
@@ -814,7 +1655,9 @@
           <li class="md-nav__item">
   <a href="#adm1-species" class="md-nav__link">
     <span class="md-ellipsis">
-      ADM1 Species
+      
+        ADM1 Species
+      
     </span>
   </a>
   
@@ -823,7 +1666,9 @@
           <li class="md-nav__item">
   <a href="#e-adm-species" class="md-nav__link">
     <span class="md-ellipsis">
-      e-ADM Species
+      
+        e-ADM Species
+      
     </span>
   </a>
   
@@ -837,7 +1682,9 @@
         <li class="md-nav__item">
   <a href="#minimal-cli-run" class="md-nav__link">
     <span class="md-ellipsis">
-      Minimal CLI Run
+      
+        Minimal CLI Run
+      
     </span>
   </a>
   
@@ -853,13 +1700,22 @@
           
           
             <div class="md-content" data-md-component="content">
+              
               <article class="md-content__inner md-typeset">
                 
                   
 
 
+  
+    <a href="https://github.com/chan-csu/ADToolbox/edit/main/docs/ADM_Models.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
 
-<h1 id="adm-models">ADM Models</h1>
+
+<h1 id="adm-models">ADM Models<a class="headerlink" href="#adm-models" title="Link to this section">&para;</a></h1>
 <p>ADToolbox exposes two anaerobic digestion models:</p>
 <table>
 <thead>
@@ -873,14 +1729,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>adtoolbox ADM adm1</code></td>
+<td><code>adtoolbox adm adm1</code></td>
 <td>ADM1</td>
 <td><code>adm1</code></td>
 <td><code>adm.build_adm1_stoichiometric_matrix</code></td>
 <td><code>adm.adm1_ode_sys</code></td>
 </tr>
 <tr>
-<td><code>adtoolbox ADM e-adm</code></td>
+<td><code>adtoolbox adm e-adm</code></td>
 <td>e-ADM</td>
 <td><code>e_adm</code></td>
 <td><code>adm.build_e_adm_stoichiometric_matrix</code></td>
@@ -889,27 +1745,27 @@
 </tbody>
 </table>
 <p>The CLI and public API use only the names ADM1 and e-ADM. The preferred parameter format is one <code>models.json</code> file containing all models, keyed by model name.</p>
-<h2 id="model-inputs">Model Inputs</h2>
+<h2 id="model-inputs">Model Inputs<a class="headerlink" href="#model-inputs" title="Link to this section">&para;</a></h2>
 <p>The canonical model input is a single JSON file with one top-level key per model:</p>
-<pre><code class="language-json">{
-  &quot;adm1&quot;: {
-    &quot;species&quot;: [],
-    &quot;reactions&quot;: [],
-    &quot;model_parameters&quot;: {},
-    &quot;base_parameters&quot;: {},
-    &quot;initial_conditions&quot;: {},
-    &quot;inlet_conditions&quot;: {}
-  },
-  &quot;e_adm&quot;: {
-    &quot;species&quot;: [],
-    &quot;reactions&quot;: [],
-    &quot;model_parameters&quot;: {},
-    &quot;base_parameters&quot;: {},
-    &quot;initial_conditions&quot;: {},
-    &quot;inlet_conditions&quot;: {}
-  }
-}
-</code></pre>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;adm1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">&quot;species&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">&quot;reactions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">&quot;model_parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">&quot;base_parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nt">&quot;initial_conditions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">&quot;inlet_conditions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="nt">&quot;e_adm&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">&quot;species&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">&quot;reactions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="nt">&quot;model_parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">&quot;base_parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">&quot;initial_conditions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="nt">&quot;inlet_conditions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>The first layer is always the model key. The second layer is the complete model payload used to instantiate <code>adm.Model</code>.</p>
 <table>
 <thead>
@@ -923,12 +1779,12 @@
 <tr>
 <td><code>adm1</code></td>
 <td>ADM1</td>
-<td><code>adtoolbox ADM adm1 --models-json models.json</code></td>
+<td><code>adtoolbox adm adm1 --models-json models.json</code></td>
 </tr>
 <tr>
 <td><code>e_adm</code></td>
 <td>e-ADM</td>
-<td><code>adtoolbox ADM e-adm --models-json models.json</code></td>
+<td><code>adtoolbox adm e-adm --models-json models.json</code></td>
 </tr>
 </tbody>
 </table>
@@ -1018,7 +1874,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="adm1-input-contract">ADM1 Input Contract</h3>
+<h3 id="adm1-input-contract">ADM1 Input Contract<a class="headerlink" href="#adm1-input-contract" title="Link to this section">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1067,7 +1923,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="e-adm-input-contract">e-ADM Input Contract</h3>
+<h3 id="e-adm-input-contract">e-ADM Input Contract<a class="headerlink" href="#e-adm-input-contract" title="Link to this section">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1122,31 +1978,31 @@
 </tr>
 </tbody>
 </table>
-<h3 id="other-keyed-database-files">Other Keyed Database Files</h3>
+<h3 id="other-keyed-database-files">Other Keyed Database Files<a class="headerlink" href="#other-keyed-database-files" title="Link to this section">&para;</a></h3>
 <p>The same first-layer-key pattern should be used for other structured databases. For example, feeds can live in one <code>feeds.json</code> file:</p>
-<pre><code class="language-json">{
-  &quot;food_waste&quot;: {
-    &quot;name&quot;: &quot;food_waste&quot;,
-    &quot;carbohydrates&quot;: 10,
-    &quot;proteins&quot;: 20,
-    &quot;lipids&quot;: 20,
-    &quot;si&quot;: 30,
-    &quot;xi&quot;: 50,
-    &quot;tss&quot;: 80
-  },
-  &quot;manure&quot;: {
-    &quot;name&quot;: &quot;manure&quot;,
-    &quot;carbohydrates&quot;: 5,
-    &quot;proteins&quot;: 15,
-    &quot;lipids&quot;: 5,
-    &quot;si&quot;: 20,
-    &quot;xi&quot;: 55,
-    &quot;tss&quot;: 70
-  }
-}
-</code></pre>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;food_waste&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;food_waste&quot;</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">&quot;carbohydrates&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">&quot;proteins&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">&quot;lipids&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">&quot;si&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">&quot;xi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="nt">&quot;tss&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">&quot;manure&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;manure&quot;</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="nt">&quot;carbohydrates&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">&quot;proteins&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="nt">&quot;lipids&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="nt">&quot;si&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="nt">&quot;xi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="nt">&quot;tss&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">70</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>That keeps the rule consistent: one file per database type, one top-level key per named item.</p>
-<h2 id="model-outputs">Model Outputs</h2>
+<h2 id="model-outputs">Model Outputs<a class="headerlink" href="#model-outputs" title="Link to this section">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1184,7 +2040,7 @@
 </tbody>
 </table>
 <p>ADM1 has 38 species and 28 reactions. e-ADM has 49 species and 45 reactions.</p>
-<h3 id="output-shapes">Output Shapes</h3>
+<h3 id="output-shapes">Output Shapes<a class="headerlink" href="#output-shapes" title="Link to this section">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1228,7 +2084,7 @@
 </tbody>
 </table>
 <p>The solver returns a fallback solution filled with <code>1e10</code> if integration fails. That is a failure sentinel, not a physical concentration.</p>
-<h2 id="mathematical-setup">Mathematical Setup</h2>
+<h2 id="mathematical-setup">Mathematical Setup<a class="headerlink" href="#mathematical-setup" title="Link to this section">&para;</a></h2>
 <p>The JSON files describe the state names, reaction names, and parameter values. The Python model converts them into a dynamic system by building a stoichiometric matrix and evaluating reaction rates at every time step.</p>
 <table>
 <thead>
@@ -1282,36 +2138,36 @@
 </tbody>
 </table>
 <p>The implemented derivative can be written as:</p>
-<pre><code class="language-text">c = current state vector
-c_in = inlet state vector
-S = stoichiometric matrix
-v = reaction-rate vector
-
-r = S @ v
-
-for liquid states:
-    dc_liq/dt = r_liq + (q_in / V_liq) * (c_in,liq - c_liq)
-
-for gas states:
-    dc_gas/dt = r_gas + (q_gas / V_gas) * (c_in,gas - c_gas)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>c = current state vector
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>c_in = inlet state vector
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>S = stoichiometric matrix
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>v = reaction-rate vector
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>r = S @ v
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>for liquid states:
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    dc_liq/dt = r_liq + (q_in / V_liq) * (c_in,liq - c_liq)
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>for gas states:
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    dc_gas/dt = r_gas + (q_gas / V_gas) * (c_in,gas - c_gas)
+</span></code></pre></div>
 <p>The gas states are the final three species in both models:</p>
-<pre><code class="language-text">S_gas_h2, S_gas_ch4, S_gas_co2
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>S_gas_h2, S_gas_ch4, S_gas_co2
+</span></code></pre></div>
 <p>The gas pressure and gas outflow equations are:</p>
-<pre><code class="language-text">p_gas_h2  = S_gas_h2  * R * T_op / 16
-p_gas_ch4 = S_gas_ch4 * R * T_op / 64
-p_gas_co2 = S_gas_co2 * R * T_op
-p_gas_h2o = 0.0313 * exp(5290 * (1 / T_base - 1 / T_op))
-
-P_gas = p_gas_h2 + p_gas_ch4 + p_gas_co2 + p_gas_h2o
-q_gas = max(0, k_p * (P_gas - P_atm))
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>p_gas_h2  = S_gas_h2  * R * T_op / 16
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>p_gas_ch4 = S_gas_ch4 * R * T_op / 64
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>p_gas_co2 = S_gas_co2 * R * T_op
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>p_gas_h2o = 0.0313 * exp(5290 * (1 / T_base - 1 / T_op))
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>P_gas = p_gas_h2 + p_gas_ch4 + p_gas_co2 + p_gas_h2o
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>q_gas = max(0, k_p * (P_gas - P_atm))
+</span></code></pre></div>
 <p>For any reaction <code>j</code>, the instantaneous contribution to species <code>i</code> is:</p>
-<pre><code class="language-text">dc_i/dt from reaction j = S[i, j] * v_j
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>dc_i/dt from reaction j = S[i, j] * v_j
+</span></code></pre></div>
 <p>This is why reaction and species names are used to build <code>S</code>: the equations are much easier to audit than when the matrix is filled with positional numbers.</p>
-<h2 id="reaction-rate-forms">Reaction Rate Forms</h2>
+<h2 id="reaction-rate-forms">Reaction Rate Forms<a class="headerlink" href="#reaction-rate-forms" title="Link to this section">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1363,73 +2219,73 @@ q_gas = max(0, k_p * (P_gas - P_atm))
 </tr>
 </tbody>
 </table>
-<h3 id="acidbase-equations">Acid/Base Equations</h3>
+<h3 id="acidbase-equations">Acid/Base Equations<a class="headerlink" href="#acidbase-equations" title="Link to this section">&para;</a></h3>
 <p>ADM1 and e-ADM both calculate kinetic acid/base rates, then set selected acid/base derivatives to zero in DAE mode. The kinetic form is:</p>
-<pre><code class="language-text">v_AB,acid = k_A_B,acid * (S_ion * (K_a,acid + S_H) - K_a,acid * S_total)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>v_AB,acid = k_A_B,acid * (S_ion * (K_a,acid + S_H) - K_a,acid * S_total)
+</span></code></pre></div>
 <p>For carbonate and inorganic nitrogen:</p>
-<pre><code class="language-text">v_AB,co2 = k_A_B_co2 * (S_hco3_ion * (K_a_co2 + S_H) - K_a_co2 * S_IC)
-v_AB,IN  = k_A_B_IN  * (S_nh3      * (K_a_IN  + S_H) - K_a_IN  * S_IN)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>v_AB,co2 = k_A_B_co2 * (S_hco3_ion * (K_a_co2 + S_H) - K_a_co2 * S_IC)
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>v_AB,IN  = k_A_B_IN  * (S_nh3      * (K_a_IN  + S_H) - K_a_IN  * S_IN)
+</span></code></pre></div>
 <p>In DAE mode, ionized species are updated algebraically. e-ADM explicitly updates:</p>
-<pre><code class="language-text">S_va_ion  = K_a_va  / (K_a_va  + S_H) * S_va
-S_bu_ion  = K_a_bu  / (K_a_bu  + S_H) * S_bu
-S_pro_ion = K_a_pro / (K_a_pro + S_H) * S_pro
-S_cap_ion = K_a_cap / (K_a_cap + S_H) * S_cap
-S_ac_ion  = K_a_ac  / (K_a_ac  + S_H) * S_ac
-S_lac_ion = K_a_lac / (K_a_lac + S_H) * S_lac
-S_hco3_ion = S_IC - S_co2
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>S_va_ion  = K_a_va  / (K_a_va  + S_H) * S_va
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>S_bu_ion  = K_a_bu  / (K_a_bu  + S_H) * S_bu
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>S_pro_ion = K_a_pro / (K_a_pro + S_H) * S_pro
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>S_cap_ion = K_a_cap / (K_a_cap + S_H) * S_cap
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>S_ac_ion  = K_a_ac  / (K_a_ac  + S_H) * S_ac
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>S_lac_ion = K_a_lac / (K_a_lac + S_H) * S_lac
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>S_hco3_ion = S_IC - S_co2
+</span></code></pre></div>
 <p>Hydrogen ion concentration is calculated from electroneutrality unless it is controlled:</p>
-<pre><code class="language-text">S_H = -phi / 2 + 0.5 * sqrt(phi^2 + 4 * K_w)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>S_H = -phi / 2 + 0.5 * sqrt(phi^2 + 4 * K_w)
+</span></code></pre></div>
 <p>When <code>S_H_ion</code> is included in <code>control_state</code>, the controlled value is used and <code>dS_H_ion/dt = 0</code>.</p>
-<h3 id="inhibition-equations">Inhibition Equations</h3>
+<h3 id="inhibition-equations">Inhibition Equations<a class="headerlink" href="#inhibition-equations" title="Link to this section">&para;</a></h3>
 <p>The pH inhibition terms use Hill-type functions:</p>
-<pre><code class="language-text">I_pH_x = K_pH_x^n_x / (S_H^n_x + K_pH_x^n_x)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>I_pH_x = K_pH_x^n_x / (S_H^n_x + K_pH_x^n_x)
+</span></code></pre></div>
 <p>Nitrogen limitation is a Monod term:</p>
-<pre><code class="language-text">I_IN_lim = S_IN / (K_S_IN + S_IN + eps)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>I_IN_lim = S_IN / (K_S_IN + S_IN + eps)
+</span></code></pre></div>
 <p>Hydrogen and ammonia inhibition terms use:</p>
-<pre><code class="language-text">I_h2_x = 1 / (1 + S_h2 / (K_I_h2_x + eps))
-I_nh3  = 1 / (1 + S_nh3 / (K_I_nh3 + eps))
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>I_h2_x = 1 / (1 + S_h2 / (K_I_h2_x + eps))
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>I_nh3  = 1 / (1 + S_nh3 / (K_I_nh3 + eps))
+</span></code></pre></div>
 <p>ADM1 uses the same conceptual forms, with its original <code>I_IN_lim = 1 / (1 + K_S_IN / S_IN)</code> expression.</p>
-<h2 id="adm1-reactions">ADM1 Reactions</h2>
+<h2 id="adm1-reactions">ADM1 Reactions<a class="headerlink" href="#adm1-reactions" title="Link to this section">&para;</a></h2>
 <p>The ADM1 reactions follow the Batstone ADM1 structure: disintegration, hydrolysis, soluble-substrate uptake, biomass decay, acid/base speciation, and gas transfer.</p>
-<h3 id="adm1-stoichiometric-coefficients">ADM1 Stoichiometric Coefficients</h3>
+<h3 id="adm1-stoichiometric-coefficients">ADM1 Stoichiometric Coefficients<a class="headerlink" href="#adm1-stoichiometric-coefficients" title="Link to this section">&para;</a></h3>
 <p>ADM1 uses yield coefficients <code>Y_*</code>, product fractions <code>f_*</code>, carbon contents <code>C_*</code>, and nitrogen contents <code>N_*</code> to fill <code>S</code>. Nitrogen limitation sets selected yields to zero before <code>S</code> is built.</p>
 <p>For the main carbon-balance terms:</p>
-<pre><code class="language-text">Y_su = 0 if nitrogen_limited else Y_su
-Y_aa = 0 if nitrogen_limited else Y_aa
-Y_fa = 0 if nitrogen_limited else Y_fa
-
-s_1  = -C_xc + f_sI_xc*C_sI + f_ch_xc*C_ch + f_pr_xc*C_pr + f_li_xc*C_li + f_xI_xc*C_xI
-s_2  = -C_ch + C_su
-s_3  = -C_pr + C_aa
-s_4  = -C_li + (1 - f_fa_li)*C_su + f_fa_li*C_fa
-s_5  = -C_su + (1 - Y_su)*(f_bu_su*C_bu + f_pro_su*C_pro + f_ac_su*C_ac) + Y_su*C_bac
-s_6  = -C_aa + (1 - Y_aa)*(f_va_aa*C_va + f_bu_aa*C_bu + f_pro_aa*C_pro + f_ac_aa*C_ac) + Y_aa*C_bac
-s_7  = -C_fa + (1 - Y_fa)*0.7*C_ac + Y_fa*C_bac
-s_8  = -C_va + (1 - Y_c4)*0.54*C_pro + (1 - Y_c4)*0.31*C_ac + Y_c4*C_bac
-s_9  = -C_bu + (1 - Y_c4)*0.8*C_ac + Y_c4*C_bac
-s_10 = -C_pro + (1 - Y_pro)*0.57*C_ac + Y_pro*C_bac
-s_11 = -C_ac + (1 - Y_ac)*C_ch4 + Y_ac*C_bac
-s_12 = (1 - Y_h2)*C_ch4 + Y_h2*C_bac
-s_13 = -C_bac + C_xc
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Y_su = 0 if nitrogen_limited else Y_su
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>Y_aa = 0 if nitrogen_limited else Y_aa
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>Y_fa = 0 if nitrogen_limited else Y_fa
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>s_1  = -C_xc + f_sI_xc*C_sI + f_ch_xc*C_ch + f_pr_xc*C_pr + f_li_xc*C_li + f_xI_xc*C_xI
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>s_2  = -C_ch + C_su
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>s_3  = -C_pr + C_aa
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>s_4  = -C_li + (1 - f_fa_li)*C_su + f_fa_li*C_fa
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>s_5  = -C_su + (1 - Y_su)*(f_bu_su*C_bu + f_pro_su*C_pro + f_ac_su*C_ac) + Y_su*C_bac
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>s_6  = -C_aa + (1 - Y_aa)*(f_va_aa*C_va + f_bu_aa*C_bu + f_pro_aa*C_pro + f_ac_aa*C_ac) + Y_aa*C_bac
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>s_7  = -C_fa + (1 - Y_fa)*0.7*C_ac + Y_fa*C_bac
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>s_8  = -C_va + (1 - Y_c4)*0.54*C_pro + (1 - Y_c4)*0.31*C_ac + Y_c4*C_bac
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>s_9  = -C_bu + (1 - Y_c4)*0.8*C_ac + Y_c4*C_bac
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>s_10 = -C_pro + (1 - Y_pro)*0.57*C_ac + Y_pro*C_bac
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>s_11 = -C_ac + (1 - Y_ac)*C_ch4 + Y_ac*C_bac
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>s_12 = (1 - Y_h2)*C_ch4 + Y_h2*C_bac
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>s_13 = -C_bac + C_xc
+</span></code></pre></div>
 <p>These terms are inserted into the <code>S_IC</code> row with negative signs for conversion reactions and positive return through decay. For example:</p>
-<pre><code class="language-text">S[S_IC, Uptake of sugars] = -s_5
-S[S_IC, Uptake of acetate] = -s_11
-S[S_IC, Decay of Xsu] = -s_13
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>S[S_IC, Uptake of sugars] = -s_5
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>S[S_IC, Uptake of acetate] = -s_11
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>S[S_IC, Decay of Xsu] = -s_13
+</span></code></pre></div>
 <p>Nitrogen stoichiometry follows the same pattern:</p>
-<pre><code class="language-text">S[S_IN, Uptake of sugars] = -Y_su * N_bac
-S[S_IN, Uptake of amino acids] = N_aa - Y_aa * N_bac
-S[S_IN, Uptake of acetate] = -Y_ac * N_bac
-S[S_IN, Decay of Xsu] = N_bac - N_xc
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>S[S_IN, Uptake of sugars] = -Y_su * N_bac
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>S[S_IN, Uptake of amino acids] = N_aa - Y_aa * N_bac
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>S[S_IN, Uptake of acetate] = -Y_ac * N_bac
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>S[S_IN, Decay of Xsu] = N_bac - N_xc
+</span></code></pre></div>
 <table>
 <thead>
 <tr>
@@ -1581,7 +2437,7 @@ S[S_IN, Decay of Xsu] = N_bac - N_xc
 </tr>
 </tbody>
 </table>
-<h3 id="adm1-inhibition-factors">ADM1 Inhibition Factors</h3>
+<h3 id="adm1-inhibition-factors">ADM1 Inhibition Factors<a class="headerlink" href="#adm1-inhibition-factors" title="Link to this section">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1628,53 +2484,53 @@ S[S_IN, Decay of Xsu] = N_bac - N_xc
 </tr>
 </tbody>
 </table>
-<h2 id="e-adm-reactions">e-ADM Reactions</h2>
+<h2 id="e-adm-reactions">e-ADM Reactions<a class="headerlink" href="#e-adm-reactions" title="Link to this section">&para;</a></h2>
 <p>e-ADM keeps the same dynamic structure but expands the soluble fermentation network. It separates ethanol-linked and lactate-linked routes, adds caproate, lactate, ethanol, explicit TSS/TDS disintegration, and two methanogenesis routes.</p>
-<h3 id="e-adm-stoichiometric-coefficients">e-ADM Stoichiometric Coefficients</h3>
+<h3 id="e-adm-stoichiometric-coefficients">e-ADM Stoichiometric Coefficients<a class="headerlink" href="#e-adm-stoichiometric-coefficients" title="Link to this section">&para;</a></h3>
 <p>e-ADM uses the same matrix logic as ADM1, but most soluble conversions are written as explicit product fractions plus a carbon-balance residual. Selected yields are set to zero under nitrogen limitation.</p>
 <p>For sugar, amino acid, and LCFA uptake:</p>
-<pre><code class="language-text">Y_su = 0 if nitrogen_limited else Y_su
-Y_aa = 0 if nitrogen_limited else Y_aa
-Y_fa = 0 if nitrogen_limited else Y_fa
-
-f_ac_su = 1 - f_pro_su - f_et_su - f_lac_su
-f_ac_aa = 1 - f_pro_aa - f_et_aa - f_lac_aa
-f_ac_fa = 1 - f_pro_fa - f_et_fa - f_lac_fa
-
-f_IC_su = -(-C_su + (1-Y_su)*f_pro_su*C_pro + (1-Y_su)*f_et_su*C_et
-              + (1-Y_su)*f_lac_su*C_lac + (1-Y_su)*f_ac_su*C_ac + Y_su*C_bac)
-
-f_IC_aa = -(-C_aa + (1-Y_aa)*f_pro_aa*C_pro + (1-Y_aa)*f_et_aa*C_et
-              + (1-Y_aa)*f_lac_aa*C_lac + (1-Y_aa)*f_ac_aa*C_ac + Y_aa*C_bac)
-
-f_IC_fa = -(-C_fa + (1-Y_fa)*f_pro_fa*C_pro + (1-Y_fa)*f_et_fa*C_et
-              + (1-Y_fa)*f_lac_fa*C_lac + (1-Y_fa)*f_ac_fa*C_ac + Y_fa*C_bac)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>Y_su = 0 if nitrogen_limited else Y_su
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>Y_aa = 0 if nitrogen_limited else Y_aa
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>Y_fa = 0 if nitrogen_limited else Y_fa
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>f_ac_su = 1 - f_pro_su - f_et_su - f_lac_su
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>f_ac_aa = 1 - f_pro_aa - f_et_aa - f_lac_aa
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>f_ac_fa = 1 - f_pro_fa - f_et_fa - f_lac_fa
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>f_IC_su = -(-C_su + (1-Y_su)*f_pro_su*C_pro + (1-Y_su)*f_et_su*C_et
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>              + (1-Y_su)*f_lac_su*C_lac + (1-Y_su)*f_ac_su*C_ac + Y_su*C_bac)
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>f_IC_aa = -(-C_aa + (1-Y_aa)*f_pro_aa*C_pro + (1-Y_aa)*f_et_aa*C_et
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>              + (1-Y_aa)*f_lac_aa*C_lac + (1-Y_aa)*f_ac_aa*C_ac + Y_aa*C_bac)
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>f_IC_fa = -(-C_fa + (1-Y_fa)*f_pro_fa*C_pro + (1-Y_fa)*f_et_fa*C_et
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>              + (1-Y_fa)*f_lac_fa*C_lac + (1-Y_fa)*f_ac_fa*C_ac + Y_fa*C_bac)
+</span></code></pre></div>
 <p>For chain elongation and VFA conversion, e-ADM uses paired substrate routes:</p>
-<pre><code class="language-text">f_IC_ac_et  = -(-C_ac  + f_et_ac*C_et  + (1-f_et_ac-Y_ac_et)*f_bu_ac*C_bu  + Y_ac_et*C_bac)
-f_IC_ac_lac = -(-C_ac  + f_lac_ac*C_lac + (1-f_lac_ac-Y_ac_lac)*f_bu_ac*C_bu + Y_ac_lac*C_bac)
-
-f_IC_pro_et  = -(-C_pro + f_et_pro*C_et  + (1-f_et_pro-Y_pro_et)*f_va_pro*C_va  + Y_pro_et*C_bac)
-f_IC_pro_lac = -(-C_pro + f_lac_pro*C_lac + (1-f_lac_pro-Y_pro_lac)*f_va_pro*C_va + Y_pro_lac*C_bac)
-
-f_IC_bu_et  = -(-C_bu + f_et_bu*C_et  + (1-f_et_bu-Y_bu_et)*f_cap_bu*C_cap  + Y_bu_et*C_bac)
-f_IC_bu_lac = -(-C_bu + f_lac_bu*C_lac + (1-f_lac_bu-Y_bu_lac)*f_cap_bu*C_cap + Y_bu_lac*C_bac)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>f_IC_ac_et  = -(-C_ac  + f_et_ac*C_et  + (1-f_et_ac-Y_ac_et)*f_bu_ac*C_bu  + Y_ac_et*C_bac)
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>f_IC_ac_lac = -(-C_ac  + f_lac_ac*C_lac + (1-f_lac_ac-Y_ac_lac)*f_bu_ac*C_bu + Y_ac_lac*C_bac)
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>f_IC_pro_et  = -(-C_pro + f_et_pro*C_et  + (1-f_et_pro-Y_pro_et)*f_va_pro*C_va  + Y_pro_et*C_bac)
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>f_IC_pro_lac = -(-C_pro + f_lac_pro*C_lac + (1-f_lac_pro-Y_pro_lac)*f_va_pro*C_va + Y_pro_lac*C_bac)
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>f_IC_bu_et  = -(-C_bu + f_et_bu*C_et  + (1-f_et_bu-Y_bu_et)*f_cap_bu*C_cap  + Y_bu_et*C_bac)
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>f_IC_bu_lac = -(-C_bu + f_lac_bu*C_lac + (1-f_lac_bu-Y_bu_lac)*f_cap_bu*C_cap + Y_bu_lac*C_bac)
+</span></code></pre></div>
 <p>Methanogenesis and oxidation use:</p>
-<pre><code class="language-text">f_IC_Me_ach2 = -(f_ac_h2*C_ac + (1 - Y_Me_ac)*C_ch4 + Y_Me_ac*C_bac)
-f_IC_et_ox   = -(-C_et  + (1-Y_ac_et_ox)*C_bac + Y_ac_et_ox*C_ac)
-f_IC_lac_ox  = -(-C_lac + (1-Y_pro_lac_ox)*C_bac + Y_pro_lac_ox*C_pro)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>f_IC_Me_ach2 = -(f_ac_h2*C_ac + (1 - Y_Me_ac)*C_ch4 + Y_Me_ac*C_bac)
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>f_IC_et_ox   = -(-C_et  + (1-Y_ac_et_ox)*C_bac + Y_ac_et_ox*C_ac)
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>f_IC_lac_ox  = -(-C_lac + (1-Y_pro_lac_ox)*C_bac + Y_pro_lac_ox*C_pro)
+</span></code></pre></div>
 <p>The stoichiometric matrix then combines these residuals with explicit product coefficients. For example:</p>
-<pre><code class="language-text">S[S_su, Uptake of sugars] = -1
-S[S_pro, Uptake of sugars] = (1 - Y_su) * f_pro_su
-S[S_et, Uptake of sugars] = (1 - Y_su) * f_et_su
-S[S_lac, Uptake of sugars] = (1 - Y_su) * f_lac_su
-S[S_ac, Uptake of sugars] = (1 - Y_su) * f_ac_su
-S[S_IN, Uptake of sugars] = -Y_su * N_bac
-S[S_IC, Uptake of sugars] = f_IC_su
-S[X_su, Uptake of sugars] = Y_su
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>S[S_su, Uptake of sugars] = -1
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>S[S_pro, Uptake of sugars] = (1 - Y_su) * f_pro_su
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>S[S_et, Uptake of sugars] = (1 - Y_su) * f_et_su
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>S[S_lac, Uptake of sugars] = (1 - Y_su) * f_lac_su
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>S[S_ac, Uptake of sugars] = (1 - Y_su) * f_ac_su
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>S[S_IN, Uptake of sugars] = -Y_su * N_bac
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>S[S_IC, Uptake of sugars] = f_IC_su
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>S[X_su, Uptake of sugars] = Y_su
+</span></code></pre></div>
 <table>
 <thead>
 <tr>
@@ -1911,7 +2767,7 @@ S[X_su, Uptake of sugars] = Y_su
 </tr>
 </tbody>
 </table>
-<h3 id="e-adm-inhibition-factors">e-ADM Inhibition Factors</h3>
+<h3 id="e-adm-inhibition-factors">e-ADM Inhibition Factors<a class="headerlink" href="#e-adm-inhibition-factors" title="Link to this section">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1973,7 +2829,7 @@ S[X_su, Uptake of sugars] = Y_su
 </tr>
 </tbody>
 </table>
-<h2 id="methane-producing-reactions">Methane-Producing Reactions</h2>
+<h2 id="methane-producing-reactions">Methane-Producing Reactions<a class="headerlink" href="#methane-producing-reactions" title="Link to this section">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1993,16 +2849,16 @@ S[X_su, Uptake of sugars] = Y_su
 </tbody>
 </table>
 <p><code>Gas Transfer CH4</code> does not create methane. It moves methane between dissolved <code>S_ch4</code> and gas-phase <code>S_gas_ch4</code>.</p>
-<h2 id="state-vectors">State Vectors</h2>
-<h3 id="adm1-species">ADM1 Species</h3>
+<h2 id="state-vectors">State Vectors<a class="headerlink" href="#state-vectors" title="Link to this section">&para;</a></h2>
+<h3 id="adm1-species">ADM1 Species<a class="headerlink" href="#adm1-species" title="Link to this section">&para;</a></h3>
 <p><code>S_su</code>, <code>S_aa</code>, <code>S_fa</code>, <code>S_va</code>, <code>S_bu</code>, <code>S_pro</code>, <code>S_ac</code>, <code>S_h2</code>, <code>S_ch4</code>, <code>S_IC</code>, <code>S_IN</code>, <code>S_I</code>, <code>X_xc</code>, <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, <code>X_su</code>, <code>X_aa</code>, <code>X_fa</code>, <code>X_c4</code>, <code>X_pro</code>, <code>X_ac</code>, <code>X_h2</code>, <code>X_I</code>, <code>S_cation</code>, <code>S_anion</code>, <code>S_H_ion</code>, <code>S_va_ion</code>, <code>S_bu_ion</code>, <code>S_pro_ion</code>, <code>S_ac_ion</code>, <code>S_hco3_ion</code>, <code>S_co2</code>, <code>S_nh3</code>, <code>S_nh4_ion</code>, <code>S_gas_h2</code>, <code>S_gas_ch4</code>, <code>S_gas_co2</code></p>
-<h3 id="e-adm-species">e-ADM Species</h3>
+<h3 id="e-adm-species">e-ADM Species<a class="headerlink" href="#e-adm-species" title="Link to this section">&para;</a></h3>
 <p><code>S_su</code>, <code>S_aa</code>, <code>S_fa</code>, <code>S_va</code>, <code>S_bu</code>, <code>S_pro</code>, <code>S_et</code>, <code>S_lac</code>, <code>S_cap</code>, <code>S_ac</code>, <code>S_h2</code>, <code>S_ch4</code>, <code>S_IC</code>, <code>S_IN</code>, <code>S_I</code>, <code>TSS</code>, <code>TDS</code>, <code>X_ch</code>, <code>X_pr</code>, <code>X_li</code>, <code>X_su</code>, <code>X_aa</code>, <code>X_ac_et</code>, <code>X_ac_lac</code>, <code>X_fa</code>, <code>X_VFA_deg</code>, <code>X_et</code>, <code>X_lac</code>, <code>X_chain_et</code>, <code>X_chain_lac</code>, <code>X_Me_ac</code>, <code>X_Me_CO2</code>, <code>X_I</code>, <code>S_cation</code>, <code>S_anion</code>, <code>S_H_ion</code>, <code>S_va_ion</code>, <code>S_bu_ion</code>, <code>S_pro_ion</code>, <code>S_cap_ion</code>, <code>S_lac_ion</code>, <code>S_ac_ion</code>, <code>S_hco3_ion</code>, <code>S_co2</code>, <code>S_nh3</code>, <code>S_nh4_ion</code>, <code>S_gas_h2</code>, <code>S_gas_ch4</code>, <code>S_gas_co2</code></p>
-<h2 id="minimal-cli-run">Minimal CLI Run</h2>
-<pre><code class="language-bash">adtoolbox ADM adm1 --models-json /path/to/ADToolbox/models.json --report csv
-</code></pre>
-<pre><code class="language-bash">adtoolbox ADM e-adm --models-json /path/to/ADToolbox/models.json --report csv
-</code></pre>
+<h2 id="minimal-cli-run">Minimal CLI Run<a class="headerlink" href="#minimal-cli-run" title="Link to this section">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>adtoolbox<span class="w"> </span>adm<span class="w"> </span>adm1<span class="w"> </span>--models-json<span class="w"> </span>/path/to/ADToolbox/models.json<span class="w"> </span>--report<span class="w"> </span>csv
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>adtoolbox<span class="w"> </span>adm<span class="w"> </span>e-adm<span class="w"> </span>--models-json<span class="w"> </span>/path/to/ADToolbox/models.json<span class="w"> </span>--report<span class="w"> </span>csv
+</span></code></pre></div>
 
 
 
@@ -2020,21 +2876,89 @@ S[X_su, Uptake of sugars] = Y_su
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../Metagenomics_Pipeline/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Metagenomics Pipeline">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Metagenomics Pipeline
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../Optimization/" class="md-footer__link md-footer__link--next" aria-label="Next: Parameter Tuning">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Parameter Tuning
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Copyright &copy; Chan Lab, Colorado State University
+    </div>
   
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/chan-csu/ADToolbox" target="_blank" rel="noopener" title="ADToolbox on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://pypi.org/project/adtoolbox/" target="_blank" rel="noopener" title="ADToolbox on PyPI" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
     </a>
   
 </div>
@@ -2051,10 +2975,11 @@ S[X_su, Uptake of sugars] = Y_su
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

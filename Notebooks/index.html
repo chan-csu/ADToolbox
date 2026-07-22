@@ -10,29 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://chan-csu.github.io/ADToolbox/">
+        <link rel="canonical" href="https://chan-csu.github.io/ADToolbox/Notebooks/">
       
       
+        <link rel="prev" href="../Optimization/">
       
-        <link rel="next" href="Installation/">
+      
+        <link rel="next" href="../modeling.html">
       
       
         
       
       
-      <link rel="icon" href="assets/favicon.svg">
+      <link rel="icon" href="../assets/favicon.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>ADToolbox</title>
+        <title>Example Notebooks - ADToolbox</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,11 +53,11 @@
       
     
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#adtoolbox" class="md-skip">
+        <a href="#example-notebooks" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +98,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="ADToolbox" class="md-header__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+    <a href=".." title="ADToolbox" class="md-header__button md-logo" aria-label="ADToolbox" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.27 10 9 7h5.42l1.16-2-.08-.5A1.5 1.5 0 0 1 17 3a1.5 1.5 0 0 1 1.5 1.5c0 .71-.5 1.31-1.17 1.46l-.96 1.67L17.73 10l.86-1.5-.09-.5A1.5 1.5 0 0 1 20 6.5 1.5 1.5 0 0 1 21.5 8c0 .71-.5 1.3-1.15 1.46L18.89 12l1.73 3c.77.07 1.38.71 1.38 1.5a1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5v-.26L17.73 14l-1.36 2.37.96 1.67a1.5 1.5 0 0 1 1.17 1.46A1.5 1.5 0 0 1 17 21a1.5 1.5 0 0 1-1.5-1.5l.08-.5-1.16-2h-3.84l-1.16 2 .08.5A1.5 1.5 0 0 1 8 21a1.5 1.5 0 0 1-1.5-1.5c0-.71.5-1.31 1.17-1.46l.96-1.67L4.38 9C3.61 8.93 3 8.29 3 7.5A1.5 1.5 0 0 1 4.5 6 1.5 1.5 0 0 1 6 7.5v.26zm2.88-1-1.73 3 1.73 3h4.7l1.73-3-1.73-3z"/></svg>
@@ -116,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Example Notebooks
             
           </span>
         </div>
@@ -236,11 +238,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="." class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -261,7 +261,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="Installation/" class="md-tabs__link">
+        <a href="../Installation/" class="md-tabs__link">
           
   
   
@@ -279,11 +279,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="Metagenomics_Pipeline/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../Metagenomics_Pipeline/" class="md-tabs__link">
           
   
   
@@ -303,7 +305,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="CLI/" class="md-tabs__link">
+      <a href="../CLI/" class="md-tabs__link">
         
   
   
@@ -324,7 +326,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="API/" class="md-tabs__link">
+        <a href="../API/" class="md-tabs__link">
           
   
   
@@ -355,9 +357,7 @@
           
             
               
-                
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -368,7 +368,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="ADToolbox" class="md-nav__button md-logo" aria-label="ADToolbox" data-md-component="logo">
+    <a href=".." title="ADToolbox" class="md-nav__button md-logo" aria-label="ADToolbox" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.27 10 9 7h5.42l1.16-2-.08-.5A1.5 1.5 0 0 1 17 3a1.5 1.5 0 0 1 1.5 1.5c0 .71-.5 1.31-1.17 1.46l-.96 1.67L17.73 10l.86-1.5-.09-.5A1.5 1.5 0 0 1 20 6.5 1.5 1.5 0 0 1 21.5 8c0 .71-.5 1.3-1.15 1.46L18.89 12l1.73 3c.77.07 1.38.71 1.38 1.5a1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5v-.26L17.73 14l-1.36 2.37.96 1.67a1.5 1.5 0 0 1 1.17 1.46A1.5 1.5 0 0 1 17 21a1.5 1.5 0 0 1-1.5-1.5l.08-.5-1.16-2h-3.84l-1.16 2 .08.5A1.5 1.5 0 0 1 8 21a1.5 1.5 0 0 1-1.5-1.5c0-.71.5-1.31 1.17-1.46l.96-1.67L4.38 9C3.61 8.93 3 8.29 3 7.5A1.5 1.5 0 0 1 4.5 6 1.5 1.5 0 0 1 6 7.5v.26zm2.88-1-1.73 3 1.73 3h4.7l1.73-3-1.73-3z"/></svg>
@@ -395,37 +395,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -441,92 +414,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#what-adtoolbox-does" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What ADToolbox does
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#explore-the-docs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Explore the docs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Install
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#at-a-glance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        At a glance
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#try-it-without-installing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Try it without installing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#credits" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Credits
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -596,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Installation/" class="md-nav__link">
+      <a href="../Installation/" class="md-nav__link">
         
   
   
@@ -624,7 +511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Quickstart/" class="md-nav__link">
+      <a href="../Quickstart/" class="md-nav__link">
         
   
   
@@ -656,8 +543,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -677,19 +566,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -707,7 +599,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -725,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Metagenomics_Pipeline/" class="md-nav__link">
+      <a href="../Metagenomics_Pipeline/" class="md-nav__link">
         
   
   
@@ -753,7 +645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ADM_Models/" class="md-nav__link">
+      <a href="../ADM_Models/" class="md-nav__link">
         
   
   
@@ -781,7 +673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Optimization/" class="md-nav__link">
+      <a href="../Optimization/" class="md-nav__link">
         
   
   
@@ -806,10 +698,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="Notebooks/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Notebooks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -825,6 +744,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#available-notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available notebooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running them
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supporting-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supporting data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -837,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="modeling.html" class="md-nav__link">
+      <a href="../modeling.html" class="md-nav__link">
         
   
   
@@ -865,7 +837,7 @@
   
   
     <li class="md-nav__item">
-      <a href="parameter_tuning.html" class="md-nav__link">
+      <a href="../parameter_tuning.html" class="md-nav__link">
         
   
   
@@ -900,7 +872,7 @@
   
   
     <li class="md-nav__item">
-      <a href="CLI/" class="md-nav__link">
+      <a href="../CLI/" class="md-nav__link">
         
   
   
@@ -995,7 +967,7 @@
   
   
     <li class="md-nav__item">
-      <a href="API/" class="md-nav__link">
+      <a href="../API/" class="md-nav__link">
         
   
   
@@ -1023,7 +995,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-configs/" class="md-nav__link">
+      <a href="../api-configs/" class="md-nav__link">
         
   
   
@@ -1051,7 +1023,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-core/" class="md-nav__link">
+      <a href="../api-core/" class="md-nav__link">
         
   
   
@@ -1079,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-adm/" class="md-nav__link">
+      <a href="../api-adm/" class="md-nav__link">
         
   
   
@@ -1107,7 +1079,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-optimize/" class="md-nav__link">
+      <a href="../api-optimize/" class="md-nav__link">
         
   
   
@@ -1135,7 +1107,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-utils/" class="md-nav__link">
+      <a href="../api-utils/" class="md-nav__link">
         
   
   
@@ -1163,7 +1135,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-stats/" class="md-nav__link">
+      <a href="../api-stats/" class="md-nav__link">
         
   
   
@@ -1199,8 +1171,6 @@
             
             
               
-                
-              
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -1220,10 +1190,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-adtoolbox-does" class="md-nav__link">
+  <a href="#available-notebooks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What ADToolbox does
+        Available notebooks
       
     </span>
   </a>
@@ -1231,10 +1201,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#explore-the-docs" class="md-nav__link">
+  <a href="#running-them" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Explore the docs
+        Running them
       
     </span>
   </a>
@@ -1242,43 +1212,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
+  <a href="#supporting-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#at-a-glance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        At a glance
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#try-it-without-installing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Try it without installing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#credits" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Credits
+        Supporting data
       
     </span>
   </a>
@@ -1299,12 +1236,10 @@
               <article class="md-content__inner md-typeset">
                 
                   
-  
-
 
 
   
-    <a href="https://github.com/chan-csu/ADToolbox/edit/main/docs/index.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/chan-csu/ADToolbox/edit/main/docs/Notebooks.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1312,168 +1247,100 @@
   
 
 
-<div class="ad-hero">
-<h1 id="adtoolbox">ADToolbox<a class="headerlink" href="#adtoolbox" title="Link to this section">&para;</a></h1>
-<p><strong>From raw sequencing reads to a calibrated anaerobic digestion model.</strong>
-ADToolbox connects metagenomics evidence, curated reaction and feed databases, and
-dynamic ADM1 / e-ADM simulations into one reproducible Python and command-line workflow.</p>
-<p><a class="md-button md-button--primary" href="Quickstart/">Get started <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
-<a class="md-button" href="Installation/">Install</a>
-<a class="md-button" href="https://github.com/chan-csu/ADToolbox">View on GitHub</a></p>
-</div>
-<h2 id="what-adtoolbox-does">What ADToolbox does<a class="headerlink" href="#what-adtoolbox-does" title="Link to this section">&para;</a></h2>
-<p>Anaerobic digestion models such as ADM1 lump the microbial community into a handful of
-guilds whose initial biomass you are expected to guess. ADToolbox replaces that guess with
-measurement. It profiles a community two ways — 16S <strong>amplicon</strong> reads mapped through GTDB
-and a curated enzyme-to-reaction database, or <strong>shotgun</strong> reads searched directly against
-that database for functional evidence — and turns either into the microbial COD allocation
-that an extended ADM (e-ADM) model actually needs. From there you can simulate, visualize,
-and fit the
-model against experimental data.</p>
-<pre class="mermaid"><code>flowchart LR
-    A[SRA accessions&lt;br/&gt;or local FASTQ] --&gt; B[Trim and denoise&lt;br/&gt;fastp + VSEARCH]
-    B --&gt; C[Representative&lt;br/&gt;sequences]
-    C --&gt; D[GTDB&lt;br/&gt;amplicon-to-genome]
-    D --&gt; E[Protein alignment&lt;br/&gt;MMseqs2]
-    E --&gt; F[EC numbers and&lt;br/&gt;COD allocation]
-    F --&gt; G[e-ADM / ADM1&lt;br/&gt;simulation]
-    G --&gt; H[Parameter tuning&lt;br/&gt;against experiments]</code></pre>
-<h2 id="explore-the-docs">Explore the docs<a class="headerlink" href="#explore-the-docs" title="Link to this section">&para;</a></h2>
+<h1 id="example-notebooks">Example Notebooks<a class="headerlink" href="#example-notebooks" title="Link to this section">&para;</a></h1>
+<p>The <code>Examples/</code> directory in the repository holds executable notebooks for each major
+workflow. Two of them are also rendered here as static walkthroughs.</p>
+<h2 id="available-notebooks">Available notebooks<a class="headerlink" href="#available-notebooks" title="Link to this section">&para;</a></h2>
 <div class="grid cards">
 <ul>
 <li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27zM5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83s-2.05.78-2.83 0m-5.66 7.07-1.41-1.41zM6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22zM2 22h1.41l4.77-4.76-1.42-1.41L2 20.59zm0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76z"/></svg></span> <strong>Quickstart</strong></p>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.96 11.31C10.82 8.1 11.5 6 13 6s2.18 2.1 3.04 5.31C17 14.92 18.1 19 22 19v-2c-2.2 0-3-2.46-4.03-6.2C17.08 7.46 16.15 4 13 4s-4.08 3.46-4.97 6.8C7.03 14.54 6.2 17 4 17V2H2v20h20v-2H4v-1c3.9 0 5-4.08 5.96-7.69"/></svg></span> <strong><code>modeling.ipynb</code></strong></p>
 <hr />
-<p>Install the package, download the reference databases, and run your first
-ADM simulation in a few minutes.</p>
-<p><a href="Quickstart/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Quickstart</a></p>
+<p>Build a new ADM model or load an existing one, then solve, inspect, and visualize it.
+The best starting point if you care about simulation rather than sequencing.</p>
+<p><a href="../modeling.html"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Rendered walkthrough</a>
+· <a href="https://github.com/chan-csu/ADToolbox/blob/main/Examples/modeling.ipynb"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0c4.42 0 8 3.58 8 8a8.01 8.01 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27s-1.36.09-2 .27c-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8"/></svg></span> Source</a></p>
 </li>
 <li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 2h2v2c0 1.44.68 2.61 1.88 3.78.86.83 2.01 1.63 3.21 2.42l-1.83 1.19C8.27 10.72 7.31 10 6.5 9.21 5.07 7.82 4 6.1 4 4zm14 0h2v2c0 2.1-1.07 3.82-2.5 5.21-1.41 1.38-3.21 2.52-4.96 3.63-1.75 1.12-3.45 2.21-4.66 3.38C6.68 17.39 6 18.56 6 20v2H4v-2c0-2.1 1.07-3.82 2.5-5.21 1.41-1.38 3.21-2.52 4.96-3.63 1.75-1.12 3.45-2.21 4.66-3.38C17.32 6.61 18 5.44 18 4zm-3.26 10.61c.99.67 1.95 1.39 2.76 2.18C18.93 16.18 20 17.9 20 20v2h-2v-2c0-1.44-.68-2.61-1.88-3.78-.86-.83-2.01-1.63-3.21-2.42zM7 3h10v1l-.06.5H7.06L7 4zm.68 3h8.64c-.24.34-.52.69-.9 1.06l-.51.44H9.07l-.49-.44c-.38-.37-.66-.72-.9-1.06m1.41 10.5h5.84l.49.44c.38.37.66.72.9 1.06H7.68c.24-.34.52-.69.9-1.06zm-2.03 3h9.88l.06.5v1H7v-1z"/></svg></span> <strong>Metagenomics pipeline</strong></p>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 13c-1.86 0-3.41 1.28-3.86 3H2v2h2.14c.45 1.72 2 3 3.86 3s3.41-1.28 3.86-3H22v-2H11.86c-.45-1.72-2-3-3.86-3m0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2M19.86 6c-.45-1.72-2-3-3.86-3s-3.41 1.28-3.86 3H2v2h10.14c.45 1.72 2 3 3.86 3s3.41-1.28 3.86-3H22V6zM16 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2"/></svg></span> <strong><code>parameter_tuning.ipynb</code></strong></p>
 <hr />
-<p>Turn a table of SRA accessions or FASTQ files into model-ready microbial COD
-allocations, locally or on Slurm.</p>
-<p><a href="Metagenomics_Pipeline/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Pipeline guide</a></p>
+<p>Reproduces the figures from the ADToolbox paper, including predicting AD products from
+16S data at time zero, and walks through the full parameter-tuning workflow.</p>
+<p><a href="../parameter_tuning.html"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Rendered walkthrough</a>
+· <a href="https://github.com/chan-csu/ADToolbox/blob/main/Examples/parameter_tuning.ipynb"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0c4.42 0 8 3.58 8 8a8.01 8.01 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27s-1.36.09-2 .27c-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8"/></svg></span> Source</a></p>
 </li>
 <li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.96 11.31C10.82 8.1 11.5 6 13 6s2.18 2.1 3.04 5.31C17 14.92 18.1 19 22 19v-2c-2.2 0-3-2.46-4.03-6.2C17.08 7.46 16.15 4 13 4s-4.08 3.46-4.97 6.8C7.03 14.54 6.2 17 4 17V2H2v20h20v-2H4v-1c3.9 0 5-4.08 5.96-7.69"/></svg></span> <strong>ADM models</strong></p>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 2h2v2c0 1.44.68 2.61 1.88 3.78.86.83 2.01 1.63 3.21 2.42l-1.83 1.19C8.27 10.72 7.31 10 6.5 9.21 5.07 7.82 4 6.1 4 4zm14 0h2v2c0 2.1-1.07 3.82-2.5 5.21-1.41 1.38-3.21 2.52-4.96 3.63-1.75 1.12-3.45 2.21-4.66 3.38C6.68 17.39 6 18.56 6 20v2H4v-2c0-2.1 1.07-3.82 2.5-5.21 1.41-1.38 3.21-2.52 4.96-3.63 1.75-1.12 3.45-2.21 4.66-3.38C17.32 6.61 18 5.44 18 4zm-3.26 10.61c.99.67 1.95 1.39 2.76 2.18C18.93 16.18 20 17.9 20 20v2h-2v-2c0-1.44-.68-2.61-1.88-3.78-.86-.83-2.01-1.63-3.21-2.42zM7 3h10v1l-.06.5H7.06L7 4zm.68 3h8.64c-.24.34-.52.69-.9 1.06l-.51.44H9.07l-.49-.44c-.38-.37-.66-.72-.9-1.06m1.41 10.5h5.84l.49.44c.38.37.66.72.9 1.06H7.68c.24-.34.52-.69.9-1.06zm-2.03 3h9.88l.06.5v1H7v-1z"/></svg></span> <strong><code>metagenomics_notebook.ipynb</code></strong></p>
 <hr />
-<p>The full input contract, stoichiometry, rate laws, and inhibition terms for
-ADM1 and e-ADM.</p>
-<p><a href="ADM_Models/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Model reference</a></p>
+<p>The sequence-analysis path in detail, covering both 16S amplicon and shotgun data and
+the computational steps that connect them to the model.</p>
+<p><a href="https://github.com/chan-csu/ADToolbox/blob/main/Examples/metagenomics_notebook.ipynb"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0c4.42 0 8 3.58 8 8a8.01 8.01 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27s-1.36.09-2 .27c-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8"/></svg></span> Source</a></p>
 </li>
 <li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 13c-1.86 0-3.41 1.28-3.86 3H2v2h2.14c.45 1.72 2 3 3.86 3s3.41-1.28 3.86-3H22v-2H11.86c-.45-1.72-2-3-3.86-3m0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2M19.86 6c-.45-1.72-2-3-3.86-3s-3.41 1.28-3.86 3H2v2h10.14c.45 1.72 2 3 3.86 3s3.41-1.28 3.86-3H22V6zM16 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2"/></svg></span> <strong>Parameter tuning</strong></p>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 14h-2v2h-6v-3h2v-2h-2V6a2 2 0 0 0-2-2H4V2H2v8h2V8h6v3H8v2h2v5a2 2 0 0 0 2 2h8v2h2"/></svg></span> <strong><code>pipeline.ipynb</code></strong></p>
 <hr />
-<p>Fit kinetic parameters to experimental data with SciPy, OpenBox, genetic, or
-neural-surrogate optimizers.</p>
-<p><a href="Optimization/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Tuning guide</a></p>
-</li>
-<li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z"/></svg></span> <strong>Command line interface</strong></p>
-<hr />
-<p>Every <code>adtoolbox</code> command, its options, and the files it reads and writes.</p>
-<p><a href="CLI/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> CLI reference</a></p>
-</li>
-<li>
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.14 7.5A2.86 2.86 0 0 1 22 10.36v3.78A2.86 2.86 0 0 1 19.14 17H12c0 .39.32.96.71.96H17v1.68a2.86 2.86 0 0 1-2.86 2.86H9.86A2.86 2.86 0 0 1 7 19.64v-3.75a2.85 2.85 0 0 1 2.86-2.85h5.25a2.85 2.85 0 0 0 2.85-2.86V7.5zm-4.28 11.79c-.4 0-.72.3-.72.89s.32.71.72.71a.71.71 0 0 0 .71-.71c0-.59-.32-.89-.71-.89m-10-1.79A2.86 2.86 0 0 1 2 14.64v-3.78A2.86 2.86 0 0 1 4.86 8H12c0-.39-.32-.96-.71-.96H7V5.36A2.86 2.86 0 0 1 9.86 2.5h4.28A2.86 2.86 0 0 1 17 5.36v3.75a2.85 2.85 0 0 1-2.86 2.85H8.89a2.85 2.85 0 0 0-2.85 2.86v2.68zM9.14 5.71c.4 0 .72-.3.72-.89s-.32-.71-.72-.71c-.39 0-.71.12-.71.71s.32.89.71.89"/></svg></span> <strong>Python API</strong></p>
-<hr />
-<p>Auto-generated reference for <code>core</code>, <code>adm</code>, <code>configs</code>, <code>optimize</code>, <code>utils</code>,
-and <code>stats</code>.</p>
-<p><a href="API/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> API reference</a></p>
+<p>A compact driver for the batch <code>metagenomics process</code> pipeline from Python, useful as
+a template for your own runs.</p>
+<p><a href="https://github.com/chan-csu/ADToolbox/blob/main/Examples/pipeline.ipynb"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0c4.42 0 8 3.58 8 8a8.01 8.01 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27s-1.36.09-2 .27c-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8"/></svg></span> Source</a></p>
 </li>
 </ul>
 </div>
-<h2 id="install">Install<a class="headerlink" href="#install" title="Link to this section">&para;</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">pip</label><label for="__tabbed_1_2">With optimizers</label><label for="__tabbed_1_3">From source</label><label for="__tabbed_1_4">Docker</label></div>
+<h2 id="running-them">Running them<a class="headerlink" href="#running-them" title="Link to this section">&para;</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Locally</label><label for="__tabbed_1_2">Binder</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>adtoolbox
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[optimize,dashboard]&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>pip<span class="w"> </span>install<span class="w"> </span>jupyterlab
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>jupyter<span class="w"> </span>lab<span class="w"> </span>Examples/
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;adtoolbox[optimize]&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/chan-csu/ADToolbox.git
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>ADToolbox
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>parsaghadermazi/adtoolbox:latest<span class="w"> </span>adtoolbox<span class="w"> </span>--help
-</span></code></pre></div>
+<p><a href="https://mybinder.org/v2/gh/chan-csu/ADToolbox/HEAD"><img alt="Binder" src="https://mybinder.org/badge_logo.svg" /></a></p>
+<p>No installation required. Escher map visualization is not available on Binder.</p>
 </div>
 </div>
 </div>
-<p>ADToolbox requires Python 3.11 or newer. See <a href="Installation/">Installation</a> for
-container images, HPC notes, and the external tools each pipeline step needs.</p>
-<h2 id="at-a-glance">At a glance<a class="headerlink" href="#at-a-glance" title="Link to this section">&para;</a></h2>
+<h2 id="supporting-data">Supporting data<a class="headerlink" href="#supporting-data" title="Link to this section">&para;</a></h2>
+<p>The notebooks read from files that ship with the repository:</p>
 <table>
 <thead>
 <tr>
-<th>Module</th>
-<th>What it gives you</th>
+<th>Path</th>
+<th>Contents</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="api-core/"><code>core</code></a></td>
-<td>Databases, feeds, experiments, and the metagenomics pipeline.</td>
+<td><code>Examples/ADM_Parameters/</code></td>
+<td>Individual e-ADM parameter JSON files.</td>
 </tr>
 <tr>
-<td><a href="api-adm/"><code>adm</code></a></td>
-<td>ADM1 and e-ADM model construction, ODE integration, and plotting.</td>
+<td><code>Examples/Studies/</code></td>
+<td>Metagenomics study metadata and experimental data references.</td>
 </tr>
 <tr>
-<td><a href="api-configs/"><code>configs</code></a></td>
-<td>Path and threshold configuration for every other module.</td>
+<td><code>Examples/feed_db.tsv</code></td>
+<td>A small feed database.</td>
 </tr>
 <tr>
-<td><a href="api-optimize/"><code>optimize</code></a></td>
-<td>Parameter estimation and model validation against experiments.</td>
+<td><code>Examples/toy_model.json</code>, <code>Examples/Toymap.json</code></td>
+<td>A minimal model and its Escher map.</td>
 </tr>
 <tr>
-<td><a href="api-utils/"><code>utils</code></a></td>
-<td>FASTA helpers, MMseqs2 wrappers, and Slurm job generation.</td>
-</tr>
-<tr>
-<td><a href="api-stats/"><code>stats</code></a></td>
-<td>Distance matrices and scaling for feature tables.</td>
+<td><code>reference_data/models.json</code></td>
+<td>ADM1 and e-ADM parameter sets keyed by model name.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="try-it-without-installing">Try it without installing<a class="headerlink" href="#try-it-without-installing" title="Link to this section">&para;</a></h2>
-<p><a href="https://mybinder.org/v2/gh/chan-csu/ADToolbox/HEAD"><img alt="Binder" src="https://mybinder.org/badge_logo.svg" /></a>
-<a href="https://badge.fury.io/py/adtoolbox"><img alt="PyPI version" src="https://badge.fury.io/py/adtoolbox.svg" /></a></p>
-<p>The <a href="Notebooks/">example notebooks</a> run on Binder, though Escher map visualization is
-not available there.</p>
-<h2 id="credits">Credits<a class="headerlink" href="#credits" title="Link to this section">&para;</a></h2>
-<p>ADToolbox is developed in the <a href="https://github.com/chan-csu">Chan Lab</a> at Colorado State
-University.</p>
-<table>
-<thead>
-<tr>
-<th>Contributor</th>
-<th>Contact</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Parsa Ghadermazi</td>
-<td><a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#112;&#97;&#114;&#115;&#97;&#46;&#103;&#104;&#97;&#100;&#101;&#114;&#109;&#97;&#122;&#105;&#64;&#99;&#111;&#108;&#111;&#115;&#116;&#97;&#116;&#101;&#46;&#101;&#100;&#117;">&#112;&#97;&#114;&#115;&#97;&#46;&#103;&#104;&#97;&#100;&#101;&#114;&#109;&#97;&#122;&#105;&#64;&#99;&#111;&#108;&#111;&#115;&#116;&#97;&#116;&#101;&#46;&#101;&#100;&#117;</a></td>
-</tr>
-<tr>
-<td>Ethan Rimelman</td>
-<td><a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#114;&#105;&#109;&#101;&#108;&#109;&#97;&#110;&#64;&#99;&#111;&#108;&#111;&#115;&#116;&#97;&#116;&#101;&#46;&#101;&#100;&#117;">&#114;&#105;&#109;&#101;&#108;&#109;&#97;&#110;&#64;&#99;&#111;&#108;&#111;&#115;&#116;&#97;&#116;&#101;&#46;&#101;&#100;&#117;</a></td>
-</tr>
-<tr>
-<td>Siu Hung Joshua Chan (PI)</td>
-<td><a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#111;&#115;&#104;&#117;&#97;&#46;&#99;&#104;&#97;&#110;&#64;&#99;&#111;&#108;&#111;&#115;&#116;&#97;&#116;&#101;&#46;&#101;&#100;&#117;">&#106;&#111;&#115;&#104;&#117;&#97;&#46;&#99;&#104;&#97;&#110;&#64;&#99;&#111;&#108;&#111;&#115;&#116;&#97;&#116;&#101;&#46;&#101;&#100;&#117;</a></td>
-</tr>
-</tbody>
-</table>
+<div class="admonition note">
+<p class="admonition-title">Notebooks that need databases</p>
+<p>The metagenomics notebooks expect the reference databases. Run
+<code>adtoolbox database download-all-databases --output-dir ./database</code> first, and point
+the notebook's <code>database_dir</code> at that directory. See the
+<a href="../Quickstart/#2-download-the-reference-databases">Quickstart</a>.</p>
+</div>
 
 
 
@@ -1481,13 +1348,8 @@ University.</p>
 
 
 
-  
-  
 
 
-
-
-  
 
 
 
@@ -1513,19 +1375,33 @@ University.</p>
   
     
       
-        
-      
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../Optimization/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Parameter Tuning">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Parameter Tuning
+              </div>
+            </div>
+          </a>
         
         
           
-          <a href="Installation/" class="md-footer__link md-footer__link--next" aria-label="Next: Installation">
+          <a href="../modeling.html" class="md-footer__link md-footer__link--next" aria-label="Next: Walkthrough: Modeling">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Installation
+                Walkthrough: Modeling
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1582,10 +1458,10 @@ University.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
