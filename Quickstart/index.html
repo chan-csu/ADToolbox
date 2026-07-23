@@ -609,10 +609,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-turn-amplicon-data-into-microbial-cod" class="md-nav__link">
+  <a href="#4-turn-sequencing-data-into-microbial-cod" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Turn amplicon data into microbial COD
+        4. Turn sequencing data into microbial COD
       
     </span>
   </a>
@@ -1267,10 +1267,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-turn-amplicon-data-into-microbial-cod" class="md-nav__link">
+  <a href="#4-turn-sequencing-data-into-microbial-cod" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Turn amplicon data into microbial COD
+        4. Turn sequencing data into microbial COD
       
     </span>
   </a>
@@ -1457,9 +1457,17 @@ extra: <code>pip install "adtoolbox[dashboard]"</code>.</p>
 </span></code></pre></div>
 <p>See the <a href="../ADM_Models/">ADM model reference</a> for the meaning of every parameter file and
 the full stoichiometry.</p>
-<h2 id="4-turn-amplicon-data-into-microbial-cod">4. Turn amplicon data into microbial COD<a class="headerlink" href="#4-turn-amplicon-data-into-microbial-cod" title="Link to this section">&para;</a></h2>
+<h2 id="4-turn-sequencing-data-into-microbial-cod">4. Turn sequencing data into microbial COD<a class="headerlink" href="#4-turn-sequencing-data-into-microbial-cod" title="Link to this section">&para;</a></h2>
 <p>This is the part that distinguishes ADToolbox from a plain ADM implementation. Describe
-your samples in a table, then run one command.</p>
+your samples in a table, then run one command. Two routes produce the same model-ready
+<code>cod_profile.csv</code>:</p>
+<ul>
+<li><strong>16S amplicon</strong> (<code>--assay amplicon</code>) — denoise to ASVs, map through GTDB to
+  representative genomes, then to microbial groups. Taxonomy-aware.</li>
+<li><strong>Shotgun</strong> (<code>--assay shotgun</code>) — align reads straight to the protein database for
+  functional evidence. No GTDB or genome step; functional rather than taxonomic.</li>
+</ul>
+<p>The amplicon route is shown first; the shotgun equivalent follows.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">SRA accessions</label><label for="__tabbed_2_2">Local FASTQ files</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
