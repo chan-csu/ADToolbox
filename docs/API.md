@@ -119,13 +119,16 @@ from adtoolbox import adm, configs, core, utils
 # Databases
 database = core.Database(config=configs.Database(database_dir="./database"))
 
-# Metagenomics: amplicon table -> microbial COD allocation
+# Metagenomics: sample table -> microbial COD allocation.
+# Works for either assay; switch the one keyword to change routes.
 metagenomics = core.Metagenomics(
     configs.Metagenomics("./run", database_dir="./database")
 )
 result = metagenomics.batch_sample_to_cod(
     manifest="./samples.tsv",
     input_type="reads",
+    assay="amplicon",           # 16S: denoise -> GTDB -> genomes -> groups
+    # assay="shotgun",          # shotgun: reads -> protein DB (no GTDB/genomes)
     output_dir="./run/process",
     execute=True,
 )

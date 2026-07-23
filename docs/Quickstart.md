@@ -116,10 +116,18 @@ model.plot(solution).show()
 See the [ADM model reference](ADM_Models.md) for the meaning of every parameter file and
 the full stoichiometry.
 
-## 4. Turn amplicon data into microbial COD
+## 4. Turn sequencing data into microbial COD
 
 This is the part that distinguishes ADToolbox from a plain ADM implementation. Describe
-your samples in a table, then run one command.
+your samples in a table, then run one command. Two routes produce the same model-ready
+`cod_profile.csv`:
+
+- **16S amplicon** (`--assay amplicon`) — denoise to ASVs, map through GTDB to
+  representative genomes, then to microbial groups. Taxonomy-aware.
+- **Shotgun** (`--assay shotgun`) — align reads straight to the protein database for
+  functional evidence. No GTDB or genome step; functional rather than taxonomic.
+
+The amplicon route is shown first; the shotgun equivalent follows.
 
 === "SRA accessions"
 

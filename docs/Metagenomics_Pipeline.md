@@ -22,7 +22,7 @@ flowchart TB
     F --> G
 ```
 
-New to the pipeline? The [Quickstart](Quickstart.md#4-turn-amplicon-data-into-microbial-cod) has a shorter, worked example. This page is the complete reference.
+New to the pipeline? The [Quickstart](Quickstart.md#4-turn-sequencing-data-into-microbial-cod) has a shorter, worked example. This page is the complete reference.
 
 ## Amplicon Reads
 

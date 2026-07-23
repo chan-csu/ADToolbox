@@ -17,11 +17,36 @@ additionally be submitted to Slurm, which is how the toolbox scales to HPC clust
 
 ## Install the package
 
+=== "conda / mamba (recommended)"
+
+    The environment file installs ADToolbox **and every external tool** both the
+    amplicon and shotgun routes need, so nothing else has to be on your `PATH`:
+
+    ```bash
+    curl -O https://raw.githubusercontent.com/chan-csu/ADToolbox/main/environment.yml
+    conda env create -f environment.yml   # or: mamba env create -f environment.yml
+    conda activate adtoolbox
+    ```
+
+    This is the least-fuss way to get a fully working pipeline — it pulls fastp,
+    Cutadapt, DADA2, VSEARCH, MMseqs2, SRA Toolkit, and the NCBI Datasets CLI
+    alongside the Python package, so you can skip the [External tools](#external-tools)
+    section entirely.
+
+    !!! note "A `conda install -c bioconda adtoolbox` one-liner is on the way"
+        The [Bioconda recipe](https://github.com/bioconda/bioconda-recipes/pull/67450)
+        is under review. Once it merges, `conda install -c bioconda adtoolbox`
+        will install the package directly; until then, use the environment file
+        above.
+
 === "pip"
 
     ```bash
     pip install adtoolbox
     ```
+
+    Installs the Python package only. The metagenomics pipeline additionally
+    needs the [external tools](#external-tools) on your `PATH`, or a container.
 
 === "From source"
 
@@ -68,17 +93,23 @@ pip install "adtoolbox[optimize,dashboard]"
 ## External tools
 
 These are only required for the metagenomics pipeline. If you plan to use containers, skip
-this section — the ADToolbox image already contains all of them.
+this section — the ADToolbox image already contains all of them. The `conda / mamba`
+install above also pulls every one of them.
 
-| Tool | Used for |
-| --- | --- |
-| [fastp](https://github.com/OpenGene/fastp) | Adapter trimming and quality filtering of amplicon reads. |
-| [Cutadapt](https://cutadapt.readthedocs.io/) | IUPAC-aware PCR primer removal. |
-| [DADA2](https://benjjneb.github.io/dada2/) and R | Error learning, ASV inference, paired-read merging, and chimera removal. |
-| [VSEARCH](https://github.com/torognes/vsearch) | Mapping representative ASVs to GTDB; also available as the legacy feature backend. |
-| [MMseqs2](https://github.com/soedinglab/MMseqs2) | Protein alignment against the ADToolbox enzyme database. |
-| [NCBI Datasets](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/) | Batched assembly downloads. |
-| [SRA Toolkit](https://github.com/ncbi/sra-tools) | `prefetch` and `fasterq-dump` for downloading reads from SRA. |
+| Tool | Used for | Assay |
+| --- | --- | --- |
+| [fastp](https://github.com/OpenGene/fastp) | Adapter trimming and quality filtering. | amplicon + shotgun |
+| [MMseqs2](https://github.com/soedinglab/MMseqs2) | Protein alignment against the ADToolbox enzyme database. | amplicon + shotgun |
+| [SRA Toolkit](https://github.com/ncbi/sra-tools) | `prefetch` and `fasterq-dump` for downloading reads from SRA. | both (SRA input) |
+| [Cutadapt](https://cutadapt.readthedocs.io/) | IUPAC-aware PCR primer removal. | amplicon only |
+| [DADA2](https://benjjneb.github.io/dada2/) and R | Error learning, ASV inference, paired-read merging, and chimera removal. | amplicon only |
+| [VSEARCH](https://github.com/torognes/vsearch) | Mapping representative ASVs to GTDB; also the legacy feature backend. | amplicon only |
+| [NCBI Datasets](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/) | Batched assembly downloads. | amplicon (genomes) |
+
+!!! tip "Shotgun-only setups are lighter"
+    The shotgun route needs just **fastp** and **MMseqs2** (plus SRA Toolkit for
+    `--input-type sra`). If you never run the amplicon route, you can skip
+    Cutadapt, DADA2/R, VSEARCH, and the NCBI Datasets CLI.
 
 The quickest local install is conda/mamba:
 

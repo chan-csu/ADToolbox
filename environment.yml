@@ -1,0 +1,56 @@
+# ADToolbox — full conda environment, including every external tool the
+# metagenomics pipeline shells out to (both the amplicon and shotgun routes).
+#
+#   conda env create -f environment.yml      # or: mamba env create -f environment.yml
+#   conda activate adtoolbox
+#   adtoolbox --help
+#
+# Channel order matters: conda-forge must come before bioconda.
+name: adtoolbox
+
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  # ---- interpreter -------------------------------------------------------
+  - python >=3.11
+
+  # ---- core runtime (all on conda-forge) --------------------------------
+  - numpy
+  - scipy
+  - polars
+  - plotly
+  - nbformat
+  - requests
+  - rich
+  - click >=8.1.7
+
+  # ---- external bioinformatics tools ------------------------------------
+  # amplicon route: fastp -> Cutadapt -> DADA2 -> VSEARCH (GTDB mapping)
+  - fastp                 # bioconda — adapter/quality trimming (both routes)
+  - cutadapt              # bioconda — IUPAC-aware primer removal (amplicon)
+  - bioconductor-dada2    # bioconda — ASV inference (amplicon; pulls r-base)
+  - r-base                # conda-forge — DADA2 is driven via Rscript
+  - vsearch               # bioconda — representative seqs -> GTDB (amplicon)
+  # shotgun route + genome alignment
+  - mmseqs2               # bioconda — translated search vs protein DB (both)
+  # data retrieval
+  - sra-tools             # bioconda — prefetch / fasterq-dump
+  - ncbi-datasets-cli     # conda-forge (NOT bioconda) — assembly downloads
+
+  # ---- ADToolbox itself --------------------------------------------------
+  - pip
+  - pip:
+      # --no-deps: every runtime dependency is already provided by conda
+      # above, so pip does not re-resolve (and possibly downgrade) them.
+      - --no-deps
+      - adtoolbox
+
+      # ---- optional extras (not packaged for conda) -------------------
+      # - openbox        # BlackBoxOptimizer   (adtoolbox[blackbox])
+      # - dash-escher    # Escher maps in the Dash app (adtoolbox[dashboard])
+      #
+      # dash, dash-bootstrap-components, pygad, pytorch ARE on conda-forge;
+      # add them to the conda list above if you want the dashboard or the
+      # genetic / surrogate optimizers.
