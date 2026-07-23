@@ -28,16 +28,13 @@ that an extended ADM (e-ADM) model actually needs. From there you can simulate, 
 and fit the
 model against experimental data.
 
-```mermaid
-flowchart LR
-    A[SRA accessions<br/>or local FASTQ] --> B[Trim and denoise<br/>fastp + VSEARCH]
-    B --> C[Representative<br/>sequences]
-    C --> D[GTDB<br/>amplicon-to-genome]
-    D --> E[Protein alignment<br/>MMseqs2]
-    E --> F[EC numbers and<br/>COD allocation]
-    F --> G[e-ADM / ADM1<br/>simulation]
-    G --> H[Parameter tuning<br/>against experiments]
-```
+<figure markdown>
+  ![ADToolbox architecture: microbiome sequence processing and the curated protein,
+  reaction, feed, and experiment databases feed the ADM model attributes; an optimization
+  layer fits parameters, and the toolbox is exposed through a command line interface, a web
+  application, and a Python API.](overal.svg)
+
+</figure>
 
 ## Explore the docs
 

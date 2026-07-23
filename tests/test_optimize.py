@@ -61,7 +61,8 @@ def _experiment():
 
 
 def test_version():
-    assert __version__ == "1.1.0"
+    assert __version__ != "0.0.0+unknown"
+    assert __version__[0].isdigit()
 
 
 def test_optimizer_is_abstract():
