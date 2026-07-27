@@ -14,6 +14,7 @@ import utils
 from adtoolbox import PKG_DATA
 import configs
 import time
+import warnings
 import polars as pl
 
 ### Note ###
@@ -178,15 +179,21 @@ class Model:
         """
         self.info={"Fluxes":[]}
         y0=self.initial_conditions[:, 0]
-        try:
-            self._be_time=time.time()
-            c = scipy.integrate.solve_ivp(self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self],rtol=1e-6)
-            if not c.success:
-                raise Exception
-        except Exception as e:
-            print("Could not solve model, setting C to a very large value")
+        self._be_time=time.time()
+        # Only numerical instability is caught here: the integrator returns
+        # success=False when it cannot converge (e.g. a stiff blow-up), in which
+        # case we hand back a large sentinel solution so callers such as the
+        # parameter optimizer can penalise that parameter set. Any other
+        # exception (a genuine bug, a bad configuration, a KeyError in the ODE,
+        # ...) is left to propagate and stop the flow rather than being masked.
+        c = scipy.integrate.solve_ivp(self.ode_system, (0,self.sim_time), y0, t_eval=t_eval, method=method, args=[self],rtol=1e-6)
+        if not c.success:
+            warnings.warn(
+                f"solve_model: integration did not converge ({c.message}); "
+                "returning a sentinel solution (numerical instability).",
+                RuntimeWarning,
+            )
             c=_Fake_Sol(np.ones((y0.shape[0],len(t_eval)))*1e10,t_eval)
-       
         return c
 
     
