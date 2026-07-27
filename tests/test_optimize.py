@@ -80,6 +80,34 @@ def test_optimizer_evaluates_by_species_name():
     assert optimizer.evaluate([1.0]) > 0.0
 
 
+class RaisingModel(FakeModel):
+    """Stands in for a physically infeasible candidate: solving raises the way
+    build_e_adm_stoichiometric_matrix does when a derived fraction goes negative."""
+
+    def copy(self):
+        copied = RaisingModel(self.model_parameters["k"])
+        copied.base_parameters = self.base_parameters.copy()
+        copied._ic = self._ic.copy()
+        copied._inc = self._inc.copy()
+        return copied
+
+    def solve_model(self, time, method="BDF"):
+        raise ValueError("f_ac is negative")
+
+
+def test_infeasible_candidate_is_penalised_not_raised():
+    """An unsimulatable candidate the search proposes must be scored with the
+    infeasible penalty, never abort the run by propagating the exception."""
+    optimizer = optimize.ScipyOptimizer(
+        base_model=RaisingModel(),
+        train_data=[_experiment()],
+        search_space={"k": (0, 4)},
+    )
+
+    cost = optimizer.evaluate({"k": 2.0})
+    assert cost == optimize.Optimizer._INFEASIBLE_PENALTY
+
+
 def test_optimizer_tracks_and_loads_history(tmp_path):
     optimizer = optimize.ScipyOptimizer(
         base_model=FakeModel(),

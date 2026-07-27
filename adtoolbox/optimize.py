@@ -81,6 +81,11 @@ class OptimizationRecord:
 class Optimizer(ABC):
     """Common interface for ADToolbox parameter optimizers."""
 
+    #: Cost assigned to a candidate that cannot be simulated (physically
+    #: infeasible parameters or a non-finite objective). Large enough to be
+    #: rejected by any population-based search without producing overflow.
+    _INFEASIBLE_PENALTY = 1e30
+
     def __init__(
         self,
         base_model: adm.Model,
@@ -300,12 +305,26 @@ class Optimizer(ABC):
         parameters = self._coerce_parameters(parameters)
         total = 0.0
         for experiment in self.train_data:
-            model = self.prepare_model(parameters, experiment)
-            rows = [model.species.index(variable) for variable in experiment.variables]
-            solution = model.solve_model(np.array(experiment.time), method=self.ode_method)
-            prediction = np.asarray(solution.y[rows, :], dtype=float).T
-            residual = prediction - experiment.data
-            total += float(np.sum(np.square(residual)))
+            try:
+                model = self.prepare_model(parameters, experiment)
+                rows = [model.species.index(variable) for variable in experiment.variables]
+                solution = model.solve_model(np.array(experiment.time), method=self.ode_method)
+                prediction = np.asarray(solution.y[rows, :], dtype=float).T
+                residual = prediction - experiment.data
+                cost = float(np.sum(np.square(residual)))
+            except Exception as exc:
+                # A candidate the optimizer proposes can be physically
+                # infeasible (e.g. fermentation fractions that make a derived
+                # coefficient negative). That is not a bug in the model — it is
+                # a point outside the feasible region — so we penalise it
+                # heavily instead of letting it abort the whole search.
+                self.logger.debug(
+                    "penalising infeasible candidate on %s: %s", experiment.name, exc
+                )
+                cost = self._INFEASIBLE_PENALTY
+            if not np.isfinite(cost):
+                cost = self._INFEASIBLE_PENALTY
+            total += cost
         return total
 
     def _evaluate_and_record(
