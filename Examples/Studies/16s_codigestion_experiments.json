@@ -118,7 +118,11 @@
    "S_nh4_ion": 0,
    "S_co2": 0
   },
-  "base_parameters": {},
+  "base_parameters": {
+   "q_in": 0.0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
   "constants": [
    "S_H_ion"
   ],
@@ -245,7 +249,11 @@
    "S_nh4_ion": 0,
    "S_co2": 0
   },
-  "base_parameters": {},
+  "base_parameters": {
+   "q_in": 0.0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
   "constants": [
    "S_H_ion"
   ],
@@ -372,7 +380,11 @@
    "S_nh4_ion": 0,
    "S_co2": 0
   },
-  "base_parameters": {},
+  "base_parameters": {
+   "q_in": 0.0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
   "constants": [
    "S_H_ion"
   ],
@@ -499,7 +511,11 @@
    "S_nh4_ion": 0,
    "S_co2": 0
   },
-  "base_parameters": {},
+  "base_parameters": {
+   "q_in": 0.0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
   "constants": [
    "S_H_ion"
   ],
@@ -626,7 +642,11 @@
    "S_nh4_ion": 0,
    "S_co2": 0
   },
-  "base_parameters": {},
+  "base_parameters": {
+   "q_in": 0.0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
   "constants": [
    "S_H_ion"
   ],
@@ -753,7 +773,11 @@
    "S_nh4_ion": 0,
    "S_co2": 0
   },
-  "base_parameters": {},
+  "base_parameters": {
+   "q_in": 0.0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
   "constants": [
    "S_H_ion"
   ],
