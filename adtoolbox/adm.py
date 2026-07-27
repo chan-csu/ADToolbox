@@ -627,7 +627,96 @@ class Model:
                           switch=self.switch,
                           time_limit=self.time_limit,
                           simulation_time=self.sim_time)
-    
+
+    def save(self, path: str | os.PathLike) -> str:
+        """Serialize everything needed to reproduce this model to one JSON file.
+
+        Captures the current parameters, initial/inlet conditions, feed, control
+        states, and solver settings. The two callables (``ode_system`` and
+        ``build_stoichiometric_matrix``) are stored by name and re-resolved from
+        the :mod:`adtoolbox.adm` module on load, so only the packaged model
+        variants (ADM1 / e-ADM) round-trip -- custom callables are not supported.
+
+        Args:
+            path: Destination ``.json`` file.
+
+        Returns:
+            str: The path written.
+        """
+        species = list(self.species)
+        payload = {
+            "format": "adtoolbox-model/1",
+            "name": self.name,
+            "switch": self.switch,
+            "simulation_time": self.sim_time,
+            "time_limit": self.time_limit,
+            "ode_system": self.ode_system.__name__,
+            "build_stoichiometric_matrix": self.build_stoichiometric_matrix.__name__,
+            "control_state": {k: float(v) for k, v in self.control_state.items()},
+            "model_parameters": self.model_parameters,
+            "base_parameters": self.base_parameters,
+            "reactions": list(self.reactions),
+            "species": species,
+            "initial_conditions": {s: float(self.initial_conditions[i, 0]) for i, s in enumerate(species)},
+            "inlet_conditions": {s + "_in": float(self.inlet_conditions[i, 0]) for i, s in enumerate(species)},
+            "feed": {
+                "name": self.feed.name, "carbohydrates": self.feed.carbohydrates,
+                "lipids": self.feed.lipids, "proteins": self.feed.proteins,
+                "tss": self.feed.tss, "si": self.feed.si, "xi": self.feed.xi,
+                "reference": getattr(self.feed, "reference", ""),
+            },
+        }
+        with open(path, "w") as f:
+            json.dump(payload, f, indent=1, default=float)
+        return str(path)
+
+    @classmethod
+    def load(cls, path: str | os.PathLike) -> "Model":
+        """Reconstruct a model previously written by :meth:`save`.
+
+        Args:
+            path: A JSON file produced by :meth:`save`.
+
+        Returns:
+            Model: A ready-to-solve model with the saved state restored.
+
+        Raises:
+            ValueError: If a stored callable cannot be resolved from
+                :mod:`adtoolbox.adm` (e.g. a custom, non-packaged model).
+        """
+        with open(path) as f:
+            payload = json.load(f)
+
+        def _resolve(fn_name):
+            fn = globals().get(fn_name)
+            if not callable(fn):
+                raise ValueError(
+                    f"Cannot resolve callable {fn_name!r} from adtoolbox.adm; "
+                    "Model.load only supports the packaged model variants."
+                )
+            return fn
+
+        feed = payload["feed"]
+        return cls(
+            model_parameters=payload["model_parameters"],
+            base_parameters=payload["base_parameters"],
+            initial_conditions=payload["initial_conditions"],
+            inlet_conditions=payload["inlet_conditions"],
+            feed=Feed(name=feed["name"], carbohydrates=feed["carbohydrates"],
+                      lipids=feed["lipids"], proteins=feed["proteins"],
+                      tss=feed["tss"], si=feed["si"], xi=feed["xi"],
+                      reference=feed.get("reference", "")),
+            reactions=payload["reactions"],
+            species=payload["species"],
+            ode_system=_resolve(payload["ode_system"]),
+            build_stoichiometric_matrix=_resolve(payload["build_stoichiometric_matrix"]),
+            control_state=payload.get("control_state", {}),
+            name=payload.get("name", "ADM"),
+            switch=payload.get("switch", "DAE"),
+            simulation_time=payload.get("simulation_time", 30),
+            time_limit=payload.get("time_limit", -1),
+        )
+
     def build_cobra_model(self,address:str=None):
         """This method builds a cobra model from an instance of Model. One particular use
         of such models is to build an escher map from the model.

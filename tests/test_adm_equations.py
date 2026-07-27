@@ -155,3 +155,33 @@ def test_e_adm_reactions_conserve_cod():
         if abs(total) > 1e-6:
             offenders[r] = round(total, 5)
     assert not offenders, f"COD not conserved in: {offenders}"
+
+
+def test_model_save_load_round_trip(tmp_path):
+    """Model.save / Model.load reproduce the model exactly, including edited
+    initial conditions and the resolved callables."""
+    repo = Path(__file__).resolve().parent.parent
+    p = utils.load_model_json(str(repo / "reference_data" / "models.json"), "e_adm")
+    model = adm.Model(
+        model_parameters=p["model_parameters"], base_parameters=p["base_parameters"],
+        initial_conditions=p["initial_conditions"], inlet_conditions=p["inlet_conditions"],
+        feed=adm.DEFAULT_FEED, reactions=p["reactions"], species=p["species"],
+        ode_system=adm.e_adm_ode_sys,
+        build_stoichiometric_matrix=adm.build_e_adm_stoichiometric_matrix,
+        control_state={"S_H_ion": 10 ** -6.5}, name="e-ADM", switch="DAE",
+    )
+    model.update_parameters(model_parameters={"k_m_su": 42.0},
+                            initial_conditions={"S_ac": 0.5})
+
+    out = tmp_path / "model.json"
+    model.save(out)
+    loaded = adm.Model.load(out)
+
+    assert loaded.name == model.name and loaded.switch == model.switch
+    assert loaded.model_parameters["k_m_su"] == 42.0
+    assert float(loaded.initial_conditions[loaded.species.index("S_ac"), 0]) == 0.5
+    assert loaded.ode_system is adm.e_adm_ode_sys
+    assert loaded.build_stoichiometric_matrix is adm.build_e_adm_stoichiometric_matrix
+
+    t = np.linspace(0, 10, 50)
+    assert np.array_equal(model.solve_model(t).y, loaded.solve_model(t).y)
