@@ -904,7 +904,8 @@ def adm1_ode_sys(t: float, c: np.ndarray, model:Model)-> np.ndarray:
     dCdt[gas_start:] = dCdt[gas_start:]+q_gas/model.base_parameters["V_gas"] * (model.inlet_conditions[gas_start:]-c[gas_start:].reshape(-1, 1))
     dCdt[[species_index('S_H_ion'), species_index('S_co2'), species_index('S_nh4_ion')], 0] = 0
     if model.switch == "DAE":
-        dCdt[species_index('S_h2')] = 0
+        # NOTE: dissolved S_h2 is left dynamic (previously frozen here, which
+        # discarded fermentation H2 and starved hydrogenotrophic methanogenesis).
         dCdt[species_index('S_va_ion'): species_index('S_co2')] = 0
         dCdt[species_index('S_nh3')] = 0
     
@@ -1036,7 +1037,7 @@ def build_e_adm_stoichiometric_matrix(base_parameters: dict,
     S[list(map(species.index, ["S_ac", "S_et", "S_bu", "S_IN", "S_IC", "S_h2", "X_ac_et"])),
       reactions.index('Uptake of acetate_et')] = [-1,
                                                   model_parameters['f_et_ac'],
-                                                  (1- model_parameters['f_et_ac']-model_parameters['Y_ac']) * model_parameters['f_bu_ac'],
+                                                  (1- model_parameters['f_et_ac']-Y_ac_et) * model_parameters['f_bu_ac'],
                                                   -Y_ac_et * model_parameters['N_bac'],
                                                   f_IC_ac_et,
                                                   (1- model_parameters['f_et_ac']-Y_ac_et) * (1-model_parameters['f_bu_ac']),
@@ -1074,7 +1075,7 @@ def build_e_adm_stoichiometric_matrix(base_parameters: dict,
                                                      -Y_pro_et *  model_parameters['N_bac'],
                                                      f_IC_pro_et,
                                                      (1-model_parameters['f_et_pro']-Y_pro_et) * (1-model_parameters['f_va_pro']),
-                                                     model_parameters['Y_chain_et_pro']]
+                                                     Y_pro_et]
 
     S[list(map(species.index, ["S_pro", "S_lac", "S_va", "S_IN", "S_IC", "S_h2", "X_chain_lac"])),
         reactions.index('Uptake of propionate_lac')] = [-1,
@@ -1083,7 +1084,7 @@ def build_e_adm_stoichiometric_matrix(base_parameters: dict,
                                                         -Y_pro_lac * model_parameters['N_bac'],
                                                         f_IC_pro_lac,
                                                         (1-model_parameters['f_lac_pro']-Y_pro_lac) * (1-model_parameters['f_va_pro']),
-                                                        model_parameters['Y_chain_lac_pro']]
+                                                        Y_pro_lac]
 
     Y_bu_et=0 if nitrogen_limited else model_parameters['Y_bu_et']
     Y_bu_lac=0 if nitrogen_limited else model_parameters['Y_bu_lac']
@@ -1140,12 +1141,14 @@ def build_e_adm_stoichiometric_matrix(base_parameters: dict,
         
     
     Y_Me_ac=0 if nitrogen_limited else model_parameters["Y_Me_ac"]
-    f_IC_Me_ach2 = -(model_parameters['f_ac_h2']*model_parameters['C_ac'] +
+    # Acetoclastic methanogenesis is a disproportionation of acetate alone
+    # (CH3COO- + H2O -> CH4 + HCO3-); it does not consume H2. COD closes:
+    # -1 acetate -> (1-Y) CH4 + Y biomass, CO2 released via the S_IC balance.
+    f_IC_Me_ach2 = -(-1*model_parameters['C_ac'] +
                      (1 - Y_Me_ac)*model_parameters['C_ch4'] +
                      Y_Me_ac*model_parameters['C_bac'])
-    S[list(map(species.index, ["S_gas_h2", "S_ac", "S_ch4", "X_Me_ac", 'S_IC', 'S_IN'])),
+    S[list(map(species.index, ["S_ac", "S_ch4", "X_Me_ac", 'S_IC', 'S_IN'])),
         reactions.index('Methanogenessis from acetate and h2')] = [-1,
-                                                                   model_parameters['f_ac_h2'],
                                                                    (1 - Y_Me_ac),
                                                                    Y_Me_ac,
                                                                    f_IC_Me_ach2,
@@ -1153,13 +1156,16 @@ def build_e_adm_stoichiometric_matrix(base_parameters: dict,
                                                                    ]
     
     Y_Me_CO2=0 if nitrogen_limited else model_parameters["Y_Me_CO2"]
-
-    
-    S[list(map(species.index, ["S_gas_h2", "S_gas_ch4", "X_Me_CO2", 'S_gas_co2',"S_IN"])),
+    # Hydrogenotrophic methanogenesis acts on DISSOLVED H2 and produces
+    # DISSOLVED CH4 (which then reaches the headspace via Gas Transfer CH4).
+    # COD closes: -1 H2 -> (1-Y) CH4 + Y biomass; CO2 consumed via S_IC.
+    f_IC_Me_co2 = -((1 - Y_Me_CO2)*model_parameters['C_ch4'] +
+                    Y_Me_CO2*model_parameters['C_bac'])
+    S[list(map(species.index, ["S_h2", "S_ch4", "X_Me_CO2", 'S_IC',"S_IN"])),
         reactions.index('Methanogenessis from CO2 and h2')] = [-1,
-                                                               (1 -model_parameters['f_co2_ch4']- Y_Me_CO2),
+                                                               (1 - Y_Me_CO2),
                                                                (Y_Me_CO2),
-                                                               model_parameters['f_co2_ch4'],
+                                                               f_IC_Me_co2,
                                                                 -Y_Me_CO2 *model_parameters['N_bac']
                                                                 ]
     
@@ -1384,13 +1390,13 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
         (model.model_parameters['K_S_bu']+c[model.species.index('S_bu')]
          )*c[model.species.index('X_VFA_deg')]*I13
 
-    v[model.reactions.index('Methanogenessis from acetate and h2')] = model.model_parameters['k_m_h2_Me_ac']*c[model.species.index('S_gas_h2')]*c[model.species.index('S_ac')] / \
-        (model.model_parameters['K_S_h2_Me_ac']*c[model.species.index('S_gas_h2')]+model.model_parameters['K_S_ac_Me']*c[model.species.index(
-            'S_ac')]+c[model.species.index('S_ac')]*c[model.species.index('S_gas_h2')]+10**-9)*c[model.species.index('X_Me_ac')]*I12
+    # Acetoclastic: Monod on dissolved acetate only (no H2 dependence).
+    v[model.reactions.index('Methanogenessis from acetate and h2')] = model.model_parameters['k_m_h2_Me_ac']*c[model.species.index('S_ac')] / \
+        (model.model_parameters['K_S_ac_Me']+c[model.species.index('S_ac')]+10**-9)*c[model.species.index('X_Me_ac')]*I12
 
-    v[model.reactions.index('Methanogenessis from CO2 and h2')] = model.model_parameters['k_m_h2_Me_CO2']*c[model.species.index('S_gas_h2')]*c[model.species.index('S_gas_co2')] / \
-        (model.model_parameters['K_S_h2_Me_CO2']*c[model.species.index('S_gas_h2')]+model.model_parameters['K_S_CO2_Me']*c[model.species.index(
-            'S_gas_co2')]+c[model.species.index('S_gas_co2')]*c[model.species.index('S_gas_h2')]+10**-9)*c[model.species.index('X_Me_CO2')]*I12
+    # Hydrogenotrophic: Monod on dissolved H2 (CO2 assumed non-limiting).
+    v[model.reactions.index('Methanogenessis from CO2 and h2')] = model.model_parameters['k_m_h2_Me_CO2']*c[model.species.index('S_h2')] / \
+        (model.model_parameters['K_S_h2_Me_CO2']+c[model.species.index('S_h2')]+10**-9)*c[model.species.index('X_Me_CO2')]*I12
 
 
     v[model.reactions.index('Uptake of ethanol')] = model.model_parameters['k_m_et']*c[model.species.index('S_et')] / \
