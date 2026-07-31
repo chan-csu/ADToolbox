@@ -12,6 +12,7 @@ import shlex
 from requests.adapters import HTTPAdapter
 import utils
 import configs
+import markers
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import Timeout
 from datetime import datetime
@@ -1940,6 +1941,8 @@ class Metagenomics:
         self._config_settings_lock = threading.RLock()
         self._genome_download_condition = threading.Condition()
         self._genomes_downloading: set[str] = set()
+        self.marker_catalog = markers.MarkerCatalog.from_json(self.config.marker_catalog)
+        self.marker_classifier = markers.MarkerClassifier(self.marker_catalog)
 
     #### NEEDS to BE FIXED        
     def find_top_taxa(
@@ -2468,6 +2471,65 @@ fi
             image=image,
         )
         return bash_script + "\n", alignment_file
+
+    def annotate_genome_with_marker_hmms(
+        self,
+        address: str | os.PathLike,
+        outdir: str | os.PathLike,
+        name: str,
+        *,
+        container: str = "None",
+        image: str | None = None,
+        threads: int = 1,
+        prodigal_mode: str = "single",
+    ) -> tuple[str, str]:
+        """Prepare Prodigal plus HMMER marker annotation for one genome."""
+        if prodigal_mode not in {"single", "meta"}:
+            raise ValueError("prodigal_mode must be 'single' or 'meta'")
+        output_dir = pathlib.Path(outdir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        input_path = pathlib.Path(address)
+        hmm_db = pathlib.Path(self.config.marker_hmm_db)
+        work_dir = output_dir / f"hmmer_work_{name}"
+        genome_fasta = work_dir / f"{name}.fna"
+        proteins = work_dir / f"{name}.faa"
+        genes = work_dir / f"{name}.gff"
+        domtblout = output_dir / f"Marker_Hits_hmmer_{name}.domtbl"
+        hmm_log = work_dir / "hmmsearch.log"
+        decompress = (
+            f"gzip -dc {self._quote(input_path)} > {self._quote(genome_fasta)}"
+            if input_path.suffix.lower() == ".gz"
+            else f"cp {self._quote(input_path)} {self._quote(genome_fasta)}"
+        )
+        command = "\n".join(
+            [
+                "set -e",
+                f"mkdir -p {self._quote(work_dir)}",
+                decompress,
+                " ".join(
+                    self._quote(value)
+                    for value in [
+                        "prodigal", "-q", "-i", genome_fasta, "-a", proteins,
+                        "-o", genes, "-f", "gff", "-p", prodigal_mode,
+                    ]
+                ),
+                " ".join(
+                    self._quote(value)
+                    for value in [
+                        "hmmsearch", "--cpu", max(1, int(threads)), "--noali",
+                        "--domtblout", domtblout, hmm_db, proteins,
+                    ]
+                ) + f" > {self._quote(hmm_log)}",
+                f"test -s {self._quote(domtblout)}",
+            ]
+        )
+        script = self._wrap_external_command(
+            command,
+            container=container,
+            mounts=[input_path, output_dir, hmm_db],
+            image=image,
+        )
+        return script + "\n", str(domtblout)
 
     def align_short_reads_to_protein_db(
         self,
@@ -3092,7 +3154,73 @@ fi
         return self._normalize_profile(microbe_scores, microbe_scores) if normalize else microbe_scores
 
     def cod_from_alignment(self, alignment_file: str | os.PathLike, normalize: bool = True) -> dict[str, float]:
-        return self.cod_from_ec_counts(self.extract_ec_from_alignment(str(alignment_file)), normalize=normalize)
+        kind, counts = self.functional_counts_from_alignment(alignment_file)
+        if kind == "markers":
+            return self.marker_classifier.profile_from_counts(counts, normalize=normalize)
+        return self.cod_from_ec_counts(counts, normalize=normalize)
+
+    def marker_hits_from_alignment(
+        self,
+        alignment_file: str | os.PathLike,
+        *,
+        entity_id: str | None = None,
+    ) -> pl.DataFrame:
+        """Read canonical marker-family hits from an MMseqs alignment."""
+        return markers.alignment_marker_hits(
+            alignment_file,
+            self.marker_catalog,
+            entity_id=entity_id or pathlib.Path(alignment_file).stem,
+            min_bits=float(self.config.bit_score),
+            max_evalue=float(self.config.e_value),
+        )
+
+    def marker_counts_from_alignment(self, alignment_file: str | os.PathLike) -> dict[str, int]:
+        """Count unique query genes/reads assigned to each marker family."""
+        hits = self.marker_hits_from_alignment(alignment_file)
+        if hits.height == 0:
+            return {}
+        return {
+            str(row["marker_id"]): int(row["len"])
+            for row in hits.group_by("marker_id").len().to_dicts()
+        }
+
+    def marker_hits_from_hmmer(
+        self,
+        domtblout: str | os.PathLike,
+        *,
+        entity_id: str | None = None,
+    ) -> pl.DataFrame:
+        """Read canonical marker-family hits from HMMER domtblout."""
+        return markers.hmmer_marker_hits(
+            domtblout,
+            self.marker_catalog,
+            entity_id=entity_id or pathlib.Path(domtblout).stem,
+            max_evalue=float(self.config.marker_hmm_evalue),
+            min_coverage=float(self.config.marker_hmm_coverage),
+            score_cutoffs=markers.read_hmm_score_cutoffs(self.config.marker_hmm_cutoffs),
+        )
+
+    def marker_counts_from_hmmer(self, domtblout: str | os.PathLike) -> dict[str, int]:
+        hits = self.marker_hits_from_hmmer(domtblout)
+        if hits.height == 0:
+            return {}
+        return {
+            str(row["marker_id"]): int(row["len"])
+            for row in hits.group_by("marker_id").len().to_dicts()
+        }
+
+    def functional_counts_from_alignment(
+        self,
+        alignment_file: str | os.PathLike,
+    ) -> tuple[str, dict[str, int]]:
+        """Prefer direct marker evidence, with EC parsing only for old databases."""
+        path = pathlib.Path(alignment_file)
+        if path.suffix.lower() in {".domtbl", ".domtblout"} or "hmmer" in path.name.lower():
+            return "markers", self.marker_counts_from_hmmer(path)
+        marker_counts = self.marker_counts_from_alignment(path)
+        if marker_counts:
+            return "markers", marker_counts
+        return "ec", self.extract_ec_from_alignment(str(alignment_file))
 
     def _alignment_files_from_path(self, path: str | os.PathLike) -> dict[str, str]:
         path = pathlib.Path(path)
@@ -3108,8 +3236,14 @@ fi
             name = alignment.stem.replace("Alignment_Results_mmseq_", "")
             alignments[name] = str(alignment)
             alignments.setdefault(name.split("~", 1)[0], str(alignment))
+        for alignment in sorted(path.glob("Marker_Hits_hmmer_*.domtbl")):
+            name = alignment.stem.replace("Marker_Hits_hmmer_", "")
+            alignments[name] = str(alignment)
+            alignments.setdefault(name.split("~", 1)[0], str(alignment))
         if not alignments:
-            raise FileNotFoundError(f"No Alignment_Results_mmseq_*.tsv files found in {path}")
+            raise FileNotFoundError(
+                f"No Alignment_Results_mmseq_*.tsv or Marker_Hits_hmmer_*.domtbl files found in {path}"
+            )
         return alignments
 
     def _genome_files_from_dir(self, genomes_dir: str | os.PathLike) -> dict[str, str]:
@@ -4661,11 +4795,13 @@ fi"""
         if mode == "shotgun-alignment":
             if alignment_file is None:
                 raise ValueError("alignment_file is required for shotgun-alignment mode")
-            logger.info("Converting shotgun alignment to EC counts and COD profile")
+            logger.info("Converting shotgun alignment to functional marker counts and COD profile")
             result["artifacts"]["alignment_file"] = str(alignment_file)
-            ec_counts = self.extract_ec_from_alignment(str(alignment_file))
-            cod_profile = self.cod_from_ec_counts(ec_counts, normalize=normalize)
-            result["artifacts"]["ec_counts"] = self._write_tall_mapping(output_path / "ec_counts.csv", ec_counts, sample_name=sample_name, key_name="ec", value_name="count", value_dtype=pl.Int64)
+            evidence_kind, functional_counts = self.functional_counts_from_alignment(str(alignment_file))
+            cod_profile = self.marker_classifier.profile_from_counts(functional_counts, normalize=normalize) if evidence_kind == "markers" else self.cod_from_ec_counts(functional_counts, normalize=normalize)
+            count_key = "marker_id" if evidence_kind == "markers" else "ec"
+            count_name = "marker_counts" if evidence_kind == "markers" else "ec_counts"
+            result["artifacts"][count_name] = self._write_tall_mapping(output_path / f"{count_name}.csv", functional_counts, sample_name=sample_name, key_name=count_key, value_name="count", value_dtype=pl.Int64)
             result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         elif mode == "shotgun-reads":
@@ -4695,9 +4831,11 @@ fi"""
                 cod_profile = {}
                 result["status"] = "waiting_for_alignment"
             else:
-                ec_counts = self.extract_ec_from_alignment(str(alignment_path))
-                cod_profile = self.cod_from_ec_counts(ec_counts, normalize=normalize)
-                result["artifacts"]["ec_counts"] = self._write_tall_mapping(output_path / "ec_counts.csv", ec_counts, sample_name=sample_name, key_name="ec", value_name="count", value_dtype=pl.Int64)
+                evidence_kind, functional_counts = self.functional_counts_from_alignment(str(alignment_path))
+                cod_profile = self.marker_classifier.profile_from_counts(functional_counts, normalize=normalize) if evidence_kind == "markers" else self.cod_from_ec_counts(functional_counts, normalize=normalize)
+                count_key = "marker_id" if evidence_kind == "markers" else "ec"
+                count_name = "marker_counts" if evidence_kind == "markers" else "ec_counts"
+                result["artifacts"][count_name] = self._write_tall_mapping(output_path / f"{count_name}.csv", functional_counts, sample_name=sample_name, key_name=count_key, value_name="count", value_dtype=pl.Int64)
                 result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         elif mode == "genome-alignments":
@@ -4906,10 +5044,12 @@ fi"""
                         if result["artifacts"].get("align_to_gtdb")
                         else None
                     )
+                    marker_backend = self.config.marker_backend
+                    preferred_profile_step = "annotate_genomes" if marker_backend == "hmmer" else "align_genomes"
                     profile_step_name = (
-                        "align_genomes"
-                        if self._step_settings(execution_profile, "align_genomes")
-                        else "align_genome"
+                        preferred_profile_step
+                        if self._step_settings(execution_profile, preferred_profile_step)
+                        else ("align_genomes" if self._step_settings(execution_profile, "align_genomes") else "align_genome")
                     )
                     alignment_step_settings = self._step_settings(execution_profile, profile_step_name)
                     step_container = str(
@@ -4921,16 +5061,30 @@ fi"""
                         for genome in genome_abund:
                             if genome not in genome_files:
                                 continue
-                            script, alignment = self.align_genome_to_protein_db(
-                                genome_files[genome],
-                                str(alignment_dir),
-                                genome,
-                                container=step_container,
-                                image=alignment_step_settings.get("image") or self._step_image(
-                                    execution_profile, profile_step_name, step_container
-                                ),
-                                tmp_dir=alignment_dir / "mmseqs_tmp" / genome,
-                            )
+                            if marker_backend == "hmmer":
+                                annotation_settings = alignment_step_settings.get("settings", {})
+                                script, alignment = self.annotate_genome_with_marker_hmms(
+                                    genome_files[genome],
+                                    str(alignment_dir),
+                                    genome,
+                                    container=step_container,
+                                    image=alignment_step_settings.get("image") or self._step_image(
+                                        execution_profile, profile_step_name, step_container
+                                    ),
+                                    threads=int(annotation_settings.get("threads", alignment_step_settings.get("cpus", 1))),
+                                    prodigal_mode=str(annotation_settings.get("prodigal_mode", "single")),
+                                )
+                            else:
+                                script, alignment = self.align_genome_to_protein_db(
+                                    genome_files[genome],
+                                    str(alignment_dir),
+                                    genome,
+                                    container=step_container,
+                                    image=alignment_step_settings.get("image") or self._step_image(
+                                        execution_profile, profile_step_name, step_container
+                                    ),
+                                    tmp_dir=alignment_dir / "mmseqs_tmp" / genome,
+                                )
                             commands[genome] = script
                             alignments[genome] = alignment
                             if not pathlib.Path(alignment).exists():
@@ -4955,7 +5109,7 @@ fi"""
                     finally:
                         self._restore_config_settings(old_settings)
                     if alignment_commands:
-                        step_name = "align_genomes"
+                        step_name = "annotate_genomes" if marker_backend == "hmmer" else "align_genomes"
                         result["artifacts"][step_name] = self._execute_step(
                             "\n".join(alignment_commands),
                             step_name=step_name,
@@ -5026,6 +5180,10 @@ fi"""
                 "normalize": normalize,
                 "reaction_db": self.config.csv_reaction_db,
                 "protein_db": self.config.protein_db,
+                "marker_catalog": self.config.marker_catalog,
+                "marker_backend": self.config.marker_backend,
+                "marker_hmm_db": self.config.marker_hmm_db if self.config.marker_backend == "hmmer" else None,
+                "marker_hmm_cutoffs": self.config.marker_hmm_cutoffs,
                 "bit_score": self.config.bit_score,
                 "e_value": self.config.e_value,
                 "artifacts": result["artifacts"],
@@ -5563,6 +5721,11 @@ fi"""
         if int(sample_workers) < 1:
             raise ValueError("sample_workers must be at least 1")
         if assay == "shotgun":
+            if self.config.marker_backend == "hmmer":
+                raise ValueError(
+                    "The hmmer marker backend requires genomes or assembled contigs; "
+                    "use --marker-backend mmseqs for raw shotgun reads"
+                )
             return self._batch_shotgun_sample_to_cod(
                 manifest=manifest,
                 output_dir=output_dir,

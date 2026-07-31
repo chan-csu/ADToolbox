@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 
-from adtoolbox import __version__, adm, configs, core, utils
+from adtoolbox import __version__, adm, configs, core, markers, utils
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -31,6 +31,10 @@ def _metagenomics_config(
     metagenomics_dir=None,
     bit_score=None,
     e_value=None,
+    marker_catalog=None,
+    marker_backend="mmseqs",
+    marker_hmm_db=None,
+    marker_hmm_cutoffs=None,
 ):
     config = configs.Metagenomics(
         metagenomics_dir=metagenomics_dir or ".",
@@ -38,6 +42,10 @@ def _metagenomics_config(
         protein_db=protein_db,
         csv_reaction_db=reaction_db,
         amplicon2genome_db=amplicon_to_genome_db,
+        marker_catalog=marker_catalog,
+        marker_backend=marker_backend,
+        marker_hmm_db=marker_hmm_db,
+        marker_hmm_cutoffs=marker_hmm_cutoffs,
     )
     if protein_db:
         config.protein_db = protein_db
@@ -305,6 +313,40 @@ def download_all_databases(output_dir):
     _database(**_database_config_from_dir(output_dir)).download_all_databases()
 
 
+@database.command(name="build-marker-protein-db", help="Build a marker-labeled MMseqs target FASTA from curated family FASTAs.")
+@click.option("--manifest", required=True, help="CSV/TSV with marker_id and source_fasta columns.")
+@click.option("--output", required=True, help="Combined marker protein FASTA to create.")
+@click.option("--catalog", default=str(markers.DEFAULT_MARKER_CATALOG), show_default=True, help="Marker catalog JSON file.")
+def build_marker_protein_db_command(manifest, output, catalog):
+    manifest = _prompt_path(manifest, "Marker reference manifest", exists=True, file_okay=True, dir_okay=False)
+    catalog = _prompt_path(catalog, "Marker catalog JSON path", exists=True, file_okay=True, dir_okay=False)
+    output = os.path.abspath(os.path.expanduser(output))
+    try:
+        loaded = markers.MarkerCatalog.from_json(catalog)
+        counts = markers.build_marker_protein_db(manifest, output, loaded)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    rich.print(f"[green]Wrote {sum(counts.values())} reference proteins for {len(counts)} marker families to {output}")
+
+
+@database.command(name="build-marker-hmm-db", help="Extract a compact marker HMM database from dbCAN/KOfam/Pfam collections.")
+@click.option("--manifest", required=True, help="CSV/TSV with marker_id, source_hmm, profile_id, and optional score_threshold.")
+@click.option("--output", required=True, help="Combined marker HMM database to create.")
+@click.option("--cutoffs-output", help="Optional adaptive profile score cutoff CSV.")
+@click.option("--catalog", default=str(markers.DEFAULT_MARKER_CATALOG), show_default=True, help="Marker catalog JSON file.")
+def build_marker_hmm_db_command(manifest, output, cutoffs_output, catalog):
+    manifest = _prompt_path(manifest, "Marker HMM manifest", exists=True, file_okay=True, dir_okay=False)
+    catalog = _prompt_path(catalog, "Marker catalog JSON path", exists=True, file_okay=True, dir_okay=False)
+    output = os.path.abspath(os.path.expanduser(output))
+    cutoffs_output = os.path.abspath(os.path.expanduser(cutoffs_output)) if cutoffs_output else None
+    try:
+        loaded = markers.MarkerCatalog.from_json(catalog)
+        counts = markers.build_marker_hmm_db(manifest, output, loaded, cutoff_output=cutoffs_output)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    rich.print(f"[green]Wrote {sum(counts.values())} HMM profiles for {len(counts)} marker families to {output}")
+
+
 @main.group(
     name="metagenomics",
     help="Import and process metagenomics data from the command line.",
@@ -342,6 +384,129 @@ def download_genome_command(genome_accession, output_dir, container):
         container=container,
     )[0]
     subprocess.run(script, shell=True)
+
+
+@metagenomics.command(name="validate-marker-catalog", help="Validate a gene-marker-to-COD-group rule catalog.")
+@click.option(
+    "--catalog",
+    default=str(markers.DEFAULT_MARKER_CATALOG),
+    show_default=True,
+    help="Marker catalog JSON file.",
+)
+def validate_marker_catalog(catalog):
+    catalog = _prompt_path(catalog, "Marker catalog JSON path", exists=True, file_okay=True, dir_okay=False)
+    try:
+        loaded = markers.MarkerCatalog.from_json(catalog)
+    except (OSError, json.JSONDecodeError, markers.MarkerCatalogError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    rich.print(
+        f"[green]Valid marker catalog {loaded.catalog_version}: "
+        f"{len(loaded.markers)} markers, {len(loaded.groups)} configured groups, "
+        f"{len(loaded.cod_groups)} output groups"
+    )
+
+
+@metagenomics.command(name="validate-marker-protein-db", help="Check marker-family coverage in an MMseqs target FASTA.")
+@click.option("--protein-db", required=True, help="Protein FASTA whose headers contain |marker_id.")
+@click.option("--catalog", default=str(markers.DEFAULT_MARKER_CATALOG), show_default=True, help="Marker catalog JSON file.")
+def validate_marker_protein_db(protein_db, catalog):
+    protein_db = _prompt_path(protein_db, "Marker protein FASTA", exists=True, file_okay=True, dir_okay=False)
+    catalog = _prompt_path(catalog, "Marker catalog JSON path", exists=True, file_okay=True, dir_okay=False)
+    try:
+        loaded = markers.MarkerCatalog.from_json(catalog)
+        found = markers.marker_ids_from_fasta(protein_db, loaded)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    required = {
+        marker
+        for group in loaded.groups.values()
+        for panel in group.panels
+        for marker in panel.marker_weights
+    }
+    missing = sorted(required - found)
+    rich.print(f"[green]Recognized {len(found)} of {len(required)} catalog marker families")
+    if missing:
+        rich.print(f"[yellow]Missing marker families: {', '.join(missing)}")
+        raise click.ClickException("Marker protein database does not cover the complete catalog")
+
+
+@metagenomics.command(name="classify-markers", help="Classify genome marker hits into e-ADM COD-group scores.")
+@click.option("--hits", required=True, help="CSV/TSV with genome_id and marker_id columns.")
+@click.option("--output", required=True, help="Output genome COD-score CSV.")
+@click.option("--catalog", default=str(markers.DEFAULT_MARKER_CATALOG), show_default=True, help="Marker catalog JSON file.")
+@click.option("--genome-column", default="genome_id", show_default=True)
+@click.option("--marker-column", default="marker_id", show_default=True)
+@click.option("--min-bits", type=float, help="Optional minimum bits score; requires a bits column.")
+@click.option("--max-evalue", type=float, help="Optional maximum E-value; requires an evalue column.")
+@click.option("--min-identity", type=float, help="Optional minimum identity; requires an identity column.")
+@click.option("--min-coverage", type=float, help="Optional minimum query coverage; requires a coverage column.")
+def classify_markers(hits, output, catalog, genome_column, marker_column, min_bits, max_evalue, min_identity, min_coverage):
+    hits = _prompt_path(hits, "Marker hits CSV/TSV", exists=True, file_okay=True, dir_okay=False)
+    catalog = _prompt_path(catalog, "Marker catalog JSON path", exists=True, file_okay=True, dir_okay=False)
+    output = os.path.abspath(os.path.expanduser(output))
+    try:
+        classifier = markers.MarkerClassifier(markers.MarkerCatalog.from_json(catalog))
+        scores = classifier.classify_hits(
+            markers.read_table(hits),
+            genome_column=genome_column,
+            marker_column=marker_column,
+            min_bits=min_bits,
+            max_evalue=max_evalue,
+            min_identity=min_identity,
+            min_coverage=min_coverage,
+        )
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    Path(output).parent.mkdir(parents=True, exist_ok=True)
+    scores.write_csv(output)
+    positive = scores.filter(pl.col("score") > 0).height
+    rich.print(f"[green]Wrote {scores.height} genome/group scores ({positive} positive) to {output}")
+
+
+@metagenomics.command(name="aggregate-marker-cod", help="Combine genome COD scores using per-sample genome abundance.")
+@click.option("--scores", required=True, help="Genome COD-score CSV/TSV from classify-markers.")
+@click.option("--abundances", required=True, help="CSV/TSV with sample, genome_id, and abundance columns.")
+@click.option("--output", required=True, help="Output sample COD-profile CSV.")
+@click.option("--qc-output", help="Output sample QC CSV; defaults beside --output.")
+@click.option("--catalog", default=str(markers.DEFAULT_MARKER_CATALOG), show_default=True, help="Marker catalog JSON file.")
+@click.option("--sample-column", default="sample", show_default=True)
+@click.option("--genome-column", default="genome_id", show_default=True)
+@click.option("--abundance-column", default="abundance", show_default=True)
+@click.option("--normalize/--no-normalize", default=True, show_default=True, help="Normalize positive COD scores per sample.")
+def aggregate_marker_cod(
+    scores,
+    abundances,
+    output,
+    qc_output,
+    catalog,
+    sample_column,
+    genome_column,
+    abundance_column,
+    normalize,
+):
+    scores = _prompt_path(scores, "Genome COD scores CSV/TSV", exists=True, file_okay=True, dir_okay=False)
+    abundances = _prompt_path(abundances, "Genome abundances CSV/TSV", exists=True, file_okay=True, dir_okay=False)
+    catalog = _prompt_path(catalog, "Marker catalog JSON path", exists=True, file_okay=True, dir_okay=False)
+    output = Path(os.path.abspath(os.path.expanduser(output)))
+    qc_output = Path(os.path.abspath(os.path.expanduser(qc_output))) if qc_output else output.with_name(f"{output.stem}_qc.csv")
+    try:
+        classifier = markers.MarkerClassifier(markers.MarkerCatalog.from_json(catalog))
+        profile, qc = classifier.aggregate_samples(
+            markers.read_table(scores),
+            markers.read_table(abundances),
+            sample_column=sample_column,
+            genome_column=genome_column,
+            abundance_column=abundance_column,
+            normalize=normalize,
+        )
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    output.parent.mkdir(parents=True, exist_ok=True)
+    qc_output.parent.mkdir(parents=True, exist_ok=True)
+    profile.write_csv(output)
+    qc.write_csv(qc_output)
+    rich.print(f"[green]Wrote {profile.height} sample/group values to {output}")
+    rich.print(f"[green]Wrote sample classification QC to {qc_output}")
 
 
 @metagenomics.command(name="align-genome", help="Align one genome to the ADToolbox protein database.")
@@ -417,7 +582,11 @@ def find_representative_genomes(input_file, output_dir, amplicon_to_genome_db, c
 @click.option("--stage", default="all", show_default=True, type=click.Choice(["download", "preprocess", "allocate", "all"]), help="Pipeline stage to run.")
 @click.option("--database-dir", help="Directory containing ADToolbox database files.")
 @click.option("--reaction-db", help="Reaction metadata CSV with EC-to-eADM mappings.")
-@click.option("--protein-db", help="Protein FASTA database for MMseqs alignment.")
+@click.option("--protein-db", help="Marker-family protein FASTA for MMseqs; headers must contain |marker_id.")
+@click.option("--marker-catalog", help="Gene-marker panel catalog JSON; defaults to the bundled catalog.")
+@click.option("--marker-backend", default="mmseqs", show_default=True, type=click.Choice(["mmseqs", "hmmer"]), help="Genome marker annotation backend.")
+@click.option("--marker-hmm-db", help="Compact HMMER profile database used by the hmmer backend.")
+@click.option("--marker-hmm-cutoffs", help="Optional CSV/TSV with profile_id and adaptive score_threshold.")
 @click.option("--amplicon-to-genome-db", help="Directory containing GTDB/amplicon-to-genome files.")
 @click.option("--genome-alignments", help="Genome alignment JSON, one TSV file, or directory of Alignment_Results_mmseq_*.tsv files.")
 @click.option("--genomes-dir", help="Directory containing genome FASTA files when alignments are not precomputed.")
@@ -450,6 +619,10 @@ def metagenomics_process(
     database_dir,
     reaction_db,
     protein_db,
+    marker_catalog,
+    marker_backend,
+    marker_hmm_db,
+    marker_hmm_cutoffs,
     amplicon_to_genome_db,
     genome_alignments,
     genomes_dir,
@@ -487,6 +660,10 @@ def metagenomics_process(
         amplicon_to_genome_db = _prompt_path(amplicon_to_genome_db, "Amplicon-to-genome database directory", exists=True, file_okay=False, dir_okay=True)
     if gtdb_matches_dir:
         gtdb_matches_dir = _prompt_path(gtdb_matches_dir, "GTDB matches directory", exists=True, file_okay=False, dir_okay=True)
+    if marker_hmm_db:
+        marker_hmm_db = _prompt_path(marker_hmm_db, "Marker HMM database", exists=True, file_okay=True, dir_okay=False)
+    if marker_hmm_cutoffs:
+        marker_hmm_cutoffs = _prompt_path(marker_hmm_cutoffs, "Marker HMM cutoff table", exists=True, file_okay=True, dir_okay=False)
 
     config = _metagenomics_config(
         protein_db=protein_db,
@@ -496,6 +673,10 @@ def metagenomics_process(
         metagenomics_dir=output_dir,
         bit_score=bit_score,
         e_value=e_value,
+        marker_catalog=marker_catalog,
+        marker_backend=marker_backend,
+        marker_hmm_db=marker_hmm_db,
+        marker_hmm_cutoffs=marker_hmm_cutoffs,
     )
 
     try:

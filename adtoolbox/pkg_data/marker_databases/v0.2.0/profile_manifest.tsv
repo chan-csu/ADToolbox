@@ -1,0 +1,87 @@
+marker_id	source	profile_id	score_threshold	score_type	description
+cazy_GH5	dbCAN	GH5.hmm		full	Glycoside hydrolase family 5
+cazy_GH9	dbCAN	GH9.hmm		full	Glycoside hydrolase family 9
+cazy_GH48	dbCAN	GH48.hmm		full	Glycoside hydrolase family 48
+cazy_GH10	dbCAN	GH10.hmm		full	Glycoside hydrolase family 10
+cazy_GH11	dbCAN	GH11.hmm		full	Glycoside hydrolase family 11
+cazy_GH13	dbCAN	GH13.hmm		full	Glycoside hydrolase family 13
+cazy_GH43	dbCAN	GH43.hmm		full	Glycoside hydrolase family 43
+cazy_PL1	dbCAN	PL1.hmm		full	Polysaccharide lyase family 1
+cazy_CE8	dbCAN	CE8.hmm		full	Carbohydrate esterase family 8
+cazy_CBM3	dbCAN	CBM3.hmm		full	Carbohydrate-binding module family 3
+cazy_CBM6	dbCAN	CBM6.hmm		full	Carbohydrate-binding module family 6
+bgl	KOfam	K01188	764.10	domain	Beta-glucosidase
+agl	KOfam	K01187	342.50	full	Alpha-glucosidase
+susC	KOfam	K21573	628.90	full	TonB-dependent starch-binding outer membrane protein SusC
+susD	KOfam	K21572	53.60	full	Starch-binding outer membrane protein SusD/RagB
+extracellular_protease	KOfam	K01342	383.93	domain	Subtilisin-family extracellular protease
+pepN	KOfam	K01256	437.20	domain	Aminopeptidase N
+pepO	KOfam	K07386	655.93	domain	Putative endopeptidase
+oppA	KOfam	K15580	355.23	full	Oligopeptide transport substrate-binding protein
+oppB	KOfam	K15581	350.83	full	Oligopeptide transport permease protein
+oppB	KOfam	K15582	355.83	domain	Alternative oligopeptide transport permease protein
+lipase	KOfam	K01046	54.20	full	Triacylglycerol lipase
+esterase	KOfam	K01044	747.60	domain	Carboxylesterase
+ptsG	KOfam	K02779	717.33	full	Glucose PTS EIICB/EIICBA component
+glcP	KOfam	K08139	408.53	domain	Sugar proton symporter
+pgi	KOfam	K01810	119.13	full	Bacterial glucose-6-phosphate isomerase
+pgi	KOfam	K06859	106.47	full	Archaeal glucose-6-phosphate isomerase
+pfkA	KOfam	K00850	355.80	full	6-phosphofructokinase 1
+pfkA	KOfam	K16370	327.43	domain	6-phosphofructokinase 2
+gapA	KOfam	K00134	410.70	full	Glyceraldehyde-3-phosphate dehydrogenase
+pyk	KOfam	K00873	46.23	full	Pyruvate kinase
+xylA	KOfam	K01805	110.70	full	Xylose isomerase
+xylB	KOfam	K00854	295.03	full	Xylulokinase
+xylF	KOfam	K10543	350.07	domain	D-xylose transport substrate-binding protein
+grdA	KOfam	K10670	54.87	full	Glycine/sarcosine/betaine reductase component A
+grdB	KOfam	K10671	565.23	full	Glycine reductase component B alpha/beta
+grdB	KOfam	K10672	412.57	full	Glycine reductase component B gamma
+prdA	KOfam	K10793	602.27	domain	D-proline reductase PrdA
+prdB	KOfam	K10794	129.67	domain	D-proline reductase PrdB
+fadD	KOfam	K01897	435.10	domain	Long-chain-fatty-acid CoA ligase
+fadE	KOfam	K00249	378.03	full	Acyl-CoA dehydrogenase
+fadE	KOfam	K00255	577.03	full	Long-chain-acyl-CoA dehydrogenase
+fadB	KOfam	K01825	751.23	domain	Multifunctional fatty-acid oxidation protein
+fadA	KOfam	K00632	495.43	domain	Acetyl-CoA acyltransferase
+mcrA	KOfam	K00399	775.53	full	Methyl-coenzyme M reductase alpha subunit
+mcrB	KOfam	K00401	504.30	full	Methyl-coenzyme M reductase beta subunit
+mtrA	KOfam	K00577	122.77	full	Methyl-H4MPT coenzyme M methyltransferase subunit A
+fwdA	KOfam	K00200	246.03	full	Formylmethanofuran dehydrogenase subunit A
+ftr	KOfam	K00672	207.97	full	Formylmethanofuran H4MPT N-formyltransferase
+mch	KOfam	K01499	284.77	full	Methenyl-H4MPT cyclohydrolase
+mtd	KOfam	K00319	336.13	full	Methylene-H4MPT dehydrogenase
+mer	KOfam	K00320	219.90	full	Methylene-H4MPT reductase
+acs	KOfam	K01895	761.17	domain	Acetyl-CoA synthetase
+ackA	KOfam	K00925	134.67	domain	Acetate kinase
+pta	KOfam	K00625	379.30	domain	Phosphate acetyltransferase
+cdhC	KOfam	K00197	390.80	full	CODH/ACS gamma subunit
+cdhD	KOfam	K00194	306.93	full	CODH/ACS delta subunit
+cdhE	KOfam	K00195	102.67	full	CODH/ACS epsilon subunit
+thl	KOfam	K00626	487.80	full	Acetyl-CoA acetyltransferase/thiolase
+hbd	KOfam	K00074	400.20	domain	3-hydroxybutyryl-CoA dehydrogenase
+crt	KOfam	K01692	347.50	domain	Enoyl-CoA hydratase/crotonase
+bcd	KOfam	K00248	516.07	domain	Butyryl-CoA dehydrogenase
+etfA	KOfam	K03522	305.23	full	Electron transfer flavoprotein alpha
+etfB	KOfam	K03521	72.90	full	Electron transfer flavoprotein beta
+cat	KOfam	K01034	300.47	domain	Acetate CoA/acetoacetate CoA-transferase alpha
+cat	KOfam	K01035	312.20	domain	Acetate CoA/acetoacetate CoA-transferase beta
+lctD	KOfam	K00782	97.20	domain	L-lactate dehydrogenase complex LldG
+lctB	KOfam	K18928	247.80	full	L-lactate dehydrogenase complex LldE
+lctC	KOfam	K18929	453.90	full	L-lactate dehydrogenase complex LldF
+pfor	KOfam	K03737	427.97	domain	Pyruvate ferredoxin/flavodoxin oxidoreductase
+adhE	KOfam	K04072	643.77	full	Bifunctional acetaldehyde/alcohol dehydrogenase
+adh	KOfam	K00001	320.40	domain	Alcohol dehydrogenase
+aldh	KOfam	K00132	654.50	full	Acetaldehyde dehydrogenase acetylating
+hydA	KOfam	K00532	919.57	full	Ferredoxin hydrogenase
+hydA	KOfam	K00533	562.93	full	Ferredoxin hydrogenase large subunit
+fdhA	KOfam	K00123	841.97	full	Formate dehydrogenase major subunit
+rnfB	KOfam	K03616	74.23	domain	Rnf complex subunit B
+mmcE	KOfam	K01848	829.47	domain	Methylmalonyl-CoA mutase N-terminal domain
+mmcF	KOfam	K01849	180.70	domain	Methylmalonyl-CoA mutase C-terminal domain
+mmcG	KOfam	K05606	79.00	domain	Methylmalonyl/ethylmalonyl-CoA epimerase
+sucC	KOfam	K01900	576.33	full	Succinyl-CoA synthetase beta subunit
+sucD	KOfam	K01899	572.57	full	Succinyl-CoA synthetase alpha subunit
+fumB	KOfam	K01676	372.33	full	Fumarate hydratase class I
+mdh	KOfam	K00024	355.80	domain	Malate dehydrogenase
+fhs	KOfam	K01938	905.10	domain	Formate tetrahydrofolate ligase
+folD	KOfam	K01491	406.07	domain	Methylene-THF dehydrogenase/cyclohydrolase

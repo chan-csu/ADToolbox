@@ -19,6 +19,11 @@ ADTOOLBOX_CONTAINERS = {
     "singularity_arm64": "docker://parsaghadermazi/adtoolbox:arm64",
 }
 
+MARKER_DATABASE_DIR = pathlib.Path(PKG_DATA) / "marker_databases" / "v0.2.0"
+DEFAULT_MARKER_PROTEIN_DB = MARKER_DATABASE_DIR / "Marker_Protein_DB.fasta"
+DEFAULT_MARKER_HMM_DB = MARKER_DATABASE_DIR / "Marker_Profiles.hmm"
+DEFAULT_MARKER_HMM_CUTOFFS = MARKER_DATABASE_DIR / "Marker_Profile_Cutoffs.csv"
+
 E_ADM_REMOTE = {
     "model_parameters": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm/e_adm_model_parameters.json",
     "base_parameters": "https://raw.githubusercontent.com/ParsaGhadermazi/Database/main/ADToolbox/e_adm/e_adm_base_parameters.json",
@@ -223,6 +228,12 @@ class Metagenomics:
         e_value=10**-5,
         protein_db: str | None = None,
         protein_db_mmseqs: str | None = None,
+        marker_catalog: str | None = None,
+        marker_backend: str = "mmseqs",
+        marker_hmm_db: str | None = None,
+        marker_hmm_cutoffs: str | None = None,
+        marker_hmm_evalue: float = 1e-15,
+        marker_hmm_coverage: float = 0.35,
         adm_mapping=E_ADM_MICROBIAL_GROUPS_MAPPING,
     ):
         self.metagenomics_dir = _norm(metagenomics_dir)
@@ -233,15 +244,23 @@ class Metagenomics:
         self.genomes_base_dir = genomes_base_dir or _join(self.metagenomics_dir, "Genomes")
         self.align_to_gtdb_outputs_dir = align_to_gtdb_outputs_dir or self.genomes_base_dir
         self.amplicon2genome_db = amplicon2genome_db or database.amplicon_to_genome_db
-        self.protein_db = protein_db or database.protein_db
+        self.protein_db = _norm(protein_db or DEFAULT_MARKER_PROTEIN_DB)
         self.protein_db_mmseqs = (
             protein_db_mmseqs
             or (
                 pathlib.Path(protein_db).parent / "protein_db_mmseqs"
                 if protein_db
-                else database.protein_db_mmseqs
+                else DEFAULT_MARKER_PROTEIN_DB.parent / "Marker_Protein_DB_mmseqs"
             )
         )
+        self.marker_catalog = _norm(marker_catalog or _join(PKG_DATA, "gene_marker_catalog.json"))
+        self.marker_backend = str(marker_backend).lower()
+        if self.marker_backend not in {"mmseqs", "hmmer"}:
+            raise ValueError("marker_backend must be 'mmseqs' or 'hmmer'")
+        self.marker_hmm_db = _norm(marker_hmm_db or DEFAULT_MARKER_HMM_DB)
+        self.marker_hmm_cutoffs = _norm(marker_hmm_cutoffs or DEFAULT_MARKER_HMM_CUTOFFS)
+        self.marker_hmm_evalue = float(marker_hmm_evalue)
+        self.marker_hmm_coverage = float(marker_hmm_coverage)
         self.seed_rxn_db = database.reaction_db
         self.genome_alignment_output = genome_alignment_output or _join(self.metagenomics_dir, "Outputs")
         self.bit_score = bit_score

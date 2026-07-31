@@ -1,0 +1,24 @@
+{
+  "asset_version": "0.2.0",
+  "catalog_version": "0.2.0",
+  "built_on": "2026-07-31",
+  "sources": {
+    "KOfam": {
+      "release": "2026-06-01",
+      "kegg_release": "118.0",
+      "profiles_url": "https://www.genome.jp/ftp/db/kofam/profiles.tar.gz",
+      "ko_list_url": "https://www.genome.jp/ftp/db/kofam/ko_list.gz",
+      "license_note": "KOfam/KEGG terms apply; verify redistribution permission before public package publication."
+    },
+    "dbCAN": {
+      "release": "db_v5-2_9-13-2025",
+      "url": "https://dbcan.s3.us-west-2.amazonaws.com/db_v5-2_9-13-2025/dbCAN.hmm",
+      "license_note": "dbCAN source terms and attribution apply."
+    }
+  },
+  "protein_database": {
+    "method": "hmmemit --consensus from each selected source profile",
+    "mmseqs_build": "mmseqs createdb using MMseqs2 17-b804f",
+    "warning": "Sequences are profile consensuses, not proteins observed in an isolate."
+  }
+}

@@ -1,0 +1,2591 @@
+{
+  "optimizer": "ScipyOptimizer",
+  "parameter_target": "model_parameters",
+  "fitness_mode": "sum_squared_error",
+  "ode_method": "BDF",
+  "search_space": {
+    "K_S_IN": {
+      "name": "K_S_IN",
+      "lower": 0.0001,
+      "upper": 10.0,
+      "default": null
+    },
+    "k_m_su": {
+      "name": "k_m_su",
+      "lower": 5.0,
+      "upper": 80.0,
+      "default": null
+    },
+    "k_m_aa": {
+      "name": "k_m_aa",
+      "lower": 2.0,
+      "upper": 60.0,
+      "default": null
+    },
+    "k_m_pro": {
+      "name": "k_m_pro",
+      "lower": 0.5,
+      "upper": 20.0,
+      "default": null
+    },
+    "k_m_bu": {
+      "name": "k_m_bu",
+      "lower": 0.3,
+      "upper": 20.0,
+      "default": null
+    },
+    "k_m_h2_Me_ac": {
+      "name": "k_m_h2_Me_ac",
+      "lower": 5.0,
+      "upper": 60.0,
+      "default": null
+    }
+  },
+  "optimized_parameters": {
+    "K_S_IN": 1.2518502678588357,
+    "k_m_su": 57.0200136232261,
+    "k_m_aa": 18.654211306448143,
+    "k_m_pro": 9.656551276132348,
+    "k_m_bu": 5.3009444262434045,
+    "k_m_h2_Me_ac": 8.053688934053312
+  },
+  "best_cost": 92.95103140855073,
+  "history": [
+    {
+      "step": 0,
+      "parameters": {
+        "K_S_IN": 8.758009585990562,
+        "k_m_su": 25.67791874023362,
+        "k_m_aa": 25.328345119874715,
+        "k_m_pro": 7.356363729688135,
+        "k_m_bu": 4.419589961191508,
+        "k_m_h2_Me_ac": 59.75232435524425
+      },
+      "cost": 143.71673442687893,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 1,
+      "parameters": {
+        "K_S_IN": 6.069456578413346,
+        "k_m_su": 31.136596159195694,
+        "k_m_aa": 54.34541938227399,
+        "k_m_pro": 4.517543495102786,
+        "k_m_bu": 1.9582626012322688,
+        "k_m_h2_Me_ac": 8.503717524433743
+      },
+      "cost": 133.22802885440188,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 2,
+      "parameters": {
+        "K_S_IN": 0.5990886814127414,
+        "k_m_su": 19.499753191648512,
+        "k_m_aa": 46.58055299832593,
+        "k_m_pro": 8.73727364797075,
+        "k_m_bu": 1.770707635426188,
+        "k_m_h2_Me_ac": 39.79481353793298
+      },
+      "cost": 144.5584020087581,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 3,
+      "parameters": {
+        "K_S_IN": 6.38277323615075,
+        "k_m_su": 69.06663869352094,
+        "k_m_aa": 18.780724523077005,
+        "k_m_pro": 0.9427175861849797,
+        "k_m_bu": 13.989707740620238,
+        "k_m_h2_Me_ac": 17.873748014132218
+      },
+      "cost": 126.7685401215072,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 4,
+      "parameters": {
+        "K_S_IN": 2.7551123340688304,
+        "k_m_su": 65.61408044014682,
+        "k_m_aa": 56.54408186752806,
+        "k_m_pro": 13.269515853346334,
+        "k_m_bu": 10.38213738178147,
+        "k_m_h2_Me_ac": 54.10759493966738
+      },
+      "cost": 103.98099205695641,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 5,
+      "parameters": {
+        "K_S_IN": 1.7160305179686137,
+        "k_m_su": 53.9606574373865,
+        "k_m_aa": 32.78655365021256,
+        "k_m_pro": 19.486144019413913,
+        "k_m_bu": 11.023487736586294,
+        "k_m_h2_Me_ac": 13.66371269565646
+      },
+      "cost": 100.55076077394003,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 6,
+      "parameters": {
+        "K_S_IN": 7.5929747507601215,
+        "k_m_su": 55.06283608183592,
+        "k_m_aa": 27.752796507874407,
+        "k_m_pro": 5.9289789930215795,
+        "k_m_bu": 3.1412976431826154,
+        "k_m_h2_Me_ac": 52.22298444904315
+      },
+      "cost": 133.39352780156148,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 7,
+      "parameters": {
+        "K_S_IN": 6.911077945700306,
+        "k_m_su": 7.234966769913811,
+        "k_m_aa": 20.528019562327025,
+        "k_m_pro": 3.5868163334260874,
+        "k_m_bu": 6.218522352214777,
+        "k_m_h2_Me_ac": 11.491420479380693
+      },
+      "cost": 147.7821507021688,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 8,
+      "parameters": {
+        "K_S_IN": 3.2074142581730434,
+        "k_m_su": 61.131839203491985,
+        "k_m_aa": 38.568511500810615,
+        "k_m_pro": 8.018299427063573,
+        "k_m_bu": 14.740134418585633,
+        "k_m_h2_Me_ac": 46.93162634570968
+      },
+      "cost": 110.72672214797355,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 9,
+      "parameters": {
+        "K_S_IN": 3.837093611386364,
+        "k_m_su": 14.142489494664567,
+        "k_m_aa": 3.4566781588398037,
+        "k_m_pro": 6.732393269064754,
+        "k_m_bu": 7.677956858740282,
+        "k_m_h2_Me_ac": 19.751531560790156
+      },
+      "cost": 143.06405784933528,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 10,
+      "parameters": {
+        "K_S_IN": 1.574316237242642,
+        "k_m_su": 10.911790627443999,
+        "k_m_aa": 34.18512601686878,
+        "k_m_pro": 11.951326664991232,
+        "k_m_bu": 4.011683830769852,
+        "k_m_h2_Me_ac": 28.761661849431373
+      },
+      "cost": 123.21452553215977,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 11,
+      "parameters": {
+        "K_S_IN": 7.3896902792426555,
+        "k_m_su": 23.044480279481927,
+        "k_m_aa": 12.013103777905194,
+        "k_m_pro": 9.515579956413845,
+        "k_m_bu": 12.850054167960828,
+        "k_m_h2_Me_ac": 42.28543493856537
+      },
+      "cost": 144.2534646863905,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 12,
+      "parameters": {
+        "K_S_IN": 1.0701078669368003,
+        "k_m_su": 71.56742130210796,
+        "k_m_aa": 37.097849462544524,
+        "k_m_pro": 16.409784209016635,
+        "k_m_bu": 19.536939126155534,
+        "k_m_h2_Me_ac": 26.18514198167034
+      },
+      "cost": 109.51542946982175,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 13,
+      "parameters": {
+        "K_S_IN": 8.255766534051784,
+        "k_m_su": 27.063204598841466,
+        "k_m_aa": 59.74998760664006,
+        "k_m_pro": 11.399088683043168,
+        "k_m_bu": 5.52009606838765,
+        "k_m_h2_Me_ac": 15.116933612478284
+      },
+      "cost": 138.902459614185,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 14,
+      "parameters": {
+        "K_S_IN": 5.407029716908106,
+        "k_m_su": 45.996024121732006,
+        "k_m_aa": 50.04599939301863,
+        "k_m_pro": 17.798188055858486,
+        "k_m_bu": 16.619591109522524,
+        "k_m_h2_Me_ac": 32.775450452780184
+      },
+      "cost": 126.91556299859526,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 15,
+      "parameters": {
+        "K_S_IN": 5.540103015050071,
+        "k_m_su": 39.678441486853316,
+        "k_m_aa": 11.614994327062515,
+        "k_m_pro": 13.503815074406443,
+        "k_m_bu": 8.669694688545711,
+        "k_m_h2_Me_ac": 31.28232567044265
+      },
+      "cost": 134.7794291525498,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 16,
+      "parameters": {
+        "K_S_IN": 9.855044478737078,
+        "k_m_su": 36.59492231613845,
+        "k_m_aa": 52.64386878391445,
+        "k_m_pro": 10.281840081206635,
+        "k_m_bu": 17.064581019024835,
+        "k_m_h2_Me_ac": 56.9135852121726
+      },
+      "cost": 139.82861486444986,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 17,
+      "parameters": {
+        "K_S_IN": 8.63553626136535,
+        "k_m_su": 78.22318261073116,
+        "k_m_aa": 43.68448676350656,
+        "k_m_pro": 18.85508411851414,
+        "k_m_bu": 10.130677144198497,
+        "k_m_h2_Me_ac": 45.269743950770746
+      },
+      "cost": 128.8168429000676,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 18,
+      "parameters": {
+        "K_S_IN": 4.232961664145701,
+        "k_m_su": 74.6821322686126,
+        "k_m_aa": 6.745518337877488,
+        "k_m_pro": 5.0243525834557765,
+        "k_m_bu": 18.82975864176403,
+        "k_m_h2_Me_ac": 36.378581940222965
+      },
+      "cost": 117.77774670499706,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 19,
+      "parameters": {
+        "K_S_IN": 3.4648271652669473,
+        "k_m_su": 44.390142249203265,
+        "k_m_aa": 22.711308861843207,
+        "k_m_pro": 2.1957925560075022,
+        "k_m_bu": 0.6477499811240186,
+        "k_m_h2_Me_ac": 21.337122765459036
+      },
+      "cost": 120.50525844747298,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 20,
+      "parameters": {
+        "K_S_IN": 9.223121962284086,
+        "k_m_su": 64.22734066099058,
+        "k_m_aa": 42.669938403941956,
+        "k_m_pro": 17.27324203687408,
+        "k_m_bu": 15.649155905156451,
+        "k_m_h2_Me_ac": 23.567186024630896
+      },
+      "cost": 133.0738468502588,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 21,
+      "parameters": {
+        "K_S_IN": 0.2287700065801186,
+        "k_m_su": 49.579342159185764,
+        "k_m_aa": 15.185696636189991,
+        "k_m_pro": 14.78062783421449,
+        "k_m_bu": 8.070263426052886,
+        "k_m_h2_Me_ac": 50.128718227261544
+      },
+      "cost": 256.57072634536576,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 22,
+      "parameters": {
+        "K_S_IN": 4.925464591631514,
+        "k_m_su": 17.09378796327131,
+        "k_m_aa": 7.00500380731156,
+        "k_m_pro": 15.81270704638279,
+        "k_m_bu": 18.04478766463655,
+        "k_m_h2_Me_ac": 6.480174009111089
+      },
+      "cost": 143.14063951066484,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 23,
+      "parameters": {
+        "K_S_IN": 2.193642902728544,
+        "k_m_su": 33.629092243390616,
+        "k_m_aa": 30.608366859788774,
+        "k_m_pro": 1.6240462340459452,
+        "k_m_bu": 12.264422748435695,
+        "k_m_h2_Me_ac": 39.21297045277882
+      },
+      "cost": 114.53290695171715,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 24,
+      "parameters": {
+        "K_S_IN": 7.492193427474941,
+        "k_m_su": 53.9606574373865,
+        "k_m_aa": 32.78655365021256,
+        "k_m_pro": 19.257759381670965,
+        "k_m_bu": 12.439167075858554,
+        "k_m_h2_Me_ac": 10.325184402671528
+      },
+      "cost": 132.65632618206988,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 25,
+      "parameters": {
+        "K_S_IN": 3.2702646747729847,
+        "k_m_su": 41.271631089275175,
+        "k_m_aa": 49.88883580024443,
+        "k_m_pro": 4.517543495102786,
+        "k_m_bu": 9.877343338130595,
+        "k_m_h2_Me_ac": 8.503717524433743
+      },
+      "cost": 115.85200062518766,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 26,
+      "parameters": {
+        "K_S_IN": 6.651838391856633,
+        "k_m_su": 64.10624242656888,
+        "k_m_aa": 46.58055299832593,
+        "k_m_pro": 16.329013956192938,
+        "k_m_bu": 11.303753916196163,
+        "k_m_h2_Me_ac": 34.95693173873521
+      },
+      "cost": 126.27144432939937,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 27,
+      "parameters": {
+        "K_S_IN": 6.38277323615075,
+        "k_m_su": 35.20574212123891,
+        "k_m_aa": 21.99498719625801,
+        "k_m_pro": 10.01472409524995,
+        "k_m_bu": 9.332736679062018,
+        "k_m_h2_Me_ac": 33.85259414151663
+      },
+      "cost": 137.1166307278879,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 28,
+      "parameters": {
+        "K_S_IN": 5.775471734018872,
+        "k_m_su": 40.41402094088743,
+        "k_m_aa": 56.54408186752806,
+        "k_m_pro": 9.775419732637875,
+        "k_m_bu": 3.701907377636534,
+        "k_m_h2_Me_ac": 57.76883374583838
+      },
+      "cost": 129.62895546385158,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 29,
+      "parameters": {
+        "K_S_IN": 8.758009585990562,
+        "k_m_su": 67.59049871309244,
+        "k_m_aa": 46.49982843289453,
+        "k_m_pro": 1.0278452031552074,
+        "k_m_bu": 14.708527597996586,
+        "k_m_h2_Me_ac": 59.75232435524425
+      },
+      "cost": 131.26562581095698,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 30,
+      "parameters": {
+        "K_S_IN": 2.886142717339393,
+        "k_m_su": 55.06283608183592,
+        "k_m_aa": 38.39201023443606,
+        "k_m_pro": 5.9289789930215795,
+        "k_m_bu": 3.1412976431826154,
+        "k_m_h2_Me_ac": 21.586348253106046
+      },
+      "cost": 108.55325939952533,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 31,
+      "parameters": {
+        "K_S_IN": 3.163149132180382,
+        "k_m_su": 56.35463763375225,
+        "k_m_aa": 32.73108901296688,
+        "k_m_pro": 8.972940637187651,
+        "k_m_bu": 6.218522352214777,
+        "k_m_h2_Me_ac": 30.700254787760276
+      },
+      "cost": 111.9072704069512,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 32,
+      "parameters": {
+        "K_S_IN": 9.249676622840726,
+        "k_m_su": 19.265125428374105,
+        "k_m_aa": 38.568511500810615,
+        "k_m_pro": 1.3971425623022906,
+        "k_m_bu": 13.315781951668544,
+        "k_m_h2_Me_ac": 46.93162634570968
+      },
+      "cost": 144.55937125733337,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 33,
+      "parameters": {
+        "K_S_IN": 0.24751937716195282,
+        "k_m_su": 61.130789261002164,
+        "k_m_aa": 3.4566781588398037,
+        "k_m_pro": 6.437133943857731,
+        "k_m_bu": 14.319300251920517,
+        "k_m_h2_Me_ac": 51.15540172422588
+      },
+      "cost": 186.37422978157608,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 34,
+      "parameters": {
+        "K_S_IN": 5.614316979255132,
+        "k_m_su": 32.71861615884292,
+        "k_m_aa": 18.513428048961245,
+        "k_m_pro": 12.635519108226942,
+        "k_m_bu": 12.278494115126843,
+        "k_m_h2_Me_ac": 33.32926844149136
+      },
+      "cost": 136.63072381947063,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 35,
+      "parameters": {
+        "K_S_IN": 8.623199236504341,
+        "k_m_su": 51.588456483815555,
+        "k_m_aa": 58.73318965990188,
+        "k_m_pro": 9.515579956413845,
+        "k_m_bu": 8.544780292056391,
+        "k_m_h2_Me_ac": 42.28543493856537
+      },
+      "cost": 133.50724956782918,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 36,
+      "parameters": {
+        "K_S_IN": 6.129224396309021,
+        "k_m_su": 63.94187256476006,
+        "k_m_aa": 54.35748822508865,
+        "k_m_pro": 10.302836044996047,
+        "k_m_bu": 13.24517051821184,
+        "k_m_h2_Me_ac": 13.449514555463388
+      },
+      "cost": 123.2760649339855,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 37,
+      "parameters": {
+        "K_S_IN": 0.17666744154552383,
+        "k_m_su": 65.96965408908093,
+        "k_m_aa": 59.74998760664006,
+        "k_m_pro": 13.595858962061206,
+        "k_m_bu": 14.764615659043429,
+        "k_m_h2_Me_ac": 10.348360909783356
+      },
+      "cost": 307.8654100729885,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 38,
+      "parameters": {
+        "K_S_IN": 2.896477114439533,
+        "k_m_su": 23.702773434020674,
+        "k_m_aa": 11.099741276985174,
+        "k_m_pro": 5.307428487142789,
+        "k_m_bu": 13.294065379654903,
+        "k_m_h2_Me_ac": 35.953071836393995
+      },
+      "cost": 131.6247723300583,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 39,
+      "parameters": {
+        "K_S_IN": 1.3695965148148495,
+        "k_m_su": 26.985830187992377,
+        "k_m_aa": 34.7878422102442,
+        "k_m_pro": 4.407104277853284,
+        "k_m_bu": 8.669694688545711,
+        "k_m_h2_Me_ac": 11.893424567650502
+      },
+      "cost": 103.89177471015651,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 40,
+      "parameters": {
+        "K_S_IN": 0.05405662529389055,
+        "k_m_su": 36.59492231613845,
+        "k_m_aa": 52.64386878391445,
+        "k_m_pro": 10.281840081206635,
+        "k_m_bu": 16.194492619450735,
+        "k_m_h2_Me_ac": 14.640507210366746
+      },
+      "cost": 369.6399229339828,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 41,
+      "parameters": {
+        "K_S_IN": 5.810861188527664,
+        "k_m_su": 23.11677800299388,
+        "k_m_aa": 30.583823936978096,
+        "k_m_pro": 18.85508411851414,
+        "k_m_bu": 14.364123344591583,
+        "k_m_h2_Me_ac": 40.45361085025741
+      },
+      "cost": 139.27134548310661,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 42,
+      "parameters": {
+        "K_S_IN": 4.232961664145701,
+        "k_m_su": 67.4399294700224,
+        "k_m_aa": 37.251288583315954,
+        "k_m_pro": 16.374561323680776,
+        "k_m_bu": 6.737826903393509,
+        "k_m_h2_Me_ac": 28.320708980672784
+      },
+      "cost": 115.18011534343346,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 43,
+      "parameters": {
+        "K_S_IN": 3.4648271652669473,
+        "k_m_su": 54.06411130428075,
+        "k_m_aa": 39.1410865618204,
+        "k_m_pro": 8.941645724645133,
+        "k_m_bu": 16.500036544962647,
+        "k_m_h2_Me_ac": 35.259903836230365
+      },
+      "cost": 114.76777392925833,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 44,
+      "parameters": {
+        "K_S_IN": 0.9440664589492371,
+        "k_m_su": 74.54088555298384,
+        "k_m_aa": 37.24537974051664,
+        "k_m_pro": 1.0645747060257307,
+        "k_m_bu": 15.649155905156451,
+        "k_m_h2_Me_ac": 23.567186024630896
+      },
+      "cost": 102.42058138070412,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 45,
+      "parameters": {
+        "K_S_IN": 0.11773463972259979,
+        "k_m_su": 76.81946281345094,
+        "k_m_aa": 24.099424767736174,
+        "k_m_pro": 14.78062783421449,
+        "k_m_bu": 8.070263426052886,
+        "k_m_h2_Me_ac": 50.128718227261544
+      },
+      "cost": 343.7634721136724,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 46,
+      "parameters": {
+        "K_S_IN": 0.4291249362972147,
+        "k_m_su": 17.09378796327131,
+        "k_m_aa": 4.637187927288782,
+        "k_m_pro": 12.301728387145424,
+        "k_m_bu": 16.842830789121486,
+        "k_m_h2_Me_ac": 6.480174009111089
+      },
+      "cost": 113.83338754269943,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 47,
+      "parameters": {
+        "K_S_IN": 2.193642902728544,
+        "k_m_su": 43.658825161217806,
+        "k_m_aa": 28.602672676010346,
+        "k_m_pro": 14.01647965877822,
+        "k_m_bu": 16.877314935301168,
+        "k_m_h2_Me_ac": 39.21297045277882
+      },
+      "cost": 110.28621130301802,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 48,
+      "parameters": {
+        "K_S_IN": 1.7160305179686137,
+        "k_m_su": 20.618993909111285,
+        "k_m_aa": 56.078848459708674,
+        "k_m_pro": 10.571316289505265,
+        "k_m_bu": 18.244456493124012,
+        "k_m_h2_Me_ac": 16.014100344145763
+      },
+      "cost": 111.20461511985978,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 49,
+      "parameters": {
+        "K_S_IN": 3.2702646747729847,
+        "k_m_su": 29.21968438410177,
+        "k_m_aa": 29.461334276466513,
+        "k_m_pro": 16.93893002186843,
+        "k_m_bu": 9.877343338130595,
+        "k_m_h2_Me_ac": 16.056026401766186
+      },
+      "cost": 125.93934029181975,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 50,
+      "parameters": {
+        "K_S_IN": 5.508291233898111,
+        "k_m_su": 45.94552462583376,
+        "k_m_aa": 35.001428951606336,
+        "k_m_pro": 13.07790288763135,
+        "k_m_bu": 11.40287446148483,
+        "k_m_h2_Me_ac": 34.243253255952794
+      },
+      "cost": 129.16138656557283,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 51,
+      "parameters": {
+        "K_S_IN": 0.4524403773982506,
+        "k_m_su": 49.285574349228376,
+        "k_m_aa": 18.780724523077005,
+        "k_m_pro": 0.9427175861849797,
+        "k_m_bu": 13.989707740620238,
+        "k_m_h2_Me_ac": 37.998188678377446
+      },
+      "cost": 153.81862005564568,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 52,
+      "parameters": {
+        "K_S_IN": 0.8517156512153461,
+        "k_m_su": 39.063623976518535,
+        "k_m_aa": 24.289940868955743,
+        "k_m_pro": 13.269515853346334,
+        "k_m_bu": 12.84559178757592,
+        "k_m_h2_Me_ac": 54.10759493966738
+      },
+      "cost": 138.00905376964892,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 53,
+      "parameters": {
+        "K_S_IN": 1.9354940106985774,
+        "k_m_su": 47.93489801476338,
+        "k_m_aa": 33.27471612876862,
+        "k_m_pro": 1.0278452031552074,
+        "k_m_bu": 12.523934127864917,
+        "k_m_h2_Me_ac": 59.75232435524425
+      },
+      "cost": 107.36004460839118,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 54,
+      "parameters": {
+        "K_S_IN": 3.537780346228745,
+        "k_m_su": 55.06283608183592,
+        "k_m_aa": 38.39201023443606,
+        "k_m_pro": 5.9289789930215795,
+        "k_m_bu": 16.771751339470427,
+        "k_m_h2_Me_ac": 34.357155550565714
+      },
+      "cost": 114.99290444056159,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 55,
+      "parameters": {
+        "K_S_IN": 3.5918265029197136,
+        "k_m_su": 56.35463763375225,
+        "k_m_aa": 43.6918130982511,
+        "k_m_pro": 9.347131516404847,
+        "k_m_bu": 2.7879697358271223,
+        "k_m_h2_Me_ac": 9.156160920587496
+      },
+      "cost": 112.90408906827032,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 56,
+      "parameters": {
+        "K_S_IN": 3.117193484983331,
+        "k_m_su": 61.131839203491985,
+        "k_m_aa": 11.347738296273995,
+        "k_m_pro": 13.275923022802658,
+        "k_m_bu": 14.740134418585633,
+        "k_m_h2_Me_ac": 42.24276292612833
+      },
+      "cost": 114.66331586151752,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 57,
+      "parameters": {
+        "K_S_IN": 6.294030940580695,
+        "k_m_su": 30.08890605637223,
+        "k_m_aa": 3.4566781588398037,
+        "k_m_pro": 6.732393269064754,
+        "k_m_bu": 13.051588878793535,
+        "k_m_h2_Me_ac": 8.148059463736018
+      },
+      "cost": 140.9033378845133,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 58,
+      "parameters": {
+        "K_S_IN": 6.521280735961906,
+        "k_m_su": 76.35413123851438,
+        "k_m_aa": 57.74514848599895,
+        "k_m_pro": 11.951326664991232,
+        "k_m_bu": 5.1977944451767994,
+        "k_m_h2_Me_ac": 32.891122892042524
+      },
+      "cost": 121.2878791804855,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 59,
+      "parameters": {
+        "K_S_IN": 1.9899382068335272,
+        "k_m_su": 59.13493031089787,
+        "k_m_aa": 32.937034000351694,
+        "k_m_pro": 9.515579956413845,
+        "k_m_bu": 18.8508555691782,
+        "k_m_h2_Me_ac": 35.27243199886478
+      },
+      "cost": 101.61706439438183,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 60,
+      "parameters": {
+        "K_S_IN": 0.8301366163455777,
+        "k_m_su": 44.025254650794686,
+        "k_m_aa": 12.531508244503037,
+        "k_m_pro": 15.300198817670669,
+        "k_m_bu": 19.536939126155534,
+        "k_m_h2_Me_ac": 5.938326744250364
+      },
+      "cost": 107.31619406786243,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 61,
+      "parameters": {
+        "K_S_IN": 3.071798790194526,
+        "k_m_su": 27.063204598841466,
+        "k_m_aa": 59.11680340323521,
+        "k_m_pro": 13.53725455527532,
+        "k_m_bu": 13.963543765081713,
+        "k_m_h2_Me_ac": 36.77856007263057
+      },
+      "cost": 121.0415279873474,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 62,
+      "parameters": {
+        "K_S_IN": 1.8148450554096587,
+        "k_m_su": 65.53001453153585,
+        "k_m_aa": 50.04599939301863,
+        "k_m_pro": 17.798188055858486,
+        "k_m_bu": 14.285201424792714,
+        "k_m_h2_Me_ac": 40.14884098222559
+      },
+      "cost": 99.71805170027322,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 63,
+      "parameters": {
+        "K_S_IN": 2.034936029591459,
+        "k_m_su": 26.985830187992377,
+        "k_m_aa": 46.0627376914038,
+        "k_m_pro": 16.074440353236103,
+        "k_m_bu": 17.99677971342536,
+        "k_m_h2_Me_ac": 22.637526585673285
+      },
+      "cost": 113.0750428790897,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 64,
+      "parameters": {
+        "K_S_IN": 1.0130236558345098,
+        "k_m_su": 36.59492231613845,
+        "k_m_aa": 24.340342393398352,
+        "k_m_pro": 10.281840081206635,
+        "k_m_bu": 17.064581019024835,
+        "k_m_h2_Me_ac": 56.9135852121726
+      },
+      "cost": 121.78010464868737,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 65,
+      "parameters": {
+        "K_S_IN": 0.4841366005837431,
+        "k_m_su": 78.22318261073116,
+        "k_m_aa": 25.91829292704476,
+        "k_m_pro": 0.6828159652251173,
+        "k_m_bu": 12.57321216716469,
+        "k_m_h2_Me_ac": 45.269743950770746
+      },
+      "cost": 162.80872701724687,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 66,
+      "parameters": {
+        "K_S_IN": 0.3559144649200485,
+        "k_m_su": 67.4399294700224,
+        "k_m_aa": 28.766956091994434,
+        "k_m_pro": 8.069297118730242,
+        "k_m_bu": 6.737826903393509,
+        "k_m_h2_Me_ac": 23.756055377612363
+      },
+      "cost": 178.96027145139954,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 67,
+      "parameters": {
+        "K_S_IN": 2.414210266419841,
+        "k_m_su": 54.06411130428075,
+        "k_m_aa": 57.24701756915607,
+        "k_m_pro": 10.2504173456534,
+        "k_m_bu": 9.134723748132037,
+        "k_m_h2_Me_ac": 35.259903836230365
+      },
+      "cost": 103.25230333472715,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 68,
+      "parameters": {
+        "K_S_IN": 4.789210011005125,
+        "k_m_su": 74.54088555298384,
+        "k_m_aa": 23.64014127076475,
+        "k_m_pro": 7.332546829877369,
+        "k_m_bu": 18.620736472244253,
+        "k_m_h2_Me_ac": 23.567186024630896
+      },
+      "cost": 118.10788690168312,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 69,
+      "parameters": {
+        "K_S_IN": 0.2287700065801186,
+        "k_m_su": 9.030016051530154,
+        "k_m_aa": 24.98091919038115,
+        "k_m_pro": 14.78062783421449,
+        "k_m_bu": 8.070263426052886,
+        "k_m_h2_Me_ac": 14.208970070274656
+      },
+      "cost": 198.11376314945463,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 70,
+      "parameters": {
+        "K_S_IN": 2.713133881974536,
+        "k_m_su": 56.37332892894824,
+        "k_m_aa": 49.02200149770397,
+        "k_m_pro": 12.301728387145424,
+        "k_m_bu": 18.70523622888323,
+        "k_m_h2_Me_ac": 58.23744854874825
+      },
+      "cost": 108.1401879627172,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 71,
+      "parameters": {
+        "K_S_IN": 1.7369621499227978,
+        "k_m_su": 40.556907030899644,
+        "k_m_aa": 28.602672676010346,
+        "k_m_pro": 6.099477901283423,
+        "k_m_bu": 16.877314935301168,
+        "k_m_h2_Me_ac": 45.33104463610064
+      },
+      "cost": 107.24365803972053,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 72,
+      "parameters": {
+        "K_S_IN": 0.16770758133875763,
+        "k_m_su": 45.67553380566136,
+        "k_m_aa": 33.11471485260821,
+        "k_m_pro": 8.1427355912319,
+        "k_m_bu": 15.590081217186993,
+        "k_m_h2_Me_ac": 29.921544550774513
+      },
+      "cost": 275.1907490452625,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 73,
+      "parameters": {
+        "K_S_IN": 6.220519872726536,
+        "k_m_su": 11.021362651085273,
+        "k_m_aa": 49.88883580024443,
+        "k_m_pro": 15.205731881955057,
+        "k_m_bu": 9.877343338130595,
+        "k_m_h2_Me_ac": 8.503717524433743
+      },
+      "cost": 141.75893574808336,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 74,
+      "parameters": {
+        "K_S_IN": 6.651838391856633,
+        "k_m_su": 64.10624242656888,
+        "k_m_aa": 46.58055299832593,
+        "k_m_pro": 18.218260423268852,
+        "k_m_bu": 14.176710326203121,
+        "k_m_h2_Me_ac": 43.688292026848096
+      },
+      "cost": 126.45805630353549,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 75,
+      "parameters": {
+        "K_S_IN": 7.85557176878236,
+        "k_m_su": 47.600938528877,
+        "k_m_aa": 18.780724523077005,
+        "k_m_pro": 7.791726325064648,
+        "k_m_bu": 8.874526065130166,
+        "k_m_h2_Me_ac": 17.873748014132218
+      },
+      "cost": 136.61643669624385,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 76,
+      "parameters": {
+        "K_S_IN": 0.7815615226070527,
+        "k_m_su": 70.68823696935789,
+        "k_m_aa": 56.54408186752806,
+        "k_m_pro": 15.09671440456328,
+        "k_m_bu": 16.334001832760833,
+        "k_m_h2_Me_ac": 55.92963538892509
+      },
+      "cost": 180.5045347593305,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 77,
+      "parameters": {
+        "K_S_IN": 1.9354940106985774,
+        "k_m_su": 73.38399737827534,
+        "k_m_aa": 18.654211306448143,
+        "k_m_pro": 15.354164829213438,
+        "k_m_bu": 14.502163361391158,
+        "k_m_h2_Me_ac": 56.63252105533338
+      },
+      "cost": 102.38452395695411,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 78,
+      "parameters": {
+        "K_S_IN": 2.886142717339393,
+        "k_m_su": 46.75091725441584,
+        "k_m_aa": 49.924334633116004,
+        "k_m_pro": 5.9289789930215795,
+        "k_m_bu": 3.1412976431826154,
+        "k_m_h2_Me_ac": 21.586348253106046
+      },
+      "cost": 110.21416186299304,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 79,
+      "parameters": {
+        "K_S_IN": 1.9220676087490163,
+        "k_m_su": 56.35463763375225,
+        "k_m_aa": 32.73108901296688,
+        "k_m_pro": 7.903398632471577,
+        "k_m_bu": 7.479133929812479,
+        "k_m_h2_Me_ac": 51.77421347872755
+      },
+      "cost": 102.06245820335576,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 80,
+      "parameters": {
+        "K_S_IN": 3.2074142581730434,
+        "k_m_su": 61.131839203491985,
+        "k_m_aa": 47.25591150070372,
+        "k_m_pro": 16.62006201181442,
+        "k_m_bu": 18.56488915206946,
+        "k_m_h2_Me_ac": 46.93162634570968
+      },
+      "cost": 109.94106475479492,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 81,
+      "parameters": {
+        "K_S_IN": 2.374691178964867,
+        "k_m_su": 63.39218118762412,
+        "k_m_aa": 53.13090166420474,
+        "k_m_pro": 19.955023961010113,
+        "k_m_bu": 14.172473395600738,
+        "k_m_h2_Me_ac": 57.92670655135613
+      },
+      "cost": 103.6837487093951,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 82,
+      "parameters": {
+        "K_S_IN": 3.1360681358685376,
+        "k_m_su": 11.321611703456856,
+        "k_m_aa": 45.14831678036273,
+        "k_m_pro": 18.24217918357514,
+        "k_m_bu": 19.26431616464791,
+        "k_m_h2_Me_ac": 32.891122892042524
+      },
+      "cost": 133.65898299667998,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 83,
+      "parameters": {
+        "K_S_IN": 0.9248057933008038,
+        "k_m_su": 59.13493031089787,
+        "k_m_aa": 29.620075363887292,
+        "k_m_pro": 13.436861643839718,
+        "k_m_bu": 18.8508555691782,
+        "k_m_h2_Me_ac": 35.27243199886478
+      },
+      "cost": 111.57557765682138,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 84,
+      "parameters": {
+        "K_S_IN": 0.3648108785094566,
+        "k_m_su": 51.233482780482916,
+        "k_m_aa": 39.16820788969351,
+        "k_m_pro": 15.300198817670669,
+        "k_m_bu": 6.98016339300484,
+        "k_m_h2_Me_ac": 15.380271602766221
+      },
+      "cost": 187.60932843015271,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 85,
+      "parameters": {
+        "K_S_IN": 5.465899963374773,
+        "k_m_su": 27.063204598841466,
+        "k_m_aa": 59.11680340323521,
+        "k_m_pro": 18.55284619825437,
+        "k_m_bu": 13.963543765081713,
+        "k_m_h2_Me_ac": 23.369157320115633
+      },
+      "cost": 132.70743151366827,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 86,
+      "parameters": {
+        "K_S_IN": 0.0784574762461423,
+        "k_m_su": 59.10088097171669,
+        "k_m_aa": 46.70621351303271,
+        "k_m_pro": 12.488457561061107,
+        "k_m_bu": 7.950163379546717,
+        "k_m_h2_Me_ac": 45.530365398844175
+      },
+      "cost": 378.6000679247761,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 87,
+      "parameters": {
+        "K_S_IN": 1.7661907792478906,
+        "k_m_su": 39.431485947694284,
+        "k_m_aa": 48.00777859969769,
+        "k_m_pro": 14.103012832813958,
+        "k_m_bu": 10.273030545450524,
+        "k_m_h2_Me_ac": 25.352862133027873
+      },
+      "cost": 102.67449435619504,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 88,
+      "parameters": {
+        "K_S_IN": 5.375225363508595,
+        "k_m_su": 78.44934029482766,
+        "k_m_aa": 6.210803859761107,
+        "k_m_pro": 10.281840081206635,
+        "k_m_bu": 12.519152330627856,
+        "k_m_h2_Me_ac": 25.530909170567284
+      },
+      "cost": 122.11840518518773,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 89,
+      "parameters": {
+        "K_S_IN": 1.9030413526655536,
+        "k_m_su": 49.383058264431526,
+        "k_m_aa": 14.667976146253945,
+        "k_m_pro": 6.777990826748222,
+        "k_m_bu": 11.275559027422275,
+        "k_m_h2_Me_ac": 53.79583704438671
+      },
+      "cost": 108.04272427803545,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 90,
+      "parameters": {
+        "K_S_IN": 4.232961664145701,
+        "k_m_su": 67.4399294700224,
+        "k_m_aa": 37.251288583315954,
+        "k_m_pro": 14.815785473469449,
+        "k_m_bu": 13.404006099929848,
+        "k_m_h2_Me_ac": 47.81816075844834
+      },
+      "cost": 115.85787879023619,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 91,
+      "parameters": {
+        "K_S_IN": 1.4189160268110061,
+        "k_m_su": 71.97799497378594,
+        "k_m_aa": 14.97563045205527,
+        "k_m_pro": 11.027767263749272,
+        "k_m_bu": 19.79836784198224,
+        "k_m_h2_Me_ac": 40.42707738397233
+      },
+      "cost": 99.380545524217,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 92,
+      "parameters": {
+        "K_S_IN": 0.9440664589492371,
+        "k_m_su": 77.9642609239889,
+        "k_m_aa": 13.085636463955211,
+        "k_m_pro": 14.14540235447554,
+        "k_m_bu": 14.068672098831737,
+        "k_m_h2_Me_ac": 22.404974184991794
+      },
+      "cost": 105.16094245102276,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 93,
+      "parameters": {
+        "K_S_IN": 0.2287700065801186,
+        "k_m_su": 68.84451912081421,
+        "k_m_aa": 27.26848580570318,
+        "k_m_pro": 13.799504149001315,
+        "k_m_bu": 8.070263426052886,
+        "k_m_h2_Me_ac": 14.208970070274656
+      },
+      "cost": 252.63995570771604,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 94,
+      "parameters": {
+        "K_S_IN": 1.5203503338229702,
+        "k_m_su": 63.8099797937555,
+        "k_m_aa": 33.15414430682796,
+        "k_m_pro": 5.345251110336646,
+        "k_m_bu": 14.19303003607145,
+        "k_m_h2_Me_ac": 58.23744854874825
+      },
+      "cost": 102.13811926364782,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 95,
+      "parameters": {
+        "K_S_IN": 4.33441297035238,
+        "k_m_su": 22.109966655793286,
+        "k_m_aa": 15.905409920594527,
+        "k_m_pro": 10.007319917919807,
+        "k_m_bu": 15.785022082312103,
+        "k_m_h2_Me_ac": 24.002809319780376
+      },
+      "cost": 137.74234127328782,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 96,
+      "parameters": {
+        "K_S_IN": 1.4189160268110061,
+        "k_m_su": 71.97799497378594,
+        "k_m_aa": 14.97563045205527,
+        "k_m_pro": 6.2509725528250435,
+        "k_m_bu": 17.12352822719683,
+        "k_m_h2_Me_ac": 40.42707738397233
+      },
+      "cost": 97.43620418895743,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 97,
+      "parameters": {
+        "K_S_IN": 0.4250661372256346,
+        "k_m_su": 67.01497043901024,
+        "k_m_aa": 12.996583928744382,
+        "k_m_pro": 14.145238636366566,
+        "k_m_bu": 16.81205725974344,
+        "k_m_h2_Me_ac": 8.459882868782707
+      },
+      "cost": 137.77848547728843,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 98,
+      "parameters": {
+        "K_S_IN": 3.658858533579978,
+        "k_m_su": 73.74718163731299,
+        "k_m_aa": 3.123672402997471,
+        "k_m_pro": 4.932242918506756,
+        "k_m_bu": 11.303753916196163,
+        "k_m_h2_Me_ac": 29.470477710393652
+      },
+      "cost": 114.69535718151293,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 99,
+      "parameters": {
+        "K_S_IN": 6.38277323615075,
+        "k_m_su": 69.06663869352094,
+        "k_m_aa": 18.780724523077005,
+        "k_m_pro": 3.3747161682795372,
+        "k_m_bu": 12.158290852828312,
+        "k_m_h2_Me_ac": 8.485295250186656
+      },
+      "cost": 126.65477487017063,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 100,
+      "parameters": {
+        "K_S_IN": 0.8850944804754342,
+        "k_m_su": 68.06226818091875,
+        "k_m_aa": 18.765411358406514,
+        "k_m_pro": 2.2857092561344405,
+        "k_m_bu": 18.472362364304168,
+        "k_m_h2_Me_ac": 8.311424041182299
+      },
+      "cost": 94.13490950613954,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 101,
+      "parameters": {
+        "K_S_IN": 1.2518502678588357,
+        "k_m_su": 62.08939432395434,
+        "k_m_aa": 18.654211306448143,
+        "k_m_pro": 12.982091203399605,
+        "k_m_bu": 15.843172014327697,
+        "k_m_h2_Me_ac": 8.053688934053312
+      },
+      "cost": 97.16350830609537,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 102,
+      "parameters": {
+        "K_S_IN": 9.669562784072536,
+        "k_m_su": 57.17917274497351,
+        "k_m_aa": 26.03740546325422,
+        "k_m_pro": 5.9289789930215795,
+        "k_m_bu": 11.720131999117882,
+        "k_m_h2_Me_ac": 21.586348253106046
+      },
+      "cost": 136.73889104370747,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 103,
+      "parameters": {
+        "K_S_IN": 6.051362841276031,
+        "k_m_su": 69.74190847269041,
+        "k_m_aa": 32.73108901296688,
+        "k_m_pro": 12.37029259898807,
+        "k_m_bu": 8.79108863943936,
+        "k_m_h2_Me_ac": 16.948345207139774
+      },
+      "cost": 123.77604802016134,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 104,
+      "parameters": {
+        "K_S_IN": 1.1194305009229089,
+        "k_m_su": 37.11489932558991,
+        "k_m_aa": 22.780403908812268,
+        "k_m_pro": 5.45010264109495,
+        "k_m_bu": 18.56488915206946,
+        "k_m_h2_Me_ac": 46.93162634570968
+      },
+      "cost": 107.50124037898836,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 105,
+      "parameters": {
+        "K_S_IN": 0.4366409641862399,
+        "k_m_su": 63.39218118762412,
+        "k_m_aa": 19.050396769972377,
+        "k_m_pro": 1.7975232731509365,
+        "k_m_bu": 19.480737909653683,
+        "k_m_h2_Me_ac": 52.27451448619412
+      },
+      "cost": 159.21768386807287,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 106,
+      "parameters": {
+        "K_S_IN": 1.0208070840186063,
+        "k_m_su": 61.770149384079104,
+        "k_m_aa": 21.699759383447017,
+        "k_m_pro": 11.951326664991232,
+        "k_m_bu": 12.465743341525753,
+        "k_m_h2_Me_ac": 22.20215261884541
+      },
+      "cost": 98.46938204960367,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 107,
+      "parameters": {
+        "K_S_IN": 0.8140083353871903,
+        "k_m_su": 79.89201811279402,
+        "k_m_aa": 33.165583668580794,
+        "k_m_pro": 9.515579956413845,
+        "k_m_bu": 7.887750769514766,
+        "k_m_h2_Me_ac": 9.575877681561842
+      },
+      "cost": 98.77843030243025,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 108,
+      "parameters": {
+        "K_S_IN": 6.866931629165629,
+        "k_m_su": 79.61764305147224,
+        "k_m_aa": 45.24866186475084,
+        "k_m_pro": 15.300198817670669,
+        "k_m_bu": 19.536939126155534,
+        "k_m_h2_Me_ac": 39.99042519972144
+      },
+      "cost": 123.32702843135705,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 109,
+      "parameters": {
+        "K_S_IN": 3.071798790194526,
+        "k_m_su": 18.22112301050111,
+        "k_m_aa": 41.66376396012058,
+        "k_m_pro": 3.28090950255629,
+        "k_m_bu": 6.616327211534396,
+        "k_m_h2_Me_ac": 29.044605060239608
+      },
+      "cost": 128.88939154117708,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 110,
+      "parameters": {
+        "K_S_IN": 0.4452332564418997,
+        "k_m_su": 70.43631727673298,
+        "k_m_aa": 39.394258563747314,
+        "k_m_pro": 19.486144019413913,
+        "k_m_bu": 17.106626227754433,
+        "k_m_h2_Me_ac": 13.66371269565646
+      },
+      "cost": 184.0397366522503,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 111,
+      "parameters": {
+        "K_S_IN": 0.8304677346789253,
+        "k_m_su": 62.061014815240156,
+        "k_m_aa": 48.00777859969769,
+        "k_m_pro": 14.103012832813958,
+        "k_m_bu": 9.653042241382375,
+        "k_m_h2_Me_ac": 7.5150567382824
+      },
+      "cost": 112.74146164210997,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 112,
+      "parameters": {
+        "K_S_IN": 0.7407031244264566,
+        "k_m_su": 52.38606519171954,
+        "k_m_aa": 32.916468525959566,
+        "k_m_pro": 8.028517242625254,
+        "k_m_bu": 17.064581019024835,
+        "k_m_h2_Me_ac": 56.9135852121726
+      },
+      "cost": 150.8916194105716,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 113,
+      "parameters": {
+        "K_S_IN": 4.78581072723265,
+        "k_m_su": 70.75910697725912,
+        "k_m_aa": 15.240688058817055,
+        "k_m_pro": 6.777990826748222,
+        "k_m_bu": 11.629688994458688,
+        "k_m_h2_Me_ac": 37.89963963216593
+      },
+      "cost": 120.51135365756649,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 114,
+      "parameters": {
+        "K_S_IN": 1.9495999685936458,
+        "k_m_su": 18.640477984889365,
+        "k_m_aa": 27.83344109320468,
+        "k_m_pro": 2.1277732200501305,
+        "k_m_bu": 5.748456124558167,
+        "k_m_h2_Me_ac": 17.826975698485768
+      },
+      "cost": 121.22762937216748,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 115,
+      "parameters": {
+        "K_S_IN": 1.0583257946108495,
+        "k_m_su": 63.82196027789669,
+        "k_m_aa": 18.323325364382818,
+        "k_m_pro": 8.269418268441697,
+        "k_m_bu": 14.285201424792714,
+        "k_m_h2_Me_ac": 45.48649280788112
+      },
+      "cost": 102.76129667557575,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 116,
+      "parameters": {
+        "K_S_IN": 0.23935185394358705,
+        "k_m_su": 58.93077676662722,
+        "k_m_aa": 13.220568856536808,
+        "k_m_pro": 1.0645747060257307,
+        "k_m_bu": 18.66589743148512,
+        "k_m_h2_Me_ac": 23.567186024630896
+      },
+      "cost": 166.74250841276506,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 117,
+      "parameters": {
+        "K_S_IN": 2.7896078704229974,
+        "k_m_su": 78.2865674268663,
+        "k_m_aa": 42.72043381032735,
+        "k_m_pro": 9.665340917452736,
+        "k_m_bu": 8.070263426052886,
+        "k_m_h2_Me_ac": 22.806452278402872
+      },
+      "cost": 100.66197872441491,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 118,
+      "parameters": {
+        "K_S_IN": 1.5203503338229702,
+        "k_m_su": 63.8099797937555,
+        "k_m_aa": 48.44410949219582,
+        "k_m_pro": 7.625275139016434,
+        "k_m_bu": 7.735374648743259,
+        "k_m_h2_Me_ac": 53.15430713006175
+      },
+      "cost": 99.63251309809208,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 119,
+      "parameters": {
+        "K_S_IN": 1.7369621499227978,
+        "k_m_su": 40.556907030899644,
+        "k_m_aa": 36.97377578754545,
+        "k_m_pro": 2.7654115173811418,
+        "k_m_bu": 16.877314935301168,
+        "k_m_h2_Me_ac": 45.33104463610064
+      },
+      "cost": 106.4727395983615,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 120,
+      "parameters": {
+        "K_S_IN": 2.4595899336499323,
+        "k_m_su": 76.5148801497341,
+        "k_m_aa": 38.56945901190231,
+        "k_m_pro": 19.213338416585994,
+        "k_m_bu": 5.916532420831786,
+        "k_m_h2_Me_ac": 8.311424041182299
+      },
+      "cost": 99.06576918625885,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 121,
+      "parameters": {
+        "K_S_IN": 1.701343993700799,
+        "k_m_su": 46.61332065343619,
+        "k_m_aa": 27.002762704165423,
+        "k_m_pro": 0.5461508137706748,
+        "k_m_bu": 9.877343338130595,
+        "k_m_h2_Me_ac": 6.038638291628125
+      },
+      "cost": 100.84876733943761,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 122,
+      "parameters": {
+        "K_S_IN": 1.1927307382311745,
+        "k_m_su": 73.74718163731299,
+        "k_m_aa": 6.732334565382857,
+        "k_m_pro": 2.498697036498739,
+        "k_m_bu": 18.276132476328804,
+        "k_m_h2_Me_ac": 7.254544308223167
+      },
+      "cost": 93.3769820389567,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 123,
+      "parameters": {
+        "K_S_IN": 1.5634753211174583,
+        "k_m_su": 56.44391337539109,
+        "k_m_aa": 18.780724523077005,
+        "k_m_pro": 2.9022891637938972,
+        "k_m_bu": 12.158290852828312,
+        "k_m_h2_Me_ac": 17.492379346616573
+      },
+      "cost": 97.70815612924116,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 124,
+      "parameters": {
+        "K_S_IN": 2.0503931904226733,
+        "k_m_su": 31.53546730848221,
+        "k_m_aa": 59.19140169267592,
+        "k_m_pro": 8.872204012500818,
+        "k_m_bu": 12.814630673173617,
+        "k_m_h2_Me_ac": 31.658277807180625
+      },
+      "cost": 108.82943767183612,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 125,
+      "parameters": {
+        "K_S_IN": 1.2518502678588357,
+        "k_m_su": 57.0200136232261,
+        "k_m_aa": 18.654211306448143,
+        "k_m_pro": 9.656551276132348,
+        "k_m_bu": 5.3009444262434045,
+        "k_m_h2_Me_ac": 8.053688934053312
+      },
+      "cost": 92.95103140855073,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 126,
+      "parameters": {
+        "K_S_IN": 2.886142717339393,
+        "k_m_su": 66.50608403737317,
+        "k_m_aa": 24.039171365330017,
+        "k_m_pro": 13.618306910573827,
+        "k_m_bu": 6.212391036294671,
+        "k_m_h2_Me_ac": 21.586348253106046
+      },
+      "cost": 107.22004319188177,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 127,
+      "parameters": {
+        "K_S_IN": 1.3630097217429262,
+        "k_m_su": 56.471829527831,
+        "k_m_aa": 32.73108901296688,
+        "k_m_pro": 1.203191816489781,
+        "k_m_bu": 7.479133929812479,
+        "k_m_h2_Me_ac": 38.114153720713894
+      },
+      "cost": 97.81552780055299,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 128,
+      "parameters": {
+        "K_S_IN": 1.1194305009229089,
+        "k_m_su": 67.28464467675178,
+        "k_m_aa": 15.447624412821959,
+        "k_m_pro": 12.377046662696475,
+        "k_m_bu": 0.8180665283662378,
+        "k_m_h2_Me_ac": 15.162601616050804
+      },
+      "cost": 93.12705371739851,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 129,
+      "parameters": {
+        "K_S_IN": 2.9808727661853744,
+        "k_m_su": 16.563554552352933,
+        "k_m_aa": 38.52773087275443,
+        "k_m_pro": 12.73636138321034,
+        "k_m_bu": 14.172473395600738,
+        "k_m_h2_Me_ac": 28.88558224321453
+      },
+      "cost": 130.2796628250657,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 130,
+      "parameters": {
+        "K_S_IN": 1.61783914990288,
+        "k_m_su": 48.14402198547584,
+        "k_m_aa": 29.34916788122542,
+        "k_m_pro": 8.827556271750431,
+        "k_m_bu": 12.465743341525753,
+        "k_m_h2_Me_ac": 30.876706020398196
+      },
+      "cost": 100.57659930748915,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 131,
+      "parameters": {
+        "K_S_IN": 4.533095193362337,
+        "k_m_su": 48.59923250994928,
+        "k_m_aa": 4.509399617242941,
+        "k_m_pro": 8.969433116819717,
+        "k_m_bu": 7.887750769514766,
+        "k_m_h2_Me_ac": 9.575877681561842
+      },
+      "cost": 128.34593374427678,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 132,
+      "parameters": {
+        "K_S_IN": 0.9341058585250046,
+        "k_m_su": 45.613849312635764,
+        "k_m_aa": 12.531508244503037,
+        "k_m_pro": 17.53642048413552,
+        "k_m_bu": 9.974034572583436,
+        "k_m_h2_Me_ac": 34.94888182300841
+      },
+      "cost": 111.02846508001616,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 133,
+      "parameters": {
+        "K_S_IN": 3.071798790194526,
+        "k_m_su": 57.627834390774645,
+        "k_m_aa": 42.02119006567155,
+        "k_m_pro": 13.53725455527532,
+        "k_m_bu": 13.963543765081713,
+        "k_m_h2_Me_ac": 20.545957414839243
+      },
+      "cost": 109.42938390438705,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 134,
+      "parameters": {
+        "K_S_IN": 1.1214501269347235,
+        "k_m_su": 53.9606574373865,
+        "k_m_aa": 32.78655365021256,
+        "k_m_pro": 10.648652942310267,
+        "k_m_bu": 13.569317322220897,
+        "k_m_h2_Me_ac": 13.66371269565646
+      },
+      "cost": 95.87903930026253,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 135,
+      "parameters": {
+        "K_S_IN": 1.7661907792478906,
+        "k_m_su": 60.00087348658781,
+        "k_m_aa": 55.967097620847845,
+        "k_m_pro": 3.85331421633615,
+        "k_m_bu": 16.096394288489478,
+        "k_m_h2_Me_ac": 25.352862133027873
+      },
+      "cost": 98.5314692395968,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 136,
+      "parameters": {
+        "K_S_IN": 1.0130236558345098,
+        "k_m_su": 32.76454910493789,
+        "k_m_aa": 6.617573049790273,
+        "k_m_pro": 2.673048966513239,
+        "k_m_bu": 17.064581019024835,
+        "k_m_h2_Me_ac": 14.346076416520734
+      },
+      "cost": 102.09520759640347,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 137,
+      "parameters": {
+        "K_S_IN": 2.2516886807263967,
+        "k_m_su": 55.20273338035273,
+        "k_m_aa": 7.974394731291483,
+        "k_m_pro": 6.777990826748222,
+        "k_m_bu": 3.6676012908397047,
+        "k_m_h2_Me_ac": 53.79583704438671
+      },
+      "cost": 109.76232134734572,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 138,
+      "parameters": {
+        "K_S_IN": 1.397866266673589,
+        "k_m_su": 70.60910563083803,
+        "k_m_aa": 25.675284699592048,
+        "k_m_pro": 16.374561323680776,
+        "k_m_bu": 8.868243862074948,
+        "k_m_h2_Me_ac": 20.508574101171156
+      },
+      "cost": 97.53205673531042,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 139,
+      "parameters": {
+        "K_S_IN": 1.8148450554096587,
+        "k_m_su": 70.89779341317653,
+        "k_m_aa": 50.04599939301863,
+        "k_m_pro": 7.791249360984295,
+        "k_m_bu": 1.7951043969683127,
+        "k_m_h2_Me_ac": 44.35753462987655
+      },
+      "cost": 95.56131372374588,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 140,
+      "parameters": {
+        "K_S_IN": 1.3193912488652195,
+        "k_m_su": 74.54088555298384,
+        "k_m_aa": 6.533170920684185,
+        "k_m_pro": 8.880594942990244,
+        "k_m_bu": 12.56110416140257,
+        "k_m_h2_Me_ac": 15.281568379619628
+      },
+      "cost": 94.51952255350932,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 141,
+      "parameters": {
+        "K_S_IN": 2.7896078704229974,
+        "k_m_su": 41.18985355216652,
+        "k_m_aa": 27.503169824483958,
+        "k_m_pro": 0.596416818306265,
+        "k_m_bu": 8.070263426052886,
+        "k_m_h2_Me_ac": 22.806452278402872
+      },
+      "cost": 115.93562546742638,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 142,
+      "parameters": {
+        "K_S_IN": 1.6312702342126046,
+        "k_m_su": 54.23012306460872,
+        "k_m_aa": 51.97646193174361,
+        "k_m_pro": 8.822327260466718,
+        "k_m_bu": 14.751337819110944,
+        "k_m_h2_Me_ac": 30.320148472065355
+      },
+      "cost": 98.14505757809975,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 143,
+      "parameters": {
+        "K_S_IN": 2.37545673570762,
+        "k_m_su": 40.556907030899644,
+        "k_m_aa": 25.595097304166814,
+        "k_m_pro": 15.298477359272223,
+        "k_m_bu": 5.281733777871071,
+        "k_m_h2_Me_ac": 54.06623342317231
+      },
+      "cost": 114.69836556857065,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 144,
+      "parameters": {
+        "K_S_IN": 1.0447779931415644,
+        "k_m_su": 53.77490613708007,
+        "k_m_aa": 18.980560510867765,
+        "k_m_pro": 13.892282192529462,
+        "k_m_bu": 5.19516017628017,
+        "k_m_h2_Me_ac": 8.053688934053312
+      },
+      "cost": 96.56827004958565,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 145,
+      "parameters": {
+        "K_S_IN": 0.8766349851180646,
+        "k_m_su": 60.70271515856565,
+        "k_m_aa": 20.672509809266888,
+        "k_m_pro": 15.913296986357333,
+        "k_m_bu": 5.513525271388667,
+        "k_m_h2_Me_ac": 11.310151702966696
+      },
+      "cost": 105.47726788980462,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 146,
+      "parameters": {
+        "K_S_IN": 0.8850944804754342,
+        "k_m_su": 58.94901831375996,
+        "k_m_aa": 9.734895551840381,
+        "k_m_pro": 10.233355994942716,
+        "k_m_bu": 11.577919254273978,
+        "k_m_h2_Me_ac": 8.311424041182299
+      },
+      "cost": 96.12079245132671,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 147,
+      "parameters": {
+        "K_S_IN": 1.7922632728987424,
+        "k_m_su": 53.85493954935627,
+        "k_m_aa": 6.12654390996844,
+        "k_m_pro": 6.980272325573376,
+        "k_m_bu": 3.714978806211957,
+        "k_m_h2_Me_ac": 35.802109340965046
+      },
+      "cost": 104.15046391533319,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 148,
+      "parameters": {
+        "K_S_IN": 1.4189160268110061,
+        "k_m_su": 47.026215729189886,
+        "k_m_aa": 22.450574677984036,
+        "k_m_pro": 6.276193891473007,
+        "k_m_bu": 12.466327749429365,
+        "k_m_h2_Me_ac": 18.229970548514466
+      },
+      "cost": 98.28860394796769,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 149,
+      "parameters": {
+        "K_S_IN": 1.1927307382311745,
+        "k_m_su": 73.74718163731299,
+        "k_m_aa": 9.599217387072692,
+        "k_m_pro": 10.409753845606332,
+        "k_m_bu": 12.744843607067265,
+        "k_m_h2_Me_ac": 25.40747273880964
+      },
+      "cost": 96.01157420735974,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 150,
+      "parameters": {
+        "K_S_IN": 2.886142717339393,
+        "k_m_su": 66.50608403737317,
+        "k_m_aa": 24.339147644928808,
+        "k_m_pro": 8.027454423317472,
+        "k_m_bu": 3.7238365210164703,
+        "k_m_h2_Me_ac": 53.05486132026459
+      },
+      "cost": 108.0835664390283,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 151,
+      "parameters": {
+        "K_S_IN": 0.6979251320371196,
+        "k_m_su": 49.96409561392476,
+        "k_m_aa": 45.23447889644015,
+        "k_m_pro": 14.13552432399091,
+        "k_m_bu": 8.609836719455412,
+        "k_m_h2_Me_ac": 38.114153720713894
+      },
+      "cost": 155.7394438091984,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 152,
+      "parameters": {
+        "K_S_IN": 1.9315927537669224,
+        "k_m_su": 68.85933001867136,
+        "k_m_aa": 25.1337054492094,
+        "k_m_pro": 12.377046662696475,
+        "k_m_bu": 1.8001351297359616,
+        "k_m_h2_Me_ac": 53.79592751474256
+      },
+      "cost": 99.59152906463333,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 153,
+      "parameters": {
+        "K_S_IN": 1.1132430094881722,
+        "k_m_su": 57.03931559506579,
+        "k_m_aa": 28.299865130586277,
+        "k_m_pro": 8.481750084558874,
+        "k_m_bu": 14.172473395600738,
+        "k_m_h2_Me_ac": 22.31213336367236
+      },
+      "cost": 95.53705634617292,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 154,
+      "parameters": {
+        "K_S_IN": 0.5778732774314497,
+        "k_m_su": 61.770149384079104,
+        "k_m_aa": 21.699759383447017,
+        "k_m_pro": 8.3607544242626,
+        "k_m_bu": 0.9621322231765603,
+        "k_m_h2_Me_ac": 22.95468166786029
+      },
+      "cost": 104.3082972902301,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 155,
+      "parameters": {
+        "K_S_IN": 0.9602662093664529,
+        "k_m_su": 48.0350909233909,
+        "k_m_aa": 14.420811222435049,
+        "k_m_pro": 9.515579956413845,
+        "k_m_bu": 15.144090590426645,
+        "k_m_h2_Me_ac": 6.591071135765873
+      },
+      "cost": 96.1726762317066,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 156,
+      "parameters": {
+        "K_S_IN": 0.8755541645416924,
+        "k_m_su": 79.96865409878924,
+        "k_m_aa": 33.668805599855055,
+        "k_m_pro": 9.472137775371072,
+        "k_m_bu": 19.536939126155534,
+        "k_m_h2_Me_ac": 49.670197009967595
+      },
+      "cost": 134.7570548330874,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 157,
+      "parameters": {
+        "K_S_IN": 0.7148219934614675,
+        "k_m_su": 57.627834390774645,
+        "k_m_aa": 3.06049050719853,
+        "k_m_pro": 14.32379764555293,
+        "k_m_bu": 4.102546918970802,
+        "k_m_h2_Me_ac": 20.545957414839243
+      },
+      "cost": 104.12731082471721,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 158,
+      "parameters": {
+        "K_S_IN": 0.9153868034385662,
+        "k_m_su": 49.95066061870219,
+        "k_m_aa": 32.78655365021256,
+        "k_m_pro": 4.554077257886278,
+        "k_m_bu": 12.493232876880063,
+        "k_m_h2_Me_ac": 14.726892255698342
+      },
+      "cost": 94.46113691481521,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 159,
+      "parameters": {
+        "K_S_IN": 1.0911180967786107,
+        "k_m_su": 39.24198880523175,
+        "k_m_aa": 23.97022898631865,
+        "k_m_pro": 14.508211146314204,
+        "k_m_bu": 16.096394288489478,
+        "k_m_h2_Me_ac": 7.594945899219798
+      },
+      "cost": 100.72587119431088,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 160,
+      "parameters": {
+        "K_S_IN": 0.9423518517534077,
+        "k_m_su": 52.51110363225241,
+        "k_m_aa": 18.692561034925916,
+        "k_m_pro": 11.973442780686153,
+        "k_m_bu": 17.064581019024835,
+        "k_m_h2_Me_ac": 15.898772496670578
+      },
+      "cost": 100.23554281734802,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 161,
+      "parameters": {
+        "K_S_IN": 0.9895091905295024,
+        "k_m_su": 58.94901831375996,
+        "k_m_aa": 23.348866328776882,
+        "k_m_pro": 10.233355994942716,
+        "k_m_bu": 10.96688523549638,
+        "k_m_h2_Me_ac": 39.81044117521188
+      },
+      "cost": 102.6638963732833,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 162,
+      "parameters": {
+        "K_S_IN": 1.2033994028890436,
+        "k_m_su": 70.60910563083803,
+        "k_m_aa": 35.921692570607334,
+        "k_m_pro": 15.378920254388756,
+        "k_m_bu": 8.868243862074948,
+        "k_m_h2_Me_ac": 20.508574101171156
+      },
+      "cost": 99.1590776136758,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 163,
+      "parameters": {
+        "K_S_IN": 1.8148450554096587,
+        "k_m_su": 33.522585105961795,
+        "k_m_aa": 39.70165683777534,
+        "k_m_pro": 7.791249360984295,
+        "k_m_bu": 8.285287594281295,
+        "k_m_h2_Me_ac": 28.83069771950349
+      },
+      "cost": 107.05041794638288,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 164,
+      "parameters": {
+        "K_S_IN": 2.6734276843395777,
+        "k_m_su": 74.54088555298384,
+        "k_m_aa": 26.61091629926331,
+        "k_m_pro": 8.49364638449079,
+        "k_m_bu": 12.56110416140257,
+        "k_m_h2_Me_ac": 18.873148068363076
+      },
+      "cost": 102.71014955994883,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 165,
+      "parameters": {
+        "K_S_IN": 1.5341992341512696,
+        "k_m_su": 65.082108767856,
+        "k_m_aa": 20.262758973518856,
+        "k_m_pro": 9.665340917452736,
+        "k_m_bu": 3.8498878460581842,
+        "k_m_h2_Me_ac": 22.806452278402872
+      },
+      "cost": 94.44297215988395,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 166,
+      "parameters": {
+        "K_S_IN": 0.9971808829971813,
+        "k_m_su": 54.23012306460872,
+        "k_m_aa": 7.458090236547253,
+        "k_m_pro": 18.314075252044653,
+        "k_m_bu": 0.30320857120401,
+        "k_m_h2_Me_ac": 30.320148472065355
+      },
+      "cost": 105.09085929160693,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 167,
+      "parameters": {
+        "K_S_IN": 1.1107690170888302,
+        "k_m_su": 45.03483504683498,
+        "k_m_aa": 30.642809111638353,
+        "k_m_pro": 4.247541725857954,
+        "k_m_bu": 13.373465615105918,
+        "k_m_h2_Me_ac": 45.33104463610064
+      },
+      "cost": 104.05740786001829,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution"
+      }
+    },
+    {
+      "step": 168,
+      "parameters": {
+        "K_S_IN": 1.2518502678588357,
+        "k_m_su": 57.0200136232261,
+        "k_m_aa": 18.654211306448143,
+        "k_m_pro": 9.656551276132348,
+        "k_m_bu": 5.3009444262434045,
+        "k_m_h2_Me_ac": 8.053688934053312
+      },
+      "cost": 92.95103140855073,
+      "metadata": {
+        "optimizer": "scipy_differential_evolution",
+        "final": true
+      }
+    }
+  ]
+}

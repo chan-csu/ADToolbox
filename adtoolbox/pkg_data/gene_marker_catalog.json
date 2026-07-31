@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "catalog_version": "0.2.0",
+  "description": "Compact pathway-panel catalog for direct gene-family-to-eADM COD-group evidence. Scores describe genomic potential, not measured activity or reaction direction.",
+  "cod_groups": [
+    "X_ch", "X_pr", "X_li", "X_su", "X_aa", "X_fa", "X_ac_et", "X_ac_lac",
+    "X_chain_et", "X_chain_lac", "X_VFA_deg", "X_Me_ac", "X_Me_CO2", "X_et", "X_lac"
+  ],
+  "markers": {
+    "cazy_GH5": {"aliases": ["GH5"], "name": "GH5 cellulase/mannanase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "cazy_GH9": {"aliases": ["GH9"], "name": "GH9 endoglucanase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "cazy_GH48": {"aliases": ["GH48"], "name": "GH48 processive cellulase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "cazy_GH10": {"aliases": ["GH10"], "name": "GH10 endoxylanase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "cazy_GH11": {"aliases": ["GH11"], "name": "GH11 endoxylanase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "cazy_GH13": {"aliases": ["GH13"], "name": "GH13 alpha-amylase/pullulanase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "cazy_GH43": {"aliases": ["GH43"], "name": "GH43 xylan/arabinose debranching family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5658599/"},
+    "cazy_PL1": {"aliases": ["PL1"], "name": "PL1 pectate lyase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7778981/"},
+    "cazy_CE8": {"aliases": ["CE8"], "name": "CE8 pectin methylesterase family", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7778981/"},
+    "cazy_CBM3": {"aliases": ["CBM3"], "name": "cellulose-binding module family 3", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5658599/"},
+    "cazy_CBM6": {"aliases": ["CBM6"], "name": "xylan/cellulose-binding module family 6", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5658599/"},
+    "bgl": {"aliases": ["bglX", "beta_glucosidase"], "name": "beta-glucosidase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4765114/"},
+    "agl": {"aliases": ["malZ", "alpha_glucosidase"], "name": "alpha-glucosidase or maltodextrin glucosidase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4765114/"},
+    "susC": {"aliases": [], "name": "SusC-like outer-membrane glycan transporter", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "susD": {"aliases": [], "name": "SusD-like glycan-binding protein", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825555/"},
+    "extracellular_protease": {"aliases": ["aprE", "prtP", "subtilisin"], "name": "secreted or cell-surface endopeptidase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "pepN": {"aliases": [], "name": "aminopeptidase N", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "pepO": {"aliases": [], "name": "endopeptidase O", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "oppA": {"aliases": [], "name": "oligopeptide transporter substrate-binding protein", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "oppB": {"aliases": [], "name": "oligopeptide transporter permease", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "lipase": {"aliases": ["triacylglycerol_lipase", "extracellular_lipase"], "name": "extracellular triacylglycerol lipase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "esterase": {"aliases": ["estA"], "name": "carboxylesterase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "ptsG": {"aliases": [], "name": "glucose-specific PTS transporter", "evidence": "https://www.genome.jp/entry/K02777"},
+    "glcP": {"aliases": [], "name": "glucose transporter", "evidence": "https://www.genome.jp/entry/K08139"},
+    "pgi": {"aliases": [], "name": "glucose-6-phosphate isomerase", "evidence": "https://www.genome.jp/entry/K01810"},
+    "pfkA": {"aliases": [], "name": "6-phosphofructokinase", "evidence": "https://www.genome.jp/entry/K00850"},
+    "gapA": {"aliases": [], "name": "glyceraldehyde-3-phosphate dehydrogenase", "evidence": "https://www.genome.jp/entry/K00134"},
+    "pyk": {"aliases": ["pykF"], "name": "pyruvate kinase", "evidence": "https://www.genome.jp/entry/K00873"},
+    "xylA": {"aliases": [], "name": "xylose isomerase", "evidence": "https://www.genome.jp/entry/K01805"},
+    "xylB": {"aliases": [], "name": "xylulokinase", "evidence": "https://www.genome.jp/entry/K00854"},
+    "xylF": {"aliases": [], "name": "xylose ABC transporter substrate-binding protein", "evidence": "https://www.genome.jp/entry/K02056"},
+    "grdA": {"aliases": [], "name": "glycine reductase component A", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
+    "grdB": {"aliases": [], "name": "glycine reductase component B", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
+    "prdA": {"aliases": [], "name": "D-proline reductase subunit A", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
+    "prdB": {"aliases": [], "name": "D-proline reductase subunit B", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
+    "fadD": {"aliases": [], "name": "long-chain fatty-acid CoA ligase", "evidence": "https://www.genome.jp/entry/K01897"},
+    "fadE": {"aliases": ["acd"], "name": "acyl-CoA dehydrogenase", "evidence": "https://www.genome.jp/entry/K00249"},
+    "fadB": {"aliases": [], "name": "multifunctional beta-oxidation enzyme", "evidence": "https://www.genome.jp/entry/K01825"},
+    "fadA": {"aliases": [], "name": "acetyl-CoA acyltransferase", "evidence": "https://www.genome.jp/entry/K00632"},
+    "mcrA": {"aliases": ["K00399"], "name": "methyl-coenzyme M reductase alpha subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10654671/"},
+    "mcrB": {"aliases": [], "name": "methyl-coenzyme M reductase beta subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7302380/"},
+    "mtrA": {"aliases": [], "name": "tetrahydromethanopterin S-methyltransferase subunit A", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7302380/"},
+    "fwdA": {"aliases": ["fmdA"], "name": "formylmethanofuran dehydrogenase subunit A", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "ftr": {"aliases": [], "name": "formylmethanofuran--tetrahydromethanopterin formyltransferase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "mch": {"aliases": [], "name": "methenyltetrahydromethanopterin cyclohydrolase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "mtd": {"aliases": [], "name": "methylenetetrahydromethanopterin dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "mer": {"aliases": [], "name": "methylenetetrahydromethanopterin reductase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "acs": {"aliases": ["acsA"], "name": "acetyl-CoA synthetase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10654671/"},
+    "ackA": {"aliases": ["ack"], "name": "acetate kinase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "pta": {"aliases": [], "name": "phosphate acetyltransferase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7525477/"},
+    "cdhC": {"aliases": [], "name": "CODH/ACS complex subunit gamma", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7302380/"},
+    "cdhD": {"aliases": [], "name": "CODH/ACS complex subunit delta", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7302380/"},
+    "cdhE": {"aliases": [], "name": "CODH/ACS complex subunit epsilon", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7302380/"},
+    "thl": {"aliases": ["atoB"], "name": "acetyl-CoA acetyltransferase/thiolase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9600882/"},
+    "hbd": {"aliases": [], "name": "3-hydroxybutyryl-CoA dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9600882/"},
+    "crt": {"aliases": [], "name": "crotonase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9600882/"},
+    "bcd": {"aliases": [], "name": "butyryl-CoA dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9600882/"},
+    "etfA": {"aliases": [], "name": "electron transfer flavoprotein alpha subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7764203/"},
+    "etfB": {"aliases": [], "name": "electron transfer flavoprotein beta subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7764203/"},
+    "cat": {"aliases": ["but"], "name": "terminal CoA transferase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9600882/"},
+    "lctD": {"aliases": ["lctD2", "iLDH"], "name": "electron-confurcating lactate dehydrogenase catalytic component", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8239352/"},
+    "lctB": {"aliases": [], "name": "electron-confurcating lactate dehydrogenase component", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8239352/"},
+    "lctC": {"aliases": [], "name": "electron-confurcating lactate dehydrogenase component", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8239352/"},
+    "pfor": {"aliases": ["porA"], "name": "pyruvate:ferredoxin oxidoreductase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8239352/"},
+    "adhE": {"aliases": [], "name": "bifunctional acetaldehyde-CoA/alcohol dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7764203/"},
+    "adh": {"aliases": [], "name": "alcohol dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7764203/"},
+    "aldh": {"aliases": [], "name": "acetaldehyde dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7764203/"},
+    "hydA": {"aliases": [], "name": "ferredoxin hydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10231205/"},
+    "fdhA": {"aliases": [], "name": "formate dehydrogenase alpha subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10231205/"},
+    "rnfB": {"aliases": [], "name": "Rnf electron transport complex subunit B", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7764203/"},
+    "mmcE": {"aliases": ["mcmA"], "name": "methylmalonyl-CoA mutase subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "mmcF": {"aliases": ["mcmB"], "name": "methylmalonyl-CoA mutase subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "mmcG": {"aliases": ["mce"], "name": "methylmalonyl-CoA epimerase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "sucC": {"aliases": [], "name": "succinyl-CoA synthetase beta subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "sucD": {"aliases": [], "name": "succinyl-CoA synthetase alpha subunit", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "fumB": {"aliases": [], "name": "fumarase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "mdh": {"aliases": [], "name": "malate dehydrogenase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8892533/"},
+    "fhs": {"aliases": [], "name": "formate--tetrahydrofolate ligase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11201294/"},
+    "folD": {"aliases": [], "name": "methylene-THF dehydrogenase/cyclohydrolase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11201294/"}
+  },
+  "groups": {
+    "X_ch": {"description": "Extracellular hydrolysis of particulate carbohydrates.", "panels": [
+      {"id": "cellulose_utilization", "marker_weights": {"cazy_GH5": 2, "cazy_GH9": 2, "cazy_GH48": 2, "cazy_CBM3": 1, "bgl": 1}, "required_all": ["bgl"], "required_any": [["cazy_GH5", "cazy_GH9", "cazy_GH48"], ["cazy_CBM3", "cazy_GH48"]], "minimum_markers": 3, "minimum_score": 0.50},
+      {"id": "xylan_utilization", "marker_weights": {"cazy_GH10": 2, "cazy_GH11": 2, "cazy_GH43": 1, "cazy_CBM6": 1, "xylA": 1, "xylB": 1}, "required_all": ["xylA", "xylB"], "required_any": [["cazy_GH10", "cazy_GH11"], ["cazy_GH43", "cazy_CBM6"]], "minimum_markers": 4, "minimum_score": 0.55},
+      {"id": "starch_utilization", "marker_weights": {"cazy_GH13": 3, "agl": 2, "susC": 1, "susD": 1}, "required_all": ["cazy_GH13"], "required_any": [["susC", "susD", "agl"]], "minimum_markers": 2, "minimum_score": 0.60},
+      {"id": "pectin_utilization", "marker_weights": {"cazy_PL1": 2, "cazy_CE8": 2, "cazy_GH43": 1, "susC": 1, "susD": 1}, "required_all": ["cazy_PL1"], "required_any": [["cazy_CE8", "cazy_GH43"], ["susC", "susD"]], "minimum_markers": 3, "minimum_score": 0.55}
+    ]},
+    "X_pr": {"description": "Extracellular protein hydrolysis coupled to peptide acquisition.", "panels": [
+      {"id": "proteolysis_and_peptide_import", "marker_weights": {"extracellular_protease": 3, "pepN": 1, "pepO": 1, "oppA": 2, "oppB": 1}, "required_all": ["extracellular_protease", "oppA"], "required_any": [["pepN", "pepO"], ["oppB"]], "minimum_markers": 4, "minimum_score": 0.65}
+    ]},
+    "X_li": {"description": "Extracellular lipid hydrolysis with fatty-acid activation.", "panels": [
+      {"id": "lipolysis", "marker_weights": {"lipase": 3, "esterase": 1, "fadD": 2}, "required_all": ["lipase", "fadD"], "required_any": [["esterase", "lipase"]], "minimum_markers": 2, "minimum_score": 0.70}
+    ]},
+    "X_su": {"description": "Sugar uptake and central fermentative conversion to pyruvate.", "panels": [
+      {"id": "hexose_fermentation", "marker_weights": {"ptsG": 2, "glcP": 2, "pgi": 1, "pfkA": 1, "gapA": 1, "pyk": 1, "pfor": 1, "adhE": 1, "lctD": 1}, "required_all": ["pgi", "pfkA", "gapA", "pyk"], "required_any": [["ptsG", "glcP"], ["pfor", "adhE", "lctD"]], "minimum_markers": 6, "minimum_score": 0.60},
+      {"id": "pentose_fermentation", "marker_weights": {"xylF": 2, "xylA": 2, "xylB": 2, "gapA": 1, "pyk": 1, "pfor": 1, "adhE": 1, "lctD": 1}, "required_all": ["xylA", "xylB", "gapA", "pyk"], "required_any": [["xylF"], ["pfor", "adhE", "lctD"]], "minimum_markers": 6, "minimum_score": 0.65}
+    ]},
+    "X_aa": {"description": "Amino-acid fermentation using diagnostic Stickland acceptor pathways.", "panels": [
+      {"id": "glycine_stickland", "marker_weights": {"oppA": 1, "oppB": 1, "grdA": 2, "grdB": 2, "pfor": 1}, "required_all": ["grdA", "grdB"], "required_any": [["oppA", "oppB"], ["pfor"]], "minimum_markers": 4, "minimum_score": 0.65},
+      {"id": "proline_stickland", "marker_weights": {"oppA": 1, "oppB": 1, "prdA": 2, "prdB": 2, "pfor": 1}, "required_all": ["prdA", "prdB"], "required_any": [["oppA", "oppB"], ["pfor"]], "minimum_markers": 4, "minimum_score": 0.65}
+    ]},
+    "X_fa": {"description": "Long-chain fatty-acid activation and beta oxidation.", "panels": [
+      {"id": "lcfa_beta_oxidation", "marker_weights": {"fadD": 2, "fadE": 2, "fadB": 2, "fadA": 2, "etfA": 1, "etfB": 1}, "required_all": ["fadD", "fadE", "fadB", "fadA"], "required_any": [["etfA", "etfB"]], "minimum_markers": 5, "minimum_score": 0.70}
+    ]},
+    "X_ac_et": {"description": "Acetate incorporation into ethanol-driven reverse beta oxidation.", "panels": [
+      {"id": "ethanol_acetate_chain_initiation", "marker_weights": {"acs": 1, "ackA": 1, "pta": 1, "thl": 2, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "adhE": 2, "adh": 1, "aldh": 1}, "required_all": ["thl", "bcd", "etfA", "etfB"], "required_any": [["acs", "ackA", "pta"], ["adhE", "adh"], ["adhE", "aldh"]], "minimum_markers": 8, "minimum_score": 0.60}
+    ]},
+    "X_ac_lac": {"description": "Acetate incorporation into lactate-driven reverse beta oxidation.", "panels": [
+      {"id": "lactate_acetate_chain_initiation", "marker_weights": {"acs": 1, "ackA": 1, "pta": 1, "thl": 2, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "lctD": 2, "lctB": 1, "lctC": 1, "pfor": 1}, "required_all": ["thl", "bcd", "etfA", "etfB", "lctD"], "required_any": [["acs", "ackA", "pta"], ["lctB", "lctC"], ["pfor"]], "minimum_markers": 9, "minimum_score": 0.60}
+    ]},
+    "X_chain_et": {"description": "Ethanol-fed reverse beta-oxidation chain elongation.", "panels": [
+      {"id": "ethanol_reverse_beta_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "cat": 2, "adhE": 2, "adh": 1, "aldh": 1}, "required_all": ["bcd", "etfA", "etfB", "cat"], "required_any": [["thl"], ["hbd"], ["crt"], ["adhE", "adh"], ["adhE", "aldh"]], "minimum_markers": 8, "minimum_score": 0.65}
+    ]},
+    "X_chain_lac": {"description": "Lactate-fed reverse beta-oxidation chain elongation.", "panels": [
+      {"id": "lactate_reverse_beta_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "cat": 2, "lctD": 2, "lctB": 1, "lctC": 1, "pfor": 1}, "required_all": ["bcd", "etfA", "etfB", "cat", "lctD"], "required_any": [["thl"], ["hbd"], ["crt"], ["lctB", "lctC"], ["pfor"]], "minimum_markers": 9, "minimum_score": 0.65}
+    ]},
+    "X_VFA_deg": {"description": "Syntrophic VFA oxidation potential; direction requires ecological or expression evidence.", "panels": [
+      {"id": "syntrophic_butyrate_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "hydA": 2, "fdhA": 2, "rnfB": 1}, "required_all": ["bcd", "etfA", "etfB"], "required_any": [["thl"], ["hbd"], ["crt"], ["hydA", "fdhA"], ["rnfB"]], "minimum_markers": 7, "minimum_score": 0.65},
+      {"id": "syntrophic_propionate_mmc", "marker_weights": {"mmcE": 2, "mmcF": 2, "mmcG": 1, "sucC": 1, "sucD": 1, "fumB": 1, "mdh": 1, "pfor": 1, "hydA": 2, "fdhA": 2}, "required_all": ["mmcE", "mmcF", "mmcG", "sucC", "sucD"], "required_any": [["fumB"], ["mdh"], ["hydA", "fdhA"]], "minimum_markers": 8, "minimum_score": 0.65}
+    ]},
+    "X_Me_ac": {"description": "Acetoclastic methanogenesis.", "panels": [
+      {"id": "acetoclastic_acs", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "acs": 2, "cdhC": 1, "cdhD": 1, "cdhE": 1}, "required_all": ["mcrA", "acs"], "required_any": [["cdhC", "cdhD", "cdhE"]], "minimum_markers": 4, "minimum_score": 0.55},
+      {"id": "acetoclastic_ack_pta", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "ackA": 1, "pta": 1, "cdhC": 1, "cdhD": 1, "cdhE": 1}, "required_all": ["mcrA", "ackA", "pta"], "required_any": [["cdhC", "cdhD", "cdhE"]], "minimum_markers": 5, "minimum_score": 0.55}
+    ]},
+    "X_Me_CO2": {"description": "Hydrogenotrophic methanogenesis.", "panels": [
+      {"id": "hydrogenotrophic_core", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "fwdA": 1, "ftr": 1, "mch": 1, "mtd": 1, "mer": 1}, "required_all": ["mcrA"], "required_any": [["fwdA"], ["ftr"], ["mch"], ["mtd", "mer"]], "minimum_markers": 6, "minimum_score": 0.65}
+    ]},
+    "X_et": {"description": "Ethanol oxidation without requiring chain-elongation capacity.", "panels": [
+      {"id": "ethanol_to_acetyl_coa", "marker_weights": {"adhE": 3, "adh": 2, "aldh": 2, "acs": 1, "pta": 1, "ackA": 1}, "required_any": [["adhE", "adh"], ["adhE", "aldh"], ["acs", "pta", "ackA"]], "minimum_markers": 3, "minimum_score": 0.50}
+    ]},
+    "X_lac": {"description": "Lactate uptake and oxidation to pyruvate without requiring chain elongation.", "panels": [
+      {"id": "lactate_to_pyruvate", "marker_weights": {"lctD": 3, "lctB": 1, "lctC": 1, "pfor": 2, "rnfB": 1}, "required_all": ["lctD", "pfor"], "required_any": [["lctB", "lctC", "rnfB"]], "minimum_markers": 3, "minimum_score": 0.60}
+    ]}
+  }
+}

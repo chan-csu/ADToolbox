@@ -24,7 +24,7 @@ def _resolve_version() -> str:
 
 
 __version__ = _resolve_version()
-__all__=["adm","configs","__main__","cli","core","optimize","pipeline","utils","PKG_DATA"]
+__all__=["adm","configs","__main__","cli","core","markers","optimize","pipeline","utils","PKG_DATA"]
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 

@@ -17,6 +17,12 @@ together; the per-module pages hold the generated reference.
 
     Feeds, experiments, databases, and the metagenomics pipeline.
 
+-   :material-dna: **[`markers`](api-markers.md)**
+
+    ---
+
+    Configurable gene-marker panels and genome-abundance COD aggregation.
+
 -   :material-chart-bell-curve: **[`adm`](api-adm.md)**
 
     ---

@@ -256,6 +256,176 @@ For shotgun data, set `assay="shotgun"`; `amplicon_to_genome_db` and `genomes_di
 
 For a single sample, [`sample_to_cod`](api-core.md#adtoolbox.core.Metagenomics.sample_to_cod) runs the same logic without the manifest.
 
+## Direct gene-marker allocation
+
+The direct allocator bypasses EC-to-reaction metadata. It scores curated, diagnostic
+gene-family panels for each genome, then weights those genome scores by their abundance
+in each sample. All 15 existing e-ADM COD groups have at least one curated panel.
+
+This is the preferred allocation path. For both genome and shotgun MMseqs alignments,
+ADToolbox recognizes a marker alias in any pipe-delimited target header, for example:
+
+```text
+>UniProt_P12345|mcrA
+>dbCAN_reference_42|GH5
+```
+
+Pass that FASTA as `--protein-db`. Validate both halves of the database before a run:
+
+```bash
+adtoolbox metagenomics validate-marker-catalog --catalog gene_marker_catalog.json
+adtoolbox metagenomics validate-marker-protein-db \
+  --catalog gene_marker_catalog.json \
+  --protein-db Marker_Protein_DB.fasta
+```
+
+To assemble the target database without hand-editing FASTA headers, prepare a CSV/TSV
+manifest pointing to curated reference sequences for each family:
+
+```text
+marker_id,source_fasta
+mcrA,references/mcrA.faa
+GH5,references/GH5.faa.gz
+```
+
+Then build and validate it:
+
+```bash
+adtoolbox database build-marker-protein-db \
+  --manifest marker_references.tsv \
+  --output Marker_Protein_DB.fasta
+
+adtoolbox metagenomics validate-marker-protein-db \
+  --protein-db Marker_Protein_DB.fasta
+```
+
+Reference sequences are deliberately separate from the rule catalog: changing a scoring
+rule should not silently change sequence homology, and adding reference diversity should
+not change the biochemical interpretation. Use reviewed proteins or validated family
+profiles and retain their source/version alongside the manifest.
+
+### Choosing MMseqs or HMMER
+
+`--marker-backend mmseqs` is the default. It accepts the marker-labeled protein FASTA
+above and works for genome FASTAs and raw shotgun reads. ADToolbox ships a compact
+prebuilt database at
+`adtoolbox/pkg_data/marker_databases/v0.2.0/Marker_Protein_DB.fasta`, which is selected
+automatically when `--protein-db` is omitted. A bundled `Marker_Protein_DB_mmseqs*`
+database is reused across samples, so the default does not rebuild the target database
+inside every sample job.
+
+`--marker-backend hmmer` is available for the genome-based amplicon route and for
+precomputed genome annotations. ADToolbox predicts proteins with Prodigal and searches
+them with `hmmsearch`. It is not offered for unassembled shotgun FASTQ because profile
+HMMs search proteins, not raw nucleotide reads.
+
+The matching prebuilt `Marker_Profiles.hmm` and `Marker_Profile_Cutoffs.csv` are in the
+same versioned directory and are also selected automatically. `profile_manifest.tsv`,
+`SOURCES.json`, `SHA256SUMS`, and `rebuild.py` make the bundled assets auditable and
+rebuildable. The HMM backend is preferred when sensitivity matters; MMseqs uses compact
+HMM consensus sequences for faster screening.
+
+Build a compact HMM collection from selected dbCAN, KOfam, Pfam, or custom profiles with
+a manifest like:
+
+```text
+marker_id,source_hmm,profile_id,score_threshold,score_type
+mcrA,kofam/profiles/K00399.hmm,K00399,775.53,full
+GH5,dbCAN.hmm,GH5.hmm,,full
+```
+
+```bash
+adtoolbox database build-marker-hmm-db \
+  --manifest marker_hmms.tsv \
+  --output Marker_Profiles.hmm \
+  --cutoffs-output Marker_Profile_Cutoffs.csv
+
+adtoolbox metagenomics process \
+  ... \
+  --marker-backend hmmer \
+  --marker-hmm-db Marker_Profiles.hmm \
+  --marker-hmm-cutoffs Marker_Profile_Cutoffs.csv
+```
+
+The HMM manifest is the provenance record: it pins the upstream collection, original
+profile ID, canonical ADToolbox marker, and any family-specific trusted score. Without
+an adaptive score, the default filters are independent E-value `1e-15` and profile
+coverage `0.35`.
+
+For Slurm, the optional step override is:
+
+```toml
+[steps.annotate_genomes]
+backend = "slurm"
+container = "None"
+cpus = 8
+memory = "24G"
+time = "04:00:00"
+retries = 3
+
+[steps.annotate_genomes.settings]
+threads = 8
+prodigal_mode = "single"
+```
+
+When recognized marker targets occur, the normal `adtoolbox metagenomics process`
+command writes `marker_counts.csv` and calculates COD directly from pathway panels.
+The old EC/reaction parser is used only when an old protein database produces no
+recognized marker targets.
+
+The marker-hit input is a tall CSV or TSV with at least these columns:
+
+```text
+genome_id,marker_id
+GCF_000001,mcrA
+GCF_000001,fwdA
+```
+
+Optional `bits`, `evalue`, `identity`, and `coverage` columns can be filtered from the
+CLI. Classify each unique genome once:
+
+```bash
+adtoolbox metagenomics validate-marker-catalog
+
+adtoolbox metagenomics classify-markers \
+  --hits genome_marker_hits.tsv \
+  --min-bits 50 --max-evalue 1e-10 \
+  --output genome_cod_scores.csv
+```
+
+Then combine those cached scores with a tall `sample,genome_id,abundance` table:
+
+```bash
+adtoolbox metagenomics aggregate-marker-cod \
+  --scores genome_cod_scores.csv \
+  --abundances sample_genome_abundance.tsv \
+  --output sample_cod_profiles.csv
+```
+
+The companion `sample_cod_profiles_qc.csv` reports the fraction of genome abundance
+that had at least one positive curated classification. This prevents normalization from
+hiding how much of a community lacked sufficient pathway evidence.
+
+Rules live in `adtoolbox/pkg_data/gene_marker_catalog.json`. A group can have multiple
+alternative panels. Each panel declares marker weights, markers that must all occur,
+alternative-marker clauses, a minimum marker count, and a minimum weighted completeness.
+Aliases are resolved case-insensitively. Copy the catalog, edit it, validate it, and pass
+it with `--catalog`; no Python changes are needed.
+
+Carbohydrate hydrolysis (`X_ch`) is represented by separate cellulose, xylan, starch,
+and pectin panels combining CAZyme families with binding, transport, or intracellular
+utilization evidence. Sugar fermentation (`X_su`) separately requires a transporter,
+central pathway coverage, and a fermentative outlet. Generic glycolysis or a lone
+glycosidase therefore cannot classify a genome by itself.
+
+The other modules cover protein and lipid hydrolysis, Stickland amino-acid fermentation,
+LCFA beta oxidation, ethanol/lactate uptake, donor-specific reverse beta oxidation,
+syntrophic propionate/butyrate oxidation, and acetoclastic/hydrogenotrophic
+methanogenesis. Reverse beta-oxidation is reversible, so `X_VFA_deg` additionally needs
+hydrogen/formate-transfer or energy-conservation evidence. Even then, DNA establishes
+potential rather than in situ direction; feed chemistry or expression data is needed to
+resolve the active direction with confidence.
+
 ## See also
 
 - [CLI reference](CLI.md#processing-pipeline) — every `process` option and output file.
