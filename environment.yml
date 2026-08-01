@@ -33,8 +33,10 @@ dependencies:
   - bioconductor-dada2    # bioconda — ASV inference (amplicon; pulls r-base)
   - r-base                # conda-forge — DADA2 is driven via Rscript
   - vsearch               # bioconda — representative seqs -> GTDB (amplicon)
-  # shotgun route + genome alignment
+  # shotgun route + genome annotation/alignment
   - mmseqs2               # bioconda — translated search vs protein DB (both)
+  - hmmer                 # bioconda — profile-HMM marker search on predicted proteins
+  - prodigal              # bioconda — protein prediction from downloaded genomes
   # data retrieval
   - sra-tools             # bioconda — prefetch / fasterq-dump
   - ncbi-datasets-cli     # conda-forge (NOT bioconda) — assembly downloads

@@ -49,6 +49,18 @@ def test_shared_mcr_marker_does_not_classify_methanogen(classifier):
     assert _score(result, "incomplete_archaeon", "X_Me_CO2") == 0
 
 
+def test_partial_pathway_evidence_is_retained_but_not_called_credible(classifier):
+    result = classifier.classify_presence({"partial_proteolysis": ["pepN", "oppA"]})
+    row = result.filter(
+        (pl.col("genome_id") == "partial_proteolysis") & (pl.col("cod_group") == "X_pr")
+    ).to_dicts()[0]
+    assert 0 < row["score"] < 0.5
+    assert row["credible"] is False
+    assert row["confidence"] == "partial"
+    assert row["weighted_completeness"] > 0
+    assert row["marker_coverage"] > 0
+
+
 def test_acetoclastic_methanogen_profile(classifier):
     # Methanosarcina-like acetate activation and CODH/ACS evidence.
     markers = ["K00399", "mcrB", "mtrA", "acsA", "cdhC", "cdhD", "cdhE"]
@@ -186,7 +198,7 @@ def test_hmmer_backend_prepares_prodigal_and_hmmsearch(tmp_path):
     assert "prodigal" in script
     assert "hmmsearch" in script
     assert "--cpu 4" in script
-    assert output.endswith("Marker_Hits_hmmer_g1.domtbl")
+    assert output.endswith("Marker_Hits_hmmer_g1~catalog-0.3.0.domtbl")
 
 
 def test_core_alignment_prefers_direct_marker_pipeline(tmp_path):

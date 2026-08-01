@@ -1,6 +1,6 @@
-# ADToolbox direct gene-to-COD marker databases v0.2.0
+# ADToolbox direct gene-to-COD marker databases v0.3.0
 
-This directory contains the two ready-to-use backends for the v0.2.0 marker
+This directory contains the two ready-to-use backends for the v0.3.0 marker
 catalog:
 
 - `Marker_Profiles.hmm`: compact HMMER database made from selected KOfam and
@@ -18,9 +18,13 @@ catalog:
 - `SOURCES.json`: pinned upstream releases and source URLs.
 - `SHA256SUMS`: integrity checks for the shipped assets.
 
+The v0.3.0 assets broaden peptide/protein utilization, lipid hydrolysis,
+Entner-Doudoroff metabolism, and amino-acid catabolism. The stable directory
+name is retained so existing installations continue to resolve bundled paths.
+
 The HMM backend is the more sensitive and preferred option for assembled
 genomes. The MMseqs backend is faster and is useful for high-throughput
-screening. Both resolve hits to the same 79 canonical marker IDs and therefore
+screening. Both resolve hits to the same 96 canonical marker IDs and therefore
 feed the same COD-group classifier.
 
 ## Rebuild

@@ -423,6 +423,43 @@ def test_sample_to_cod_weights_genome_alignments(tmp_path):
     assert result["artifacts"]["genome_cods"].endswith("genome_cods.csv")
 
 
+def test_marker_genome_outputs_preserve_partial_evidence_and_unmapped_abundance(tmp_path):
+    alignments = tmp_path / "alignments"
+    alignments.mkdir()
+    _write_alignment(
+        alignments / "Alignment_Results_mmseq_genome_a.tsv",
+        [
+            ["gene_1", "ref_1|pepN", 1, 100, 0, 0, 1, 100, 1, 100, 1e-50, 900],
+            ["gene_2", "ref_2|oppA", 1, 100, 0, 0, 1, 100, 1, 100, 1e-50, 900],
+        ],
+    )
+    abundances = tmp_path / "abundances.json"
+    abundances.write_text(json.dumps({"genome_a": 0.6}))
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    result = metagenomics.sample_to_cod(
+        sample_name="sample_partial",
+        output_dir=tmp_path / "out",
+        mode="genome-alignments",
+        genome_abundances=abundances,
+        genome_alignments=alignments,
+        verbose=False,
+    )
+
+    scores = pl.read_csv(result["artifacts"]["genome_pathway_scores"])
+    protein = scores.filter(pl.col("cod_group") == "X_pr").to_dicts()[0]
+    potential = pl.read_csv(result["artifacts"]["cod_potential"])
+    protein_potential = potential.filter(pl.col("group") == "X_pr")["potential"][0]
+    qc = pl.read_csv(result["artifacts"]["cod_evidence_qc"]).to_dicts()[0]
+
+    assert protein["score"] > 0
+    assert protein["credible"] is False
+    assert protein_potential == pytest.approx(protein["score"] * 0.6)
+    assert qc["mapped_abundance"] == pytest.approx(0.6)
+    assert qc["unmapped_abundance"] == pytest.approx(0.4)
+    assert pathlib.Path(result["artifacts"]["genome_gene_annotations"]).is_file()
+
+
 def test_extract_relative_abundances_uses_feature_ids(tmp_path):
     feature_table = tmp_path / "feature-table.tsv"
     feature_table.write_text(
@@ -488,6 +525,18 @@ def test_alignment_files_from_path_indexes_gtdb_prefix_before_contig(tmp_path):
 
     assert alignments["GCF000001.1"] == str(alignment)
     assert alignments["GCF000001.1~NZABC01000001.1"] == str(alignment)
+
+
+def test_alignment_files_prefer_current_catalog_version(tmp_path):
+    old = tmp_path / "Alignment_Results_mmseq_GCF000001.1.tsv"
+    current = tmp_path / "Alignment_Results_mmseq_GCF000001.1~catalog-0.3.0.tsv"
+    old.write_text("")
+    current.write_text("")
+
+    metagenomics = core.Metagenomics(configs.Metagenomics())
+    alignments = metagenomics._alignment_files_from_path(tmp_path)
+
+    assert alignments["GCF000001.1"] == str(current)
 
 
 def test_genome_files_from_dir_indexes_assembly_accession_prefix(tmp_path):
@@ -603,7 +652,7 @@ def test_amplicon_pipeline_downloads_missing_genome_before_alignment(monkeypatch
         elif step_name == "align_genomes":
             alignment = (
                 tmp_path / "out" / "sample_a" / "scratch" / "genome_alignments"
-                / "Alignment_Results_mmseq_GCF_000146505.1.tsv"
+                    / "Alignment_Results_mmseq_GCF_000146505.1~catalog-0.3.0.tsv"
             )
             alignment.write_text("query\ttarget\n")
         return {"step": step_name, "status": "completed", "backend": "slurm"}
@@ -634,7 +683,10 @@ def test_amplicon_pipeline_downloads_missing_genome_before_alignment(monkeypatch
     )
 
     assert calls == ["download_genomes", "align_genomes"]
-    assert result["cod_profile"] == {"group_a": 1.0}
+    assert set(result["cod_profile"]) == set(metagenomics.marker_catalog.cod_groups)
+    assert all(value == 0.0 for value in result["cod_profile"].values())
+    assert result["artifacts"]["genome_pathway_scores"].endswith("genome_pathway_scores.csv")
+    assert result["artifacts"]["cod_evidence_qc"].endswith("cod_evidence_qc.csv")
     assert "missing_genome_fastas" not in result["artifacts"]
     assert result["artifacts"]["skipped_genome_fastas"] == ["GCA_000000001.1"]
 
@@ -1728,6 +1780,49 @@ def test_dada2_profile_does_not_reuse_legacy_vsearch_feature_cache(tmp_path):
     assert result["samples"]["sample_ready"]["status"] == "waiting_for_preprocess"
     assert (tmp_path / "out" / "sample_ready" / "scratch" / "trim_reads.sh").exists()
     assert (tmp_path / "out" / "sample_ready" / "scratch" / "build_amplicon_features.sh").exists()
+
+
+def test_allocate_stage_accepts_existing_features_without_dada2_audit(monkeypatch, tmp_path):
+    manifest = tmp_path / "samples.tsv"
+    manifest.write_text("sample\tread_1\nsample_ready\treads.fastq\n")
+    preprocess = tmp_path / "out" / "sample_ready" / "scratch" / "amplicon_preprocess"
+    preprocess.mkdir(parents=True)
+    (preprocess / "feature-table.tsv").write_text("#OTU ID\tsample_ready\nasv_1\t10\n")
+    (preprocess / "rep-seqs.fasta").write_text(">asv_1\nACGT\n")
+    profile = {
+        "backend": "local",
+        "container": "None",
+        "steps": {
+            "build_amplicon_features": {
+                "backend": "local",
+                "settings": {"denoiser": "dada2", "primer_mode": "auto"},
+            }
+        },
+    }
+    calls = []
+
+    def fake_sample_to_cod(self, **kwargs):
+        calls.append(kwargs)
+        return {
+            "status": "waiting_for_gtdb_alignment",
+            "artifacts": {},
+            "cod_profile": {},
+        }
+
+    monkeypatch.setattr(core.Metagenomics, "sample_to_cod", fake_sample_to_cod)
+
+    result = core.Metagenomics(configs.Metagenomics()).batch_sample_to_cod(
+        manifest=manifest,
+        input_type="reads",
+        output_dir=tmp_path / "out",
+        stage="cod",
+        execute=False,
+        verbose=False,
+        execution_profile=profile,
+    )
+
+    assert len(calls) == 1
+    assert result["samples"]["sample_ready"]["status"] == "waiting_for_gtdb_alignment"
 
 
 def test_batch_workflow_reuses_completed_gtdb_alignment(monkeypatch, tmp_path):

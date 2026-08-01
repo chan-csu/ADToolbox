@@ -20,8 +20,29 @@ pepO	KOfam	K07386	655.93	domain	Putative endopeptidase
 oppA	KOfam	K15580	355.23	full	Oligopeptide transport substrate-binding protein
 oppB	KOfam	K15581	350.83	full	Oligopeptide transport permease protein
 oppB	KOfam	K15582	355.83	domain	Alternative oligopeptide transport permease protein
+endopeptidase	KOfam	K01318	118.40	domain	Glutamyl endopeptidase
+endopeptidase	KOfam	K01337	163.97	full	Lysyl endopeptidase
+endopeptidase	KOfam	K08303	373.17	full	U32 family peptidase
+pepA	KOfam	K01255	416.03	full	Leucyl aminopeptidase
+pepT	KOfam	K01258	195.77	full	Tripeptide aminopeptidase
+pepQ	KOfam	K01262	251.77	full	Xaa-Pro aminopeptidase
+pepD	KOfam	K01270	159.10	full	Dipeptidase D
+pepD	KOfam	K05995	80.17	domain	Dipeptidase E
+dtpT	KOfam	K03305	373.67	domain	Proton-dependent oligopeptide transporter
+dppA	KOfam	K12368	672.33	full	Dipeptide transport substrate-binding protein
+dppA	KOfam	K16199	724.97	domain	Alternative dipeptide transport substrate-binding protein
+dppB	KOfam	K12369	481.50	full	Dipeptide transport permease protein
+dppB	KOfam	K16200	479.83	full	Alternative dipeptide transport permease protein
+dppC	KOfam	K12370	414.40	full	Dipeptide transport permease protein
+dppC	KOfam	K16201	517.37	full	Alternative dipeptide transport permease protein
 lipase	KOfam	K01046	54.20	full	Triacylglycerol lipase
 esterase	KOfam	K01044	747.60	domain	Carboxylesterase
+lysophospholipase	KOfam	K01048	189.17	domain	Lysophospholipase
+lysophospholipase	KOfam	K06128	419.93	full	Lysophospholipase I
+lysophospholipase	KOfam	K06129	572.30	full	Lysophospholipase III
+lysophospholipase	KOfam	K06130	299.13	full	Lysophospholipase II
+acylglycerol_lipase	KOfam	K01054	217.80	full	Acylglycerol lipase
+phospholipase	KOfam	K01058	107.50	full	Phospholipase A1/A2
 ptsG	KOfam	K02779	717.33	full	Glucose PTS EIICB/EIICBA component
 glcP	KOfam	K08139	408.53	domain	Sugar proton symporter
 pgi	KOfam	K01810	119.13	full	Bacterial glucose-6-phosphate isomerase
@@ -33,6 +54,14 @@ pyk	KOfam	K00873	46.23	full	Pyruvate kinase
 xylA	KOfam	K01805	110.70	full	Xylose isomerase
 xylB	KOfam	K00854	295.03	full	Xylulokinase
 xylF	KOfam	K10543	350.07	domain	D-xylose transport substrate-binding protein
+edd	KOfam	K01690	511.87	full	Phosphogluconate dehydratase
+eda	KOfam	K01625	189.37	full	2-dehydro-3-deoxyphosphogluconate aldolase
+gdh	KOfam	K00260	634.70	domain	Glutamate dehydrogenase
+gdh	KOfam	K00261	526.20	full	Glutamate dehydrogenase NAD(P)
+gdh	KOfam	K00262	452.13	domain	Glutamate dehydrogenase NADP
+gdh	KOfam	K15371	290.83	full	Alternative glutamate dehydrogenase
+ilvE	KOfam	K00826	187.00	full	Branched-chain amino-acid aminotransferase
+tdcB	KOfam	K01754	267.97	domain	Threonine dehydratase
 grdA	KOfam	K10670	54.87	full	Glycine/sarcosine/betaine reductase component A
 grdB	KOfam	K10671	565.23	full	Glycine reductase component B alpha/beta
 grdB	KOfam	K10672	412.57	full	Glycine reductase component B gamma

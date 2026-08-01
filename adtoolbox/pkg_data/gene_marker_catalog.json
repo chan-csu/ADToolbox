@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "0.2.0",
+  "catalog_version": "0.3.0",
   "description": "Compact pathway-panel catalog for direct gene-family-to-eADM COD-group evidence. Scores describe genomic potential, not measured activity or reaction direction.",
   "cod_groups": [
     "X_ch", "X_pr", "X_li", "X_su", "X_aa", "X_fa", "X_ac_et", "X_ac_lac",
@@ -27,8 +27,20 @@
     "pepO": {"aliases": [], "name": "endopeptidase O", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
     "oppA": {"aliases": [], "name": "oligopeptide transporter substrate-binding protein", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
     "oppB": {"aliases": [], "name": "oligopeptide transporter permease", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "endopeptidase": {"aliases": [], "name": "broad bacterial endopeptidase", "evidence": "https://www.genome.jp/entry/K01318+K01337+K08303"},
+    "pepA": {"aliases": ["leucyl_aminopeptidase"], "name": "leucyl aminopeptidase", "evidence": "https://www.genome.jp/entry/K01255"},
+    "pepT": {"aliases": ["tripeptide_aminopeptidase"], "name": "tripeptide aminopeptidase", "evidence": "https://www.genome.jp/entry/K01258"},
+    "pepQ": {"aliases": ["xaa_pro_aminopeptidase"], "name": "Xaa-Pro aminopeptidase", "evidence": "https://www.genome.jp/entry/K01262"},
+    "pepD": {"aliases": ["dipeptidase"], "name": "bacterial dipeptidase", "evidence": "https://www.genome.jp/entry/K01270+K05995"},
+    "dtpT": {"aliases": ["pot"], "name": "proton-dependent oligopeptide transporter", "evidence": "https://www.genome.jp/entry/K03305"},
+    "dppA": {"aliases": [], "name": "dipeptide transport substrate-binding protein", "evidence": "https://www.genome.jp/entry/K12368+K16199"},
+    "dppB": {"aliases": [], "name": "dipeptide transport permease protein", "evidence": "https://www.genome.jp/entry/K12369+K16200"},
+    "dppC": {"aliases": [], "name": "dipeptide transport permease protein", "evidence": "https://www.genome.jp/entry/K12370+K16201"},
     "lipase": {"aliases": ["triacylglycerol_lipase", "extracellular_lipase"], "name": "extracellular triacylglycerol lipase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
     "esterase": {"aliases": ["estA"], "name": "carboxylesterase", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7842101/"},
+    "lysophospholipase": {"aliases": [], "name": "lysophospholipase", "evidence": "https://www.genome.jp/entry/K01048+K06128+K06129+K06130"},
+    "acylglycerol_lipase": {"aliases": [], "name": "acylglycerol lipase", "evidence": "https://www.genome.jp/entry/K01054"},
+    "phospholipase": {"aliases": [], "name": "phospholipase A", "evidence": "https://www.genome.jp/entry/K01058"},
     "ptsG": {"aliases": [], "name": "glucose-specific PTS transporter", "evidence": "https://www.genome.jp/entry/K02777"},
     "glcP": {"aliases": [], "name": "glucose transporter", "evidence": "https://www.genome.jp/entry/K08139"},
     "pgi": {"aliases": [], "name": "glucose-6-phosphate isomerase", "evidence": "https://www.genome.jp/entry/K01810"},
@@ -38,6 +50,11 @@
     "xylA": {"aliases": [], "name": "xylose isomerase", "evidence": "https://www.genome.jp/entry/K01805"},
     "xylB": {"aliases": [], "name": "xylulokinase", "evidence": "https://www.genome.jp/entry/K00854"},
     "xylF": {"aliases": [], "name": "xylose ABC transporter substrate-binding protein", "evidence": "https://www.genome.jp/entry/K02056"},
+    "edd": {"aliases": [], "name": "phosphogluconate dehydratase", "evidence": "https://www.genome.jp/entry/K01690"},
+    "eda": {"aliases": [], "name": "2-dehydro-3-deoxyphosphogluconate aldolase", "evidence": "https://www.genome.jp/entry/K01625"},
+    "gdh": {"aliases": ["glutamate_dehydrogenase"], "name": "glutamate dehydrogenase", "evidence": "https://www.genome.jp/entry/K00260+K00261+K00262"},
+    "ilvE": {"aliases": ["branched_chain_aminotransferase"], "name": "branched-chain amino-acid aminotransferase", "evidence": "https://www.genome.jp/entry/K00826"},
+    "tdcB": {"aliases": ["threonine_dehydratase"], "name": "threonine dehydratase", "evidence": "https://www.genome.jp/entry/K01754"},
     "grdA": {"aliases": [], "name": "glycine reductase component A", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
     "grdB": {"aliases": [], "name": "glycine reductase component B", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
     "prdA": {"aliases": [], "name": "D-proline reductase subunit A", "evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7872299/"},
@@ -95,44 +112,47 @@
       {"id": "pectin_utilization", "marker_weights": {"cazy_PL1": 2, "cazy_CE8": 2, "cazy_GH43": 1, "susC": 1, "susD": 1}, "required_all": ["cazy_PL1"], "required_any": [["cazy_CE8", "cazy_GH43"], ["susC", "susD"]], "minimum_markers": 3, "minimum_score": 0.55}
     ]},
     "X_pr": {"description": "Extracellular protein hydrolysis coupled to peptide acquisition.", "panels": [
-      {"id": "proteolysis_and_peptide_import", "marker_weights": {"extracellular_protease": 3, "pepN": 1, "pepO": 1, "oppA": 2, "oppB": 1}, "required_all": ["extracellular_protease", "oppA"], "required_any": [["pepN", "pepO"], ["oppB"]], "minimum_markers": 4, "minimum_score": 0.65}
+      {"id": "proteolysis_and_peptide_import", "marker_weights": {"extracellular_protease": 3, "endopeptidase": 2, "pepN": 1, "pepO": 1, "oppA": 2, "oppB": 1, "dtpT": 1}, "required_any": [["extracellular_protease", "endopeptidase"], ["oppA", "oppB", "dtpT"], ["pepN", "pepO"]], "minimum_markers": 4, "minimum_score": 0.50},
+      {"id": "peptide_scavenging", "marker_weights": {"endopeptidase": 2, "pepA": 1, "pepN": 1, "pepO": 1, "pepT": 1, "pepQ": 1, "pepD": 1, "oppA": 2, "oppB": 1, "dppA": 2, "dppB": 1, "dppC": 1, "dtpT": 2}, "required_any": [["endopeptidase", "pepA", "pepN", "pepO", "pepT", "pepQ", "pepD"], ["oppA", "dppA", "dtpT"], ["oppB", "dppB", "dppC", "dtpT"]], "minimum_markers": 4, "minimum_score": 0.40}
     ]},
     "X_li": {"description": "Extracellular lipid hydrolysis with fatty-acid activation.", "panels": [
-      {"id": "lipolysis", "marker_weights": {"lipase": 3, "esterase": 1, "fadD": 2}, "required_all": ["lipase", "fadD"], "required_any": [["esterase", "lipase"]], "minimum_markers": 2, "minimum_score": 0.70}
+      {"id": "lipolysis", "marker_weights": {"lipase": 3, "esterase": 1, "lysophospholipase": 2, "acylglycerol_lipase": 2, "phospholipase": 2, "fadD": 2}, "required_any": [["lipase", "lysophospholipase", "acylglycerol_lipase", "phospholipase"], ["fadD", "esterase"]], "minimum_markers": 2, "minimum_score": 0.40}
     ]},
     "X_su": {"description": "Sugar uptake and central fermentative conversion to pyruvate.", "panels": [
       {"id": "hexose_fermentation", "marker_weights": {"ptsG": 2, "glcP": 2, "pgi": 1, "pfkA": 1, "gapA": 1, "pyk": 1, "pfor": 1, "adhE": 1, "lctD": 1}, "required_all": ["pgi", "pfkA", "gapA", "pyk"], "required_any": [["ptsG", "glcP"], ["pfor", "adhE", "lctD"]], "minimum_markers": 6, "minimum_score": 0.60},
-      {"id": "pentose_fermentation", "marker_weights": {"xylF": 2, "xylA": 2, "xylB": 2, "gapA": 1, "pyk": 1, "pfor": 1, "adhE": 1, "lctD": 1}, "required_all": ["xylA", "xylB", "gapA", "pyk"], "required_any": [["xylF"], ["pfor", "adhE", "lctD"]], "minimum_markers": 6, "minimum_score": 0.65}
+      {"id": "pentose_fermentation", "marker_weights": {"xylF": 2, "xylA": 2, "xylB": 2, "gapA": 1, "pyk": 1, "pfor": 1, "adhE": 1, "lctD": 1}, "required_all": ["xylA", "xylB", "gapA", "pyk"], "required_any": [["xylF"], ["pfor", "adhE", "lctD"]], "minimum_markers": 6, "minimum_score": 0.65},
+      {"id": "entner_doudoroff", "marker_weights": {"ptsG": 1, "glcP": 1, "edd": 3, "eda": 3, "gapA": 1, "pyk": 1, "pfor": 1, "adhE": 1, "lctD": 1}, "required_all": ["edd", "eda"], "required_any": [["ptsG", "glcP"], ["gapA", "pyk"], ["pfor", "adhE", "lctD"]], "minimum_markers": 5, "minimum_score": 0.55}
     ]},
     "X_aa": {"description": "Amino-acid fermentation using diagnostic Stickland acceptor pathways.", "panels": [
       {"id": "glycine_stickland", "marker_weights": {"oppA": 1, "oppB": 1, "grdA": 2, "grdB": 2, "pfor": 1}, "required_all": ["grdA", "grdB"], "required_any": [["oppA", "oppB"], ["pfor"]], "minimum_markers": 4, "minimum_score": 0.65},
-      {"id": "proline_stickland", "marker_weights": {"oppA": 1, "oppB": 1, "prdA": 2, "prdB": 2, "pfor": 1}, "required_all": ["prdA", "prdB"], "required_any": [["oppA", "oppB"], ["pfor"]], "minimum_markers": 4, "minimum_score": 0.65}
+      {"id": "proline_stickland", "marker_weights": {"oppA": 1, "oppB": 1, "prdA": 2, "prdB": 2, "pfor": 1}, "required_all": ["prdA", "prdB"], "required_any": [["oppA", "oppB"], ["pfor"]], "minimum_markers": 4, "minimum_score": 0.65},
+      {"id": "general_amino_acid_catabolism", "marker_weights": {"gdh": 2, "ilvE": 2, "tdcB": 2, "pfor": 1, "oppA": 1, "dppA": 1, "dtpT": 1}, "required_any": [["gdh", "ilvE", "tdcB"], ["pfor"], ["oppA", "dppA", "dtpT"]], "minimum_markers": 3, "minimum_score": 0.45}
     ]},
     "X_fa": {"description": "Long-chain fatty-acid activation and beta oxidation.", "panels": [
       {"id": "lcfa_beta_oxidation", "marker_weights": {"fadD": 2, "fadE": 2, "fadB": 2, "fadA": 2, "etfA": 1, "etfB": 1}, "required_all": ["fadD", "fadE", "fadB", "fadA"], "required_any": [["etfA", "etfB"]], "minimum_markers": 5, "minimum_score": 0.70}
     ]},
     "X_ac_et": {"description": "Acetate incorporation into ethanol-driven reverse beta oxidation.", "panels": [
-      {"id": "ethanol_acetate_chain_initiation", "marker_weights": {"acs": 1, "ackA": 1, "pta": 1, "thl": 2, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "adhE": 2, "adh": 1, "aldh": 1}, "required_all": ["thl", "bcd", "etfA", "etfB"], "required_any": [["acs", "ackA", "pta"], ["adhE", "adh"], ["adhE", "aldh"]], "minimum_markers": 8, "minimum_score": 0.60}
+      {"id": "ethanol_acetate_chain_initiation", "marker_weights": {"acs": 1, "ackA": 1, "pta": 1, "thl": 2, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "adhE": 2, "adh": 1, "aldh": 1}, "required_all": ["thl", "bcd", "etfA", "etfB"], "required_any": [["acs", "ackA", "pta"], ["adhE", "adh"], ["adhE", "aldh"]], "minimum_markers": 8, "minimum_score": 0.60, "strict": true}
     ]},
     "X_ac_lac": {"description": "Acetate incorporation into lactate-driven reverse beta oxidation.", "panels": [
-      {"id": "lactate_acetate_chain_initiation", "marker_weights": {"acs": 1, "ackA": 1, "pta": 1, "thl": 2, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "lctD": 2, "lctB": 1, "lctC": 1, "pfor": 1}, "required_all": ["thl", "bcd", "etfA", "etfB", "lctD"], "required_any": [["acs", "ackA", "pta"], ["lctB", "lctC"], ["pfor"]], "minimum_markers": 9, "minimum_score": 0.60}
+      {"id": "lactate_acetate_chain_initiation", "marker_weights": {"acs": 1, "ackA": 1, "pta": 1, "thl": 2, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "lctD": 2, "lctB": 1, "lctC": 1, "pfor": 1}, "required_all": ["thl", "bcd", "etfA", "etfB", "lctD"], "required_any": [["acs", "ackA", "pta"], ["lctB", "lctC"], ["pfor"]], "minimum_markers": 9, "minimum_score": 0.60, "strict": true}
     ]},
     "X_chain_et": {"description": "Ethanol-fed reverse beta-oxidation chain elongation.", "panels": [
-      {"id": "ethanol_reverse_beta_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "cat": 2, "adhE": 2, "adh": 1, "aldh": 1}, "required_all": ["bcd", "etfA", "etfB", "cat"], "required_any": [["thl"], ["hbd"], ["crt"], ["adhE", "adh"], ["adhE", "aldh"]], "minimum_markers": 8, "minimum_score": 0.65}
+      {"id": "ethanol_reverse_beta_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "cat": 2, "adhE": 2, "adh": 1, "aldh": 1}, "required_all": ["bcd", "etfA", "etfB", "cat"], "required_any": [["thl"], ["hbd"], ["crt"], ["adhE", "adh"], ["adhE", "aldh"]], "minimum_markers": 8, "minimum_score": 0.65, "strict": true}
     ]},
     "X_chain_lac": {"description": "Lactate-fed reverse beta-oxidation chain elongation.", "panels": [
-      {"id": "lactate_reverse_beta_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "cat": 2, "lctD": 2, "lctB": 1, "lctC": 1, "pfor": 1}, "required_all": ["bcd", "etfA", "etfB", "cat", "lctD"], "required_any": [["thl"], ["hbd"], ["crt"], ["lctB", "lctC"], ["pfor"]], "minimum_markers": 9, "minimum_score": 0.65}
+      {"id": "lactate_reverse_beta_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "cat": 2, "lctD": 2, "lctB": 1, "lctC": 1, "pfor": 1}, "required_all": ["bcd", "etfA", "etfB", "cat", "lctD"], "required_any": [["thl"], ["hbd"], ["crt"], ["lctB", "lctC"], ["pfor"]], "minimum_markers": 9, "minimum_score": 0.65, "strict": true}
     ]},
     "X_VFA_deg": {"description": "Syntrophic VFA oxidation potential; direction requires ecological or expression evidence.", "panels": [
       {"id": "syntrophic_butyrate_oxidation", "marker_weights": {"thl": 1, "hbd": 1, "crt": 1, "bcd": 2, "etfA": 1, "etfB": 1, "hydA": 2, "fdhA": 2, "rnfB": 1}, "required_all": ["bcd", "etfA", "etfB"], "required_any": [["thl"], ["hbd"], ["crt"], ["hydA", "fdhA"], ["rnfB"]], "minimum_markers": 7, "minimum_score": 0.65},
       {"id": "syntrophic_propionate_mmc", "marker_weights": {"mmcE": 2, "mmcF": 2, "mmcG": 1, "sucC": 1, "sucD": 1, "fumB": 1, "mdh": 1, "pfor": 1, "hydA": 2, "fdhA": 2}, "required_all": ["mmcE", "mmcF", "mmcG", "sucC", "sucD"], "required_any": [["fumB"], ["mdh"], ["hydA", "fdhA"]], "minimum_markers": 8, "minimum_score": 0.65}
     ]},
     "X_Me_ac": {"description": "Acetoclastic methanogenesis.", "panels": [
-      {"id": "acetoclastic_acs", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "acs": 2, "cdhC": 1, "cdhD": 1, "cdhE": 1}, "required_all": ["mcrA", "acs"], "required_any": [["cdhC", "cdhD", "cdhE"]], "minimum_markers": 4, "minimum_score": 0.55},
-      {"id": "acetoclastic_ack_pta", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "ackA": 1, "pta": 1, "cdhC": 1, "cdhD": 1, "cdhE": 1}, "required_all": ["mcrA", "ackA", "pta"], "required_any": [["cdhC", "cdhD", "cdhE"]], "minimum_markers": 5, "minimum_score": 0.55}
+      {"id": "acetoclastic_acs", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "acs": 2, "cdhC": 1, "cdhD": 1, "cdhE": 1}, "required_all": ["mcrA", "acs"], "required_any": [["cdhC", "cdhD", "cdhE"]], "minimum_markers": 4, "minimum_score": 0.55, "strict": true},
+      {"id": "acetoclastic_ack_pta", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "ackA": 1, "pta": 1, "cdhC": 1, "cdhD": 1, "cdhE": 1}, "required_all": ["mcrA", "ackA", "pta"], "required_any": [["cdhC", "cdhD", "cdhE"]], "minimum_markers": 5, "minimum_score": 0.55, "strict": true}
     ]},
     "X_Me_CO2": {"description": "Hydrogenotrophic methanogenesis.", "panels": [
-      {"id": "hydrogenotrophic_core", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "fwdA": 1, "ftr": 1, "mch": 1, "mtd": 1, "mer": 1}, "required_all": ["mcrA"], "required_any": [["fwdA"], ["ftr"], ["mch"], ["mtd", "mer"]], "minimum_markers": 6, "minimum_score": 0.65}
+      {"id": "hydrogenotrophic_core", "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1, "fwdA": 1, "ftr": 1, "mch": 1, "mtd": 1, "mer": 1}, "required_all": ["mcrA"], "required_any": [["fwdA"], ["ftr"], ["mch"], ["mtd", "mer"]], "minimum_markers": 6, "minimum_score": 0.65, "strict": true}
     ]},
     "X_et": {"description": "Ethanol oxidation without requiring chain-elongation capacity.", "panels": [
       {"id": "ethanol_to_acetyl_coa", "marker_weights": {"adhE": 3, "adh": 2, "aldh": 2, "acs": 1, "pta": 1, "ackA": 1}, "required_any": [["adhE", "adh"], ["adhE", "aldh"], ["acs", "pta", "ackA"]], "minimum_markers": 3, "minimum_score": 0.50}

@@ -1943,6 +1943,7 @@ class Metagenomics:
         self._genomes_downloading: set[str] = set()
         self.marker_catalog = markers.MarkerCatalog.from_json(self.config.marker_catalog)
         self.marker_classifier = markers.MarkerClassifier(self.marker_catalog)
+        self.marker_catalog_tag = re.sub(r"[^A-Za-z0-9_.-]", "_", self.marker_catalog.catalog_version)
 
     #### NEEDS to BE FIXED        
     def find_top_taxa(
@@ -2431,7 +2432,8 @@ fi
             >>> address=os.path.join(Main_Dir,"test","genome_sequence.fa")
             >>> obj = Metagenomics(configs.Metagenomics()) 
             >>> name="test_align"
-            >>> assert obj.align_genome_to_protein_db(address=address,outdir=output,name=name,container="docker")[0].split(" ")==['docker', 'run', '', '-v', address+':'+address, '-v', configs.Database().protein_db+':'+configs.Database().protein_db, '-v', output+':'+output, 'parsaghadermazi/adtoolbox:x86', '', 'mmseqs', 'easy-search', address, configs.Database().protein_db, output+'/Alignment_Results_mmseq_test_align.tsv', 'tmpfiles', '--format-mode', '4', '\n\n']
+            >>> obj.align_genome_to_protein_db(address=address,outdir=output,name=name)[1].endswith("test_align~catalog-0.3.0.tsv")
+            True
 
         Args:
             address (str): The address of the genome to be aligned.
@@ -2444,7 +2446,10 @@ fi
             str: The bash script that is used to align the genomes or to be used to align the genomes.
         """
  
-        alignment_file = os.path.join(outdir, "Alignment_Results_mmseq_" + name + ".tsv")
+        alignment_file = os.path.join(
+            outdir,
+            f"Alignment_Results_mmseq_{name}~catalog-{self.marker_catalog_tag}.tsv",
+        )
         mmseqs_tmp = pathlib.Path(tmp_dir) if tmp_dir else pathlib.Path(outdir) / "mmseqs_tmp" / name
         command = "\n".join(
             [
@@ -2494,7 +2499,7 @@ fi
         genome_fasta = work_dir / f"{name}.fna"
         proteins = work_dir / f"{name}.faa"
         genes = work_dir / f"{name}.gff"
-        domtblout = output_dir / f"Marker_Hits_hmmer_{name}.domtbl"
+        domtblout = output_dir / f"Marker_Hits_hmmer_{name}~catalog-{self.marker_catalog_tag}.domtbl"
         hmm_log = work_dir / "hmmsearch.log"
         decompress = (
             f"gzip -dc {self._quote(input_path)} > {self._quote(genome_fasta)}"
@@ -3235,11 +3240,19 @@ fi
         for alignment in sorted(path.glob("Alignment_Results_mmseq_*.tsv")):
             name = alignment.stem.replace("Alignment_Results_mmseq_", "")
             alignments[name] = str(alignment)
-            alignments.setdefault(name.split("~", 1)[0], str(alignment))
+            base_name = name.split("~", 1)[0]
+            if name.endswith(f"~catalog-{self.marker_catalog_tag}"):
+                alignments[base_name] = str(alignment)
+            else:
+                alignments.setdefault(base_name, str(alignment))
         for alignment in sorted(path.glob("Marker_Hits_hmmer_*.domtbl")):
             name = alignment.stem.replace("Marker_Hits_hmmer_", "")
             alignments[name] = str(alignment)
-            alignments.setdefault(name.split("~", 1)[0], str(alignment))
+            base_name = name.split("~", 1)[0]
+            if name.endswith(f"~catalog-{self.marker_catalog_tag}"):
+                alignments[base_name] = str(alignment)
+            else:
+                alignments.setdefault(base_name, str(alignment))
         if not alignments:
             raise FileNotFoundError(
                 f"No Alignment_Results_mmseq_*.tsv or Marker_Hits_hmmer_*.domtbl files found in {path}"
@@ -4728,13 +4741,144 @@ fi"""
         if abundance_total <= 0:
             raise ValueError("Genome abundances must contain at least one positive value")
 
+        # Amplicon genome abundances are already fractions of the complete
+        # sample and may sum to less than one when ASVs remain unmapped. Keep
+        # that missing fraction in raw potential; normalize count-like external
+        # abundance inputs only when their total is greater than one.
+        abundance_scale = 1.0 if abundance_total <= 1.0 + 1e-9 else abundance_total
         for genome, abundance in genome_abundances.items():
             if genome not in genome_cods:
                 continue
-            weight = float(abundance) / abundance_total
+            weight = float(abundance) / abundance_scale
             for group, value in genome_cods[genome].items():
                 aggregated[group] = aggregated.get(group, 0.0) + float(value) * weight
         return self._normalize_profile(aggregated, groups) if normalize else aggregated
+
+    def genome_marker_evidence(
+        self,
+        alignment_file: str | os.PathLike,
+        genome_id: str,
+    ) -> tuple[dict[str, float], pl.DataFrame, pl.DataFrame, str]:
+        """Return continuous COD potential and auditable marker evidence for one genome."""
+        path = pathlib.Path(alignment_file)
+        if path.suffix.lower() in {".domtbl", ".domtblout"} or "hmmer" in path.name.lower():
+            hits = self.marker_hits_from_hmmer(path, entity_id=genome_id)
+            marker_mode = True
+        else:
+            hits = self.marker_hits_from_alignment(path, entity_id=genome_id)
+            legacy_ec_counts = {}
+            if not hits.height:
+                try:
+                    legacy_ec_counts = self.extract_ec_from_alignment(str(path))
+                except (pl.exceptions.ColumnNotFoundError, pl.exceptions.SchemaError):
+                    legacy_ec_counts = {}
+            marker_mode = bool(hits.height) or not legacy_ec_counts
+
+        if marker_mode:
+            present = set(hits["marker_id"].to_list()) if hits.height else set()
+            scores = self.marker_classifier.classify_presence({str(genome_id): present})
+            profile = {
+                str(row["cod_group"]): float(row["score"])
+                for row in scores.select("cod_group", "score").to_dicts()
+            }
+            return profile, hits, scores, "markers"
+
+        ec_counts = self.extract_ec_from_alignment(str(path))
+        profile = self.cod_from_ec_counts(ec_counts, normalize=False)
+        return profile, hits, pl.DataFrame(), "legacy_ec"
+
+    @staticmethod
+    def _write_frame(path: str | os.PathLike, frame: pl.DataFrame) -> str:
+        path = pathlib.Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frame.write_csv(path)
+        return str(path)
+
+    def _write_genome_cod_evidence(
+        self,
+        *,
+        output_path: pathlib.Path,
+        sample_name: str,
+        genome_abundances: dict[str, float],
+        genome_profiles: dict[str, dict[str, float]],
+        hit_frames: list[pl.DataFrame],
+        score_frames: list[pl.DataFrame],
+    ) -> dict[str, str]:
+        """Write genome annotations, pathway scores, raw potential, and evidence QC."""
+        artifacts: dict[str, str] = {}
+        abundance_rows = [
+            {"genome_id": str(genome), "genome_abundance": float(abundance)}
+            for genome, abundance in genome_abundances.items()
+        ]
+        abundance_frame = pl.DataFrame(
+            abundance_rows,
+            schema={"genome_id": pl.Utf8, "genome_abundance": pl.Float64},
+        )
+
+        if hit_frames:
+            hits = pl.concat(hit_frames, how="diagonal_relaxed")
+        else:
+            hits = pl.DataFrame(schema={"genome_id": pl.Utf8, "gene_id": pl.Utf8, "marker_id": pl.Utf8})
+        hits = hits.with_columns(pl.lit(sample_name).alias("sample")).select("sample", *[c for c in hits.columns if c != "sample"])
+        artifacts["genome_gene_annotations"] = self._write_frame(
+            output_path / "genome_gene_annotations.csv", hits
+        )
+
+        if score_frames:
+            scores = pl.concat(score_frames, how="diagonal_relaxed")
+        else:
+            scores = pl.DataFrame(
+                schema={"genome_id": pl.Utf8, "cod_group": pl.Utf8, "score": pl.Float64, "credible": pl.Boolean}
+            )
+        scores = scores.join(abundance_frame, on="genome_id", how="left").with_columns(
+            pl.lit(sample_name).alias("sample"),
+            pl.col("genome_abundance").fill_null(0.0),
+        )
+        scores = scores.select("sample", "genome_id", "genome_abundance", *[c for c in scores.columns if c not in {"sample", "genome_id", "genome_abundance"}])
+        artifacts["genome_pathway_scores"] = self._write_frame(
+            output_path / "genome_pathway_scores.csv", scores
+        )
+
+        potential = (
+            self.aggregate_genome_cod(genome_profiles, genome_abundances, normalize=False)
+            if genome_profiles and any(float(value) > 0 for value in genome_abundances.values())
+            else {group: 0.0 for group in self.marker_catalog.cod_groups}
+        )
+        artifacts["cod_potential"] = self._write_tall_mapping(
+            output_path / "cod_potential.csv", potential,
+            sample_name=sample_name, key_name="group", value_name="potential",
+        )
+
+        aligned = set(genome_profiles)
+        classified = set()
+        credible = set()
+        if scores.height:
+            classified = set(scores.filter(pl.col("score") > 0)["genome_id"].unique().to_list())
+            if "credible" in scores.columns:
+                credible = set(scores.filter(pl.col("credible"))["genome_id"].unique().to_list())
+        mapped_abundance = sum(max(0.0, float(value)) for value in genome_abundances.values())
+        aligned_abundance = sum(max(0.0, float(genome_abundances.get(genome, 0.0))) for genome in aligned)
+        classified_abundance = sum(max(0.0, float(genome_abundances.get(genome, 0.0))) for genome in classified)
+        credible_abundance = sum(max(0.0, float(genome_abundances.get(genome, 0.0))) for genome in credible)
+        qc = pl.DataFrame(
+            [{
+                "sample": sample_name,
+                "genomes_mapped": len(genome_abundances),
+                "genomes_aligned": len(aligned),
+                "genomes_with_marker_hits": len(set(hits["genome_id"].unique().to_list())) if hits.height else 0,
+                "genomes_with_partial_or_credible_pathway": len(classified),
+                "genomes_with_credible_pathway": len(credible),
+                "mapped_abundance": mapped_abundance,
+                "unmapped_abundance": max(0.0, 1.0 - mapped_abundance) if mapped_abundance <= 1.0 + 1e-9 else 0.0,
+                "aligned_abundance": aligned_abundance,
+                "unaligned_mapped_abundance": max(0.0, mapped_abundance - aligned_abundance),
+                "classified_abundance": classified_abundance,
+                "credible_abundance": credible_abundance,
+                "unclassified_aligned_abundance": max(0.0, aligned_abundance - classified_abundance),
+            }]
+        )
+        artifacts["cod_evidence_qc"] = self._write_frame(output_path / "cod_evidence_qc.csv", qc)
+        return artifacts
 
     def sample_to_cod(
         self,
@@ -4798,7 +4942,7 @@ fi"""
             logger.info("Converting shotgun alignment to functional marker counts and COD profile")
             result["artifacts"]["alignment_file"] = str(alignment_file)
             evidence_kind, functional_counts = self.functional_counts_from_alignment(str(alignment_file))
-            cod_profile = self.marker_classifier.profile_from_counts(functional_counts, normalize=normalize) if evidence_kind == "markers" else self.cod_from_ec_counts(functional_counts, normalize=normalize)
+            cod_profile = self.marker_classifier.profile_from_counts(functional_counts, normalize=normalize, count_weighted=True) if evidence_kind == "markers" else self.cod_from_ec_counts(functional_counts, normalize=normalize)
             count_key = "marker_id" if evidence_kind == "markers" else "ec"
             count_name = "marker_counts" if evidence_kind == "markers" else "ec_counts"
             result["artifacts"][count_name] = self._write_tall_mapping(output_path / f"{count_name}.csv", functional_counts, sample_name=sample_name, key_name=count_key, value_name="count", value_dtype=pl.Int64)
@@ -4832,7 +4976,7 @@ fi"""
                 result["status"] = "waiting_for_alignment"
             else:
                 evidence_kind, functional_counts = self.functional_counts_from_alignment(str(alignment_path))
-                cod_profile = self.marker_classifier.profile_from_counts(functional_counts, normalize=normalize) if evidence_kind == "markers" else self.cod_from_ec_counts(functional_counts, normalize=normalize)
+                cod_profile = self.marker_classifier.profile_from_counts(functional_counts, normalize=normalize, count_weighted=True) if evidence_kind == "markers" else self.cod_from_ec_counts(functional_counts, normalize=normalize)
                 count_key = "marker_id" if evidence_kind == "markers" else "ec"
                 count_name = "marker_counts" if evidence_kind == "markers" else "ec_counts"
                 result["artifacts"][count_name] = self._write_tall_mapping(output_path / f"{count_name}.csv", functional_counts, sample_name=sample_name, key_name=count_key, value_name="count", value_dtype=pl.Int64)
@@ -4844,13 +4988,29 @@ fi"""
             abundances = genome_abundances if isinstance(genome_abundances, dict) else self._read_json_or_table(genome_abundances)
             alignments = genome_alignments if isinstance(genome_alignments, dict) else self._alignment_files_from_path(genome_alignments)
             logger.info("Converting %s genome alignments to genome-level COD profiles", len(alignments))
-            genome_cods = {
-                genome: self.cod_from_alignment(alignment, normalize=normalize)
-                for genome, alignment in alignments.items()
-                if genome in abundances
-            }
-            cod_profile = self.aggregate_genome_cod(genome_cods, abundances, normalize=normalize)
+            genome_cods = {}
+            hit_frames: list[pl.DataFrame] = []
+            score_frames: list[pl.DataFrame] = []
+            for genome, alignment in alignments.items():
+                if genome not in abundances:
+                    continue
+                profile, hits, scores, _ = self.genome_marker_evidence(alignment, genome)
+                genome_cods[genome] = profile
+                if hits.height:
+                    hit_frames.append(hits)
+                if scores.height:
+                    score_frames.append(scores)
+            cod_potential = self.aggregate_genome_cod(genome_cods, abundances, normalize=False)
+            cod_profile = self._normalize_profile(cod_potential, self.marker_catalog.cod_groups) if normalize else cod_potential
             result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
+            result["artifacts"].update(self._write_genome_cod_evidence(
+                output_path=output_path,
+                sample_name=sample_name,
+                genome_abundances={str(key): float(value) for key, value in abundances.items()},
+                genome_profiles=genome_cods,
+                hit_frames=hit_frames,
+                score_frames=score_frames,
+            ))
             result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         elif mode == "amplicon-reads":
@@ -5132,11 +5292,18 @@ fi"""
                 else:
                     raise ValueError("amplicon mode requires genome_alignments or genomes_dir after GTDB matching")
 
-                genome_cods = {
-                    genome: self.cod_from_alignment(alignment, normalize=normalize)
-                    for genome, alignment in alignments.items()
-                    if genome in genome_abund and pathlib.Path(alignment).exists()
-                }
+                genome_cods = {}
+                hit_frames: list[pl.DataFrame] = []
+                score_frames: list[pl.DataFrame] = []
+                for genome, alignment in alignments.items():
+                    if genome not in genome_abund or not pathlib.Path(alignment).exists():
+                        continue
+                    profile, hits, scores, _ = self.genome_marker_evidence(alignment, genome)
+                    genome_cods[genome] = profile
+                    if hits.height:
+                        hit_frames.append(hits)
+                    if scores.height:
+                        score_frames.append(scores)
                 missing_alignments = [
                     genome
                     for genome, alignment in alignments.items()
@@ -5162,8 +5329,20 @@ fi"""
                         value_name="value",
                     )
                 else:
-                    cod_profile = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=normalize) if genome_cods else {}
+                    cod_potential = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=False) if genome_cods else {}
+                    cod_profile = (
+                        self._normalize_profile(cod_potential, self.marker_catalog.cod_groups)
+                        if normalize and genome_cods else cod_potential
+                    )
                     result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
+                    result["artifacts"].update(self._write_genome_cod_evidence(
+                        output_path=output_path,
+                        sample_name=sample_name,
+                        genome_abundances=genome_abund,
+                        genome_profiles=genome_cods,
+                        hit_frames=hit_frames,
+                        score_frames=score_frames,
+                    ))
                     result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         else:
@@ -5181,6 +5360,8 @@ fi"""
                 "reaction_db": self.config.csv_reaction_db,
                 "protein_db": self.config.protein_db,
                 "marker_catalog": self.config.marker_catalog,
+                "marker_catalog_version": self.marker_catalog.catalog_version,
+                "cod_scoring": "continuous_pathway_potential_v1",
                 "marker_backend": self.config.marker_backend,
                 "marker_hmm_db": self.config.marker_hmm_db if self.config.marker_backend == "hmmer" else None,
                 "marker_hmm_cutoffs": self.config.marker_hmm_cutoffs,
@@ -5822,6 +6003,21 @@ fi"""
             except (OSError, ValueError, AttributeError):
                 return False
 
+        def _matching_cod_provenance(sample_path: pathlib.Path) -> bool:
+            provenance_path = sample_path / "provenance.json"
+            if not provenance_path.exists():
+                return False
+            try:
+                payload = json.loads(provenance_path.read_text())
+            except (OSError, ValueError, AttributeError):
+                return False
+            return (
+                payload.get("cod_scoring") == "continuous_pathway_potential_v1"
+                and payload.get("marker_catalog_version") == self.marker_catalog.catalog_version
+                and payload.get("marker_backend") == self.config.marker_backend
+                and bool(payload.get("normalize")) == bool(normalize)
+            )
+
         def _artifact_status(artifacts: Iterable[dict]) -> str:
             statuses = {
                 str(artifact.get("status", "prepared"))
@@ -5863,7 +6059,8 @@ fi"""
             feature_table = supplied_feature_table or str(preprocess_dir / "feature-table.tsv")
             rep_seqs = supplied_rep_seqs or str(preprocess_dir / "rep-seqs.fasta")
             require_dada2_artifacts = (
-                expected_feature_denoiser == "dada2"
+                stage != "cod"
+                and expected_feature_denoiser == "dada2"
                 and supplied_feature_table is None
                 and supplied_rep_seqs is None
             )
@@ -6073,7 +6270,11 @@ fi"""
                 elif candidate.exists():
                     stale_internal_gtdb_matches = True
 
-            if _csv_has_rows(cod_profile_path) and downstream_signature_matches:
+            if (
+                _csv_has_rows(cod_profile_path)
+                and downstream_signature_matches
+                and _matching_cod_provenance(sample_dir)
+            ):
                 record_stage("cod", "completed", message="cached COD profile found", paths={"cod_profile": str(cod_profile_path)})
                 sample_result["status"] = "completed"
                 sample_result["artifacts"]["cod"] = {"cod_profile": str(cod_profile_path)}

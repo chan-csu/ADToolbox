@@ -146,7 +146,11 @@ adtoolbox metagenomics align-multiple-genomes \
 | `feature_abundances.csv` | Amplicon feature abundances, as `sample`, `feature_id`, `abundance`. |
 | `representative_genomes.csv` | GTDB mapping from feature IDs to representative genomes. |
 | `genome_abundances.csv` | Per-sample genome abundances after feature-to-genome aggregation. |
-| `genome_cods.csv` | Genome-level `X_*` profiles when genomes are involved, as `sample`, `genome_id`, `group`, `value`. |
+| `genome_gene_annotations.csv` | Accepted gene-to-marker annotations for every aligned genome. |
+| `genome_pathway_scores.csv` | Continuous genome/COD potential, credibility, matched markers, and missing requirements. |
+| `genome_cods.csv` | Compact genome-level `X_*` potential table retained for compatibility. |
+| `cod_potential.csv` | Raw abundance-weighted pathway potential before normalization. |
+| `cod_evidence_qc.csv` | Mapped, aligned, classified, credible, unclassified, and unmapped abundance. |
 | `provenance.json` | Inputs, thresholds, databases, and artifacts used. |
 | `pipeline.log` | Step-by-step log for the sample. |
 | `scratch/` | Intermediate files, generated scripts, GTDB matches, and genome alignment files. |

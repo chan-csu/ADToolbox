@@ -381,6 +381,36 @@ GCF_000001,mcrA
 GCF_000001,fwdA
 ```
 
+### Continuous COD potential and credibility
+
+Marker catalog v0.3.0 no longer discards every incomplete pathway. For each genome and
+COD group it reports a continuous `score` based on weighted marker completeness,
+diagnostic-requirement coverage, and the number of supporting markers. The separate
+`credible` column records whether the complete pathway rule passed. Signature pathways
+whose direction or identity cannot be inferred safely from partial evidence (including
+methanogenesis and substrate-specific chain elongation) remain strict.
+
+For genome-based amplicon processing, the final files are:
+
+| File | Meaning |
+| --- | --- |
+| `genome_gene_annotations.csv` | Accepted gene-to-marker hits for every aligned genome. |
+| `genome_pathway_scores.csv` | Continuous score, credibility, matched markers, and missing requirements for every genome/COD group. |
+| `genome_cods.csv` | Compact genome-by-COD score table retained for compatibility. |
+| `cod_potential.csv` | Raw `sum(genome abundance * pathway score)`; it is not normalized and preserves unmapped abundance. |
+| `cod_profile.csv` | Model-ready COD composition normalized over detected potential. |
+| `cod_evidence_qc.csv` | Mapped, aligned, classified, credible, unclassified, and unmapped abundance diagnostics. |
+
+`cod_profile.csv` should be used for model allocation. Use `cod_potential.csv` and the QC
+table when comparing biological evidence between samples; a normalized value of 1.0 can
+still mean that only one group had evidence, while the raw potential shows its strength.
+
+Genome annotation filenames include `~catalog-<version>`. After a marker-database update,
+ADToolbox therefore reuses downloaded genomes and upstream amplicon results but creates a
+new HMMER/MMseqs alignment for the new catalog. COD cache provenance includes the catalog
+version, backend, scoring method, and normalization mode, so stale COD profiles are not
+silently reused.
+
 Optional `bits`, `evalue`, `identity`, and `coverage` columns can be filtered from the
 CLI. Classify each unique genome once:
 

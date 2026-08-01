@@ -32,6 +32,7 @@ class MarkerPanel:
     required_any: tuple[tuple[str, ...], ...]
     minimum_markers: int
     minimum_score: float
+    strict: bool
 
 
 @dataclass(frozen=True)
@@ -121,6 +122,7 @@ class MarkerCatalog:
 
                 minimum_markers = int(raw_panel.get("minimum_markers", 1))
                 minimum_score = float(raw_panel.get("minimum_score", 0.0))
+                strict = bool(raw_panel.get("strict", False))
                 if not 1 <= minimum_markers <= len(weights):
                     raise MarkerCatalogError(f"Panel {panel_id} has invalid minimum_markers")
                 if not 0 <= minimum_score <= 1:
@@ -134,6 +136,7 @@ class MarkerCatalog:
                         required_any=required_any,
                         minimum_markers=minimum_markers,
                         minimum_score=minimum_score,
+                        strict=strict,
                     )
                 )
             if not panels:
@@ -180,6 +183,8 @@ def alignment_marker_hits(
     missing = required - set(frame.columns)
     if missing:
         raise ValueError(f"alignment is missing required columns: {sorted(missing)}")
+    if frame.height == 0:
+        return pl.DataFrame(schema={"genome_id": pl.Utf8, "gene_id": pl.Utf8, "marker_id": pl.Utf8})
     if min_bits is not None:
         if "bits" not in frame.columns:
             raise ValueError("alignment is missing required column: bits")
@@ -454,7 +459,8 @@ def build_marker_hmm_db(
             used_names.add(output_name)
             rewritten = []
             for line in record.splitlines(keepends=True):
-                rewritten.append(f"NAME  {output_name}\n" if line.startswith("NAME") else line)
+                rewritten_line = f"NAME  {output_name}" if line.startswith("NAME") else line.rstrip()
+                rewritten.append(rewritten_line + "\n")
             output.write("".join(rewritten))
             counts[canonical] = counts.get(canonical, 0) + 1
             if threshold is not None:
@@ -472,9 +478,11 @@ def build_marker_hmm_db(
     return counts
 
 
-def _confidence(score: float) -> str:
+def _confidence(score: float, credible: bool = False) -> str:
     if score <= 0:
         return "none"
+    if not credible:
+        return "partial"
     if score < 0.7:
         return "low"
     if score < 0.9:
@@ -553,16 +561,20 @@ class MarkerClassifier:
                 group = self.catalog.groups.get(cod_group)
                 if group is None:
                     rows.append(
-                        self._result_row(str(genome_id), cod_group, False, "", 0.0, (), ("no configured rule",), 0, 0)
+                        self._result_row(
+                            str(genome_id), cod_group, False, "", 0.0, False, (),
+                            ("no configured rule",), 0, 0,
+                        )
                     )
                     continue
 
                 panel_results = [self._evaluate_panel(panel, present) for panel in group.panels]
-                best = max(panel_results, key=lambda result: (result[0], result[2], result[3]))
-                score, panel_id, matched, total, missing = best
+                best = max(panel_results, key=lambda result: (result[0], result[1], len(result[3]), result[4]))
+                score, credible, panel_id, matched, total, missing, weighted, requirements, marker_coverage = best
                 rows.append(
                     self._result_row(
-                        str(genome_id), cod_group, True, panel_id, score, matched, missing, len(matched), total
+                        str(genome_id), cod_group, True, panel_id, score, credible, matched, missing,
+                        len(matched), total, weighted, requirements, marker_coverage,
                     )
                 )
 
@@ -570,6 +582,7 @@ class MarkerClassifier:
             "genome_id": pl.Utf8,
             "cod_group": pl.Utf8,
             "score": pl.Float64,
+            "credible": pl.Boolean,
             "configured": pl.Boolean,
             "panel_id": pl.Utf8,
             "confidence": pl.Utf8,
@@ -577,16 +590,25 @@ class MarkerClassifier:
             "missing_requirements": pl.Utf8,
             "markers_detected": pl.Int64,
             "markers_in_panel": pl.Int64,
+            "weighted_completeness": pl.Float64,
+            "requirement_coverage": pl.Float64,
+            "marker_coverage": pl.Float64,
         }
         return pl.DataFrame(rows, schema=schema)
 
-    def profile_from_counts(self, marker_counts: Mapping[str, int | float], *, normalize: bool = True) -> dict[str, float]:
+    def profile_from_counts(
+        self,
+        marker_counts: Mapping[str, int | float],
+        *,
+        normalize: bool = True,
+        count_weighted: bool = False,
+    ) -> dict[str, float]:
         """Convert marker-family counts into a COD-group potential profile.
 
-        Panel completeness establishes whether a pathway is credible. The
-        median count among its observed panel markers supplies a robust signal
-        magnitude. This avoids allowing one highly represented reference
-        family to dominate a pathway score.
+        Pathway potential is continuous even when the full credibility rule is
+        not satisfied. Genome annotations should use the default presence-based
+        score. Read-level workflows may request ``count_weighted`` to scale the
+        potential by the median observed marker-family count.
         """
         canonical_counts: dict[str, float] = {}
         for raw_marker, raw_count in marker_counts.items():
@@ -599,27 +621,45 @@ class MarkerClassifier:
         for row in classified.filter(pl.col("score") > 0).to_dicts():
             matched = [marker for marker in row["matched_markers"].split(";") if marker]
             signals = sorted(canonical_counts[marker] for marker in matched if marker in canonical_counts)
-            if not signals:
-                continue
-            midpoint = len(signals) // 2
-            median = signals[midpoint] if len(signals) % 2 else (signals[midpoint - 1] + signals[midpoint]) / 2
-            profile[row["cod_group"]] = float(row["score"]) * median
+            magnitude = 1.0
+            if count_weighted:
+                if not signals:
+                    continue
+                midpoint = len(signals) // 2
+                magnitude = signals[midpoint] if len(signals) % 2 else (signals[midpoint - 1] + signals[midpoint]) / 2
+            profile[row["cod_group"]] = float(row["score"]) * magnitude
         total = sum(profile.values())
         if normalize and total > 0:
             profile = {group: value / total for group, value in profile.items()}
         return profile
 
     @staticmethod
-    def _evaluate_panel(panel: MarkerPanel, present: set[str]) -> tuple[float, str, tuple[str, ...], int, tuple[str, ...]]:
+    def _evaluate_panel(
+        panel: MarkerPanel,
+        present: set[str],
+    ) -> tuple[float, bool, str, tuple[str, ...], int, tuple[str, ...], float, float, float]:
         matched = tuple(sorted(set(panel.marker_weights) & present))
         missing: list[str] = [marker for marker in panel.required_all if marker not in present]
+        requirements_met = sum(marker in present for marker in panel.required_all)
         for clause in panel.required_any:
             if not set(clause) & present:
                 missing.append("one_of(" + "|".join(clause) + ")")
+            else:
+                requirements_met += 1
         weighted_score = sum(panel.marker_weights[marker] for marker in matched) / sum(panel.marker_weights.values())
+        requirement_total = len(panel.required_all) + len(panel.required_any)
+        requirement_coverage = requirements_met / requirement_total if requirement_total else 1.0
+        marker_coverage = min(1.0, len(matched) / panel.minimum_markers)
         requirements_pass = not missing and len(matched) >= panel.minimum_markers
-        score = weighted_score if requirements_pass and weighted_score >= panel.minimum_score else 0.0
-        return score, panel.id, matched, len(panel.marker_weights), tuple(missing)
+        credible = requirements_pass and weighted_score >= panel.minimum_score
+        if not matched or (panel.strict and not credible):
+            score = 0.0
+        else:
+            score = weighted_score * (0.35 + 0.65 * requirement_coverage) * (0.35 + 0.65 * marker_coverage)
+        return (
+            score, credible, panel.id, matched, len(panel.marker_weights), tuple(missing),
+            weighted_score, requirement_coverage, marker_coverage,
+        )
 
     @staticmethod
     def _result_row(
@@ -628,22 +668,30 @@ class MarkerClassifier:
         configured: bool,
         panel_id: str,
         score: float,
+        credible: bool,
         matched: Iterable[str],
         missing: Iterable[str],
         detected: int,
         total: int,
+        weighted_completeness: float = 0.0,
+        requirement_coverage: float = 0.0,
+        marker_coverage: float = 0.0,
     ) -> dict[str, Any]:
         return {
             "genome_id": genome_id,
             "cod_group": cod_group,
             "score": score,
+            "credible": credible,
             "configured": configured,
             "panel_id": panel_id,
-            "confidence": _confidence(score),
+            "confidence": _confidence(score, credible),
             "matched_markers": ";".join(matched),
             "missing_requirements": ";".join(missing),
             "markers_detected": detected,
             "markers_in_panel": total,
+            "weighted_completeness": weighted_completeness,
+            "requirement_coverage": requirement_coverage,
+            "marker_coverage": marker_coverage,
         }
 
     def aggregate_samples(
@@ -677,7 +725,10 @@ class MarkerClassifier:
         if totals.filter(pl.col("total_abundance") <= 0).height:
             raise ValueError("Every sample must have positive total genome abundance")
         abundance = abundance.join(totals, on="sample").with_columns(
-            (pl.col("abundance") / pl.col("total_abundance")).alias("genome_weight")
+            pl.when(pl.col("total_abundance") > 1.0 + 1e-9)
+            .then(pl.col("abundance") / pl.col("total_abundance"))
+            .otherwise(pl.col("abundance"))
+            .alias("genome_weight")
         )
 
         scores = genome_scores.select(
