@@ -24,6 +24,50 @@ This page is the companion *reference* for the rules themselves.
 
 ---
 
+## Files that define the biochemistry
+
+> **Is it a TOML file? No.** The biochemistry lives in a single **JSON** rule
+> catalog. TOML *is* used elsewhere in ADToolbox — the pipeline's
+> [execution profiles](Metagenomics_Pipeline.md#execution-profiles) are TOML —
+> but those configure Slurm and step settings, not the biochemistry.
+
+The biochemistry is split into **two deliberately separate layers** plus the
+interpreter code:
+
+1. **The rules** — which gene families imply which COD group. One JSON file.
+2. **The detection assets** — the sequences/profiles used to *find* those gene
+   families in a genome or read set (FASTA for MMseqs, HMMs for HMMER).
+
+They are kept apart on purpose: changing a scoring rule must not silently change
+sequence homology, and adding reference diversity must not change the biochemical
+interpretation.
+
+| Layer | File | Format | Role |
+| --- | --- | --- | --- |
+| **Rules** | `adtoolbox/pkg_data/gene_marker_catalog.json` | JSON | **The biochemistry.** 96 markers (with aliases + `evidence` URLs), 15 COD groups, 25 panels, and every threshold. This is the file you edit to change the biochemistry. |
+| Interpreter | `adtoolbox/markers.py` | Python | Loads and validates the catalog, scores panels, parses MMseqs/HMMER hits. Contains *no* gene→group knowledge — that all lives in the JSON. |
+| Detection (HMMER) | `…/marker_databases/v0.2.0/Marker_Profiles.hmm` | HMMER3 | Profile HMMs (selected KOfam + dbCAN families). |
+| Detection (HMMER) | `…/marker_databases/v0.2.0/Marker_Profile_Cutoffs.csv` | CSV | Per-profile adaptive score thresholds and full/best-domain score type. |
+| Detection (MMseqs) | `…/marker_databases/v0.2.0/Marker_Protein_DB.fasta` | FASTA | One `hmmemit` **consensus** sequence per profile; headers are `<accession>\|<marker_id>`. Not isolate proteins. |
+| Detection (MMseqs) | `…/marker_databases/v0.2.0/Marker_Protein_DB_mmseqs*` | MMseqs DB | Prebuilt searchable target, reused across samples. |
+| Provenance | `…/marker_databases/v0.2.0/profile_manifest.tsv` | TSV | Auditable marker → source-profile mapping. |
+| Provenance | `…/marker_databases/v0.2.0/SOURCES.json` | JSON | Pinned upstream KOfam/dbCAN releases, URLs, and license notes. |
+| Provenance | `…/marker_databases/v0.2.0/SHA256SUMS` | text | Integrity checks for the shipped assets. |
+| Provenance | `…/marker_databases/v0.2.0/README.md` | Markdown | Human description of the bundled assets. |
+| Rebuild | `…/marker_databases/v0.2.0/rebuild.py` | Python | Regenerates every detection asset from the catalog + upstream sources. |
+
+All of these are auto-resolved: `MarkerCatalog.from_json()` defaults to the
+bundled catalog, and the detection assets are selected automatically when
+`--protein-db` / `--marker-hmm-db` are omitted.
+
+> **Version gotcha.** The directory is named `v0.2.0` but its **contents are
+> catalog `0.3.0`** (see the `README.md` title and `SOURCES.json → asset_version`).
+> The stable directory name is retained on purpose so existing installations keep
+> resolving the bundled paths; the *catalog* version (`0.3.0`) is the one stamped
+> into COD-cache filenames.
+
+---
+
 ## How a panel is scored
 
 Each COD group owns one or more **panels**. A panel is one biochemical route to
@@ -229,22 +273,193 @@ dehydrogenase), `ftr`, `mch`, `mtd`/`mer`, with `mtrA` (methyltransferase).
 
 ## Editing or extending the catalog
 
-The rules are data, not code. To add a substrate route, retune a threshold, or
-add a marker family:
+The rules are **data, not code** — you never touch Python to change the
+biochemistry. The catalog has two top-level sections you edit:
 
-1. Copy `adtoolbox/pkg_data/gene_marker_catalog.json`, edit the `markers` and
-   `groups` sections, and keep each new marker's `evidence` URL.
-2. Validate it: `adtoolbox metagenomics validate-marker-catalog --catalog my_catalog.json`.
-   The loader rejects unknown COD groups, empty clauses, requirement markers
-   without weights, out-of-range `minimum_markers`/`minimum_score`, and duplicate
-   aliases.
-3. If you added a marker family, add reference sequences/profiles to the marker
-   **database** (a separate concern from the rules) and re-validate coverage with
-   `validate-marker-protein-db`. See
-   [Direct gene-marker allocation](Metagenomics_Pipeline.md#direct-gene-marker-allocation).
-4. Pass `--catalog my_catalog.json` to `process`. No Python changes are needed;
-   the catalog version is stamped into cache filenames so stale COD profiles are
-   not silently reused.
+- `markers` — the dictionary of gene families. Each entry has a canonical id, a
+  list of `aliases` (KO numbers, gene symbols, CAZy families — all matched
+  case-insensitively), a human `name`, and an `evidence` URL.
+- `groups` — one entry per COD group, each holding a list of `panels`
+  (alternative biochemical routes). A panel is the unit that gets scored.
+
+The general loop is: **copy → edit → validate → (optionally add detection
+sequences) → run with `--catalog`.**
+
+```bash
+cp adtoolbox/pkg_data/gene_marker_catalog.json my_catalog.json
+# ...edit my_catalog.json...
+adtoolbox metagenomics validate-marker-catalog --catalog my_catalog.json
+adtoolbox metagenomics process ... --catalog my_catalog.json
+```
+
+`validate-marker-catalog` is strict — it rejects unknown COD groups, empty
+`required_any` clauses, requirement markers that have no weight, `minimum_markers`
+outside `1…len(panel)`, `minimum_score` outside `0…1`, and duplicate aliases —
+so most mistakes are caught before a run. The catalog version is stamped into
+COD-cache filenames, so bumping `catalog_version` guarantees stale profiles are
+not silently reused.
+
+### Example 1 — Retune a threshold (loosen or tighten a panel)
+
+The simplest edit changes only the numbers/requirements on an existing panel.
+Say you want the hydrogenotrophic-methanogenesis panel to accept a genome on
+`mcrA` plus **any two** C1-pathway genes, rather than demanding the full pathway.
+Edit its `required_all`/`required_any`, lower `minimum_markers`, and (optionally)
+drop `strict`:
+
+```jsonc
+// groups → X_Me_CO2 → panels[0]
+{
+  "id": "hydrogenotrophic_core",
+  "marker_weights": {"mcrA": 2, "mcrB": 1, "mtrA": 1,
+                     "fwdA": 1, "ftr": 1, "mch": 1, "mtd": 1, "mer": 1},
+  "required_all": ["mcrA"],
+  "required_any": [["fwdA", "ftr", "mch", "mtd", "mer"]],  // was 4 separate clauses
+  "minimum_markers": 3,                                      // was 6
+  "minimum_score": 0.45,                                     // was 0.65
+  "strict": false                                            // was true
+}
+```
+
+Nothing else changes — no new markers, no database edit — because every marker
+referenced already exists and is already in the detection assets.
+
+### Example 2 — Add an alternative panel to an existing group
+
+Panels are alternatives, so you can add a second route to a group without
+touching the first. To recognize *methylotrophic-leaning* acetate handling via a
+different activation, append a panel to `X_Me_ac.panels` (all its markers must
+already exist in `markers`):
+
+```jsonc
+// groups → X_Me_ac → panels  (append)
+{
+  "id": "acetoclastic_minimal",
+  "marker_weights": {"mcrA": 2, "mcrB": 1, "acs": 2},
+  "required_all": ["mcrA", "acs"],
+  "required_any": [],
+  "minimum_markers": 2,
+  "minimum_score": 0.6,
+  "strict": true
+}
+```
+
+The best-supported panel wins, so adding a route can only *increase* a group's
+score for genomes that match it, never penalize genomes matched by another panel.
+
+### Example 3 — Add a brand-new marker family
+
+Suppose you want to cover **methylotrophic methanogenesis** (a documented gap —
+see [limitations](#direction-ambiguity-and-known-limitations)). That needs new
+markers *and* a new panel/group. First add the gene families to `markers`:
+
+```jsonc
+// markers  (add entries)
+"mtaB": {"aliases": ["K14080"], "name": "methanol--corrinoid methyltransferase",
+         "evidence": "https://www.genome.jp/entry/K14080"},
+"mtbA": {"aliases": ["K14082"], "name": "methylamine--corrinoid methyltransferase",
+         "evidence": "https://www.genome.jp/entry/K14082"}
+```
+
+Then give them a panel. If you want a new COD group you must also add its name to
+the top-level `cod_groups` list (and the e-ADM model must have a matching group);
+to stay within the existing 15 groups, attach the panel to `X_Me_CO2` instead:
+
+```jsonc
+// groups → X_Me_CO2 → panels  (append)
+{
+  "id": "methylotrophic",
+  "marker_weights": {"mcrA": 2, "mtaB": 2, "mtbA": 2},
+  "required_all": ["mcrA"],
+  "required_any": [["mtaB", "mtbA"]],
+  "minimum_markers": 2,
+  "minimum_score": 0.5,
+  "strict": true
+}
+```
+
+Because the score comes from a genome's marker hits, **a new marker does nothing
+until the detection database can find it** (Example 4).
+
+### Example 4 — Make a new marker detectable
+
+New markers must be added to whichever backend you run. Both take a manifest, so
+you never hand-edit FASTA headers or HMM `NAME` lines.
+
+**MMseqs backend** — collect curated reference proteins and build the target
+FASTA (headers are rewritten to `<accession>|<marker_id>`):
+
+```text
+# marker_references.tsv
+marker_id	source_fasta
+mtaB	references/mtaB.faa
+mtbA	references/mtbA.faa.gz
+```
+
+```bash
+adtoolbox database build-marker-protein-db \
+  --manifest marker_references.tsv \
+  --output My_Marker_Protein_DB.fasta \
+  --catalog my_catalog.json
+
+adtoolbox metagenomics validate-marker-protein-db \
+  --protein-db My_Marker_Protein_DB.fasta \
+  --catalog my_catalog.json          # confirms every catalog marker is covered
+```
+
+**HMMER backend** — select profiles from KOfam/dbCAN/Pfam/custom collections and
+carry their score thresholds:
+
+```text
+# marker_hmms.tsv
+marker_id	source_hmm	profile_id	score_threshold	score_type
+mtaB	kofam/profiles/K14080.hmm	K14080	120.5	full
+mtbA	kofam/profiles/K14082.hmm	K14082	118.2	full
+```
+
+```bash
+adtoolbox database build-marker-hmm-db \
+  --manifest marker_hmms.tsv \
+  --output My_Marker_Profiles.hmm \
+  --cutoffs-output My_Marker_Profile_Cutoffs.csv \
+  --catalog my_catalog.json
+```
+
+Then run with your catalog and database together:
+
+```bash
+# MMseqs
+adtoolbox metagenomics process ... \
+  --catalog my_catalog.json \
+  --protein-db My_Marker_Protein_DB.fasta
+
+# HMMER
+adtoolbox metagenomics process ... \
+  --catalog my_catalog.json \
+  --marker-backend hmmer \
+  --marker-hmm-db My_Marker_Profiles.hmm \
+  --marker-hmm-cutoffs My_Marker_Profile_Cutoffs.csv
+```
+
+To regenerate the *entire* bundled asset set from the catalog and pinned upstream
+sources instead of adding one family, use the shipped rebuild script:
+
+```bash
+python adtoolbox/pkg_data/marker_databases/v0.2.0/rebuild.py --help
+```
+
+### Editing checklist
+
+- [ ] Every marker in a panel's `marker_weights`, `required_all`, and
+  `required_any` exists in the `markers` section.
+- [ ] Requirement markers also have a weight (the validator enforces this).
+- [ ] `minimum_markers` ≤ number of markers in the panel; `0 ≤ minimum_score ≤ 1`.
+- [ ] New COD-group names are added to the top-level `cod_groups` **and** exist in
+  the e-ADM model.
+- [ ] New markers are added to the detection database (Example 4) and
+  `validate-marker-protein-db` reports full coverage.
+- [ ] `catalog_version` bumped so caches refresh.
+- [ ] Each new marker keeps an `evidence` URL for traceability.
 
 ## See also
 
