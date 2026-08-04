@@ -381,14 +381,33 @@ GCF_000001,mcrA
 GCF_000001,fwdA
 ```
 
-### Continuous COD potential and credibility
+### Community marker-pool COD potential and credibility
 
-Marker catalog v0.3.0 no longer discards every incomplete pathway. For each genome and
-COD group it reports a continuous `score` based on weighted marker completeness,
-diagnostic-requirement coverage, and the number of supporting markers. The separate
-`credible` column records whether the complete pathway rule passed. Signature pathways
-whose direction or identity cannot be inferred safely from partial evidence (including
-methanogenesis and substrate-specific chain elongation) remain strict.
+The final COD profile is calculated from the community marker pool rather than from a
+separately normalized COD profile for every genome. For marker family *m*, ADToolbox first
+calculates `sum(genome abundance * marker presence)` over the genomes mapped to a sample.
+Those abundance-weighted marker values are then combined with the biochemical panel
+weights. Marker weights are normalized within each panel, the best-supported alternative
+panel supplies each COD group's raw potential, and only the final vector is normalized.
+
+Per-genome pathway scores are still calculated as diagnostics. Their `credible` column
+records whether the complete pathway rule passed, but an incomplete genome-level pathway
+does not zero accepted marker evidence from the community profile.
+
+The calculation makes these explicit assumptions:
+
+1. Amplicon-derived genome abundance is a proxy for the abundance of its marker families.
+2. Marker presence is capped at one contribution per genome. This limits bias from
+   paralogs, assembly fragmentation, and uncertain gene copy number.
+3. Accepted genes describe encoded functional potential, not expression, flux, direction,
+   growth rate, or measured activity.
+4. Evidence may complement across community members. Consequently, community potential is
+   intentionally more permissive than the per-genome credibility call.
+5. Alternative panels are biochemical alternatives, not additive evidence budgets. Taking
+   the best-supported panel prevents groups with more catalogued routes from receiving a
+   larger prior weight.
+6. `cod_profile.csv` is compositional. Always retain `cod_potential.csv` and the QC table,
+   because final normalization can make weak evidence appear proportionally large.
 
 For genome-based amplicon processing, the final files are:
 
@@ -396,8 +415,10 @@ For genome-based amplicon processing, the final files are:
 | --- | --- |
 | `genome_gene_annotations.csv` | Accepted gene-to-marker hits for every aligned genome. |
 | `genome_pathway_scores.csv` | Continuous score, credibility, matched markers, and missing requirements for every genome/COD group. |
-| `genome_cods.csv` | Compact genome-by-COD score table retained for compatibility. |
-| `cod_potential.csv` | Raw `sum(genome abundance * pathway score)`; it is not normalized and preserves unmapped abundance. |
+| `genome_cods.csv` | Compact genome-by-COD diagnostic score table retained for compatibility; it no longer determines the final profile. |
+| `sample_marker_abundances.csv` | Per-marker `sum(genome abundance * capped marker-family copy evidence)` plus detection counts. |
+| `community_pathway_scores.csv` | Community-level potential for every alternative panel and the panel selected for each COD group. |
+| `cod_potential.csv` | Raw community marker-pool potential; it is not normalized and preserves the effect of unmapped abundance. |
 | `cod_profile.csv` | Model-ready COD composition normalized over detected potential. |
 | `cod_evidence_qc.csv` | Mapped, aligned, classified, credible, unclassified, and unmapped abundance diagnostics. |
 
@@ -442,6 +463,9 @@ alternative-marker clauses, a minimum marker count, and a minimum weighted compl
 Aliases are resolved case-insensitively. Copy the catalog, edit it, validate it, and pass
 it with `--catalog`; no Python changes are needed.
 
+The pathway biology behind every panel — which enzymes mark each COD group and why —
+is documented in the [Gene-Marker Biochemistry](Gene_Marker_Biochemistry.md) reference.
+
 Carbohydrate hydrolysis (`X_ch`) is represented by separate cellulose, xylan, starch,
 and pectin panels combining CAZyme families with binding, transport, or intracellular
 utilization evidence. Sugar fermentation (`X_su`) separately requires a transporter,
@@ -458,6 +482,7 @@ resolve the active direction with confidence.
 
 ## See also
 
+- [Gene-Marker Biochemistry](Gene_Marker_Biochemistry.md) — the pathway biology behind every marker panel and COD group.
 - [CLI reference](CLI.md#processing-pipeline) — every `process` option and output file.
 - [`core.Metagenomics` API](api-core.md#adtoolbox.core.Metagenomics) — generated reference for all methods.
 - [Parameter tuning](Optimization.md) — what to do with the COD profile once you have it.

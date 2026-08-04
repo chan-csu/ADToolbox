@@ -139,6 +139,7 @@ nav:
       - Quickstart: Quickstart.md
   - Guides:
       - Metagenomics Pipeline: Metagenomics_Pipeline.md
+      - Gene-Marker Biochemistry: Gene_Marker_Biochemistry.md
       - ADM Models: ADM_Models.md
       - Parameter Tuning: Optimization.md
       - Example Notebooks: Notebooks.md
@@ -150,6 +151,7 @@ nav:
       - configs: api-configs.md
       - core: api-core.md
       - adm: api-adm.md
+      - markers: api-markers.md
       - optimize: api-optimize.md
       - utils: api-utils.md
       - stats: api-stats.md
