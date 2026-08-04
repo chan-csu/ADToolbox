@@ -134,9 +134,174 @@ Successful read-input signatures are stored in `scratch/shotgun_downstream_input
 
 ## Execution Profiles
 
-Use a TOML execution profile to choose local or Slurm execution per step. The reference profile is `reference_data/metagenomics_pipeline.toml`.
+Use a TOML execution profile to choose local or Slurm execution per step. The reference profile ships at `reference_data/metagenomics_pipeline.toml`.
 
 The reference profile uses `container = "None"`, so commands run from the active Conda environment on the compute node. Container image selection remains available through a top-level or step-specific `image` key when Docker or Apptainer is wanted.
+
+### Using a profile at runtime
+
+Pass the TOML file to the `process` command with `--execution-profile` (nothing is submitted or run until you also add `--execute`):
+
+```bash
+adtoolbox metagenomics process \
+  --input ./metagenomics/read_samples.tsv \
+  --input-type reads \
+  --output-dir ./metagenomics/process \
+  --stage all \
+  --execution-profile reference_data/metagenomics_pipeline.toml \
+  --execute
+```
+
+From Python, [`batch_sample_to_cod`](api-core.md#adtoolbox.core.Metagenomics.batch_sample_to_cod) takes the same profile as a keyword argument — either a path or an already-parsed `dict`:
+
+```python
+from adtoolbox import configs, core
+
+mg = core.Metagenomics(configs.Metagenomics("./metagenomics/process", database_dir="./database"))
+
+result = mg.batch_sample_to_cod(
+    manifest="./metagenomics/read_samples.tsv",
+    assay="amplicon", input_type="reads", output_dir="./metagenomics/process",
+    stage="all",
+    execution_profile="reference_data/metagenomics_pipeline.toml",  # path or dict
+    execute=True,
+)
+```
+
+Resolution rules: the top-level `backend`/`container`/`image` are the defaults; each `[steps.<name>]` table overrides them for that step, and `[steps.<name>.settings]` carries tool-specific options. A `[slurm]` table supplies shared Slurm defaults (`cpus`, `memory`, `time`, and the optional throttle/retry keys). Keys you omit fall back to ADToolbox's built-in defaults, so a partial profile is valid — you only specify what you want to change.
+
+### Full reference profile
+
+The complete `reference_data/metagenomics_pipeline.toml` is reproduced here as a copy-paste starting point. Every step is present; commented keys show the optional Slurm throttle, retry, container-image, and tool-tuning knobs. Delete or edit any step you do not need.
+
+```toml
+# Example execution profile for `adtoolbox Metagenomics process`.
+#
+# `backend` controls how generated external commands are handled:
+# - "local": run directly when --execute is used.
+# - "slurm": write sbatch files and submit them when --execute is used.
+# Without --execute, commands/scripts are written but not run or submitted.
+
+backend = "local"
+# Run tools from the active Conda environment; no Apptainer image is used.
+container = "None"
+
+[slurm]
+cpus = 8
+memory = "32G"
+time = "04:00:00"
+# Optional ADToolbox-side submission throttle. This checks existing Slurm jobs
+# whose names start with `job_name_prefix` before submitting another job.
+# max_concurrent_jobs = 20
+# poll_seconds = 30
+# ADToolbox submits every Slurm task with `sbatch --wait`. After the task
+# succeeds and its outputs are validated, the application starts the next task.
+# Slurm dependency directives are not used.
+#
+# On failure or cancellation, ADToolbox submits a fresh Slurm job after the
+# configured delay. The sbatch script itself does not contain a retry loop.
+# retries = 1
+# retry_delay_seconds = 60
+# job_name_prefix = "adtoolbox_"
+# partition = "general"
+# account = "my_account"
+# qos = "normal"
+# extra_sbatch = ["--mail-type=FAIL"]
+
+[steps.download_sra]
+backend = "slurm"
+container = "None"
+cpus = 4
+memory = "16G"
+time = "04:00:00"
+
+[steps.download_genomes]
+backend = "slurm"
+container = "None"
+cpus = 1
+memory = "2G"
+time = "01:00:00"
+
+[steps.download_genomes.settings]
+max_workers = 10
+
+[steps.trim_reads]
+backend = "slurm"
+container = "None"
+cpus = 4
+memory = "8G"
+time = "01:00:00"
+# retries = 2
+
+[steps.trim_reads.settings]
+threads = 4
+minimum_length = 100
+quality_cutoff = 20
+quality_trim = "cut_right"
+quality_window_size = 4
+quality_mean = 20
+min_reads_for_denoising = 1000
+allow_single_end_fallback = true
+# adapter_1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+# adapter_2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+[steps.build_amplicon_features]
+backend = "slurm"
+container = "None"
+cpus = 8
+memory = "24G"
+time = "04:00:00"
+
+[steps.build_amplicon_features.settings]
+threads = 8
+denoiser = "dada2"
+primer_mode = "auto"
+primer_detection_reads = 10000
+primer_max_offset = 12
+primer_max_error_rate = 0.15
+primer_min_fraction = 0.80
+cutadapt_error_rate = 0.15
+discard_untrimmed = true
+maxee = 2.0
+minimum_length = 100
+chimera_filter = true
+dada2_min_overlap = 12
+
+[steps.align_to_gtdb]
+backend = "slurm"
+container = "None"
+cpus = 8
+memory = "32G"
+time = "04:00:00"
+
+[steps.align_to_gtdb.settings]
+vsearch_threads = 8
+vsearch_similarity = 0.97
+
+[steps.align_genomes]
+backend = "slurm"
+container = "None"
+cpus = 12
+memory = "48G"
+time = "08:00:00"
+
+[steps.align_short_reads]
+# Shotgun only: one MMseqs translated-search job per sample.
+backend = "slurm"
+container = "None"
+cpus = 24
+memory = "150G"
+time = "12:00:00"
+
+[steps.align_short_reads.settings]
+threads = 24
+# Nucleotide reads against the protein target require translated search.
+search_type = 2
+# Keep only the final TSV after success. Failed work directories remain for debugging.
+keep_work = false
+# Optional MMseqs sensitivity. Omit to use the MMseqs default.
+# sensitivity = 7.5
+```
 
 Slurm steps use `sbatch --wait --parsable`. The application waits for each task to finish, validates its outputs, and only then starts the next task for that sample. It does not use Slurm dependency directives.
 

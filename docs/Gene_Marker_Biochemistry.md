@@ -28,7 +28,8 @@ This page is the companion *reference* for the rules themselves.
 
 > **Is it a TOML file? No.** The biochemistry lives in a single **JSON** rule
 > catalog. TOML *is* used elsewhere in ADToolbox — the pipeline's
-> [execution profiles](Metagenomics_Pipeline.md#execution-profiles) are TOML —
+> [execution profiles](Metagenomics_Pipeline.md#execution-profiles) are TOML
+> (see that section for a runtime example and the full reference profile) —
 > but those configure Slurm and step settings, not the biochemistry.
 
 The biochemistry is split into **two deliberately separate layers** plus the
