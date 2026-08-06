@@ -454,10 +454,15 @@ def test_marker_genome_outputs_preserve_partial_evidence_and_unmapped_abundance(
 
     assert protein["score"] > 0
     assert protein["credible"] is False
-    assert protein_potential == pytest.approx(protein["score"] * 0.6)
+    # Final potential now comes from abundance-weighted marker evidence, not
+    # the nonlinear per-genome pathway score retained above for diagnostics.
+    assert protein_potential == pytest.approx((0.6 * 1 + 0.6 * 2) / 11)
     assert qc["mapped_abundance"] == pytest.approx(0.6)
     assert qc["unmapped_abundance"] == pytest.approx(0.4)
+    assert qc["cod_aggregation"] == "community_marker_pool_v1"
     assert pathlib.Path(result["artifacts"]["genome_gene_annotations"]).is_file()
+    assert pathlib.Path(result["artifacts"]["sample_marker_abundances"]).is_file()
+    assert pathlib.Path(result["artifacts"]["community_pathway_scores"]).is_file()
 
 
 def test_extract_relative_abundances_uses_feature_ids(tmp_path):

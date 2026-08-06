@@ -147,9 +147,11 @@ adtoolbox metagenomics align-multiple-genomes \
 | `representative_genomes.csv` | GTDB mapping from feature IDs to representative genomes. |
 | `genome_abundances.csv` | Per-sample genome abundances after feature-to-genome aggregation. |
 | `genome_gene_annotations.csv` | Accepted gene-to-marker annotations for every aligned genome. |
-| `genome_pathway_scores.csv` | Continuous genome/COD potential, credibility, matched markers, and missing requirements. |
-| `genome_cods.csv` | Compact genome-level `X_*` potential table retained for compatibility. |
-| `cod_potential.csv` | Raw abundance-weighted pathway potential before normalization. |
+| `genome_pathway_scores.csv` | Diagnostic genome/COD potential, credibility, matched markers, and missing requirements. |
+| `genome_cods.csv` | Compact genome-level diagnostic table retained for compatibility; it does not determine the final profile. |
+| `sample_marker_abundances.csv` | Marker-family presence weighted by mapped genome abundance and summed over the sample. |
+| `community_pathway_scores.csv` | Raw potential for every alternative community biochemical panel and the selected panel per COD group. |
+| `cod_potential.csv` | Raw community marker-pool potential before normalization. |
 | `cod_evidence_qc.csv` | Mapped, aligned, classified, credible, unclassified, and unmapped abundance. |
 | `provenance.json` | Inputs, thresholds, databases, and artifacts used. |
 | `pipeline.log` | Step-by-step log for the sample. |

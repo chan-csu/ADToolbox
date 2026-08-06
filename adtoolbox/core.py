@@ -4803,8 +4803,8 @@ fi"""
         genome_profiles: dict[str, dict[str, float]],
         hit_frames: list[pl.DataFrame],
         score_frames: list[pl.DataFrame],
-    ) -> dict[str, str]:
-        """Write genome annotations, pathway scores, raw potential, and evidence QC."""
+    ) -> tuple[dict[str, str], dict[str, float]]:
+        """Write genome diagnostics and community-level marker/COD evidence."""
         artifacts: dict[str, str] = {}
         abundance_rows = [
             {"genome_id": str(genome), "genome_abundance": float(abundance)}
@@ -4839,11 +4839,34 @@ fi"""
             output_path / "genome_pathway_scores.csv", scores
         )
 
-        potential = (
-            self.aggregate_genome_cod(genome_profiles, genome_abundances, normalize=False)
-            if genome_profiles and any(float(value) > 0 for value in genome_abundances.values())
-            else {group: 0.0 for group in self.marker_catalog.cod_groups}
+        marker_abundances, community_scores, potential = self.marker_classifier.community_profile_from_hits(
+            hits.drop("sample"),
+            genome_abundances,
+            normalize=False,
+            copy_cap=1.0,
         )
+        marker_abundances = marker_abundances.with_columns(
+            pl.lit(sample_name).alias("sample")
+        ).select("sample", *marker_abundances.columns)
+        community_scores = community_scores.with_columns(
+            pl.lit(sample_name).alias("sample")
+        ).select("sample", *community_scores.columns)
+        artifacts["sample_marker_abundances"] = self._write_frame(
+            output_path / "sample_marker_abundances.csv", marker_abundances
+        )
+        artifacts["community_pathway_scores"] = self._write_frame(
+            output_path / "community_pathway_scores.csv", community_scores
+        )
+
+        # Marker-free legacy EC alignments retain their old aggregation path.
+        # Current MMseqs marker and HMMER workflows always use the community
+        # marker pool above.
+        if not hits.height:
+            potential = (
+                self.aggregate_genome_cod(genome_profiles, genome_abundances, normalize=False)
+                if genome_profiles and any(float(value) > 0 for value in genome_abundances.values())
+                else {}
+            )
         artifacts["cod_potential"] = self._write_tall_mapping(
             output_path / "cod_potential.csv", potential,
             sample_name=sample_name, key_name="group", value_name="potential",
@@ -4875,10 +4898,13 @@ fi"""
                 "classified_abundance": classified_abundance,
                 "credible_abundance": credible_abundance,
                 "unclassified_aligned_abundance": max(0.0, aligned_abundance - classified_abundance),
+                "community_marker_families_detected": marker_abundances.filter(pl.col("weighted_abundance") > 0).height,
+                "community_cod_potential_total": sum(potential.values()),
+                "cod_aggregation": "community_marker_pool_v1" if hits.height else "legacy_genome_profile",
             }]
         )
         artifacts["cod_evidence_qc"] = self._write_frame(output_path / "cod_evidence_qc.csv", qc)
-        return artifacts
+        return artifacts, potential
 
     def sample_to_cod(
         self,
@@ -5000,17 +5026,17 @@ fi"""
                     hit_frames.append(hits)
                 if scores.height:
                     score_frames.append(scores)
-            cod_potential = self.aggregate_genome_cod(genome_cods, abundances, normalize=False)
-            cod_profile = self._normalize_profile(cod_potential, self.marker_catalog.cod_groups) if normalize else cod_potential
             result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
-            result["artifacts"].update(self._write_genome_cod_evidence(
+            evidence_artifacts, cod_potential = self._write_genome_cod_evidence(
                 output_path=output_path,
                 sample_name=sample_name,
                 genome_abundances={str(key): float(value) for key, value in abundances.items()},
                 genome_profiles=genome_cods,
                 hit_frames=hit_frames,
                 score_frames=score_frames,
-            ))
+            )
+            result["artifacts"].update(evidence_artifacts)
+            cod_profile = self._normalize_profile(cod_potential, self.marker_catalog.cod_groups) if normalize else cod_potential
             result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         elif mode == "amplicon-reads":
@@ -5329,20 +5355,20 @@ fi"""
                         value_name="value",
                     )
                 else:
-                    cod_potential = self.aggregate_genome_cod(genome_cods, genome_abund, normalize=False) if genome_cods else {}
-                    cod_profile = (
-                        self._normalize_profile(cod_potential, self.marker_catalog.cod_groups)
-                        if normalize and genome_cods else cod_potential
-                    )
                     result["artifacts"]["genome_cods"] = self._write_tall_nested_profile(output_path / "genome_cods.csv", genome_cods, sample_name=sample_name, entity_name="genome_id")
-                    result["artifacts"].update(self._write_genome_cod_evidence(
+                    evidence_artifacts, cod_potential = self._write_genome_cod_evidence(
                         output_path=output_path,
                         sample_name=sample_name,
                         genome_abundances=genome_abund,
                         genome_profiles=genome_cods,
                         hit_frames=hit_frames,
                         score_frames=score_frames,
-                    ))
+                    )
+                    result["artifacts"].update(evidence_artifacts)
+                    cod_profile = (
+                        self._normalize_profile(cod_potential, self.marker_catalog.cod_groups)
+                        if normalize and genome_cods else cod_potential
+                    )
                     result["artifacts"]["cod_profile"] = self._write_tall_mapping(output_path / "cod_profile.csv", cod_profile, sample_name=sample_name, key_name="group", value_name="value")
 
         else:
@@ -5361,7 +5387,7 @@ fi"""
                 "protein_db": self.config.protein_db,
                 "marker_catalog": self.config.marker_catalog,
                 "marker_catalog_version": self.marker_catalog.catalog_version,
-                "cod_scoring": "continuous_pathway_potential_v1",
+                "cod_scoring": "community_marker_pool_v1",
                 "marker_backend": self.config.marker_backend,
                 "marker_hmm_db": self.config.marker_hmm_db if self.config.marker_backend == "hmmer" else None,
                 "marker_hmm_cutoffs": self.config.marker_hmm_cutoffs,
@@ -6012,7 +6038,7 @@ fi"""
             except (OSError, ValueError, AttributeError):
                 return False
             return (
-                payload.get("cod_scoring") == "continuous_pathway_potential_v1"
+                payload.get("cod_scoring") == "community_marker_pool_v1"
                 and payload.get("marker_catalog_version") == self.marker_catalog.catalog_version
                 and payload.get("marker_backend") == self.config.marker_backend
                 and bool(payload.get("normalize")) == bool(normalize)

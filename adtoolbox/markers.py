@@ -633,6 +633,162 @@ class MarkerClassifier:
             profile = {group: value / total for group, value in profile.items()}
         return profile
 
+    def community_profile_from_hits(
+        self,
+        hits: pl.DataFrame,
+        genome_abundances: Mapping[str, int | float],
+        *,
+        normalize: bool = False,
+        copy_cap: float = 1.0,
+    ) -> tuple[pl.DataFrame, pl.DataFrame, dict[str, float]]:
+        """Aggregate genome marker evidence before calculating COD potential.
+
+        Assumptions
+        -----------
+        * Genome abundances are fractions of the complete sample when their
+          positive total is at most one. Count-like inputs whose total exceeds
+          one are converted to fractions.
+        * A marker family contributes at most once per genome by default. This
+          avoids treating assembly fragmentation, paralogs, or uncertain gene
+          copy number as proportional metabolic activity. ``copy_cap`` keeps
+          this policy explicit and extensible.
+        * Accepted marker hits are pooled across the community before pathway
+          rules are evaluated. Panel requirements and credibility thresholds
+          remain diagnostic; they do not zero community potential.
+        * Marker weights are normalized within each panel. Alternative panels
+          represent alternative biochemical routes, so the best-supported
+          panel defines a COD group's raw potential. This prevents groups with
+          more catalogued alternatives from receiving a larger prior weight.
+        * The returned potential describes relative gene-encoded capacity, not
+          expression, flux, biomass yield, or measured activity.
+        """
+        self._require_columns(hits, ("genome_id", "gene_id", "marker_id"), "marker hits")
+        if copy_cap <= 0:
+            raise ValueError("copy_cap must be positive")
+
+        positive_abundances = {
+            str(genome): float(abundance)
+            for genome, abundance in genome_abundances.items()
+            if float(abundance) > 0
+        }
+        abundance_total = sum(positive_abundances.values())
+        abundance_scale = 1.0 if abundance_total <= 1.0 + 1e-9 else abundance_total
+        scaled_abundances = {
+            genome: abundance / abundance_scale
+            for genome, abundance in positive_abundances.items()
+        }
+
+        gene_ids: dict[tuple[str, str], set[str]] = {}
+        for genome, gene, raw_marker in hits.select("genome_id", "gene_id", "marker_id").iter_rows():
+            genome = str(genome)
+            if genome not in scaled_abundances or gene is None or raw_marker is None:
+                continue
+            canonical = self.catalog.alias_lookup.get(str(raw_marker).strip().casefold())
+            if canonical is None:
+                continue
+            gene_ids.setdefault((genome, canonical), set()).add(str(gene))
+
+        marker_weighted_abundance = {marker: 0.0 for marker in self.catalog.markers}
+        marker_genomes = {marker: 0 for marker in self.catalog.markers}
+        marker_gene_copies = {marker: 0 for marker in self.catalog.markers}
+        for (genome, marker), genes in gene_ids.items():
+            copies = len(genes)
+            marker_genomes[marker] += 1
+            marker_gene_copies[marker] += copies
+            marker_weighted_abundance[marker] += scaled_abundances[genome] * min(float(copies), copy_cap)
+
+        marker_rows = []
+        for marker, definition in self.catalog.markers.items():
+            marker_rows.append(
+                {
+                    "marker_id": marker,
+                    "marker_name": str(definition.get("name", marker)),
+                    "genomes_detected": marker_genomes[marker],
+                    "gene_copies_detected": marker_gene_copies[marker],
+                    "weighted_abundance": marker_weighted_abundance[marker],
+                    "copy_cap_per_genome": float(copy_cap),
+                }
+            )
+        marker_frame = pl.DataFrame(
+            marker_rows,
+            schema={
+                "marker_id": pl.Utf8,
+                "marker_name": pl.Utf8,
+                "genomes_detected": pl.Int64,
+                "gene_copies_detected": pl.Int64,
+                "weighted_abundance": pl.Float64,
+                "copy_cap_per_genome": pl.Float64,
+            },
+        )
+
+        community_present = {
+            marker for marker, abundance in marker_weighted_abundance.items() if abundance > 0
+        }
+        panel_rows: list[dict[str, Any]] = []
+        profile = {group: 0.0 for group in self.catalog.cod_groups}
+        for cod_group in self.catalog.cod_groups:
+            group = self.catalog.groups.get(cod_group)
+            if group is None:
+                continue
+            group_rows: list[dict[str, Any]] = []
+            for panel in group.panels:
+                total_weight = sum(panel.marker_weights.values())
+                contributions = {
+                    marker: marker_weighted_abundance[marker] * weight / total_weight
+                    for marker, weight in panel.marker_weights.items()
+                    if marker_weighted_abundance[marker] > 0
+                }
+                potential = sum(contributions.values())
+                _, credible, _, matched, total, missing, weighted, requirements, coverage = (
+                    self._evaluate_panel(panel, community_present)
+                )
+                group_rows.append(
+                    {
+                        "cod_group": cod_group,
+                        "panel_id": panel.id,
+                        "potential": potential,
+                        "selected": False,
+                        "credible": credible,
+                        "matched_markers": ";".join(matched),
+                        "missing_requirements": ";".join(missing),
+                        "markers_detected": len(matched),
+                        "markers_in_panel": total,
+                        "weighted_completeness": weighted,
+                        "requirement_coverage": requirements,
+                        "marker_coverage": coverage,
+                        "marker_contributions": ";".join(
+                            f"{marker}:{value:.12g}" for marker, value in sorted(contributions.items())
+                        ),
+                    }
+                )
+            selected = max(group_rows, key=lambda row: (row["potential"], row["credible"], row["markers_detected"]))
+            selected["selected"] = True
+            profile[cod_group] = float(selected["potential"])
+            panel_rows.extend(group_rows)
+
+        panel_frame = pl.DataFrame(
+            panel_rows,
+            schema={
+                "cod_group": pl.Utf8,
+                "panel_id": pl.Utf8,
+                "potential": pl.Float64,
+                "selected": pl.Boolean,
+                "credible": pl.Boolean,
+                "matched_markers": pl.Utf8,
+                "missing_requirements": pl.Utf8,
+                "markers_detected": pl.Int64,
+                "markers_in_panel": pl.Int64,
+                "weighted_completeness": pl.Float64,
+                "requirement_coverage": pl.Float64,
+                "marker_coverage": pl.Float64,
+                "marker_contributions": pl.Utf8,
+            },
+        )
+        total = sum(profile.values())
+        if normalize and total > 0:
+            profile = {group: value / total for group, value in profile.items()}
+        return marker_frame, panel_frame, profile
+
     @staticmethod
     def _evaluate_panel(
         panel: MarkerPanel,

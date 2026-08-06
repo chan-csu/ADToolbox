@@ -61,6 +61,66 @@ def test_partial_pathway_evidence_is_retained_but_not_called_credible(classifier
     assert row["marker_coverage"] > 0
 
 
+def test_community_marker_pool_weights_genomes_before_pathway_scoring(classifier):
+    hits = pl.DataFrame(
+        {
+            "genome_id": ["common", "rare", "rare"],
+            "gene_id": ["pep_common", "pep_rare_1", "pep_rare_2"],
+            "marker_id": ["pepN", "oppA", "oppA"],
+        }
+    )
+
+    markers, panels, profile = classifier.community_profile_from_hits(
+        hits,
+        {"common": 0.8, "rare": 0.2},
+    )
+
+    marker_values = dict(markers.select("marker_id", "weighted_abundance").iter_rows())
+    assert marker_values["pepN"] == pytest.approx(0.8)
+    # Two copies in one genome remain one marker-family contribution.
+    assert marker_values["oppA"] == pytest.approx(0.2)
+    selected_protein = panels.filter(
+        (pl.col("cod_group") == "X_pr") & pl.col("selected")
+    ).to_dicts()[0]
+    expected = (0.8 * 1.0 + 0.2 * 2.0) / 11.0
+    assert selected_protein["panel_id"] == "proteolysis_and_peptide_import"
+    assert selected_protein["potential"] == pytest.approx(expected)
+    assert profile["X_pr"] == pytest.approx(expected)
+
+
+def test_community_marker_pool_is_not_zeroed_by_genome_level_strict_gate(classifier):
+    hits = pl.DataFrame(
+        {
+            "genome_id": ["archaeon"],
+            "gene_id": ["mcr_gene"],
+            "marker_id": ["mcrA"],
+        }
+    )
+
+    _, panels, profile = classifier.community_profile_from_hits(hits, {"archaeon": 0.25})
+
+    assert profile["X_Me_CO2"] > 0
+    hydrogenotrophic = panels.filter(
+        (pl.col("cod_group") == "X_Me_CO2") & pl.col("selected")
+    ).to_dicts()[0]
+    assert hydrogenotrophic["credible"] is False
+
+
+def test_community_marker_pool_normalizes_count_like_abundances(classifier):
+    hits = pl.DataFrame(
+        {
+            "genome_id": ["g1", "g2"],
+            "gene_id": ["gene_1", "gene_2"],
+            "marker_id": ["pepN", "pepN"],
+        }
+    )
+
+    markers, _, _ = classifier.community_profile_from_hits(hits, {"g1": 30, "g2": 70})
+
+    pep = markers.filter(pl.col("marker_id") == "pepN").to_dicts()[0]
+    assert pep["weighted_abundance"] == pytest.approx(1.0)
+
+
 def test_acetoclastic_methanogen_profile(classifier):
     # Methanosarcina-like acetate activation and CODH/ACS evidence.
     markers = ["K00399", "mcrB", "mtrA", "acsA", "cdhC", "cdhD", "cdhE"]

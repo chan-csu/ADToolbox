@@ -15,6 +15,8 @@ By default, this is a dry run and changes nothing. Pass --apply to delete:
   <sample>/cod_potential.csv
   <sample>/genome_pathway_scores.csv
   <sample>/genome_gene_annotations.csv
+  <sample>/sample_marker_abundances.csv
+  <sample>/community_pathway_scores.csv
   <sample>/cod_evidence_qc.csv
 
 Genome downloads, feature tables, representative sequences, GTDB matches,
@@ -61,6 +63,8 @@ while IFS= read -r -d '' cod_profile; do
         "$sample_dir/cod_potential.csv" \
         "$sample_dir/genome_pathway_scores.csv" \
         "$sample_dir/genome_gene_annotations.csv" \
+        "$sample_dir/sample_marker_abundances.csv" \
+        "$sample_dir/community_pathway_scores.csv" \
         "$sample_dir/cod_evidence_qc.csv"; do
         if [[ ! -f $output ]]; then
             continue

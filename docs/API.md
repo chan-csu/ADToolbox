@@ -21,7 +21,7 @@ together; the per-module pages hold the generated reference.
 
     ---
 
-    Configurable gene-marker panels and genome-abundance COD aggregation.
+    Configurable gene-marker panels and community marker-pool COD aggregation.
 
 -   :material-chart-bell-curve: **[`adm`](api-adm.md)**
 
