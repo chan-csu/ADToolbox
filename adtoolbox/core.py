@@ -3806,10 +3806,13 @@ fi
                     "dada_r <- dada(derep_r, err=err_r, multithread=threads)",
                     f"mergers <- mergePairs(dada_f, derep_f, dada_r, derep_r, minOverlap={int(min_overlap)}, verbose=TRUE)",
                     "seqtab <- makeSequenceTable(mergers)",
+                    # One sample per DADA2 run, so mergePairs/dada return single
+                    # objects (a data.frame and dada-class), not per-sample lists.
+                    # sapply would iterate their columns/slots; call getUniques directly.
                     "get_n <- function(x) sum(getUniques(x))",
-                    "merged_n <- sapply(mergers, get_n)",
-                    "denoised_f_n <- sapply(dada_f, get_n)",
-                    "denoised_r_n <- sapply(dada_r, get_n)",
+                    "merged_n <- get_n(mergers)",
+                    "denoised_f_n <- get_n(dada_f)",
+                    "denoised_r_n <- get_n(dada_r)",
                 ]
             )
         else:
@@ -3825,7 +3828,7 @@ fi
                     "dada_f <- dada(derep_f, err=err_f, multithread=threads)",
                     "seqtab <- makeSequenceTable(dada_f)",
                     "get_n <- function(x) sum(getUniques(x))",
-                    "denoised_f_n <- sapply(dada_f, get_n)",
+                    "denoised_f_n <- get_n(dada_f)",
                 ]
             )
         r_lines.append(
@@ -3888,7 +3891,7 @@ fi
                 "dada_f <- dada(derep_f, err=err_f, multithread=threads)",
                 "seqtab <- makeSequenceTable(dada_f)",
                 "get_n <- function(x) sum(getUniques(x))",
-                "denoised_f_n <- sapply(dada_f, get_n)",
+                "denoised_f_n <- get_n(dada_f)",
                 "if (ncol(seqtab) == 0 || sum(seqtab) == 0) quit_no_features('DADA2 produced no inferred single-end ASVs')",
             ]
             if chimera_filter:
