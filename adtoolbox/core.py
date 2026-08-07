@@ -3791,7 +3791,10 @@ fi
                     f"filtered_r <- {r_string(dada2_filtered_2)}",
                     "filter_stats <- filterAndTrim(input_f, filtered_f, input_r, filtered_r, "
                     f"maxN=0, maxEE=c({float(maxee)}, {float(maxee)}), truncQ=2, minLen={int(minimum_length)}, "
-                    "rm.phix=TRUE, compress=TRUE, matchIDs=TRUE, multithread=threads, verbose=TRUE)",
+                    # id.field=1 pairs R1/R2 by the first header field. SRA reads from
+                    # fasterq-dump carry non-Casava headers (@SRR....N ...) that DADA2's
+                    # matchIDs auto-detector cannot parse, so it must be set explicitly.
+                    "rm.phix=TRUE, compress=TRUE, matchIDs=TRUE, id.field=1, multithread=threads, verbose=TRUE)",
                     "if (sum(filter_stats[, 2]) == 0) quit_no_features('DADA2 filtering retained no paired reads')",
                     "err_f <- learnErrors(filtered_f, multithread=threads, randomize=TRUE)",
                     "err_r <- learnErrors(filtered_r, multithread=threads, randomize=TRUE)",
