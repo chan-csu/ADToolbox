@@ -105,12 +105,28 @@ class Model:
         self.sim_time=simulation_time
         self.time_limit=time_limit
         self.nitrogen_limited=False
+        self._s_cache={}   # stoichiometric matrix cache, keyed by nitrogen_limited
 
     @property
     def s(self):
-        """Returns the stoichiometric matrix of a model"""
-        return self.build_stoichiometric_matrix(
-            base_parameters=self.base_parameters,model_parameters= self.model_parameters,reactions= self.reactions,species= self.species,feed=self.feed, nitrogen_limited=self.nitrogen_limited)
+        """Stoichiometric matrix, cached per solve.
+
+        The matrix depends only on the parameters, feed, and the binary
+        ``nitrogen_limited`` flag — never on the state or time. Rebuilding it on
+        every ODE right-hand-side call (hundreds per solve) dominated runtime, so
+        we memoise by ``nitrogen_limited`` (at most two variants). The cache is
+        reset whenever parameters change (``update_parameters``) or a new solve
+        starts (``solve_model``), so it can never go stale within a solve."""
+        cache = self.__dict__.setdefault("_s_cache", {})
+        key = self.nitrogen_limited
+        matrix = cache.get(key)
+        if matrix is None:
+            matrix = self.build_stoichiometric_matrix(
+                base_parameters=self.base_parameters, model_parameters=self.model_parameters,
+                reactions=self.reactions, species=self.species, feed=self.feed,
+                nitrogen_limited=key)
+            cache[key] = matrix
+        return matrix
 
     def update_parameters(self, 
                         model_parameters: dict|None=None,
@@ -139,6 +155,9 @@ class Model:
         if inlet_conditions is not None:
             for k,v in inlet_conditions.items():
                 self.inlet_conditions[self.species.index(k)]=v
+        # model_parameters / base_parameters / feed feed the stoichiometric
+        # matrix; invalidate its cache so the next access rebuilds it.
+        self._s_cache={}
             
 
     
@@ -178,6 +197,7 @@ class Model:
             scipy.integrate._ivp.ivp.OdeResult: Returns the results of the simulation being run and gives optimized paramters.
         """
         self.info={"Fluxes":[]}
+        self._s_cache={}   # fresh matrix cache for this solve (params/feed fixed within it)
         y0=self.initial_conditions[:, 0]
         self._be_time=time.time()
         # Only numerical instability is caught here: the integrator returns
