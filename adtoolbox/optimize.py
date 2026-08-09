@@ -37,6 +37,32 @@ def _require_package(module_name: str, extra: str):
     return importlib.import_module(module_name)
 
 
+def parallel_map(n_jobs: int = -1, backend: str = "loky"):
+    """A ``workers`` callable for ``ScipyOptimizer.optimize`` that runs in parallel.
+
+    SciPy's ``differential_evolution(workers=<int>)`` uses stdlib multiprocessing,
+    which cannot pickle the optimizer's nested objective and raises
+    ``PicklingError: Can't pickle local object ...objective``. This returns a
+    joblib/loky map instead (cloudpickle-based), so the objective serialises
+    cleanly. Use it as::
+
+        from adtoolbox import optimize
+        optimizer.optimize(maxiter=50, popsize=8, workers=optimize.parallel_map(8))
+
+    ``n_jobs=-1`` uses all cores. Note SciPy switches to ``updating='deferred'``
+    whenever ``workers`` is set, so the search trajectory differs from the serial
+    run (both are valid differential evolution).
+    """
+    if importlib.util.find_spec("joblib") is None:
+        raise ImportError("parallel_map needs `joblib` (`pip install joblib`).")
+    from joblib import Parallel, delayed
+
+    def _map(func, iterable):
+        return Parallel(n_jobs=n_jobs, backend=backend)(delayed(func)(x) for x in iterable)
+
+    return _map
+
+
 @dataclass(frozen=True)
 class ParameterSpec:
     """Bounds and optional default value for one optimized parameter."""
