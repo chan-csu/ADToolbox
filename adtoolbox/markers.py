@@ -33,6 +33,7 @@ class MarkerPanel:
     minimum_markers: int
     minimum_score: float
     strict: bool
+    forbidden: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -120,6 +121,18 @@ class MarkerCatalog:
                         f"Panel {panel_id} requirements lack weights: {sorted(missing_weights)}"
                     )
 
+                forbidden = tuple(raw_panel.get("forbidden", ()))
+                unknown_forbidden = set(forbidden) - set(marker_data)
+                if unknown_forbidden:
+                    raise MarkerCatalogError(
+                        f"Panel {panel_id} forbids unknown markers: {sorted(unknown_forbidden)}"
+                    )
+                if set(forbidden) & requirement_markers:
+                    raise MarkerCatalogError(
+                        f"Panel {panel_id} both requires and forbids: "
+                        f"{sorted(set(forbidden) & requirement_markers)}"
+                    )
+
                 minimum_markers = int(raw_panel.get("minimum_markers", 1))
                 minimum_score = float(raw_panel.get("minimum_score", 0.0))
                 strict = bool(raw_panel.get("strict", False))
@@ -137,6 +150,7 @@ class MarkerCatalog:
                         minimum_markers=minimum_markers,
                         minimum_score=minimum_score,
                         strict=strict,
+                        forbidden=forbidden,
                     )
                 )
             if not panels:
@@ -795,7 +809,13 @@ class MarkerClassifier:
         present: set[str],
     ) -> tuple[float, bool, str, tuple[str, ...], int, tuple[str, ...], float, float, float]:
         matched = tuple(sorted(set(panel.marker_weights) & present))
-        missing: list[str] = [marker for marker in panel.required_all if marker not in present]
+        # Markers whose presence rules this panel out. Used where gene presence alone
+        # cannot resolve pathway direction: e.g. acetoclastic methanogenesis shares
+        # acs/cdh with hydrogenotrophs, so an intact H2-uptake hydrogenase (frh/mvh)
+        # identifies the genome as hydrogenotrophic and disqualifies the acetoclastic call.
+        blocked = tuple(sorted(set(panel.forbidden) & present))
+        missing: list[str] = [f"forbidden({marker})" for marker in blocked]
+        missing += [marker for marker in panel.required_all if marker not in present]
         requirements_met = sum(marker in present for marker in panel.required_all)
         for clause in panel.required_any:
             if not set(clause) & present:
@@ -808,7 +828,7 @@ class MarkerClassifier:
         marker_coverage = min(1.0, len(matched) / panel.minimum_markers)
         requirements_pass = not missing and len(matched) >= panel.minimum_markers
         credible = requirements_pass and weighted_score >= panel.minimum_score
-        if not matched or (panel.strict and not credible):
+        if blocked or not matched or (panel.strict and not credible):
             score = 0.0
         else:
             score = weighted_score * (0.35 + 0.65 * requirement_coverage) * (0.35 + 0.65 * marker_coverage)

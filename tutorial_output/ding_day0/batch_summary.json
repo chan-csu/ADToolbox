@@ -1,0 +1,1882 @@
+{
+  "assay": "amplicon",
+  "execute": true,
+  "manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/Examples/Studies/16s_sra_day0.csv",
+  "output_dir": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0",
+  "samples": {
+    "FW_AS_rep_1": {
+      "artifacts": {
+        "cod": {
+          "align_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/align_genomes.sh",
+            "dependencies": [
+              "align_to_gtdb"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "align_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "align_to_gtdb": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "cod_evidence_qc": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/cod_evidence_qc.csv",
+          "cod_potential": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/cod_potential.csv",
+          "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/cod_profile.csv",
+          "community_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/community_pathway_scores.csv",
+          "download_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/download_genomes.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "feature_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/feature_abundances.csv",
+          "genome_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/genome_abundances.csv",
+          "genome_alignment_scripts": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/genome_alignment_commands.json",
+          "genome_cods": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/genome_cods.csv",
+          "genome_gene_annotations": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/genome_gene_annotations.csv",
+          "genome_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/genome_pathway_scores.csv",
+          "provenance": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/provenance.json",
+          "representative_genomes": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/representative_genomes.csv",
+          "sample_marker_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/sample_marker_abundances.csv",
+          "sample_repseqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/sample_repseqs.fasta",
+          "skipped_genome_fastas": [
+            "GCA_018000955.1",
+            "GCA_035452445.1",
+            "GCA_035419325.1",
+            "GCA_035376965.1",
+            "GCA_018003655.1",
+            "GCF_024341885.1",
+            "GCA_016722305.1",
+            "GCA_012797505.1",
+            "GCA_035395015.1",
+            "GCA_019454985.1",
+            "GCA_035364295.1",
+            "GCF_042654745.1",
+            "GCA_035357655.1",
+            "GCA_035364515.1",
+            "GCA_002849245.1",
+            "GCA_019636095.1",
+            "GCA_035434045.1",
+            "GCA_046347895.1",
+            "GCA_035367605.1",
+            "GCF_041464035.1",
+            "GCA_017992995.1",
+            "GCA_035419245.1",
+            "GCA_035365655.1",
+            "GCF_022012435.1",
+            "GCA_017995635.1",
+            "GCA_013824685.1",
+            "GCA_018242085.1",
+            "GCF_025821515.1",
+            "GCA_035377605.1",
+            "GCA_002069655.1",
+            "GCA_035417565.1",
+            "GCF_963887565.1",
+            "GCA_016714645.1",
+            "GCA_035332425.1",
+            "GCA_035426845.1",
+            "GCA_050950365.1",
+            "GCA_035376845.1",
+            "GCA_035374425.1",
+            "GCA_050952125.1",
+            "GCA_035415525.1",
+            "GCA_035434385.1",
+            "GCA_028683535.1",
+            "GCA_046350755.1",
+            "GCF_041654235.1",
+            "GCA_035373905.1",
+            "GCA_035376025.1",
+            "GCA_035419085.1"
+          ]
+        },
+        "preprocess": {
+          "build_amplicon_features": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/build_amplicon_features.sh",
+            "dependencies": [
+              "trim_reads"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "build_amplicon_features",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "cutadapt_report": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/FW_AS_rep_1_cutadapt.json",
+          "dada2_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/FW_AS_rep_1_dada2.R",
+          "dada2_single_end_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/FW_AS_rep_1_dada2_single.R",
+          "dada2_stats": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/dada2-stats.tsv",
+          "detected_primers": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/detected_primers.json",
+          "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+          "preprocess_manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/preprocess_artifacts.json",
+          "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/read-layout.txt",
+          "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/read-selection.json",
+          "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta",
+          "trim_reads": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/trim_reads.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "trim_reads",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "trimmed_reads": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/FW_AS_rep_1_trimmed_R1.fastq.gz",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/FW_AS_rep_1_trimmed_R2.fastq.gz",
+            "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/read-layout.txt",
+            "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/read-selection.json"
+          }
+        }
+      },
+      "cod_profile": {
+        "X_Me_CO2": 0.007449973746580266,
+        "X_Me_ac": 0.02761762875780116,
+        "X_VFA_deg": 0.09767597670731729,
+        "X_aa": 0.08912697491080854,
+        "X_ac_et": 0.07719598353445359,
+        "X_ac_lac": 0.07099706591327587,
+        "X_ch": 0.10156513918629409,
+        "X_chain_et": 0.06802722070418048,
+        "X_chain_lac": 0.06159765505356831,
+        "X_et": 0.0792593235765602,
+        "X_fa": 0.07249283365994143,
+        "X_lac": 0.06311619222711007,
+        "X_li": 0.04508430213383492,
+        "X_pr": 0.06931697722375177,
+        "X_su": 0.06947675266452201
+      },
+      "input": {
+        "accession": "SRR19159476",
+        "condition": "FW+AS",
+        "replicate": "1",
+        "sample_name": "FW_AS_rep_1"
+      },
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159476/SRR19159476_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159476/SRR19159476_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:14:20"
+        }
+      },
+      "status": "completed"
+    },
+    "FW_AS_rep_2": {
+      "artifacts": {
+        "cod": {
+          "align_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/align_genomes.sh",
+            "dependencies": [
+              "align_to_gtdb"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "align_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "align_to_gtdb": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "cod_evidence_qc": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/cod_evidence_qc.csv",
+          "cod_potential": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/cod_potential.csv",
+          "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/cod_profile.csv",
+          "community_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/community_pathway_scores.csv",
+          "download_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/download_genomes.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "feature_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/feature_abundances.csv",
+          "genome_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/genome_abundances.csv",
+          "genome_alignment_scripts": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/genome_alignment_commands.json",
+          "genome_cods": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/genome_cods.csv",
+          "genome_gene_annotations": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/genome_gene_annotations.csv",
+          "genome_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/genome_pathway_scores.csv",
+          "provenance": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/provenance.json",
+          "representative_genomes": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/representative_genomes.csv",
+          "sample_marker_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/sample_marker_abundances.csv",
+          "sample_repseqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/sample_repseqs.fasta",
+          "skipped_genome_fastas": [
+            "GCA_018000955.1",
+            "GCA_035419325.1",
+            "GCA_035452445.1",
+            "GCA_035376965.1",
+            "GCA_016722305.1",
+            "GCF_024341885.1",
+            "GCA_018003655.1",
+            "GCA_035395015.1",
+            "GCA_012797505.1",
+            "GCA_035396845.1",
+            "GCA_035364295.1",
+            "GCA_019454985.1",
+            "GCA_035364515.1",
+            "GCF_042654745.1",
+            "GCA_002849245.1",
+            "GCA_035419245.1",
+            "GCA_035357655.1",
+            "GCF_001262605.1",
+            "GCA_046347895.1",
+            "GCA_019636095.1",
+            "GCA_035434045.1",
+            "GCF_041464035.1",
+            "GCF_001192795.1",
+            "GCA_050183115.1",
+            "GCA_035379705.1",
+            "GCA_035365655.1",
+            "GCA_013824685.1",
+            "GCA_035367605.1",
+            "GCA_018242085.1",
+            "GCF_963887565.1",
+            "GCA_017995635.1",
+            "GCA_016705885.1",
+            "GCA_035377605.1",
+            "GCA_017992995.1",
+            "GCA_035420785.1",
+            "GCF_026261605.1",
+            "GCA_035426845.1",
+            "GCA_035332425.1",
+            "GCA_012797495.1",
+            "GCA_035347995.1",
+            "GCA_016191845.1",
+            "GCA_016714645.1",
+            "GCA_016704085.1",
+            "GCA_035376845.1",
+            "GCA_037046705.1",
+            "GCA_037200505.1",
+            "GCA_016710525.1",
+            "GCA_035415525.1",
+            "GCA_029219025.1",
+            "GCA_046350755.1",
+            "GCA_035374425.1",
+            "GCA_035417565.1",
+            "GCA_035373905.1",
+            "GCA_002069655.1",
+            "GCA_002070395.1",
+            "GCA_035434385.1",
+            "GCA_046329585.1",
+            "GCA_016707525.1",
+            "GCA_016707485.1",
+            "GCA_002071235.1",
+            "GCA_036569545.1",
+            "GCA_016793045.1",
+            "GCA_035376025.1",
+            "GCF_000146065.2",
+            "GCA_035416805.1",
+            "GCA_035421885.1",
+            "GCF_041654235.1",
+            "GCA_009783195.1",
+            "GCA_050950105.1",
+            "GCA_050948525.1",
+            "GCA_035394325.1",
+            "GCA_028690755.1",
+            "GCA_003574895.1"
+          ]
+        },
+        "preprocess": {
+          "build_amplicon_features": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/build_amplicon_features.sh",
+            "dependencies": [
+              "trim_reads"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "build_amplicon_features",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "cutadapt_report": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/FW_AS_rep_2_cutadapt.json",
+          "dada2_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/FW_AS_rep_2_dada2.R",
+          "dada2_single_end_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/FW_AS_rep_2_dada2_single.R",
+          "dada2_stats": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/dada2-stats.tsv",
+          "detected_primers": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/detected_primers.json",
+          "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+          "preprocess_manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/preprocess_artifacts.json",
+          "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/read-layout.txt",
+          "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/read-selection.json",
+          "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta",
+          "trim_reads": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/trim_reads.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "trim_reads",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "trimmed_reads": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/FW_AS_rep_2_trimmed_R1.fastq.gz",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/FW_AS_rep_2_trimmed_R2.fastq.gz",
+            "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/read-layout.txt",
+            "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/read-selection.json"
+          }
+        }
+      },
+      "cod_profile": {
+        "X_Me_CO2": 0.007555538496979704,
+        "X_Me_ac": 0.027966973830427996,
+        "X_VFA_deg": 0.09897863535055261,
+        "X_aa": 0.08862407896199995,
+        "X_ac_et": 0.07665942514872023,
+        "X_ac_lac": 0.07114385595185324,
+        "X_ch": 0.10126755141518891,
+        "X_chain_et": 0.06701936172398633,
+        "X_chain_lac": 0.06140443002933361,
+        "X_et": 0.07961536160507617,
+        "X_fa": 0.0715941743963762,
+        "X_lac": 0.06470245277783411,
+        "X_li": 0.0448312462751414,
+        "X_pr": 0.07041396324960697,
+        "X_su": 0.06822295078692263
+      },
+      "input": {
+        "accession": "SRR19159475",
+        "condition": "FW+AS",
+        "replicate": "2",
+        "sample_name": "FW_AS_rep_2"
+      },
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:56:31"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:56:31"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:56:31"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159475/SRR19159475_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159475/SRR19159475_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:19:29"
+        }
+      },
+      "status": "completed"
+    },
+    "FW_TWAS_AS_rep_1": {
+      "artifacts": {
+        "cod": {
+          "align_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/align_genomes.sh",
+            "dependencies": [
+              "align_to_gtdb"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "align_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "align_to_gtdb": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "cod_evidence_qc": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/cod_evidence_qc.csv",
+          "cod_potential": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/cod_potential.csv",
+          "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/cod_profile.csv",
+          "community_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/community_pathway_scores.csv",
+          "download_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/download_genomes.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "feature_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/feature_abundances.csv",
+          "genome_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/genome_abundances.csv",
+          "genome_alignment_scripts": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/genome_alignment_commands.json",
+          "genome_cods": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/genome_cods.csv",
+          "genome_gene_annotations": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/genome_gene_annotations.csv",
+          "genome_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/genome_pathway_scores.csv",
+          "provenance": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/provenance.json",
+          "representative_genomes": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/representative_genomes.csv",
+          "sample_marker_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/sample_marker_abundances.csv",
+          "sample_repseqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/sample_repseqs.fasta",
+          "skipped_genome_fastas": [
+            "GCA_018003655.1",
+            "GCA_016722305.1",
+            "GCA_046347895.1",
+            "GCA_041674545.1",
+            "GCA_035426845.1",
+            "GCA_018000955.1",
+            "GCA_016703135.1",
+            "GCA_035434045.1",
+            "GCA_035434385.1",
+            "GCA_046329365.1",
+            "GCA_046329585.1",
+            "GCA_018242085.1",
+            "GCA_041396145.1",
+            "GCA_046350755.1",
+            "GCA_019636095.1",
+            "GCA_016710995.1",
+            "GCA_046329695.1",
+            "GCA_016705885.1",
+            "GCA_035419325.1",
+            "GCF_004127515.1",
+            "GCA_051953275.1",
+            "GCA_016706035.1",
+            "GCA_016704735.1",
+            "GCA_035452445.1",
+            "GCA_024235995.1",
+            "GCA_035376965.1",
+            "GCA_016700375.1",
+            "GCA_046351615.1",
+            "GCA_046329225.1",
+            "GCA_049291395.1",
+            "GCA_040080065.1",
+            "GCA_016704085.1",
+            "GCA_037200505.1",
+            "GCA_016191845.1",
+            "GCF_022012435.1",
+            "GCA_022484585.1",
+            "GCA_016714645.1",
+            "GCA_016707525.1",
+            "GCA_046331345.1",
+            "GCA_036569545.1",
+            "GCA_037045515.1",
+            "GCF_046764005.1",
+            "GCA_046330555.1",
+            "GCA_016707485.1",
+            "GCA_016722395.1",
+            "GCA_016714715.1",
+            "GCA_046348625.1",
+            "GCA_049290295.1",
+            "GCA_017347485.1",
+            "GCA_016722575.1",
+            "GCA_035395015.1",
+            "GCA_016717165.1",
+            "GCA_035332425.1",
+            "GCA_016710525.1",
+            "GCA_037046705.1",
+            "GCA_016722635.1",
+            "GCA_049643045.1",
+            "GCA_050183115.1",
+            "GCF_963887565.1",
+            "GCA_035396845.1",
+            "GCF_026261605.1",
+            "GCF_024341885.1",
+            "GCA_016706645.1",
+            "GCF_002165385.1",
+            "GCA_016719255.1",
+            "GCA_016721425.1",
+            "GCA_037045585.1",
+            "GCA_037045785.1",
+            "GCF_025821515.1",
+            "GCA_016710435.1",
+            "GCA_020890945.1",
+            "GCA_035379705.1",
+            "GCA_016721435.1",
+            "GCA_016711835.1",
+            "GCA_016702775.1",
+            "GCF_044224635.1",
+            "GCA_035364295.1",
+            "GCF_027111095.2",
+            "GCA_046329445.1",
+            "GCA_046331075.1",
+            "GCA_046351595.1",
+            "GCA_016711965.1",
+            "GCF_023893595.1",
+            "GCA_016722075.1",
+            "GCA_046347845.1",
+            "GCA_018061365.1",
+            "GCA_016716985.1",
+            "GCA_008933705.1",
+            "GCA_030537075.1",
+            "GCA_018240425.1",
+            "GCA_035364515.1",
+            "GCF_051962735.1",
+            "GCA_014642275.1",
+            "GCA_002849245.1",
+            "GCA_016712025.1",
+            "GCF_030143255.1",
+            "GCA_035248525.1",
+            "GCA_016721565.1",
+            "GCA_030857175.1",
+            "GCA_049653105.1",
+            "GCF_016711745.1",
+            "GCA_016704225.1",
+            "GCF_019430125.1",
+            "GCA_046349545.1",
+            "GCA_016713585.1",
+            "GCF_020034655.1",
+            "GCF_051958235.1",
+            "GCA_036528635.1",
+            "GCA_019454985.1",
+            "GCF_039830215.1",
+            "GCA_036387945.1",
+            "GCA_017303335.1",
+            "GCA_023898625.1",
+            "GCA_017999195.1",
+            "GCA_046330105.1",
+            "GCA_004168015.1",
+            "GCA_016711875.1",
+            "GCA_002773975.1",
+            "GCA_013824685.1",
+            "GCA_015075465.1",
+            "GCA_016716965.1",
+            "GCA_042852035.1",
+            "GCA_016795365.1",
+            "GCA_016717055.1",
+            "GCA_037045685.1"
+          ]
+        },
+        "preprocess": {
+          "build_amplicon_features": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/build_amplicon_features.sh",
+            "dependencies": [
+              "trim_reads"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "build_amplicon_features",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "cutadapt_report": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/FW_TWAS_AS_rep_1_cutadapt.json",
+          "dada2_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/FW_TWAS_AS_rep_1_dada2.R",
+          "dada2_single_end_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/FW_TWAS_AS_rep_1_dada2_single.R",
+          "dada2_stats": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/dada2-stats.tsv",
+          "detected_primers": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/detected_primers.json",
+          "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+          "preprocess_manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/preprocess_artifacts.json",
+          "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/read-layout.txt",
+          "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/read-selection.json",
+          "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta",
+          "trim_reads": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/trim_reads.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "trim_reads",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "trimmed_reads": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/FW_TWAS_AS_rep_1_trimmed_R1.fastq.gz",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/FW_TWAS_AS_rep_1_trimmed_R2.fastq.gz",
+            "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/read-layout.txt",
+            "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/read-selection.json"
+          }
+        }
+      },
+      "cod_profile": {
+        "X_Me_CO2": 0.009848854259584358,
+        "X_Me_ac": 0.024850721485282685,
+        "X_VFA_deg": 0.090861026503741,
+        "X_aa": 0.08586900678793968,
+        "X_ac_et": 0.07790647726045366,
+        "X_ac_lac": 0.07807404542595082,
+        "X_ch": 0.07933297928601563,
+        "X_chain_et": 0.07469481789960714,
+        "X_chain_lac": 0.07511572861452152,
+        "X_et": 0.06539250878233491,
+        "X_fa": 0.08721397635391039,
+        "X_lac": 0.06762453886796717,
+        "X_li": 0.04591902330530008,
+        "X_pr": 0.07948653495779692,
+        "X_su": 0.05780976020959403
+      },
+      "input": {
+        "accession": "SRR19159483",
+        "condition": "FW+TWAS+AS",
+        "replicate": "1",
+        "sample_name": "FW_TWAS_AS_rep_1"
+      },
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-22T00:21:49"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:21:49"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:21:49"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159483/SRR19159483_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159483/SRR19159483_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:00:31"
+        }
+      },
+      "status": "completed"
+    },
+    "FW_TWAS_AS_rep_2": {
+      "artifacts": {
+        "cod": {
+          "align_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/align_genomes.sh",
+            "dependencies": [
+              "align_to_gtdb"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "align_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "align_to_gtdb": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "cod_evidence_qc": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/cod_evidence_qc.csv",
+          "cod_potential": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/cod_potential.csv",
+          "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/cod_profile.csv",
+          "community_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/community_pathway_scores.csv",
+          "download_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/download_genomes.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "feature_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/feature_abundances.csv",
+          "genome_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/genome_abundances.csv",
+          "genome_alignment_scripts": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/genome_alignment_commands.json",
+          "genome_cods": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/genome_cods.csv",
+          "genome_gene_annotations": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/genome_gene_annotations.csv",
+          "genome_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/genome_pathway_scores.csv",
+          "provenance": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/provenance.json",
+          "representative_genomes": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/representative_genomes.csv",
+          "sample_marker_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/sample_marker_abundances.csv",
+          "sample_repseqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/sample_repseqs.fasta",
+          "skipped_genome_fastas": [
+            "GCA_018003655.1",
+            "GCA_046347895.1",
+            "GCA_016722305.1",
+            "GCA_018000955.1",
+            "GCA_016703135.1",
+            "GCA_041674545.1",
+            "GCA_035434045.1",
+            "GCA_046329365.1",
+            "GCA_035426845.1",
+            "GCA_035434385.1",
+            "GCA_018242085.1",
+            "GCA_046350755.1",
+            "GCA_019636095.1",
+            "GCA_016710995.1",
+            "GCF_004127515.1",
+            "GCA_046329585.1",
+            "GCA_041396145.1",
+            "GCA_046351615.1",
+            "GCA_051953275.1",
+            "GCA_016700375.1",
+            "GCA_046330055.1",
+            "GCA_046329695.1",
+            "GCA_016705885.1",
+            "GCA_016706035.1",
+            "GCA_024235995.1",
+            "GCA_035419325.1",
+            "GCA_049291395.1",
+            "GCA_035452445.1",
+            "GCA_040080065.1",
+            "GCA_016704085.1",
+            "GCA_035376965.1",
+            "GCA_016191845.1",
+            "GCA_037045515.1",
+            "GCA_046331345.1",
+            "GCA_036569545.1",
+            "GCA_037200505.1",
+            "GCA_022484585.1",
+            "GCA_016714645.1",
+            "GCF_046764005.1",
+            "GCA_046329225.1",
+            "GCA_035367445.1",
+            "GCF_022012435.1",
+            "GCA_046330555.1",
+            "GCA_016722635.1",
+            "GCA_046348185.1",
+            "GCF_963887565.1",
+            "GCA_016714715.1",
+            "GCA_016707485.1",
+            "GCA_016710525.1",
+            "GCA_017347485.1",
+            "GCA_016707525.1",
+            "GCA_037044955.1",
+            "GCA_049643045.1",
+            "GCA_035332425.1",
+            "GCA_035379705.1",
+            "GCA_020160975.1",
+            "GCA_016722575.1",
+            "GCF_001014975.1",
+            "GCA_016722395.1",
+            "GCA_037046705.1",
+            "GCA_016717165.1",
+            "GCA_016716985.1",
+            "GCA_018240425.1",
+            "GCA_037046685.1",
+            "GCA_016704885.1",
+            "GCF_013337765.1",
+            "GCF_026261605.1",
+            "GCA_047600985.1",
+            "GCF_047600585.1",
+            "GCA_016719255.1",
+            "GCA_046351595.1",
+            "GCA_037045785.1",
+            "GCA_016712025.1",
+            "GCA_016702775.1",
+            "GCF_027111095.2",
+            "GCA_014642275.1",
+            "GCF_044224635.1",
+            "GCF_002165385.1",
+            "GCA_016713365.1",
+            "GCA_046329445.1",
+            "GCA_035364515.1",
+            "GCA_046348585.1",
+            "GCA_030857175.1",
+            "GCA_016721425.1",
+            "GCA_016711875.1",
+            "GCF_001051235.1",
+            "GCA_019454985.1",
+            "GCA_016793045.1",
+            "GCA_016721435.1",
+            "GCA_016124855.1",
+            "GCF_900113135.1",
+            "GCA_002849245.1",
+            "GCA_036281335.1",
+            "GCA_046331075.1",
+            "GCA_018061365.1",
+            "GCA_020890945.1",
+            "GCA_016717055.1",
+            "GCA_016713585.1",
+            "GCA_008933705.1",
+            "GCA_017999195.1",
+            "GCF_025821515.1",
+            "GCF_016711745.1",
+            "GCF_014645495.1",
+            "GCF_034925685.1",
+            "GCA_036403075.1",
+            "GCA_049290295.1",
+            "GCA_016713435.1",
+            "GCA_049290055.1",
+            "GCA_037046755.1",
+            "GCA_002773975.1",
+            "GCA_023382815.1",
+            "GCA_017303335.1",
+            "GCA_016704225.1",
+            "GCF_028435455.1",
+            "GCA_016795365.1",
+            "GCA_035376845.1",
+            "GCA_016706645.1",
+            "GCA_009927175.1",
+            "GCF_000828635.1",
+            "GCA_013824685.1",
+            "GCF_019930585.1",
+            "GCA_039680645.1",
+            "GCA_046346705.1",
+            "GCA_023229685.1",
+            "GCF_029870285.2",
+            "GCA_016699385.1",
+            "GCF_002978535.1"
+          ]
+        },
+        "preprocess": {
+          "build_amplicon_features": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/build_amplicon_features.sh",
+            "dependencies": [
+              "trim_reads"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "build_amplicon_features",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "cutadapt_report": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/FW_TWAS_AS_rep_2_cutadapt.json",
+          "dada2_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/FW_TWAS_AS_rep_2_dada2.R",
+          "dada2_single_end_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/FW_TWAS_AS_rep_2_dada2_single.R",
+          "dada2_stats": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/dada2-stats.tsv",
+          "detected_primers": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/detected_primers.json",
+          "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+          "preprocess_manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/preprocess_artifacts.json",
+          "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/read-layout.txt",
+          "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/read-selection.json",
+          "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta",
+          "trim_reads": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/trim_reads.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "trim_reads",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "trimmed_reads": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/FW_TWAS_AS_rep_2_trimmed_R1.fastq.gz",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/FW_TWAS_AS_rep_2_trimmed_R2.fastq.gz",
+            "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/read-layout.txt",
+            "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/read-selection.json"
+          }
+        }
+      },
+      "cod_profile": {
+        "X_Me_CO2": 0.0098473297250854,
+        "X_Me_ac": 0.024323991503809157,
+        "X_VFA_deg": 0.09058656246452429,
+        "X_aa": 0.08497367682071273,
+        "X_ac_et": 0.07903974279422692,
+        "X_ac_lac": 0.07780962137973027,
+        "X_ch": 0.07733114743135774,
+        "X_chain_et": 0.07594685798068043,
+        "X_chain_lac": 0.07476192527936616,
+        "X_et": 0.06818532310975453,
+        "X_fa": 0.0873190067882505,
+        "X_lac": 0.0658729902088596,
+        "X_li": 0.04832493480272331,
+        "X_pr": 0.07828003410666344,
+        "X_su": 0.057396855604255524
+      },
+      "input": {
+        "accession": "SRR19159479",
+        "condition": "FW+TWAS+AS",
+        "replicate": "2",
+        "sample_name": "FW_TWAS_AS_rep_2"
+      },
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-22T00:28:47"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:28:47"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:28:47"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159479/SRR19159479_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159479/SRR19159479_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:06:00"
+        }
+      },
+      "status": "completed"
+    },
+    "FW_TWAS_rep_1": {
+      "artifacts": {
+        "cod": {
+          "align_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/align_genomes.sh",
+            "dependencies": [
+              "align_to_gtdb"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "align_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "align_to_gtdb": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "cod_evidence_qc": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/cod_evidence_qc.csv",
+          "cod_potential": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/cod_potential.csv",
+          "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/cod_profile.csv",
+          "community_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/community_pathway_scores.csv",
+          "download_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/download_genomes.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "feature_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/feature_abundances.csv",
+          "genome_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/genome_abundances.csv",
+          "genome_alignment_scripts": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/genome_alignment_commands.json",
+          "genome_cods": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/genome_cods.csv",
+          "genome_gene_annotations": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/genome_gene_annotations.csv",
+          "genome_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/genome_pathway_scores.csv",
+          "provenance": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/provenance.json",
+          "representative_genomes": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/representative_genomes.csv",
+          "sample_marker_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/sample_marker_abundances.csv",
+          "sample_repseqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/sample_repseqs.fasta",
+          "skipped_genome_fastas": [
+            "GCA_018003655.1",
+            "GCA_016722305.1",
+            "GCA_041674545.1",
+            "GCA_046347895.1",
+            "GCA_035434045.1",
+            "GCA_035434385.1",
+            "GCA_035426845.1",
+            "GCA_016703135.1",
+            "GCA_046329365.1",
+            "GCA_046350755.1",
+            "GCF_004127515.1",
+            "GCA_041396145.1",
+            "GCA_018242085.1",
+            "GCA_016705885.1",
+            "GCA_046330055.1",
+            "GCA_019636095.1",
+            "GCA_046329585.1",
+            "GCA_051953275.1",
+            "GCA_046351615.1",
+            "GCA_046331345.1",
+            "GCA_016700375.1",
+            "GCA_016710995.1",
+            "GCA_046329695.1",
+            "GCA_016706035.1",
+            "GCA_016704085.1",
+            "GCA_040080065.1",
+            "GCA_016191845.1",
+            "GCA_024235995.1",
+            "GCA_016707525.1",
+            "GCA_037200505.1",
+            "GCF_046764005.1",
+            "GCF_003640395.1",
+            "GCA_049291395.1",
+            "GCA_016714645.1",
+            "GCA_036569545.1",
+            "GCA_046329225.1",
+            "GCA_046330555.1",
+            "GCA_037045515.1",
+            "GCA_037044955.1",
+            "GCA_022484585.1",
+            "GCA_035332425.1",
+            "GCA_037046705.1",
+            "GCA_050183115.1",
+            "GCA_016714715.1",
+            "GCA_016717165.1",
+            "GCF_963887565.1",
+            "GCA_016711835.1",
+            "GCF_001014975.1",
+            "GCA_049290295.1",
+            "GCA_049643045.1",
+            "GCF_044224635.1",
+            "GCA_046330835.1",
+            "GCA_016707485.1",
+            "GCA_016710525.1",
+            "GCA_050597465.1",
+            "GCA_046348585.1",
+            "GCA_020160975.1",
+            "GCA_016722635.1",
+            "GCF_026261605.1",
+            "GCA_016722395.1",
+            "GCA_016722575.1",
+            "GCA_016702655.1",
+            "GCA_024235115.1",
+            "GCA_037045785.1",
+            "GCA_016711875.1",
+            "GCA_046351595.1",
+            "GCF_016711745.1",
+            "GCA_016721425.1",
+            "GCA_046329445.1",
+            "GCA_016716985.1",
+            "GCF_002165385.1",
+            "GCA_016722075.1",
+            "GCF_024341885.1",
+            "GCA_017347485.1",
+            "GCA_016712025.1",
+            "GCF_025821515.1",
+            "GCA_016702775.1",
+            "GCA_036510065.1",
+            "GCF_051958235.1",
+            "GCA_016710435.1",
+            "GCF_048977785.1",
+            "GCF_012103215.1",
+            "GCA_030857175.1",
+            "GCF_040226955.1",
+            "GCF_051958015.1",
+            "GCA_017999195.1",
+            "GCA_021300375.1",
+            "GCA_035248525.1",
+            "GCA_016713585.1",
+            "GCA_016704225.1",
+            "GCA_016185255.1",
+            "GCA_046330105.1",
+            "GCF_014645495.1",
+            "GCA_046329965.1",
+            "GCA_020890945.1",
+            "GCF_051962735.1",
+            "GCA_049290055.1",
+            "GCA_035550135.1",
+            "GCA_033763945.1",
+            "GCA_016707685.1",
+            "GCF_034925685.1",
+            "GCA_004168015.1",
+            "GCA_016704885.1"
+          ]
+        },
+        "preprocess": {
+          "build_amplicon_features": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/build_amplicon_features.sh",
+            "dependencies": [
+              "trim_reads"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "build_amplicon_features",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "cutadapt_report": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/FW_TWAS_rep_1_cutadapt.json",
+          "dada2_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/FW_TWAS_rep_1_dada2.R",
+          "dada2_single_end_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/FW_TWAS_rep_1_dada2_single.R",
+          "dada2_stats": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/dada2-stats.tsv",
+          "detected_primers": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/detected_primers.json",
+          "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+          "preprocess_manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/preprocess_artifacts.json",
+          "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/read-layout.txt",
+          "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/read-selection.json",
+          "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta",
+          "trim_reads": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/trim_reads.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "trim_reads",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "trimmed_reads": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/FW_TWAS_rep_1_trimmed_R1.fastq.gz",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/FW_TWAS_rep_1_trimmed_R2.fastq.gz",
+            "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/read-layout.txt",
+            "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/read-selection.json"
+          }
+        }
+      },
+      "cod_profile": {
+        "X_Me_CO2": 0.010475698060087123,
+        "X_Me_ac": 0.02306800519580334,
+        "X_VFA_deg": 0.09070031602859795,
+        "X_aa": 0.08275288067252026,
+        "X_ac_et": 0.07856703535944869,
+        "X_ac_lac": 0.08084609476504166,
+        "X_ch": 0.07187136307742555,
+        "X_chain_et": 0.07725775710026725,
+        "X_chain_lac": 0.07995591629660075,
+        "X_et": 0.06136999500649836,
+        "X_fa": 0.09307572548624167,
+        "X_lac": 0.0690937512226653,
+        "X_li": 0.047422427980295265,
+        "X_pr": 0.07998414724712907,
+        "X_su": 0.053558886501377814
+      },
+      "input": {
+        "accession": "SRR19159478",
+        "condition": "FW+TWAS",
+        "replicate": "1",
+        "sample_name": "FW_TWAS_rep_1"
+      },
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159478/SRR19159478_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159478/SRR19159478_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:18:04"
+        }
+      },
+      "status": "completed"
+    },
+    "FW_TWAS_rep_2": {
+      "artifacts": {
+        "cod": {
+          "align_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/align_genomes.sh",
+            "dependencies": [
+              "align_to_gtdb"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "align_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "align_to_gtdb": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "cod_evidence_qc": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/cod_evidence_qc.csv",
+          "cod_potential": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/cod_potential.csv",
+          "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/cod_profile.csv",
+          "community_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/community_pathway_scores.csv",
+          "download_genomes": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/download_genomes.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_genomes",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "feature_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/feature_abundances.csv",
+          "genome_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/genome_abundances.csv",
+          "genome_alignment_scripts": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/genome_alignment_commands.json",
+          "genome_cods": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/genome_cods.csv",
+          "genome_gene_annotations": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/genome_gene_annotations.csv",
+          "genome_pathway_scores": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/genome_pathway_scores.csv",
+          "provenance": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/provenance.json",
+          "representative_genomes": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/representative_genomes.csv",
+          "sample_marker_abundances": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/sample_marker_abundances.csv",
+          "sample_repseqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/sample_repseqs.fasta",
+          "skipped_genome_fastas": [
+            "GCA_018003655.1",
+            "GCA_016722305.1",
+            "GCA_046347895.1",
+            "GCA_016703135.1",
+            "GCA_035434045.1",
+            "GCA_035434385.1",
+            "GCA_041674545.1",
+            "GCA_035426845.1",
+            "GCA_018242085.1",
+            "GCA_041396145.1",
+            "GCA_046350755.1",
+            "GCA_019636095.1",
+            "GCA_046329365.1",
+            "GCA_016704735.1",
+            "GCA_016705885.1",
+            "GCA_046331345.1",
+            "GCA_046351615.1",
+            "GCF_004127515.1",
+            "GCA_046329585.1",
+            "GCA_016700375.1",
+            "GCA_046329695.1",
+            "GCA_016710995.1",
+            "GCA_051953275.1",
+            "GCA_049291395.1",
+            "GCA_024235995.1",
+            "GCA_016706035.1",
+            "GCA_016704085.1",
+            "GCA_037200505.1",
+            "GCA_022484585.1",
+            "GCA_046329225.1",
+            "GCA_037045515.1",
+            "GCA_040080065.1",
+            "GCA_016191845.1",
+            "GCA_036569545.1",
+            "GCF_022012435.1",
+            "GCA_046348625.1",
+            "GCA_016714715.1",
+            "GCF_001014975.1",
+            "GCF_046764005.1",
+            "GCA_017347485.1",
+            "GCA_016714645.1",
+            "GCA_016710525.1",
+            "GCF_963887565.1",
+            "GCA_037044955.1",
+            "GCA_046330555.1",
+            "GCA_016722395.1",
+            "GCA_016722575.1",
+            "GCA_016707525.1",
+            "GCA_037046705.1",
+            "GCA_035332425.1",
+            "GCF_026261605.1",
+            "GCA_014642275.1",
+            "GCA_016707485.1",
+            "GCF_027111095.2",
+            "GCA_050183115.1",
+            "GCA_049643045.1",
+            "GCF_002165385.1",
+            "GCA_037046685.1",
+            "GCA_016722635.1",
+            "GCA_046351595.1",
+            "GCF_016711745.1",
+            "GCA_016721435.1",
+            "GCA_016711875.1",
+            "GCA_037045785.1",
+            "GCA_046329445.1",
+            "GCA_016719255.1",
+            "GCF_044224635.1",
+            "GCA_046316935.1",
+            "GCF_051958235.1",
+            "GCA_016716985.1",
+            "GCA_030857175.1",
+            "GCA_016702655.1",
+            "GCA_016795365.1",
+            "GCA_016713365.1",
+            "GCA_016721425.1",
+            "GCA_018882785.1",
+            "GCA_016711965.1",
+            "GCF_051958015.1",
+            "GCA_016702775.1",
+            "GCA_001771815.1",
+            "GCA_046348585.1",
+            "GCA_030537075.1",
+            "GCA_016710435.1",
+            "GCA_016712025.1",
+            "GCA_046329855.1",
+            "GCA_036510065.1",
+            "GCA_049290295.1",
+            "GCA_016717055.1",
+            "GCA_016722075.1",
+            "GCF_025821515.1",
+            "GCA_035248525.1",
+            "GCA_015075305.1",
+            "GCA_046330105.1",
+            "GCF_040226955.1",
+            "GCF_020783315.1",
+            "GCF_003052295.1",
+            "GCF_051962735.1",
+            "GCA_016712375.1",
+            "GCA_020890945.1",
+            "GCA_035332785.1",
+            "GCA_049653105.1",
+            "GCA_036387945.1",
+            "GCA_016704225.1",
+            "GCA_016721245.1",
+            "GCA_008933705.1",
+            "GCA_046330625.1",
+            "GCA_036504335.1",
+            "GCA_036528635.1",
+            "GCF_020658055.1",
+            "GCA_035460805.1",
+            "GCA_036403075.1",
+            "GCF_034925685.1",
+            "GCF_014645495.1",
+            "GCA_046327955.1",
+            "GCA_017303335.1",
+            "GCA_046331265.1",
+            "GCF_016717175.1",
+            "GCF_019430125.1"
+          ]
+        },
+        "preprocess": {
+          "build_amplicon_features": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/build_amplicon_features.sh",
+            "dependencies": [
+              "trim_reads"
+            ],
+            "executed": true,
+            "status": "completed",
+            "step": "build_amplicon_features",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "cutadapt_report": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/FW_TWAS_rep_2_cutadapt.json",
+          "dada2_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/FW_TWAS_rep_2_dada2.R",
+          "dada2_single_end_script": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/FW_TWAS_rep_2_dada2_single.R",
+          "dada2_stats": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/dada2-stats.tsv",
+          "detected_primers": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/detected_primers.json",
+          "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+          "preprocess_manifest": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/preprocess_artifacts.json",
+          "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/read-layout.txt",
+          "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/read-selection.json",
+          "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta",
+          "trim_reads": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/trim_reads.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "trim_reads",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "trimmed_reads": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/FW_TWAS_rep_2_trimmed_R1.fastq.gz",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/FW_TWAS_rep_2_trimmed_R2.fastq.gz",
+            "read_layout": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/read-layout.txt",
+            "read_selection": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/read-selection.json"
+          }
+        }
+      },
+      "cod_profile": {
+        "X_Me_CO2": 0.010787127434531193,
+        "X_Me_ac": 0.022986897682048302,
+        "X_VFA_deg": 0.09084317723127229,
+        "X_aa": 0.0827576842451895,
+        "X_ac_et": 0.07952100683818397,
+        "X_ac_lac": 0.07910429068776928,
+        "X_ch": 0.06860637696437093,
+        "X_chain_et": 0.07876126546859276,
+        "X_chain_lac": 0.07833928568023249,
+        "X_et": 0.0643712214338792,
+        "X_fa": 0.0927815172742816,
+        "X_lac": 0.06483464376126906,
+        "X_li": 0.05037123022754867,
+        "X_pr": 0.081594092026679,
+        "X_su": 0.054340183044151814
+      },
+      "input": {
+        "accession": "SRR19159477",
+        "condition": "FW+TWAS",
+        "replicate": "2",
+        "sample_name": "FW_TWAS_rep_2"
+      },
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:55:51"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:55:51"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:55:51"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159477/SRR19159477_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159477/SRR19159477_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:18:33"
+        }
+      },
+      "status": "completed"
+    }
+  },
+  "stage": "all",
+  "workflow_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/workflow_events.jsonl",
+  "workflow_state": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/workflow_state.json"
+}

@@ -1,0 +1,57 @@
+# Local execution profile for the Ding day-0 re-annotation.
+# Matches reference_data/metagenomics_pipeline.toml settings, but every step runs
+# locally instead of via Slurm, and VSEARCH identity is 0.95 to match the Rico run.
+backend = "local"
+container = "None"
+
+[steps.download_sra]
+backend = "local"
+
+[steps.trim_reads]
+backend = "local"
+
+[steps.trim_reads.settings]
+threads = 4
+minimum_length = 100
+quality_cutoff = 20
+quality_trim = "cut_right"
+quality_window_size = 4
+quality_mean = 20
+min_reads_for_denoising = 1000
+allow_single_end_fallback = true
+
+[steps.build_amplicon_features]
+backend = "local"
+
+[steps.build_amplicon_features.settings]
+threads = 4
+denoiser = "dada2"
+primer_mode = "auto"
+primer_detection_reads = 10000
+primer_max_offset = 12
+primer_max_error_rate = 0.15
+primer_min_fraction = 0.80
+cutadapt_error_rate = 0.15
+discard_untrimmed = true
+maxee = 2.0
+minimum_length = 100
+chimera_filter = true
+dada2_min_overlap = 12
+# SRA-sourced reads: identifier is the first header field
+id_field = 1
+
+[steps.align_to_gtdb]
+backend = "local"
+
+[steps.align_to_gtdb.settings]
+vsearch_threads = 4
+vsearch_similarity = 0.95      # matches the Rico annotation (was 0.97 in the original Ding run)
+
+[steps.download_genomes]
+backend = "local"
+
+[steps.download_genomes.settings]
+max_workers = 3                # NCBI rate-limits above this
+
+[steps.align_genomes]
+backend = "local"

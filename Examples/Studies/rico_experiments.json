@@ -1,0 +1,1037 @@
+{
+ "FW_A_35C_pH5_repA": {
+  "name": "FW_A_35C_pH5_repA",
+  "condition": "FW_A_35C_pH5",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.11308610346666666,
+    0.055799507199999994,
+    0.9259020853333334,
+    0.7152932629333333,
+    1.2933062453333335
+   ],
+   [
+    0.0,
+    0.0,
+    0.39413831459459464,
+    0.5101812043243243,
+    0.7129449115675676
+   ],
+   [
+    0.0,
+    1.7972753781818183,
+    1.9695040963636365,
+    2.0933212254545457,
+    2.240047520909091
+   ],
+   [
+    0.0,
+    0.0,
+    0.2382131154509804,
+    0.3609779557647058,
+    0.48710568807843135
+   ],
+   [
+    0.0,
+    0.28586602593103444,
+    0.2856460336551724,
+    0.3038620424827586,
+    0.36398058924137927
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.11308610346666666,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.00041643320712920015,
+   "X_aa": 0.10600568609828515,
+   "X_pr": 0.14247908743437185,
+   "X_ac_et": 0.011623954793747103,
+   "X_chain_et": 0.010806878543053403,
+   "X_et": 0.16121737342856346,
+   "X_ac_lac": 0.0015710889178058003,
+   "X_chain_lac": 0.0010347734237757004,
+   "X_fa": 0.09130285207356133,
+   "X_li": 0.09841093290331503,
+   "X_lac": 0.021768661192711106,
+   "X_su": 0.12660903781116045,
+   "X_ch": 0.14942802401918595,
+   "X_VFA_deg": 0.07732521615333433,
+   "X_Me_ac": 0.0,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.07178065046250336,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-05
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH5_repB": {
+  "name": "FW_A_35C_pH5_repB",
+  "condition": "FW_A_35C_pH5",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.2339288896,
+    0.0,
+    0.7812805642666666,
+    0.890039088,
+    1.1313292202666667
+   ],
+   [
+    0.0,
+    0.0,
+    0.5159949835675676,
+    0.6393997422702703,
+    0.8856095662702703
+   ],
+   [
+    0.0,
+    0.6630733236363637,
+    2.5178997309090914,
+    2.6879860963636366,
+    2.5670481654545454
+   ],
+   [
+    0.0,
+    0.0,
+    0.2781516889411764,
+    0.703911760627451,
+    0.857423144627451
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.25743984993103447,
+    0.26916198179310347
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.2339288896,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.00028955784697130024,
+   "X_aa": 0.10612290064455777,
+   "X_pr": 0.1449982748454713,
+   "X_ac_et": 0.009655547705467006,
+   "X_chain_et": 0.008908080109471006,
+   "X_et": 0.16516530402627172,
+   "X_ac_lac": 0.0019692195764734015,
+   "X_chain_lac": 0.001502081331164101,
+   "X_fa": 0.08505804627443525,
+   "X_li": 0.10108085147154247,
+   "X_lac": 0.019639675073745515,
+   "X_su": 0.126455525248937,
+   "X_ch": 0.1577906690843481,
+   "X_VFA_deg": 0.07136426676114414,
+   "X_Me_ac": 0.0,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.14848480354978924,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-05
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH5_repC": {
+  "name": "FW_A_35C_pH5_repC",
+  "condition": "FW_A_35C_pH5",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.1371567328,
+    0.18754801813333333,
+    0.6216862549333333,
+    1.3593329514666666,
+    1.258283592533333
+   ],
+   [
+    0.0,
+    0.0,
+    0.5030510088648649,
+    0.6017463578378379,
+    1.0294909164324324
+   ],
+   [
+    0.0,
+    2.142675570909091,
+    2.175979610909091,
+    2.1198713472727273,
+    2.6098008100000003
+   ],
+   [
+    0.0,
+    0.0,
+    0.25873747058823526,
+    0.5852730142745098,
+    0.8657902046274508
+   ],
+   [
+    0.0,
+    0.42681589627586203,
+    0.3056858659310345,
+    0.332580268137931,
+    0.6761358388965517
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.1371567328,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.00026637643893290014,
+   "X_aa": 0.10833263941872666,
+   "X_pr": 0.14299056290601697,
+   "X_ac_et": 0.0076314919490242045,
+   "X_chain_et": 0.007300852565403304,
+   "X_et": 0.1609836357371087,
+   "X_ac_lac": 0.0004864265406601003,
+   "X_chain_lac": 0.0004864265406601003,
+   "X_fa": 0.08779916968646835,
+   "X_li": 0.10356303351772705,
+   "X_lac": 0.020472924207873812,
+   "X_su": 0.12844614901005388,
+   "X_ch": 0.1567036855017115,
+   "X_VFA_deg": 0.07453662597963244,
+   "X_Me_ac": 0.0,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.08705932200235149,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-05
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH7_repA": {
+  "name": "FW_A_35C_pH7_repA",
+  "condition": "FW_A_35C_pH7",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.14920617173333334,
+    2.409501104,
+    2.9760569738666667,
+    0.2008538912,
+    0.042357030399999995
+   ],
+   [
+    0.0,
+    0.21602504756756757,
+    0.8879325597837838,
+    0.2867161450810811,
+    0.32330897124324326
+   ],
+   [
+    0.0,
+    1.9191215818181824,
+    2.0562273272727274,
+    1.4221642345454548,
+    0.10332739636363637
+   ],
+   [
+    0.0,
+    0.145527271372549,
+    0.6710997443137255,
+    0.6235210575686274,
+    0.19385374666666663
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.14920617173333334,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.0017981122677641016,
+   "X_aa": 0.1106615724507438,
+   "X_pr": 0.1242607487322338,
+   "X_ac_et": 0.03257828205560953,
+   "X_chain_et": 0.021288821114349116,
+   "X_et": 0.1390010092383429,
+   "X_ac_lac": 0.004712170803619104,
+   "X_chain_lac": 0.0014258915753925013,
+   "X_fa": 0.1020062122676534,
+   "X_li": 0.09018560298262468,
+   "X_lac": 0.03093772452371373,
+   "X_su": 0.12245519093510011,
+   "X_ch": 0.11968241747471062,
+   "X_VFA_deg": 0.09804992272235738,
+   "X_Me_ac": 0.0009563208557853009,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.14835249224492106,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-07
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH7_repB": {
+  "name": "FW_A_35C_pH7_repB",
+  "condition": "FW_A_35C_pH7",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.24057294293333334,
+    1.7823687882666666,
+    2.3560823872,
+    2.3003993792,
+    2.0370759530666667
+   ],
+   [
+    0.0,
+    0.25930147675675674,
+    0.48680839502702705,
+    0.7803230944864865,
+    0.8655048988108108
+   ],
+   [
+    0.0,
+    2.11439132,
+    1.8187705127272729,
+    1.8031735381818184,
+    1.9470111090909092
+   ],
+   [
+    0.0,
+    0.1684806525490196,
+    0.5747059535686274,
+    0.4022438404705882,
+    0.46062696486274507
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.01196249820689655,
+    0.040087552
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.24057294293333334,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.0014247221438203012,
+   "X_aa": 0.10869570994839407,
+   "X_pr": 0.11456854284314417,
+   "X_ac_et": 0.05660626151040293,
+   "X_chain_et": 0.03808142807145073,
+   "X_et": 0.12960826142972298,
+   "X_ac_lac": 0.013406857986184708,
+   "X_chain_lac": 0.001189966790577201,
+   "X_fa": 0.09434263122317045,
+   "X_li": 0.08824954649449517,
+   "X_lac": 0.03401235115193242,
+   "X_su": 0.11551454714315737,
+   "X_ch": 0.11258775640530487,
+   "X_VFA_deg": 0.09121762111521377,
+   "X_Me_ac": 0.0004937957430286003,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.2391965106821513,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-07
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH7_repC": {
+  "name": "FW_A_35C_pH7_repC",
+  "condition": "FW_A_35C_pH7",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.1976291648,
+    2.3391742272,
+    2.8589343594666667,
+    0.13831920106666665,
+    0.01815820693333333
+   ],
+   [
+    0.0,
+    0.036302744648648654,
+    0.7466588503783784,
+    0.28263525405405404,
+    0.4600697602162162
+   ],
+   [
+    0.0,
+    1.8230187890909093,
+    1.9225356472727273,
+    1.120446190909091,
+    0.0
+   ],
+   [
+    0.0,
+    0.22542493490196078,
+    0.39632562462745097,
+    0.3727108095686274,
+    0.17116298180392156
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.01691073103448276,
+    0.0
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.1976291648,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.0013689570226891009,
+   "X_aa": 0.10800330144310437,
+   "X_pr": 0.11314261547288158,
+   "X_ac_et": 0.06324088126978024,
+   "X_chain_et": 0.042414899187394925,
+   "X_et": 0.1278801127413263,
+   "X_ac_lac": 0.01525623979255381,
+   "X_chain_lac": 0.0011407975189076007,
+   "X_fa": 0.09209373485251905,
+   "X_li": 0.08650661130350255,
+   "X_lac": 0.03463472594015642,
+   "X_su": 0.11510470383371578,
+   "X_ch": 0.10875518809570607,
+   "X_VFA_deg": 0.08980975185286875,
+   "X_Me_ac": 0.0006474796728935004,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.19649843433260797,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-07
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH9_repA": {
+  "name": "FW_A_35C_pH9_repA",
+  "condition": "FW_A_35C_pH9",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.13278117973333334,
+    0.5963548458666666,
+    1.6299339018666668,
+    2.622774119466667,
+    3.1684364576
+   ],
+   [
+    0.0,
+    0.12586062205405407,
+    0.2412475141621622,
+    0.841003112864865,
+    0.8534254369729729
+   ],
+   [
+    0.0,
+    0.0,
+    0.1725887654545455,
+    0.12392016727272728,
+    0.19800377090909094
+   ],
+   [
+    0.0,
+    0.06557809317647058,
+    0.24225629286274508,
+    0.23828372533333333,
+    0.30161836925490193
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.2968975051034483,
+    0.0
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.13278117973333334,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.00013715999711260012,
+   "X_aa": 0.10504344086370679,
+   "X_pr": 0.14426168301593892,
+   "X_ac_et": 0.01271187423239941,
+   "X_chain_et": 0.008806595006918006,
+   "X_et": 0.16601386064457974,
+   "X_ac_lac": 0.004363402408145004,
+   "X_chain_lac": 0.0015601949671559014,
+   "X_fa": 0.08129989496261247,
+   "X_li": 0.09943314960446659,
+   "X_lac": 0.02268898112393162,
+   "X_su": 0.1243884012300522,
+   "X_ch": 0.1584283944497235,
+   "X_VFA_deg": 0.07086296749325735,
+   "X_Me_ac": 0.0,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.13277353941361333,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-09
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH9_repB": {
+  "name": "FW_A_35C_pH9_repB",
+  "condition": "FW_A_35C_pH9",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.17377972586666665,
+    0.6445645013333333,
+    1.6190619136,
+    2.552368362666667,
+    3.1987647925333333
+   ],
+   [
+    0.0,
+    0.05095491005405406,
+    0.0672999494054054,
+    0.6646304378378379,
+    0.6256923377297298
+   ],
+   [
+    0.0,
+    0.0,
+    0.09824823272727273,
+    0.10673527636363637,
+    0.11323652000000001
+   ],
+   [
+    0.0,
+    0.0,
+    0.14499501976470586,
+    0.17936996643137254,
+    0.1949141979607843
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.17377972586666665,
+   "S_pro": 0.0,
+   "S_bu": 0.0,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.00014237091556910012,
+   "X_aa": 0.10745626573234318,
+   "X_pr": 0.1442401670412193,
+   "X_ac_et": 0.010347653734912008,
+   "X_chain_et": 0.0065490621161796055,
+   "X_et": 0.16586754876641435,
+   "X_ac_lac": 0.0034080037914358025,
+   "X_chain_lac": 0.0011287979734409008,
+   "X_fa": 0.07958063380034905,
+   "X_li": 0.10281296123602568,
+   "X_lac": 0.021933946440759317,
+   "X_su": 0.1254761540474534,
+   "X_ch": 0.16186219453834724,
+   "X_VFA_deg": 0.06919423986555126,
+   "X_Me_ac": 0.0,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.0,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.173769726462616,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-09
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ },
+ "FW_A_35C_pH9_repC": {
+  "name": "FW_A_35C_pH9_repC",
+  "condition": "FW_A_35C_pH9",
+  "reference": "https://doi.org/10.1016/j.biortech.2026.134980",
+  "sra_bioproject": "PRJNA1443009",
+  "model_name": "e_adm",
+  "time": [
+   0.0,
+   1.2,
+   3.3,
+   7.2,
+   11.3
+  ],
+  "variables": [
+   "S_ac",
+   "S_pro",
+   "S_bu",
+   "S_va",
+   "S_cap"
+  ],
+  "data": [
+   [
+    0.041134432,
+    0.39456985706666664,
+    1.6362829557333332,
+    2.7445083925333336,
+    2.9550597248
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.19120801340540539,
+    0.2337323974054054
+   ],
+   [
+    0.45917165272727284,
+    0.0,
+    0.57949434,
+    0.6713503490909091,
+    0.6947658036363636
+   ],
+   [
+    0.0,
+    0.0,
+    0.16267375952941174,
+    0.5609873176470587,
+    0.3056920064313725
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "feed": {
+   "name": "Foodwaste_Rico",
+   "carbohydrates": 46.5,
+   "lipids": 15.5,
+   "proteins": 18.0,
+   "tss": 30,
+   "si": 9.4,
+   "xi": 9.4,
+   "source": "Rico et al. SI Table S1a/b; protein assumed 18% (not measured); si/xi from BMP 518 mL CH4/gVS -> 317 mL CH4/gCOD vs 350 theoretical -> 9.4% inert (consistent with measured lignin 8.8%)"
+  },
+  "initial_concentrations": {
+   "S_ac": 0.041134432,
+   "S_pro": 0.0,
+   "S_bu": 0.45917165272727284,
+   "S_va": 0.0,
+   "S_cap": 0.0,
+   "X_Me_CO2": 0.00035179073072630026,
+   "X_aa": 0.11406161906486659,
+   "X_pr": 0.13654518941966381,
+   "X_ac_et": 0.01347151562958071,
+   "X_chain_et": 0.005776690324914104,
+   "X_et": 0.1545946898265588,
+   "X_ac_lac": 0.005722419441539905,
+   "X_chain_lac": 0.00045525859270470037,
+   "X_fa": 0.07959549777917635,
+   "X_li": 0.10513587115356578,
+   "X_lac": 0.030113424507327423,
+   "X_su": 0.12617968367280652,
+   "X_ch": 0.1547783414496412,
+   "X_VFA_deg": 0.07321800840692776,
+   "X_Me_ac": 0.0,
+   "S_va_ion": 0.0,
+   "S_bu_ion": 0.4591413175612506,
+   "S_pro_ion": 0.0,
+   "S_cap_ion": 0.0,
+   "S_ac_ion": 0.04113206509670382,
+   "S_su": 0.0,
+   "S_aa": 0.0,
+   "S_fa": 0.0,
+   "TSS": 4.5,
+   "TDS": 10.5,
+   "S_H_ion": 1e-09
+  },
+  "base_parameters": {
+   "q_in": 0,
+   "V_liq": 0.0001,
+   "V_gas": 7e-05
+  },
+  "constants": [
+   "S_H_ion"
+  ],
+  "microbiome_source": {
+   "backend": "mmseqs",
+   "marker_catalog_version": "0.4.1",
+   "vsearch_similarity": 0.95,
+   "profiles": "tutorial_output/rico_mmseqs/profiles/<Jcode>/cod_profile.csv"
+  }
+ }
+}

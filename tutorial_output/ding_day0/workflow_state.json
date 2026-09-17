@@ -1,0 +1,617 @@
+{
+  "samples": {
+    "FW_AS_rep_1": {
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159476/SRR19159476_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159476/SRR19159476_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:14:20"
+        }
+      }
+    },
+    "FW_AS_rep_2": {
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:56:31"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:56:31"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:56:31"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159475/SRR19159475_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159475/SRR19159475_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_AS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:19:29"
+        }
+      }
+    },
+    "FW_TWAS_AS_rep_1": {
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-22T00:21:49"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:21:49"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:21:49"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159483/SRR19159483_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159483/SRR19159483_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:40:07"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:00:31"
+        }
+      }
+    },
+    "FW_TWAS_AS_rep_2": {
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-22T00:28:47"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:28:47"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:28:47"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159479/SRR19159479_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159479/SRR19159479_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_AS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-22T00:06:00"
+        }
+      }
+    },
+    "FW_TWAS_rep_1": {
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:47:46"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159478/SRR19159478_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159478/SRR19159478_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_1/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:18:04"
+        }
+      }
+    },
+    "FW_TWAS_rep_2": {
+      "stages": {
+        "align_genomes": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/align_genomes.sh",
+                "dependencies": [
+                  "align_to_gtdb"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "align_genomes",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "status": "completed",
+          "updated_at": "2026-08-21T23:55:51"
+        },
+        "align_to_gtdb": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/align_to_gtdb.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "align_to_gtdb",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+          },
+          "attempts": 0,
+          "paths": {
+            "matches": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/matches.blast"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:55:51"
+        },
+        "cod": {
+          "attempts": 0,
+          "paths": {
+            "cod_profile": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/cod_profile.csv"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:55:51"
+        },
+        "download_sra": {
+          "artifact": {
+            "backend": "local",
+            "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/download_sra.sh",
+            "dependencies": [],
+            "executed": true,
+            "status": "completed",
+            "step": "download_sra",
+            "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/task_events.jsonl"
+          },
+          "attempts": 0,
+          "message": "cached FASTQ files found",
+          "paths": {
+            "read_1": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159477/SRR19159477_1.fastq",
+            "read_2": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_sra/SRR19159477/SRR19159477_2.fastq"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:09:09"
+        },
+        "preprocess": {
+          "artifact": {
+            "steps": [
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/trim_reads.sh",
+                "dependencies": [],
+                "executed": true,
+                "status": "completed",
+                "step": "trim_reads",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+              },
+              {
+                "backend": "local",
+                "command": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/build_amplicon_features.sh",
+                "dependencies": [
+                  "trim_reads"
+                ],
+                "executed": true,
+                "status": "completed",
+                "step": "build_amplicon_features",
+                "task_events": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/task_events.jsonl"
+              }
+            ]
+          },
+          "attempts": 0,
+          "message": "Step trim_reads failed. See /Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/trim_reads.sh. Last output: pyenv: fastp: command not found\n\nThe `fastp' command exists in these Python versions:\n  miniconda3-latest/envs/adtoolbox-tools\n\nNote: See 'pyenv help global' for tips on allowing both\n      python2 and python3 to be found.\nfastp retained fewer than 1000 usable paired or R1-only reads",
+          "paths": {
+            "feature_table": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/feature-table.tsv",
+            "rep_seqs": "/Users/parsaghadermarzi/Desktop/Academics/Projects/ADToolbox/tutorial_output/ding_day0/FW_TWAS_rep_2/scratch/amplicon_preprocess/rep-seqs.fasta"
+          },
+          "status": "completed",
+          "updated_at": "2026-08-21T23:18:33"
+        }
+      }
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,103 @@
+sample,marker_id,marker_name,genomes_detected,gene_copies_detected,weighted_abundance,copy_cap_per_genome
+FW_TWAS_rep_1,cazy_GH5,GH5 cellulase/mannanase family,4,6,0.026087378170004366,1.0
+FW_TWAS_rep_1,cazy_GH9,GH9 endoglucanase family,4,4,0.03331232119478252,1.0
+FW_TWAS_rep_1,cazy_GH48,GH48 processive cellulase family,0,0,0.0,1.0
+FW_TWAS_rep_1,cazy_GH10,GH10 endoxylanase family,6,9,0.02841487659409397,1.0
+FW_TWAS_rep_1,cazy_GH11,GH11 endoxylanase family,0,0,0.0,1.0
+FW_TWAS_rep_1,cazy_GH13,GH13 alpha-amylase/pullulanase family,26,88,0.1837269068515735,1.0
+FW_TWAS_rep_1,cazy_GH43,GH43 xylan/arabinose debranching family,13,31,0.11496872423992631,1.0
+FW_TWAS_rep_1,cazy_PL1,PL1 pectate lyase family,2,2,0.016195509867623525,1.0
+FW_TWAS_rep_1,cazy_CE8,CE8 pectin methylesterase family,7,10,0.03486398681084226,1.0
+FW_TWAS_rep_1,cazy_CBM3,cellulose-binding module family 3,0,0,0.0,1.0
+FW_TWAS_rep_1,cazy_CBM6,xylan/cellulose-binding module family 6,2,2,0.004654996848179218,1.0
+FW_TWAS_rep_1,bgl,beta-glucosidase,16,36,0.05988459486980556,1.0
+FW_TWAS_rep_1,agl,alpha-glucosidase or maltodextrin glucosidase,23,65,0.16156718227222036,1.0
+FW_TWAS_rep_1,susC,SusC-like outer-membrane glycan transporter,25,118,0.17713232798331963,1.0
+FW_TWAS_rep_1,susD,SusD-like glycan-binding protein,7,38,0.11007127963923774,1.0
+FW_TWAS_rep_1,extracellular_protease,secreted or cell-surface endopeptidase,30,102,0.1901760170683218,1.0
+FW_TWAS_rep_1,pepN,aminopeptidase N,35,96,0.21374193861222904,1.0
+FW_TWAS_rep_1,pepO,endopeptidase O,19,24,0.08456577607525577,1.0
+FW_TWAS_rep_1,oppA,oligopeptide transporter substrate-binding protein,37,115,0.211220481986132,1.0
+FW_TWAS_rep_1,oppB,oligopeptide transporter permease,34,108,0.20661397468845463,1.0
+FW_TWAS_rep_1,endopeptidase,broad bacterial endopeptidase,23,50,0.17907191000339426,1.0
+FW_TWAS_rep_1,pepA,leucyl aminopeptidase,29,36,0.1197691897396111,1.0
+FW_TWAS_rep_1,pepT,tripeptide aminopeptidase,25,48,0.16665858507491635,1.0
+FW_TWAS_rep_1,pepQ,Xaa-Pro aminopeptidase,39,91,0.22431266062163605,1.0
+FW_TWAS_rep_1,pepD,bacterial dipeptidase,20,31,0.060175532172816765,1.0
+FW_TWAS_rep_1,dtpT,proton-dependent oligopeptide transporter,27,58,0.1752412355137468,1.0
+FW_TWAS_rep_1,dppA,dipeptide transport substrate-binding protein,37,120,0.2107840760316152,1.0
+FW_TWAS_rep_1,dppB,dipeptide transport permease protein,34,98,0.20661397468845463,1.0
+FW_TWAS_rep_1,dppC,dipeptide transport permease protein,34,98,0.20661397468845463,1.0
+FW_TWAS_rep_1,lipase,extracellular triacylglycerol lipase,9,11,0.046016583426271636,1.0
+FW_TWAS_rep_1,esterase,carboxylesterase,17,26,0.06323037385443436,1.0
+FW_TWAS_rep_1,lysophospholipase,lysophospholipase,28,42,0.16593124181738841,1.0
+FW_TWAS_rep_1,acylglycerol_lipase,acylglycerol lipase,31,69,0.13868011443533917,1.0
+FW_TWAS_rep_1,phospholipase,phospholipase A,8,8,0.036512631527905744,1.0
+FW_TWAS_rep_1,ptsG,glucose-specific PTS transporter,7,33,0.018959414246229937,1.0
+FW_TWAS_rep_1,glcP,glucose transporter,13,36,0.04761673859283324,1.0
+FW_TWAS_rep_1,pgi,glucose-6-phosphate isomerase,26,31,0.1588517674441158,1.0
+FW_TWAS_rep_1,pfkA,6-phosphofructokinase,35,94,0.2167967802938467,1.0
+FW_TWAS_rep_1,gapA,glyceraldehyde-3-phosphate dehydrogenase,35,47,0.2101537118750909,1.0
+FW_TWAS_rep_1,pyk,pyruvate kinase,40,47,0.214129855016244,1.0
+FW_TWAS_rep_1,xylA,xylose isomerase,12,15,0.04907142510788925,1.0
+FW_TWAS_rep_1,xylB,xylulokinase,9,17,0.037094506133928146,1.0
+FW_TWAS_rep_1,xylF,xylose ABC transporter substrate-binding protein,11,25,0.04650147893129031,1.0
+FW_TWAS_rep_1,edd,phosphogluconate dehydratase,23,36,0.10391310672550066,1.0
+FW_TWAS_rep_1,eda,2-dehydro-3-deoxyphosphogluconate aldolase,20,26,0.07651651069194587,1.0
+FW_TWAS_rep_1,gdh,glutamate dehydrogenase,35,73,0.21286912670319547,1.0
+FW_TWAS_rep_1,ilvE,branched-chain amino-acid aminotransferase,31,47,0.2001163749212045,1.0
+FW_TWAS_rep_1,tdcB,threonine dehydratase,32,79,0.14672937981864909,1.0
+FW_TWAS_rep_1,grdA,glycine reductase component A,1,1,0.003491247636134413,1.0
+FW_TWAS_rep_1,grdB,glycine reductase component B,1,1,0.003491247636134413,1.0
+FW_TWAS_rep_1,prdA,D-proline reductase subunit A,1,1,0.003491247636134413,1.0
+FW_TWAS_rep_1,prdB,D-proline reductase subunit B,4,6,0.01954128885225234,1.0
+FW_TWAS_rep_1,fadD,long-chain fatty-acid CoA ligase,35,189,0.2151481355767832,1.0
+FW_TWAS_rep_1,fadE,acyl-CoA dehydrogenase,35,136,0.2151481355767832,1.0
+FW_TWAS_rep_1,fadB,multifunctional beta-oxidation enzyme,36,139,0.21863938321291762,1.0
+FW_TWAS_rep_1,fadA,acetyl-CoA acyltransferase,36,106,0.21863938321291762,1.0
+FW_TWAS_rep_1,mcrA,methyl-coenzyme M reductase alpha subunit,0,0,0.0,1.0
+FW_TWAS_rep_1,mcrB,methyl-coenzyme M reductase beta subunit,0,0,0.0,1.0
+FW_TWAS_rep_1,mtrA,tetrahydromethanopterin S-methyltransferase subunit A,1,1,0.006982495272268826,1.0
+FW_TWAS_rep_1,fwdA,formylmethanofuran dehydrogenase subunit A,20,26,0.16108228676720168,1.0
+FW_TWAS_rep_1,ftr,formylmethanofuran--tetrahydromethanopterin formyltransferase,0,0,0.0,1.0
+FW_TWAS_rep_1,mch,methenyltetrahydromethanopterin cyclohydrolase,0,0,0.0,1.0
+FW_TWAS_rep_1,mtd,methylenetetrahydromethanopterin dehydrogenase,0,0,0.0,1.0
+FW_TWAS_rep_1,mer,methylenetetrahydromethanopterin reductase,13,21,0.049604810163409785,1.0
+FW_TWAS_rep_1,acs,acetyl-CoA synthetase,35,173,0.2151481355767832,1.0
+FW_TWAS_rep_1,ackA,acetate kinase,15,25,0.06546089317752023,1.0
+FW_TWAS_rep_1,pta,phosphate acetyltransferase,31,41,0.20016486447170637,1.0
+FW_TWAS_rep_1,cdhC,CODH/ACS complex subunit gamma,8,8,0.04000387916404015,1.0
+FW_TWAS_rep_1,cdhD,CODH/ACS complex subunit delta,1,1,0.002036561121078408,1.0
+FW_TWAS_rep_1,cdhE,CODH/ACS complex subunit epsilon,0,0,0.0,1.0
+FW_TWAS_rep_1,thl,acetyl-CoA acetyltransferase/thiolase,36,110,0.21863938321291762,1.0
+FW_TWAS_rep_1,hbd,3-hydroxybutyryl-CoA dehydrogenase,36,99,0.21863938321291762,1.0
+FW_TWAS_rep_1,crt,crotonase,38,150,0.22203365174804832,1.0
+FW_TWAS_rep_1,bcd,butyryl-CoA dehydrogenase,35,130,0.2151481355767832,1.0
+FW_TWAS_rep_1,etfA,electron transfer flavoprotein alpha subunit,36,138,0.21863938321291762,1.0
+FW_TWAS_rep_1,etfB,electron transfer flavoprotein beta subunit,28,31,0.19507346166901032,1.0
+FW_TWAS_rep_1,cat,terminal CoA transferase,23,31,0.14866896183872375,1.0
+FW_TWAS_rep_1,lctD,electron-confurcating lactate dehydrogenase catalytic component,13,17,0.13310381612762445,1.0
+FW_TWAS_rep_1,lctB,electron-confurcating lactate dehydrogenase component,22,34,0.15996702710565874,1.0
+FW_TWAS_rep_1,lctC,electron-confurcating lactate dehydrogenase component,21,31,0.1636522329438006,1.0
+FW_TWAS_rep_1,pfor,pyruvate:ferredoxin oxidoreductase,29,55,0.1938612229064637,1.0
+FW_TWAS_rep_1,adhE,bifunctional acetaldehyde-CoA/alcohol dehydrogenase,26,80,0.10013092178635502,1.0
+FW_TWAS_rep_1,adh,alcohol dehydrogenase,34,100,0.21257818940018428,1.0
+FW_TWAS_rep_1,aldh,acetaldehyde dehydrogenase,23,48,0.10527081413955292,1.0
+FW_TWAS_rep_1,hydA,ferredoxin hydrogenase,36,91,0.21863938321291762,1.0
+FW_TWAS_rep_1,fdhA,formate dehydrogenase alpha subunit,34,120,0.20336517480482957,1.0
+FW_TWAS_rep_1,rnfB,Rnf electron transport complex subunit B,24,68,0.16549483586287161,1.0
+FW_TWAS_rep_1,mmcE,methylmalonyl-CoA mutase subunit,32,54,0.20545022547640981,1.0
+FW_TWAS_rep_1,mmcF,methylmalonyl-CoA mutase subunit,30,39,0.199195073461669,1.0
+FW_TWAS_rep_1,mmcG,methylmalonyl-CoA epimerase,29,36,0.18624836347767057,1.0
+FW_TWAS_rep_1,sucC,succinyl-CoA synthetase beta subunit,32,37,0.19012752751781992,1.0
+FW_TWAS_rep_1,sucD,succinyl-CoA synthetase alpha subunit,35,57,0.2151481355767832,1.0
+FW_TWAS_rep_1,fumB,fumarase,16,21,0.06289094700092131,1.0
+FW_TWAS_rep_1,mdh,malate dehydrogenase,32,37,0.1974494496436018,1.0
+FW_TWAS_rep_1,fhs,formate--tetrahydrofolate ligase,17,17,0.0765165106919459,1.0
+FW_TWAS_rep_1,folD,methylene-THF dehydrogenase/cyclohydrolase,36,37,0.20060127042622317,1.0
+FW_TWAS_rep_1,frhA,coenzyme F420 hydrogenase subunit alpha (H2 uptake),18,36,0.06754594384910051,1.0
+FW_TWAS_rep_1,frhB,coenzyme F420 hydrogenase subunit beta (H2 uptake),29,66,0.19517044077001408,1.0
+FW_TWAS_rep_1,frhG,coenzyme F420 hydrogenase subunit gamma (H2 uptake),36,106,0.21863938321291762,1.0
+FW_TWAS_rep_1,mvhA,F420-non-reducing hydrogenase large subunit (H2 uptake),14,26,0.05775105464772342,1.0
+FW_TWAS_rep_1,mvhD,F420-non-reducing hydrogenase iron-sulfur subunit (H2 uptake),5,6,0.01939582020074674,1.0
+FW_TWAS_rep_1,mvhG,F420-non-reducing hydrogenase small subunit (H2 uptake),27,51,0.18775153954322846,1.0

@@ -144,6 +144,7 @@ nav:
       - Parameter Tuning: Optimization.md
       - Example Notebooks: Notebooks.md
       - "Walkthrough: Modeling": modeling.html
+      - "Walkthrough: Metagenomics": metagenomics.html
       - "Walkthrough: Parameter Tuning": parameter_tuning.html
   - CLI: CLI.md
   - Python API:

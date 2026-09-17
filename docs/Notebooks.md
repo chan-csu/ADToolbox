@@ -1,7 +1,7 @@
 # Example Notebooks
 
 The `Examples/` directory in the repository holds executable notebooks for each major
-workflow. Two of them are also rendered here as static walkthroughs.
+workflow. Three of them are also rendered here as static walkthroughs.
 
 ## Available notebooks
 
@@ -27,23 +27,17 @@ workflow. Two of them are also rendered here as static walkthroughs.
     [:octicons-arrow-right-24: Rendered walkthrough](parameter_tuning.html)
     · [:octicons-mark-github-16: Source](https://github.com/chan-csu/ADToolbox/blob/main/Examples/parameter_tuning.ipynb)
 
--   :material-dna: **`metagenomics_notebook.ipynb`**
+-   :material-dna: **`metagenomics.ipynb`**
 
     ---
 
-    The sequence-analysis path in detail, covering both 16S amplicon and shotgun data and
-    the computational steps that connect them to the model.
+    End-to-end tutorial: from an SRA accession table to the NMDS + feature-enrichment
+    figure. Runs the metagenomics pipeline (SRA → per-sample COD / marker profiles) via
+    the Python API, then ordinates and compares the feedstock groups. Ends with the
+    one-command CLI equivalent.
 
-    [:octicons-mark-github-16: Source](https://github.com/chan-csu/ADToolbox/blob/main/Examples/metagenomics_notebook.ipynb)
-
--   :material-pipe: **`pipeline.ipynb`**
-
-    ---
-
-    A compact driver for the batch `metagenomics process` pipeline from Python, useful as
-    a template for your own runs.
-
-    [:octicons-mark-github-16: Source](https://github.com/chan-csu/ADToolbox/blob/main/Examples/pipeline.ipynb)
+    [:octicons-arrow-right-24: Rendered walkthrough](metagenomics.html)
+    · [:octicons-mark-github-16: Source](https://github.com/chan-csu/ADToolbox/blob/main/Examples/metagenomics.ipynb)
 
 </div>
 
@@ -78,7 +72,7 @@ The notebooks read from files that ship with the repository:
 | `reference_data/models.json` | ADM1 and e-ADM parameter sets keyed by model name. |
 
 !!! note "Notebooks that need databases"
-    The metagenomics notebooks expect the reference databases. Run
+    The metagenomics notebook expects the reference databases. Run
     `adtoolbox database download-all-databases --output-dir ./database` first, and point
     the notebook's `database_dir` at that directory. See the
     [Quickstart](Quickstart.md#2-download-the-reference-databases).

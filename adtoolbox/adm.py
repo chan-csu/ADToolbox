@@ -158,9 +158,42 @@ class Model:
         # model_parameters / base_parameters / feed feed the stoichiometric
         # matrix; invalidate its cache so the next access rebuilds it.
         self._s_cache={}
-            
 
-    
+    def fit(self, train_data, search_space, *, optimizer="scipy",
+            parameter_target="model_parameters", random_state=None, **optimize_kwargs):
+        """Calibrate this model's parameters to experimental data.
+
+        This gives every model type one homogeneous fitting call. Mechanistic
+        models fit their ``search_space`` with a black-box optimizer here;
+        :class:`NeuralADM` overrides this with gradient descent. Callers write
+        ``model.fit(train_data, ...)`` regardless of the model type.
+
+        Args:
+            train_data: Iterable of :class:`core.Experiment`.
+            search_space: ``{parameter: (low, high)}`` bounds to search.
+            optimizer: ``"scipy"`` (differential evolution), ``"genetic"``, or ``"surrogate"``.
+            parameter_target: which parameter group to fit. Defaults to ``"model_parameters"``.
+            random_state: optional seed for reproducibility.
+            **optimize_kwargs: forwarded to the optimizer's ``optimize`` (e.g. ``maxiter``,
+                ``popsize``, ``workers``).
+
+        Returns:
+            Model: ``self``, with the fitted parameters applied.
+        """
+        import optimize as _optimize
+        optimizers = {"scipy": _optimize.ScipyOptimizer,
+                      "genetic": _optimize.GeneticOptimizer,
+                      "surrogate": _optimize.SurrogateOptimizer}
+        if optimizer not in optimizers:
+            raise ValueError(f"optimizer must be one of {sorted(optimizers)}")
+        opt = optimizers[optimizer](base_model=self, train_data=list(train_data),
+                                    search_space=search_space,
+                                    parameter_target=parameter_target,
+                                    random_state=random_state)
+        opt.optimize(**optimize_kwargs)
+        self.update_parameters(**{parameter_target: opt.optimized_parameters})
+        return self
+
 
     def solve_model(self, t_eval: np.ndarray, method="BDF")->scipy.integrate._ivp.ivp.OdeResult:
         """
@@ -1617,3 +1650,254 @@ def e_adm_ode_sys(t: float, c: np.ndarray, model: Model)-> np.ndarray:
     
     model.info["Fluxes"]=v
     return dCdt[:, 0]
+
+
+# ============================================================================
+# Data-driven models that share the Model interface (option 1: COD-balanced)
+# ----------------------------------------------------------------------------
+# A neural network outputs non-negative reaction *rates*; concentrations follow
+# dc/dt = S @ rate with e-ADM's COD-balanced stoichiometric matrix S. Because
+# every biochemical column of S sums to zero in COD, total COD is conserved for
+# ANY network output -- the net only learns the (uncertain) rate laws. These
+# models expose the same interface as Model (species/solve_model/copy/fit) and
+# are trained by gradient descent, so `model.fit(train_data, ...)` works for
+# both mechanistic and neural models (the fit internals differ, the call does not).
+# ============================================================================
+
+DEFAULT_OBSERVED = ["S_ac", "S_pro", "S_bu", "S_va", "S_cap"]
+_NEURAL_BIOMASS = ["X_su", "X_aa", "X_fa", "X_ac_et", "X_lac", "X_et",
+                   "X_pr", "X_ch", "X_li", "X_Me_ac", "X_Me_CO2"]
+
+
+def _require_torch():
+    try:
+        import torch
+        return torch
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "Neural ADM models require PyTorch. Install it with `pip install torch`."
+        ) from exc
+
+
+def _neural_features(ic: dict, t: float, observed) -> list:
+    """Condition features fed to the rate network at time t (see _NEURAL_BIOMASS)."""
+    import math
+    pH = -math.log10(ic.get("S_H_ion", 10 ** -6.5))
+    cod = float(ic.get("TSS", 0.0)) + float(ic.get("TDS", 0.0))
+    bio = [float(ic.get(b, 0.0)) for b in _NEURAL_BIOMASS]
+    v0 = [float(ic.get(v, 0.0)) for v in observed]
+    return [float(t), pH, cod, sum(bio), *bio, *v0]
+
+
+def _cumulative_trapz_np(rates, t):
+    dt = np.diff(t)
+    incr = 0.5 * (rates[1:] + rates[:-1]) * dt[:, None]
+    cum = np.zeros_like(rates)
+    cum[1:] = np.cumsum(incr, axis=0)
+    return cum
+
+
+def _build_rate_net(backbone, in_dim, out_dim, hidden=32, seed=0):
+    """Return a torch module mapping (batch, time, in_dim) -> non-negative rates."""
+    torch = _require_torch()
+    import torch.nn as nn
+    import torch.nn.functional as F
+    torch.manual_seed(seed)
+
+    class MLP(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.net = nn.Sequential(nn.Linear(in_dim, hidden), nn.SiLU(),
+                                     nn.Linear(hidden, hidden), nn.SiLU(),
+                                     nn.Linear(hidden, out_dim))
+        def forward(self, x):
+            return F.softplus(self.net(x))
+
+    class LSTMNet(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.rnn = nn.LSTM(in_dim, hidden, batch_first=True)
+            self.head = nn.Linear(hidden, out_dim)
+        def forward(self, x):
+            return F.softplus(self.head(self.rnn(x)[0]))
+
+    class TransformerNet(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.inp = nn.Linear(in_dim, hidden)
+            layer = nn.TransformerEncoderLayer(hidden, 2, 2 * hidden, batch_first=True, dropout=0.0)
+            self.enc = nn.TransformerEncoder(layer, 1)
+            self.head = nn.Linear(hidden, out_dim)
+        def forward(self, x):
+            return F.softplus(self.head(self.enc(self.inp(x))))
+
+    b = backbone.lower()
+    if b == "mlp":
+        net = MLP()
+    elif b == "lstm":
+        net = LSTMNet()
+    elif b in ("transformer", "tfm"):
+        net = TransformerNet()
+    else:
+        raise ValueError(f"backbone must be 'mlp', 'lstm', or 'transformer'; got {backbone!r}")
+    # Start from near-zero rates: with softplus(bias<<0) the model begins pinned at
+    # the initial condition and grows rates as needed -- essential for a stable,
+    # non-diverging integration through S.
+    for module in reversed(list(net.modules())):
+        if isinstance(module, nn.Linear):
+            nn.init.zeros_(module.weight)
+            nn.init.constant_(module.bias, -4.0)
+            break
+    return net
+
+
+def _neural_ode_sys(t, c, model):
+    """Open-loop neural RHS (dc/dt = S @ rate(t)); available for scipy integration.
+
+    ``solve_model`` uses the cumulative-rate rollout directly so that training and
+    inference share identical math, but this keeps a Model-compatible ODE callable.
+    """
+    return np.asarray(model.s, float) @ model._rate_at(float(t))
+
+
+class NeuralADM(Model):
+    """A COD-balanced, data-driven model that shares the :class:`Model` interface.
+
+    The network (``backbone`` = ``"lstm"``, ``"transformer"``, or ``"mlp"``) emits
+    non-negative reaction rates; concentrations follow ``dc/dt = S @ rate`` using
+    e-ADM's COD-balanced stoichiometric matrix, so total COD is conserved by
+    construction. Fit with :meth:`fit` (gradient descent); solve with the usual
+    :meth:`solve_model`. Build one from an existing e-ADM model with
+    :meth:`from_model`.
+    """
+
+    def __init__(self, model_parameters, base_parameters, initial_conditions, inlet_conditions,
+                 feed, reactions, species, ode_system=None, build_stoichiometric_matrix=None,
+                 control_state={}, name="NeuralADM", switch="DAE", simulation_time=30, time_limit=-1,
+                 *, backbone="lstm", observed=None, hidden=32, rate_net=None, seed=0):
+        super().__init__(model_parameters=model_parameters, base_parameters=base_parameters,
+                         initial_conditions=initial_conditions, inlet_conditions=inlet_conditions,
+                         feed=feed, reactions=reactions, species=species,
+                         ode_system=(ode_system or _neural_ode_sys),
+                         build_stoichiometric_matrix=(build_stoichiometric_matrix or build_e_adm_stoichiometric_matrix),
+                         control_state=control_state, name=name, switch=switch,
+                         simulation_time=simulation_time, time_limit=time_limit)
+        self.backbone = backbone
+        self.hidden = hidden
+        self.observed = list(observed) if observed else list(DEFAULT_OBSERVED)
+        self._feat_dim = 4 + len(_NEURAL_BIOMASS) + len(self.observed)
+        self.rate_net = rate_net if rate_net is not None else _build_rate_net(
+            backbone, self._feat_dim, len(reactions), hidden, seed)
+        self._feat_mean = None      # feature standardisation, learned in fit()
+        self._feat_std = None
+
+    @classmethod
+    def from_model(cls, base_model, *, backbone="lstm", observed=None, hidden=32, seed=0):
+        """Build a NeuralADM that reuses a fitted e-ADM model's structure (its S)."""
+        return cls(model_parameters=base_model.model_parameters.copy(),
+                   base_parameters=base_model.base_parameters.copy(),
+                   initial_conditions=base_model._ic.copy(), inlet_conditions=base_model._inc.copy(),
+                   feed=base_model.feed, reactions=base_model.reactions.copy(),
+                   species=base_model.species.copy(), control_state=base_model.control_state.copy(),
+                   simulation_time=base_model.sim_time, backbone=backbone, observed=observed,
+                   hidden=hidden, seed=seed)
+
+    def _features(self, t_eval):
+        # build conditions from the LIVE initial_conditions array (update_parameters
+        # writes there, not to self._ic), so features reflect the current experiment.
+        ic = {s: float(self.initial_conditions[i, 0]) for i, s in enumerate(self.species)}
+        return np.array([_neural_features(ic, float(t), self.observed) for t in t_eval], float)
+
+    def _norm(self, feats):
+        if self._feat_mean is None:
+            return feats
+        return (feats - self._feat_mean) / self._feat_std
+
+    def _rate_at(self, t):
+        torch = _require_torch()
+        feats = self._norm(self._features([t]))
+        with torch.no_grad():
+            return self.rate_net(torch.tensor(feats, dtype=torch.float32).unsqueeze(0)).squeeze(0).numpy()[0]
+
+    def solve_model(self, t_eval, method="BDF"):
+        """Predict the COD-balanced trajectory at ``t_eval`` (same return as Model)."""
+        torch = _require_torch()
+        t_eval = np.asarray(t_eval, float)
+        feats = self._norm(self._features(t_eval))
+        with torch.no_grad():
+            rates = self.rate_net(torch.tensor(feats, dtype=torch.float32).unsqueeze(0)).squeeze(0).numpy()
+        cum = _cumulative_trapz_np(rates, t_eval)          # (n_t, n_rxn)
+        S = np.asarray(self.s, float)                      # (n_species, n_rxn), COD-balanced
+        y = self.initial_conditions[:, 0][:, None] + S @ cum.T
+        self.info = {"Fluxes": rates}
+        return _Fake_Sol(y=y, t=t_eval)
+
+    def fit(self, train_data, *, epochs=400, lr=5e-3, weight_decay=1e-4, seed=0, verbose=False):
+        """Train the rate network by gradient descent on observed VFA trajectories.
+
+        Same call as :meth:`Model.fit` (``model.fit(train_data, ...)``); the internals
+        are gradient descent instead of a black-box search. COD balance is structural
+        (via S), so it is never part of the loss.
+        """
+        torch = _require_torch()
+        import torch.nn as nn
+        torch.manual_seed(seed)
+        S = torch.tensor(np.asarray(self.s, float), dtype=torch.float32)
+        vfa_rows = [self.species.index(v) for v in self.observed]
+        S_vfa = S[vfa_rows]                                # (n_vfa, n_rxn)
+
+        raw = []
+        for e in train_data:
+            ic = dict(self._ic); ic.update(e.initial_concentrations)
+            obs = np.asarray(e.data, float)                # (n_t, n_vars) -- Experiment stores (time, var)
+            for j, v in enumerate(e.variables):
+                ic[v] = float(obs[0, j])
+            t = np.asarray(e.time, float)
+            feats = np.array([_neural_features(ic, float(ti), self.observed) for ti in t], float)
+            c0 = np.array([ic[v] for v in self.observed], float)
+            var_idx = [self.observed.index(v) for v in e.variables]
+            raw.append((feats, t, obs, c0, var_idx))
+
+        # standardise features (per-column) for stable optimisation
+        allf = np.concatenate([r[0] for r in raw], axis=0)
+        self._feat_mean = allf.mean(axis=0)
+        self._feat_std = allf.std(axis=0) + 1e-8
+
+        data = []
+        for feats, t, obs, c0, var_idx in raw:
+            feats = (feats - self._feat_mean) / self._feat_std
+            data.append((torch.tensor(feats, dtype=torch.float32),
+                         torch.tensor(t, dtype=torch.float32),
+                         torch.tensor(obs, dtype=torch.float32),
+                         torch.tensor(c0, dtype=torch.float32), var_idx))
+
+        opt = torch.optim.Adam(self.rate_net.parameters(), lr=lr, weight_decay=weight_decay)
+        lossf = nn.MSELoss()
+        for epoch in range(epochs):
+            opt.zero_grad(); total = 0.0
+            for feats, t, obs, c0, var_idx in data:
+                rates = self.rate_net(feats.unsqueeze(0)).squeeze(0)      # (n_t, n_rxn)
+                dt = (t[1:] - t[:-1]).unsqueeze(1)
+                incr = 0.5 * (rates[1:] + rates[:-1]) * dt
+                cum = torch.zeros_like(rates)
+                cum[1:] = torch.cumsum(incr, dim=0)
+                pred = (c0 + cum @ S_vfa.T)[:, var_idx]                   # anchored at IC, COD-balanced
+                total = total + lossf(pred, obs)
+            loss = total / len(data)
+            loss.backward(); opt.step()
+            if verbose and epoch % 100 == 0:
+                print(f"  epoch {epoch:4d}  loss={float(loss):.5f}")
+        return self
+
+    def copy(self):
+        new = type(self)(model_parameters=self.model_parameters.copy(),
+                         base_parameters=self.base_parameters.copy(),
+                         initial_conditions=self._ic.copy(), inlet_conditions=self._inc.copy(),
+                         feed=self.feed, reactions=self.reactions.copy(), species=self.species.copy(),
+                         control_state=self.control_state.copy(), name=self.name, switch=self.switch,
+                         time_limit=self.time_limit, simulation_time=self.sim_time,
+                         backbone=self.backbone, observed=list(self.observed), hidden=self.hidden)
+        new.rate_net.load_state_dict(self.rate_net.state_dict())
+        new._feat_mean = None if self._feat_mean is None else self._feat_mean.copy()
+        new._feat_std = None if self._feat_std is None else self._feat_std.copy()
+        return new
